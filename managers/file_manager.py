@@ -55,12 +55,12 @@ class ImageFileManager:
     def fully_load_image_data(self) -> None:
         """Init only loads one file, load entire directory here"""
         image_to_start_at: str = self._files[self._current_index].name
-        self._files.clear()
 
-        for p in next(os.walk(self.image_directory), (None, None, []))[2]:
-            fp = ImagePath(p)
-            if fp.suffix in self.VALID_FILE_TYPES:
-                self._files.append(fp)
+        self._files = [
+            image_path
+            for path in next(os.walk(self.image_directory), (None, None, []))[2]
+            if (image_path := ImagePath(path)).suffix in self.VALID_FILE_TYPES
+        ]
 
         self._files.sort(key=OSFileSortKey)
         self._current_index = self._binary_search(image_to_start_at)
@@ -131,7 +131,7 @@ class ImageFileManager:
         self._files.insert(self._binary_search(image_data.name), image_data)
         self._populate_data_attributes()
 
-    def cache_info(self, width: int, height: int, dimensions: str):
+    def cache_info(self, width: int, height: int, dimensions: str) -> None:
         self.cache[self.current_image.name] = CachedInfo(
             width,
             height,
@@ -145,7 +145,7 @@ class ImageFileManager:
         dimensions: str,
         photo_image: PhotoImage,
         bit_size: int,
-    ):
+    ) -> None:
         self.cache[self.current_image.name] = CachedInfoAndImage(
             width,
             height,
@@ -168,10 +168,9 @@ class ImageFileManager:
         """Finds index of image in the sorted list of all images in the directory.
         target_image: name of image file to find"""
         low: int = 0
-        mid: int
         high: int = len(self._files) - 1
         while low <= high:
-            mid = (low + high) >> 1
+            mid: int = (low + high) >> 1
             current_image = self._files[mid].name
             if target_image == current_image:
                 return mid
