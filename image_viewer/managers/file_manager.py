@@ -63,10 +63,12 @@ class ImageFileManager:
         """Init only loads one file, load entire directory here"""
         image_to_start_at: str = self._files[self._current_index].name
 
+        image_directory = self.image_directory
+        VALID_FILE_TYPES = self.VALID_FILE_TYPES
         self._files = [
             image_path
-            for path in next(os.walk(self.image_directory), (None, None, []))[2]
-            if (image_path := ImagePath(path)).suffix in self.VALID_FILE_TYPES
+            for path in next(os.walk(image_directory), (None, None, []))[2]
+            if (image_path := ImagePath(path)).suffix in VALID_FILE_TYPES
         ]
 
         self._files.sort()
@@ -163,7 +165,7 @@ class ImageFileManager:
     def current_image_cache_still_fresh(self) -> bool:
         """Returns true when we think the cached image is still accurate.
         Not guaranteed to be correct, but thats not important for this case"""
-        return os.path.isfile(self.path_to_current_image) and os.stat(
+        return os.path.exists(self.path_to_current_image) and os.stat(
             self.path_to_current_image
         ).st_size == self.cache.get(self.current_image.name, 0)
 
@@ -173,11 +175,12 @@ class ImageFileManager:
     def _binary_search(self, target_image: str) -> int:
         """Finds index of image in the sorted list of all images in the directory.
         target_image: name of image file to find"""
+        files = self._files
         low: int = 0
-        high: int = len(self._files) - 1
+        high: int = len(files) - 1
         while low <= high:
             mid: int = (low + high) >> 1
-            current_image = self._files[mid].name
+            current_image = files[mid].name
             if target_image == current_image:
                 return mid
             if OS_name_cmp(target_image, current_image):
