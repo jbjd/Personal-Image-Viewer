@@ -332,27 +332,24 @@ class ViewerApp:
         self.app.iconify()
 
     def refresh(self, _: Event) -> None:
-        """Get images in current directory and update internal list with them"""
+        """Gets images in current directory and update internal list with them"""
         self.clear_animation_variables()
         try:
             self.file_manager.refresh_image_list()
         except IndexError:
             self.exit()
-
-        self.load_image()
+        self.dropdown.refresh = True
+        self.load_image_and_refresh()
 
     def move(self, amount: int) -> None:
         """
-        Move to different image
+        Moves to different image
         amount: any non-zero value indicating movement to next or previous
         """
         self.hide_rename_window()
         self.file_manager.move_current_index(amount)
         self.dropdown.refresh = True
-
-        self.load_image()
-        if self.topbar_shown:
-            self.refresh_topbar()
+        self.load_image_and_refresh()
 
     def redraw(self, event: Event) -> None:
         """
@@ -364,13 +361,15 @@ class ViewerApp:
         self.redraw_screen = False
         if self.file_manager.current_image_cache_still_fresh():
             return
-        self.load_image()
+        self.dropdown.refresh = True
+        self.load_image_and_refresh()
 
     def trash_image(self, _: Event | None = None) -> None:
         """Move current image to trash and moves to next"""
         self.clear_animation_variables()
         self.hide_rename_window()
-        self.remove_image_and_move_to_next(True)
+        self.remove_image(True)
+        self.load_image_and_refresh()
 
     def hide_rename_window(self) -> None:
         self.canvas.itemconfig(self.rename_window_id, state="hidden")
@@ -415,7 +414,10 @@ class ViewerApp:
             "Confirm deletion",
             f"Converted file to {new_format}, delete old file?",
         ):
-            self.remove_image_and_move_to_next(True)
+            try:
+                self.file_manager.remove_current_image(True)
+            except IndexError:
+                pass  # even if no images left, a new one will be added after this
 
     def try_rename_or_convert(self, _: Event) -> None:
         """Handles user input into rename window.
@@ -449,6 +451,12 @@ class ViewerApp:
 
         self.update_after_image_load(current_image)
 
+    def load_image_and_refresh(self) -> None:
+        """Both loads a new image and refreshes topbar"""
+        self.load_image()
+        if self.topbar_shown:
+            self.refresh_topbar()
+
     def show_topbar(self, _: Event | None = None) -> None:
         """Shows all topbar elements and updates its display"""
         self.topbar_shown = True
@@ -467,15 +475,6 @@ class ViewerApp:
             self.file_manager.remove_current_image(delete_from_disk)
         except IndexError:
             self.exit()
-
-    def remove_image_and_move_to_next(self, delete_from_disk: bool) -> None:
-        """Removes current image from internal image list
-        and optionaly deletes it from disk"""
-        self.remove_image(delete_from_disk)
-
-        self.load_image()
-        if self.topbar_shown:
-            self.refresh_topbar()
 
     def refresh_topbar(self) -> None:
         """Updates all elements on the topbar with current info"""
