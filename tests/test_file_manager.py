@@ -1,4 +1,5 @@
 import os
+import tempfile
 from unittest import mock
 
 import pytest
@@ -6,13 +7,9 @@ import pytest
 from image_viewer.managers.file_manager import ImageFileManager
 
 
-# class MockPhotoImage:
-#     pass
-
-
 @pytest.fixture
-def manager() -> ImageFileManager:
-    return ImageFileManager(os.path.abspath("tests/example_images/a.png"))
+def manager(img_dir: str) -> ImageFileManager:
+    return ImageFileManager(os.path.join(img_dir, "a.png"))
 
 
 def test_image_file_manager(manager: ImageFileManager):
@@ -32,7 +29,7 @@ def test_image_file_manager(manager: ImageFileManager):
 
     # Try to rename a.png mocking the os call away should pass
     with mock.patch("os.rename", lambda *_: None):
-        manager.rename_or_convert_current_image("example.png", lambda _: None)
+        manager.rename_or_convert_current_image("example.test", lambda _: None)
 
     # test remove_current_image fuctionality
     for _ in range(4):
@@ -44,14 +41,39 @@ def test_image_file_manager(manager: ImageFileManager):
         manager.remove_current_image(False)
 
 
-def test_bad_path():
+def test_bad_path(img_dir: str):
+    # doesn't exist
     with pytest.raises(ValueError):
         ImageFileManager("bad/path")
+    # wrong file type
     with pytest.raises(ValueError):
-        ImageFileManager(os.path.abspath("tests/example_images/not_an_image.txt"))
+        ImageFileManager(os.path.join(img_dir, "not_an_image.txt"))
 
 
 def test_caching(manager: ImageFileManager):
+    """Test various caching methods to ensure they act as expected"""
     manager.cache_image(20, 20, "20x20", None, 0)
     assert len(manager.cache) == 1
     assert manager.get_current_image_cache() is not None
+    assert manager.current_image_cache_still_fresh()
+    # clear cache to make it not fresh
+    manager.refresh_image_list()
+    assert not manager.current_image_cache_still_fresh()
+
+
+def test_move_current_index(manager: ImageFileManager):
+    """Test moving to an index thats too large"""
+    manager.move_current_index(999)
+    assert manager._current_index == 0
+
+
+def test_delete_file(manager: ImageFileManager):
+    """Tests deleting a file from disk via file manager"""
+
+    # add one extra image so it doesn't error after removing the only file
+    manager.add_new_image("Some_image.png")
+
+    with tempfile.NamedTemporaryFile() as tmp:
+        manager.path_to_current_image = tmp.name
+        manager.remove_current_image(True)
+        assert len(manager._files) == 1
