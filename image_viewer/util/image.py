@@ -47,12 +47,20 @@ def init_PIL(font_size: int) -> None:
     """Sets up font and PIL's internal list of plugins to load"""
     from PIL import Image
 
+    # setup font
     ImageDraw.font = truetype("arial.ttf", font_size)
     ImageDraw.fontmode = "L"  # antialiasing
-    # edit this so PIL will not waste time importing +20 useless modules
-    Image._plugins = [
-        "WebPImagePlugin",
-    ]
+
+    # edit these so PIL will not waste time importing +20 useless modules
+    Image._plugins = []
+
+    def preinit():
+        __import__("PIL.JpegImagePlugin", globals(), locals(), [])
+        __import__("PIL.GifImagePlugin", globals(), locals(), [])
+        __import__("PIL.PngImagePlugin", globals(), locals(), [])
+        __import__("PIL.WebPImagePlugin", globals(), locals(), [])
+
+    Image.preinit = preinit
 
 
 def create_dropdown_image(dimension_text: str, size_text: str) -> PhotoImage:
