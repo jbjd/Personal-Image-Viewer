@@ -1,9 +1,14 @@
 argparse
+cffi
 csv
+cv2.version
+defusedxml
 email*
 getpass
 numpy.testing
+packaging
 PIL.BlpImagePlugin
+PIL.BmpImagePlugin
 PIL.BufrStubImagePlugin
 PIL.CurImagePlugin
 PIL.DcxImagePlugin
@@ -31,6 +36,7 @@ PIL.PcdImagePlugin
 PIL.PcxImagePlugin
 PIL.PdfImagePlugin
 PIL.PixarImagePlugin
+PIL.PpmImagePlugin
 PIL.PsdImagePlugin
 PIL.QoiImagePlugin
 PIL.SgiImagePlugin
@@ -41,6 +47,7 @@ PIL.WmfImagePlugin
 PIL.XbmImagePlugin
 PIL.XpmImagePlugin
 PIL.XVThumbImagePlugin
+PIL.ImageCms
 PIL.ImageDraw2
 PIL.ImageFilter
 PIL.ImageQt
@@ -49,7 +56,10 @@ PIL.ImageWin
 PIL.PyAccess
 py_compile
 pydoc
+selectors
 send2trash.win.modern
+socket
+statistics
 urllib.error
 urllib.request
 yaml
