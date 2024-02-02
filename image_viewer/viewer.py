@@ -1,5 +1,5 @@
 import os
-from tkinter import Canvas, Event, Tk
+from tkinter import Event, Tk
 
 from PIL.ImageTk import PhotoImage
 
@@ -96,10 +96,10 @@ class ViewerApp:
 
         # Don't call load_image for first image since if it fails to load, don't exit
         # until we load the rest of the images and try to display them as well
-        if current_image := self.image_loader.load_image():
+        if (current_image := self.image_loader.load_image()) is not None:
             self.update_after_image_load(current_image)
+            app.update()
 
-        app.update()
         self.file_manager.fully_load_image_data()
 
         # if first load failed, load new one now that all images are loaded
@@ -134,7 +134,7 @@ class ViewerApp:
         app.mainloop()
 
     def _load_assests(  # TODO: port this into canvas.py?
-        self, app: Tk, canvas: Canvas, screen_width: int, topbar_height: int
+        self, app: Tk, canvas: CustomCanvas, screen_width: int, topbar_height: int
     ) -> None:
         """
         Load all assets on topbar from factory and create tkinter objects
@@ -142,7 +142,7 @@ class ViewerApp:
         """
 
         def _make_topbar_button(
-            canvas: Canvas,
+            canvas: CustomCanvas,
             regular_image: PhotoImage,
             hovered_image: PhotoImage,
             anchor: str,
@@ -264,7 +264,7 @@ class ViewerApp:
     # Functions handling user input
 
     def handle_canvas_click(self, _: Event) -> None:
-        """toggles the display of topbar when non-topbar area clicked"""
+        """Toggles the display of topbar when non-topbar area clicked"""
         if self.topbar_shown:
             self.hide_topbar()
         else:
@@ -330,7 +330,7 @@ class ViewerApp:
 
     def exit(self, _: Event | None = None) -> None:
         """Safely exits the program"""
-        self.image_loader.reset()
+        self.image_loader.reset_and_setup()
         self.canvas.delete(self.file_name_text_id)
         self.app.quit()
         self.app.destroy()
@@ -354,20 +354,16 @@ class ViewerApp:
         self.load_image_and_refresh()
 
     def move(self, amount: int) -> None:
-        """
-        Moves to different image
-        amount: any non-zero value indicating movement to next or previous
-        """
+        """Moves to different image
+        amount: any non-zero value indicating movement to next or previous"""
         self.hide_rename_window()
         self.file_manager.move_current_index(amount)
         self.dropdown.refresh = True
         self.load_image_and_refresh()
 
     def redraw(self, event: Event) -> None:
-        """
-        Redraws screen if current image has a diffent size than when it was loaded
-        This implys it was edited outside of the program
-        """
+        """Redraws screen if current image has a diffent size than when it was loaded,
+        implying it was edited outside of the program"""
         if event.widget is not self.app or not self.redraw_flag:
             return
         self.redraw_flag = False
@@ -391,17 +387,21 @@ class ViewerApp:
     def leave_hover_dropdown_toggle(self, _: Event | None = None) -> None:
         self.canvas.itemconfigure(
             self.dropdown_button_id,
-            image=self.dropdown_showing_icon
-            if self.dropdown_shown
-            else self.dropdown_hidden_icon,
+            image=(
+                self.dropdown_showing_icon
+                if self.dropdown_shown
+                else self.dropdown_hidden_icon
+            ),
         )
 
     def hover_dropdown_toggle(self, _: Event | None = None) -> None:
         self.canvas.itemconfigure(
             self.dropdown_button_id,
-            image=self.dropdown_showing_icon_hovered
-            if self.dropdown_shown
-            else self.dropdown_hidden_icon_hovered,
+            image=(
+                self.dropdown_showing_icon_hovered
+                if self.dropdown_shown
+                else self.dropdown_hidden_icon_hovered
+            ),
         )
 
     def toggle_show_rename_window(self, _: Event | None = None) -> None:
@@ -492,7 +492,7 @@ class ViewerApp:
         )
 
     def animate(self, ms_backoff: int) -> None:
-        """displays a frame on screen and loops to next frame after a delay"""
+        """Displays a frame on screen and loops to next frame after a delay"""
         frame_and_speed = self.image_loader.get_next_frame()
 
         # if tried to show next frame before it is loaded
@@ -514,7 +514,7 @@ class ViewerApp:
 
         self.app.after_cancel(self.animation_id)
         self.animation_id = ""
-        self.image_loader.reset()
+        self.image_loader.reset_and_setup()
 
     def update_details_dropdown(self) -> None:
         """Updates the infomation and state of dropdown image"""
