@@ -1,3 +1,4 @@
+from collections.abc import Callable
 from tkinter import Canvas
 
 from PIL.ImageTk import PhotoImage
@@ -7,6 +8,7 @@ class CustomCanvas(Canvas):
     """Custom version of tkinter's canvas to support internal methods"""
 
     __slots__ = (
+        "file_name_text_id",
         "image_display_id",
         "move_x",
         "move_y",
@@ -33,11 +35,54 @@ class CustomCanvas(Canvas):
         self.screen_width = screen_width
         self.screen_height = screen_height
 
+    def make_topbar_button(
+        self,
+        regular_image: PhotoImage,
+        hovered_image: PhotoImage,
+        anchor: str,
+        x_offset: int,
+        function_to_bind: Callable,
+    ) -> int:
+        """Default way to setup a button on the topbar"""
+        button_id: int = self.create_image(
+            x_offset,
+            0,
+            image=regular_image,
+            anchor=anchor,
+            tag="topbar",
+            state="hidden",
+        )
+
+        self.tag_bind(
+            button_id,
+            "<Enter>",
+            lambda _: self.itemconfigure(button_id, image=hovered_image),
+        )
+        self.tag_bind(
+            button_id,
+            "<Leave>",
+            lambda _: self.itemconfigure(button_id, image=regular_image),
+        )
+        self.tag_bind(button_id, "<ButtonRelease-1>", function_to_bind)
+        return button_id
+
     def create_topbar(self, topbar_img: PhotoImage) -> None:
         """Creates the topbar and stores it"""
         self.topbar = topbar_img  # need to do this so garbage collector doesn't kill it
         self.create_image(
             0, 0, image=topbar_img, anchor="nw", tag="topbar", state="hidden"
+        )
+
+    def create_name_text(self, x: int, y: int, font: str) -> None:
+        """Creates text object used to display file name"""
+        self.file_name_text_id: int = self.create_text(
+            x,
+            y,
+            text="",
+            fill="white",
+            anchor="w",
+            font=font,
+            tags="topbar",
         )
 
     def update_img_display(self, new_image: PhotoImage) -> None:
@@ -80,3 +125,12 @@ class CustomCanvas(Canvas):
         # TODO: find a good way to handle scaling 10px to screen, don't
         # really want to call the internal scale function each time...
         self.move(self.image_display_id, x, y)
+
+    def refresh_text(self, new_name: str) -> int:
+        """Updates file name text"""
+        self.itemconfigure(self.file_name_text_id, text=new_name)
+        return self.bbox(self.file_name_text_id)[2]
+
+    def is_widget_visible(self, tag_or_id) -> bool:
+        """Returns bool of if provided tag/id is visible"""
+        return self.itemcget(tag_or_id, "state") == "normal"
