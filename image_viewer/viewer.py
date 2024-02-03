@@ -25,9 +25,7 @@ class ViewerApp:
         "dropdown_hidden_icon_hovered",
         "dropdown_showing_icon",
         "dropdown_showing_icon_hovered",
-        "dropdown_shown",
         "file_manager",
-        "file_name_text_id",
         "height_ratio",
         "image_loader",
         "image_load_id",
@@ -36,7 +34,6 @@ class ViewerApp:
         "rename_button_id",
         "rename_entry",
         "rename_window_x_offset",
-        "topbar_shown",
         "width_ratio",
     )
 
@@ -44,8 +41,6 @@ class ViewerApp:
         self.file_manager = ImageFileManager(first_image_to_show)
 
         # UI varaibles
-        self.topbar_shown: bool = False
-        self.dropdown_shown: bool = False
         self.redraw_flag: bool = False
         self.rename_window_x_offset: int = 0
         self.move_id: str = ""
@@ -137,37 +132,6 @@ class ViewerApp:
         topbar_height: size to make icons/topbar
         """
 
-        def _make_topbar_button(
-            canvas: CustomCanvas,
-            regular_image: PhotoImage,
-            hovered_image: PhotoImage,
-            anchor: str,
-            x_offset: int,
-            function_to_bind,
-        ) -> int:
-            """Default way to setup a button on the topbar"""
-            button_id: int = canvas.create_image(
-                x_offset,
-                0,
-                image=regular_image,
-                anchor=anchor,
-                tag="topbar",
-                state="hidden",
-            )
-
-            canvas.tag_bind(
-                button_id,
-                "<Enter>",
-                lambda _: canvas.itemconfigure(button_id, image=hovered_image),
-            )
-            canvas.tag_bind(
-                button_id,
-                "<Leave>",
-                lambda _: canvas.itemconfigure(button_id, image=regular_image),
-            )
-            canvas.tag_bind(button_id, "<ButtonRelease-1>", function_to_bind)
-            return button_id
-
         topbar_height += topbar_height % 2  # ensure even number
 
         # negative makes it an absolute size for consistency with different monitors
@@ -176,30 +140,23 @@ class ViewerApp:
         icon_factory = IconFactory(topbar_height)
 
         canvas.create_topbar(icon_factory.make_topbar(screen_width))
-        self.file_name_text_id: int = canvas.create_text(
-            self._scale_pixels_to_width(36),
-            self._scale_pixels_to_height(16),
-            text="",
-            fill="white",
-            anchor="w",
-            font=FONT,
-            tags="topbar",
+        canvas.create_name_text(
+            self._scale_pixels_to_width(36), self._scale_pixels_to_height(16), FONT
         )
-        _make_topbar_button(  # type: ignore
-            canvas, *icon_factory.make_exit_icons(), "ne", screen_width, self.exit
+
+        canvas.make_topbar_button(  # type: ignore
+            *icon_factory.make_exit_icons(), "ne", screen_width, self.exit
         )
-        _make_topbar_button(  # type: ignore
-            canvas,
+        canvas.make_topbar_button(  # type: ignore
             *icon_factory.make_minify_icons(),
             "ne",
             screen_width - topbar_height,
             self.minimize,
         )
-        _make_topbar_button(  # type: ignore
-            canvas, *icon_factory.make_trash_icons(), "nw", 0, self.trash_image
+        canvas.make_topbar_button(  # type: ignore
+            *icon_factory.make_trash_icons(), "nw", 0, self.trash_image
         )
-        self.rename_button_id: int = _make_topbar_button(  # type: ignore
-            canvas,
+        self.rename_button_id: int = canvas.make_topbar_button(  # type: ignore
             *icon_factory.make_rename_icons(),
             "nw",
             0,
@@ -229,11 +186,10 @@ class ViewerApp:
         canvas.tag_bind(
             self.dropdown_button_id, "<Leave>", self.leave_hover_dropdown_toggle
         )
-        self.dropdown = DropdownImage(
-            canvas.create_image(
-                screen_width, topbar_height, anchor="ne", tag="topbar", state="hidden"
-            )
+        dropdown_id: int = canvas.create_image(
+            screen_width, topbar_height, anchor="ne", tag="topbar", state="hidden"
         )
+        self.dropdown = DropdownImage(dropdown_id)
 
         rename_id: int = canvas.create_window(
             0,
@@ -258,7 +214,7 @@ class ViewerApp:
 
     def handle_canvas_click(self, _: Event) -> None:
         """Toggles the display of topbar when non-topbar area clicked"""
-        if self.topbar_shown:
+        if self.canvas.is_widget_visible("topbar"):
             self.hide_topbar()
         else:
             self.show_topbar()
@@ -302,14 +258,14 @@ class ViewerApp:
 
     def handle_esc(self, _: Event) -> None:
         """Closes rename window, then program on hitting escape"""
-        if self.canvas.itemcget(self.rename_entry.id, "state") == "normal":
+        if self.canvas.is_widget_visible(self.rename_entry.id):
             self.hide_rename_window()
             return
         self.exit()
 
     def handle_dropdown(self, _: Event) -> None:
         """Handle when user clicks on the dropdown arrow"""
-        self.dropdown_shown = not self.dropdown_shown
+        self.dropdown.toggle_display()
         self.hover_dropdown_toggle()  # fake mouse hover
         self.update_details_dropdown()
 
@@ -327,7 +283,7 @@ class ViewerApp:
     def exit(self, _: Event | None = None) -> None:
         """Safely exits the program"""
         self.image_loader.reset_and_setup()
-        self.canvas.delete(self.file_name_text_id)
+        self.canvas.delete(self.canvas.file_name_text_id)
         self.app.quit()
         self.app.destroy()
         raise SystemExit(0)  # I used exit(0) here, but didn't work with --standalone
@@ -381,7 +337,7 @@ class ViewerApp:
             self.dropdown_button_id,
             image=(
                 self.dropdown_showing_icon
-                if self.dropdown_shown
+                if self.dropdown.showing
                 else self.dropdown_hidden_icon
             ),
         )
@@ -391,18 +347,18 @@ class ViewerApp:
             self.dropdown_button_id,
             image=(
                 self.dropdown_showing_icon_hovered
-                if self.dropdown_shown
+                if self.dropdown.showing
                 else self.dropdown_hidden_icon_hovered
             ),
         )
 
     def toggle_show_rename_window(self, _: Event) -> None:
         canvas = self.canvas
-        if canvas.itemcget(self.rename_entry.id, "state") == "normal":
+        if canvas.is_widget_visible(self.rename_entry.id):
             self.hide_rename_window()
             return
 
-        if canvas.itemcget("topbar", "state") == "hidden":
+        if not canvas.is_widget_visible("topbar"):
             self.show_topbar()
 
         canvas.itemconfigure(self.rename_entry.id, state="normal")
@@ -441,26 +397,24 @@ class ViewerApp:
             self.remove_image(False)
 
         self.update_after_image_load(current_image)
-        if self.topbar_shown:
+        if self.canvas.is_widget_visible("topbar"):
             self.refresh_topbar()
         self.image_load_id = ""
 
     def load_image_unblocking(self) -> None:
         """Loads an image without blocking main thread"""
-        self.dropdown.refresh = True
+        self.dropdown.need_refresh = True
         if self.image_load_id != "":
             self.app.after_cancel(self.image_load_id)
         self.image_load_id = self.app.after(0, self.load_image)
 
     def show_topbar(self, _: Event | None = None) -> None:
         """Shows all topbar elements and updates its display"""
-        self.topbar_shown = True
         self.canvas.itemconfigure("topbar", state="normal")
         self.refresh_topbar()
 
     def hide_topbar(self, _: Event | None = None) -> None:
         """Hides/removes focus from all topbar elements"""
-        self.topbar_shown = False
         self.canvas.itemconfigure("topbar", state="hidden")
         self.hide_rename_window()
 
@@ -473,10 +427,9 @@ class ViewerApp:
 
     def refresh_topbar(self) -> None:
         """Updates all elements on the topbar with current info"""
-        self.canvas.itemconfigure(
-            self.file_name_text_id, text=self.file_manager.current_image.name
+        self.rename_window_x_offset = self.canvas.refresh_text(
+            self.file_manager.current_image.name
         )
-        self.rename_window_x_offset = self.canvas.bbox(self.file_name_text_id)[2]
         self.canvas.coords(self.rename_button_id, self.rename_window_x_offset, 0)
 
         self.update_details_dropdown()
@@ -515,8 +468,8 @@ class ViewerApp:
     def update_details_dropdown(self) -> None:
         """Updates the infomation and state of dropdown image"""
         dropdown = self.dropdown
-        if self.dropdown_shown:
-            if dropdown.refresh:
+        if dropdown.showing:
+            if dropdown.need_refresh:
                 image_info: CachedImageData | None = (
                     self.file_manager.get_current_image_cache()
                 )
