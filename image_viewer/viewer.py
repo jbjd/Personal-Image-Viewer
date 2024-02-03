@@ -30,6 +30,7 @@ class ViewerApp:
         "file_name_text_id",
         "height_ratio",
         "image_loader",
+        "image_load_id",
         "move_id",
         "redraw_flag",
         "rename_button_id",
@@ -44,14 +45,12 @@ class ViewerApp:
         self.file_manager = ImageFileManager(first_image_to_show)
 
         # UI varaibles
-        self.topbar_shown: bool
-        self.dropdown_shown: bool
-        self.redraw_flag: bool
-        self.topbar_shown = self.dropdown_shown = self.redraw_flag = False
+        self.topbar_shown: bool = False
+        self.dropdown_shown: bool = False
+        self.redraw_flag: bool = False
         self.rename_window_x_offset: int = 0
         self.move_id: str = ""
-
-        # Animation variables
+        self.image_load_id: str = ""
         self.animation_id: str = ""
 
         # Application and canvas
@@ -112,12 +111,10 @@ class ViewerApp:
         app.bind("<KeyPress>", self.handle_key)
         app.bind("<KeyRelease>", self.handle_key_release)
         app.bind("<Control-r>", self.refresh)
-        app.bind("<Control-d>", lambda _: self.load_image_and_refresh())
+        app.bind("<Control-d>", lambda _: self.load_image_unblocking())
         app.bind("<F2>", self.toggle_show_rename_window)
         app.bind("<Up>", self.hide_topbar)
         app.bind("<Down>", self.show_topbar)
-        app.bind("<Left>", self.handle_lr_arrow)
-        app.bind("<Right>", self.handle_lr_arrow)
         app.bind("<Alt-Left>", self.handle_ctrl_arrow_keys)
         app.bind("<Alt-Right>", self.handle_ctrl_arrow_keys)
         app.bind("<Alt-Up>", self.handle_ctrl_arrow_keys)
@@ -273,10 +270,13 @@ class ViewerApp:
     def handle_key(self, event: Event) -> None:
         """Key binds on main screen"""
         if event.widget is self.app:
-            if event.keycode == 82:  # r
-                self.toggle_show_rename_window(event)
-            if event.keycode in (187, 189):  # - or =
-                self.handle_zoom(event)
+            match event.keycode:
+                case 37 | 39:  # Left/Right arrow
+                    self.handle_lr_arrow(event)
+                case 187 | 189:  # - or =
+                    self.handle_zoom(event)
+                case 82:  # r
+                    self.toggle_show_rename_window(event)
 
     def handle_key_release(self, event: Event) -> None:
         if event.widget is self.app:
@@ -287,12 +287,12 @@ class ViewerApp:
     def handle_lr_arrow(self, event: Event) -> None:
         """Handle L/R arrow key input
         Doesn't move when main window unfocused"""
-        if event.widget is self.app and self.move_id == "":
+        if self.move_id == "":
             # move +4 when ctrl held, +1 when shift held
             move_amount: int = 1 + (event.state & 5)  # type: ignore
             if event.keysym == "Left":
                 move_amount = -move_amount
-            self._repeat_move(move_amount, 600)
+            self._repeat_move(move_amount, 500)
 
     def _repeat_move(self, move_amount: int, ms: int) -> None:
         """Repeat move to next image while L/R key held"""
@@ -350,16 +350,14 @@ class ViewerApp:
             self.file_manager.refresh_image_list()
         except IndexError:
             self.exit()
-        self.dropdown.refresh = True
-        self.load_image_and_refresh()
+        self.load_image_unblocking()
 
     def move(self, amount: int) -> None:
         """Moves to different image
         amount: any non-zero value indicating movement to next or previous"""
         self.hide_rename_window()
         self.file_manager.move_current_index(amount)
-        self.dropdown.refresh = True
-        self.load_image_and_refresh()
+        self.load_image_unblocking()
 
     def redraw(self, event: Event) -> None:
         """Redraws screen if current image has a diffent size than when it was loaded,
@@ -369,16 +367,14 @@ class ViewerApp:
         self.redraw_flag = False
         if self.file_manager.current_image_cache_still_fresh():
             return
-        self.dropdown.refresh = True
-        self.load_image_and_refresh()
+        self.load_image_unblocking()
 
     def trash_image(self, _: Event | None = None) -> None:
         """Move current image to trash and moves to next"""
         self.clear_animation_variables()
         self.hide_rename_window()
         self.remove_image(True)
-        self.dropdown.refresh = True
-        self.load_image_and_refresh()
+        self.load_image_unblocking()
 
     def hide_rename_window(self) -> None:
         self.canvas.itemconfigure(self.rename_window_id, state="hidden")
@@ -404,7 +400,7 @@ class ViewerApp:
             ),
         )
 
-    def toggle_show_rename_window(self, _: Event | None = None) -> None:
+    def toggle_show_rename_window(self, _: Event) -> None:
         canvas = self.canvas
         if canvas.itemcget(self.rename_window_id, "state") == "normal":
             self.hide_rename_window()
@@ -449,12 +445,16 @@ class ViewerApp:
             self.remove_image(False)
 
         self.update_after_image_load(current_image)
-
-    def load_image_and_refresh(self) -> None:
-        """Both loads a new image and refreshes topbar"""
-        self.load_image()
         if self.topbar_shown:
             self.refresh_topbar()
+        self.image_load_id = ""
+
+    def load_image_unblocking(self) -> None:
+        """Loads an image without blocking main thread"""
+        self.dropdown.refresh = True
+        if self.image_load_id != "":
+            self.app.after_cancel(self.image_load_id)
+        self.image_load_id = self.app.after(0, self.load_image)
 
     def show_topbar(self, _: Event | None = None) -> None:
         """Shows all topbar elements and updates its display"""
