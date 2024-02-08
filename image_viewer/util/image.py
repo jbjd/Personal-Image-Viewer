@@ -11,11 +11,11 @@ class CachedImageData:
 
     __slots__ = ("dimensions", "height", "image", "kb_size", "width")
 
-    def __init__(self, width, height, dimensions, image, kb_size) -> None:
+    def __init__(self, image, width, height, dimensions, kb_size) -> None:
+        self.image: PhotoImage = image
         self.width: int = width
         self.height: int = height
         self.dimensions: str = dimensions
-        self.image: PhotoImage = image
         self.kb_size: int = kb_size
 
 
@@ -46,6 +46,19 @@ class DropdownImage:
     def toggle_display(self) -> None:
         """Flips if showing is true or false"""
         self.showing = not self.showing
+
+
+def magic_number_guess(magic: bytes) -> str:
+    """Given bytes, make best guess at file type of image"""
+    match magic:
+        case b"\x89PNG":
+            return "PNG"
+        case b"RIFF":
+            return "WEBP"
+        case b"GIF8":
+            return "GIF"
+        case _:
+            return "JPEG"
 
 
 def init_PIL(font_size: int) -> None:
