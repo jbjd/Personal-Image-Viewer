@@ -1,5 +1,6 @@
 import os
 from tkinter import Event, Tk
+from typing import NoReturn
 
 from PIL.ImageTk import PhotoImage
 
@@ -281,18 +282,24 @@ class ViewerApp:
         self.hover_dropdown_toggle()  # fake mouse hover
         self.update_details_dropdown()
 
+    def _load_zoomed_image(self, keycode: int) -> None:
+        """Function to be called in Tk thread for loading image with zoom"""
+        new_image: PhotoImage | None = self.image_loader.get_zoomed_image(keycode)
+        if new_image is not None:
+            self.canvas.update_img_display(new_image)
+
     def handle_zoom(self, event: Event) -> None:
         """Handle user input of zooming in or out"""
         if self.animation_id != "":
             return
 
-        new_image: PhotoImage | None = self.image_loader.get_zoomed_image(event.keycode)
-        if new_image is not None:
-            self.canvas.update_img_display(new_image)
+        if self.image_load_id != "":
+            self.app.after_cancel(self.image_load_id)
+        self.image_load_id = self.app.after(0, self._load_zoomed_image, event.keycode)
 
     # End functions handling user input
 
-    def exit(self, _: Event | None = None) -> None:
+    def exit(self, _: Event | None = None) -> NoReturn:
         """Safely exits the program"""
         self.image_loader.reset_and_setup()
         self.canvas.delete(self.canvas.file_name_text_id)
