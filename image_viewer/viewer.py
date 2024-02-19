@@ -32,7 +32,7 @@ class ViewerApp:
         "image_loader",
         "image_load_id",
         "move_id",
-        "redraw_flag",
+        "need_to_redraw",
         "rename_button_id",
         "rename_entry",
         "rename_window_x_offset",
@@ -43,7 +43,7 @@ class ViewerApp:
         self.file_manager = ImageFileManager(first_image_to_show)
 
         # UI varaibles
-        self.redraw_flag: bool = False
+        self.need_to_redraw: bool = False
         self.rename_window_x_offset: int = 0
         self.move_id: str = ""
         self.image_load_id: str = ""
@@ -53,44 +53,37 @@ class ViewerApp:
         app = Tk()
         self.app = app
         app.attributes("-fullscreen", True)
-        self.canvas = CustomCanvas(app)
+        canvas = CustomCanvas(app)
+        self.canvas = canvas
 
-        is_windows: bool = os.name == "nt"
-        if is_windows:
+        if os.name == "nt":
             app.state("zoomed")
             app.wm_iconbitmap(default=os.path.join(path_to_exe, "icon/icon.ico"))
         else:
             from tkinter import Image as tkImage
 
-            app.tk.call(
-                "wm",
-                "iconphoto",
-                app._w,  # type: ignore
-                tkImage("photo", file=os.path.join(path_to_exe, "icon/icon.png")),
+            app.wm_iconbitmap(
+                bitmap=tkImage("photo", file=os.path.join(path_to_exe, "icon/icon.png"))
             )
 
-        app.update()  # updates winfo width and height to the current size
-        screen_width: int = app.winfo_width()
-        screen_height: int = app.winfo_height()
-        self.height_ratio: Final[float] = screen_height / 1080
-        self.width_ratio: Final[float] = screen_width / 1920
+        self.height_ratio: Final[float] = canvas.screen_height / 1080
+        self.width_ratio: Final[float] = canvas.screen_width / 1920
 
-        self.canvas.finish_init(screen_width, screen_height)
         self._load_assests(
-            app, self.canvas, screen_width, self._scale_pixels_to_height(32)
+            app, canvas, canvas.screen_width, self._scale_pixels_to_height(32)
         )
 
         # set up and draw first image, then get all image paths in directory
         self.image_loader = ImageLoader(
             self.file_manager,
-            ImageResizer(screen_width, screen_height, path_to_exe),
+            ImageResizer(canvas.screen_width, canvas.screen_height, path_to_exe),
             self.animation_loop,
         )
 
         init_PIL(self._scale_pixels_to_height(22))
 
-        # Don't call load_image for first image since if it fails to load, don't exit
-        # until we load the rest of the images and try to display them as well
+        # Don't call this class's load_image here since we only loaded one image
+        # and if its failed to load, we don't want to exit. Special check for that here
         if (current_image := self.image_loader.load_image()) is not None:
             self.update_after_image_load(current_image)
             app.update()
@@ -103,15 +96,6 @@ class ViewerApp:
 
         self.canvas.tag_bind("back", "<Button-1>", self.handle_canvas_click)
         self._add_keybinds()
-
-        # OS specific keybinds
-        if is_windows:
-            app.bind(
-                "<MouseWheel>", lambda event: self.move(-1 if event.delta > 0 else 1)
-            )
-        else:
-            app.bind("<Button-4>", lambda _: self.move(-1))
-            app.bind("<Button-5>", lambda _: self.move(1))
 
         app.mainloop()
 
@@ -128,10 +112,18 @@ class ViewerApp:
         app.bind("<F5>", lambda _: self.load_image_unblocking())
         app.bind("<Up>", self.hide_topbar)
         app.bind("<Down>", self.show_topbar)
-        app.bind("<Alt-Left>", self.handle_ctrl_arrow_keys)
-        app.bind("<Alt-Right>", self.handle_ctrl_arrow_keys)
-        app.bind("<Alt-Up>", self.handle_ctrl_arrow_keys)
-        app.bind("<Alt-Down>", self.handle_ctrl_arrow_keys)
+        app.bind("<Alt-Left>", self.handle_alt_arrow_keys)
+        app.bind("<Alt-Right>", self.handle_alt_arrow_keys)
+        app.bind("<Alt-Up>", self.handle_alt_arrow_keys)
+        app.bind("<Alt-Down>", self.handle_alt_arrow_keys)
+
+        if os.name == "nt":
+            app.bind(
+                "<MouseWheel>", lambda event: self.move(-1 if event.delta > 0 else 1)
+            )
+        else:
+            app.bind("<Button-4>", lambda _: self.move(-1))
+            app.bind("<Button-5>", lambda _: self.move(1))
 
     def _load_assests(  # TODO: port this into canvas.py?
         self, app: Tk, canvas: CustomCanvas, screen_width: int, topbar_height: int
@@ -177,8 +169,8 @@ class ViewerApp:
         # details dropdown
         (
             self.dropdown_hidden_icon,
-            self.dropdown_hidden_icon_hovered,
             self.dropdown_showing_icon,
+            self.dropdown_hidden_icon_hovered,
             self.dropdown_showing_icon_hovered,
         ) = icon_factory.make_dropdown_icons()
 
@@ -213,7 +205,7 @@ class ViewerApp:
         self.rename_entry = RenameEntry(  # TODO: move this to canvas?
             app, canvas, rename_id, rename_window_width, font=FONT
         )
-        self.rename_entry.bind("<Return>", self.try_rename_or_convert)
+        self.rename_entry.bind("<Return>", self.rename_or_convert)
         canvas.itemconfigure(rename_id, state="hidden", window=self.rename_entry)
 
     def _scale_pixels_to_height(self, original_pixels: int) -> int:
@@ -267,10 +259,10 @@ class ViewerApp:
             self.move(move_amount)
             self.move_id = self.app.after(ms, self._repeat_move, move_amount, 200)
 
-    def handle_ctrl_arrow_keys(self, event: Event) -> None:
+    def handle_alt_arrow_keys(self, event: Event) -> None:
         """Wraps canvas's event handler if app is focused"""
         if event.widget is self.app:
-            self.canvas.handle_ctrl_arrow_keys(event.keycode)
+            self.canvas.handle_alt_arrow_keys(event.keycode)
 
     def handle_esc(self, _: Event) -> None:
         """Closes rename window, then program on hitting escape"""
@@ -289,7 +281,7 @@ class ViewerApp:
         """Function to be called in Tk thread for loading image with zoom"""
         new_image: PhotoImage | None = self.image_loader.get_zoomed_image(keycode)
         if new_image is not None:
-            self.canvas.update_img_display(new_image)
+            self.canvas.update_image_display(new_image)
 
     def handle_zoom(self, event: Event) -> None:
         """Handle user input of zooming in or out"""
@@ -315,9 +307,9 @@ class ViewerApp:
 
     def minimize(self, _: Event) -> None:
         """Minimizes the app and sets flag to redraw current image when opened again"""
-        self.redraw_flag = True
+        self.need_to_redraw = True
         self.app.iconify()
-        if self.move_id:
+        if self.move_id != "":
             self.app.after_cancel(self.move_id)
 
     def refresh(self, _: Event) -> None:
@@ -333,15 +325,15 @@ class ViewerApp:
         """Moves to different image
         amount: any non-zero value indicating movement to next or previous"""
         self.hide_rename_window()
-        self.file_manager.move_current_index(amount)
+        self.file_manager.move_index(amount)
         self.load_image_unblocking()
 
     def redraw(self, event: Event) -> None:
         """Redraws screen if current image has a diffent size than when it was loaded,
         implying it was edited outside of the program"""
-        if event.widget is not self.app or not self.redraw_flag:
+        if event.widget is not self.app or not self.need_to_redraw:
             return
-        self.redraw_flag = False
+        self.need_to_redraw = False
         if self.file_manager.current_image_cache_still_fresh():
             return
         self.load_image_unblocking()
@@ -395,7 +387,7 @@ class ViewerApp:
         )
         self.rename_entry.focus()
 
-    def try_rename_or_convert(self, _: Event) -> None:
+    def rename_or_convert(self, _: Event) -> None:
         """Handles user input into rename window.
         Trys to convert or rename based on input"""
         try:
@@ -406,12 +398,12 @@ class ViewerApp:
 
         # Cleanup after successful rename
         self.hide_rename_window()
-        self.load_image()
-        self.refresh_topbar()
+        self.load_image_unblocking()
 
     def update_after_image_load(self, current_image: PhotoImage) -> None:
         """Updates app title and displayed image"""
-        self.canvas.update_img_display_and_location(current_image)
+        self.canvas.center_image()
+        self.canvas.update_image_display(current_image)
         self.app.title(self.file_manager.current_image.name)
 
     def load_image(self) -> None:
@@ -453,7 +445,7 @@ class ViewerApp:
 
     def refresh_topbar(self) -> None:
         """Updates all elements on the topbar with current info"""
-        self.rename_window_x_offset = self.canvas.refresh_text(
+        self.rename_window_x_offset = self.canvas.update_file_name(
             self.file_manager.current_image.name
         )
         self.canvas.coords(self.rename_button_id, self.rename_window_x_offset, 0)
@@ -463,22 +455,19 @@ class ViewerApp:
     def animation_loop(self, ms_until_next_frame: int, ms_backoff: int) -> None:
         """Handles looping between animation frames"""
         self.animation_id = self.app.after(
-            ms_until_next_frame, self.animate, ms_backoff
+            ms_until_next_frame, self.show_next_frame, ms_backoff
         )
 
-    def animate(self, ms_backoff: int) -> None:
+    def show_next_frame(self, ms_backoff: int) -> None:
         """Displays a frame on screen and loops to next frame after a delay"""
-        frame_and_speed = self.image_loader.get_next_frame()
-
-        # if tried to show next frame before it is loaded
-        # reset to current frame and try again after delay
+        frame: PhotoImage | None
         ms_until_next_frame: int
-        if frame_and_speed is None:
-            ms_backoff = int(ms_backoff * 1.4)
-            ms_until_next_frame = ms_backoff
+        frame, ms_until_next_frame = self.image_loader.get_next_frame()
+
+        if frame is None:  # trying to display frame before it is loaded
+            ms_until_next_frame = ms_backoff = int(ms_backoff * 1.4)
         else:
-            self.canvas.update_img_display(frame_and_speed[0])
-            ms_until_next_frame = frame_and_speed[1]
+            self.canvas.update_image_display(frame)
 
         self.animation_loop(ms_until_next_frame, ms_backoff)
 

@@ -1,11 +1,12 @@
 from collections.abc import Callable
 from tkinter import Canvas, Event, Tk
+from typing import Final
 
 from PIL.ImageTk import PhotoImage
 
 
 def _clean_long_name(image_name: str) -> str:
-    """Takes a name and returns a shortened version if too long"""
+    """Takes a name and returns a shortened version if its too long"""
     end_index: int = image_name.rfind(".")
     MAX: int = 40
     if end_index < MAX:
@@ -33,16 +34,16 @@ class CustomCanvas(Canvas):
         self.move_x: int = 0
         self.move_y: int = 0
 
-    def finish_init(self, screen_width: int, screen_height: int) -> None:
-        """Finishes init since screen size not known before canvas needs to display"""
+        master.update()  # updates winfo width and height to the current size
+        self.screen_width: Final[int] = master.winfo_width()
+        self.screen_height: Final[int] = master.winfo_height()
+
         self.create_rectangle(
-            0, 0, screen_width, screen_height, fill="black", tags="back"
+            0, 0, self.screen_width, self.screen_height, fill="black", tags="back"
         )
         self.image_display_id = self.create_image(
-            screen_width >> 1, screen_height >> 1, anchor="center", tag="back"
+            self.screen_width >> 1, self.screen_height >> 1, anchor="center", tag="back"
         )
-        self.screen_width = screen_width
-        self.screen_height = screen_height
 
     def make_topbar_button(
         self,
@@ -94,17 +95,15 @@ class CustomCanvas(Canvas):
             tags="topbar",
         )
 
-    def update_img_display(self, new_image: PhotoImage) -> None:
-        """Updates dispalyed with a new image"""
-        self.itemconfigure(self.image_display_id, image=new_image)
-
-    def update_img_display_and_location(self, new_image: PhotoImage) -> None:
-        """Updates dispalyed with a new image and internal location metric"""
+    def center_image(self) -> None:
         self.move(self.image_display_id, self.move_x, self.move_y)
-        self.update_img_display(new_image)
         self.move_x = self.move_y = 0
 
-    def handle_ctrl_arrow_keys(self, keycode: int) -> None:
+    def update_image_display(self, new_image: PhotoImage) -> None:
+        """Updates dispalyed with a new image and internal location metric"""
+        self.itemconfigure(self.image_display_id, image=new_image)
+
+    def handle_alt_arrow_keys(self, keycode: int) -> None:
         """Move onscreen image when ctrl+arrow key clicked/held"""
         bbox: tuple[int, int, int, int] = self.bbox(self.image_display_id)
         match keycode:
@@ -135,8 +134,8 @@ class CustomCanvas(Canvas):
         # really want to call the internal scale function each time...
         self.move(self.image_display_id, x, y)
 
-    def refresh_text(self, new_name: str) -> int:
-        """Updates file name text"""
+    def update_file_name(self, new_name: str) -> int:
+        """Updates file name. Returns width of new name"""
         self.itemconfigure(self.file_name_text_id, text=_clean_long_name(new_name))
         return self.bbox(self.file_name_text_id)[2]
 
