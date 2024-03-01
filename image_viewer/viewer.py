@@ -50,28 +50,15 @@ class ViewerApp:
         self.image_load_id: str = ""
         self.animation_id: str = ""
 
-        # Application and canvas
-        app = Tk()
-        self.app = app
-        app.attributes("-fullscreen", True)
-        canvas = CustomCanvas(app)
+        self.app: Tk = self._setup_tk_app(path_to_exe)
+        canvas = CustomCanvas(self.app)
         self.canvas = canvas
-
-        if os.name == "nt":
-            app.state("zoomed")
-            app.wm_iconbitmap(default=os.path.join(path_to_exe, "icon/icon.ico"))
-        else:
-            from tkinter import Image as tkImage
-
-            app.wm_iconbitmap(
-                bitmap=tkImage("photo", file=os.path.join(path_to_exe, "icon/icon.png"))
-            )
 
         self.height_ratio: Final[float] = canvas.screen_height / 1080
         self.width_ratio: Final[float] = canvas.screen_width / 1920
 
         self._load_assests(
-            app, canvas, canvas.screen_width, self._scale_pixels_to_height(32)
+            self.app, canvas, canvas.screen_width, self._scale_pixels_to_height(32)
         )
 
         # set up and draw first image, then get all image paths in directory
@@ -83,22 +70,44 @@ class ViewerApp:
 
         init_PIL(self._scale_pixels_to_height(23))
 
-        # Don't call this class's load_image here since we only loaded one image
-        # and if its failed to load, we don't want to exit. Special check for that here
-        if (current_image := self.image_loader.load_image()) is not None:
-            self.update_after_image_load(current_image)
-            app.update()
-
-        self.file_manager.fully_load_image_data()
-
-        # if first load failed, load new one now that all images are loaded
-        if current_image is None:
-            self.load_image()
+        self._init_image_display()
 
         self.canvas.tag_bind("back", "<Button-1>", self.handle_canvas_click)
         self._add_keybinds()
 
-        app.mainloop()
+        self.app.mainloop()
+
+    @staticmethod
+    def _setup_tk_app(path_to_exe: str) -> Tk:
+        """Creates and setups Tk class"""
+        app = Tk()
+        app.attributes("-fullscreen", True)
+
+        if os.name == "nt":
+            app.state("zoomed")
+            app.wm_iconbitmap(default=os.path.join(path_to_exe, "icon/icon.ico"))
+        else:
+            from tkinter import Image as tkImage
+
+            app.wm_iconbitmap(
+                bitmap=tkImage("photo", file=os.path.join(path_to_exe, "icon/icon.png"))
+            )
+            del tkImage
+
+        return app
+
+    def _init_image_display(self) -> None:
+        """Loads first image and then finds all images files in the directory"""
+        # Don't call this class's load_image here since we only consider there
+        # to be one image now, and that function would throw if that one failed to load
+        if (current_image := self.image_loader.load_image()) is not None:
+            self.update_after_image_load(current_image)
+
+        self.file_manager.find_all_images()
+
+        # if first load failed, load new one now that all images are loaded
+        if current_image is None:
+            self.load_image()
 
     def _add_keybinds(self) -> None:
         """Assigns keybinds to app"""
