@@ -10,6 +10,7 @@ from PIL.ImageTk import PhotoImage
 from helpers.image_resizer import ImageResizer
 from managers.file_manager import ImageFileManager
 from util.image import CachedImage, magic_number_guess
+from util.os import get_byte_display
 from util.PIL import get_placeholder_for_errored_image
 
 
@@ -90,21 +91,17 @@ class ImageLoader:
         self,
         current_image: PhotoImage,
         dimensions: tuple[int, int],
-        size_in_kb: int,
+        byte_size: int,
         mode: str,
     ) -> None:
-        size_display: str = (
-            f"{round(size_in_kb/10.24)/100}mb"
-            if size_in_kb > 999
-            else f"{size_in_kb}kb"
-        )
+        size_display: str = get_byte_display(byte_size)
 
         self.file_manager.cache_image(
             CachedImage(
                 current_image,
                 *dimensions,
                 size_display,
-                size_in_kb,
+                byte_size,
                 mode,
             )
         )
@@ -120,12 +117,12 @@ class ImageLoader:
             return None
 
         PIL_image = self.PIL_image
-        size_in_kb: int = stat(self.file_manager.path_to_current_image).st_size >> 10
+        byte_size: int = stat(self.file_manager.path_to_current_image).st_size
 
         # check if was cached and not changed outside of program
         current_image: PhotoImage
         cached_image_data = self.file_manager.get_current_image_cache()
-        if cached_image_data is not None and size_in_kb == cached_image_data.size_in_kb:
+        if cached_image_data is not None and byte_size == cached_image_data.byte_size:
             current_image = cached_image_data.image
         else:
             original_mode: str = PIL_image.mode  # save since resize might change it
@@ -140,7 +137,7 @@ class ImageLoader:
                     self.image_resizer.screen_height,
                 )
 
-            self._cache_image(current_image, PIL_image.size, size_in_kb, original_mode)
+            self._cache_image(current_image, PIL_image.size, byte_size, original_mode)
 
         frame_count: int = getattr(PIL_image, "n_frames", 1)
         if frame_count > 1:
