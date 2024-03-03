@@ -87,12 +87,12 @@ class ViewerApp:
             app.state("zoomed")
             app.wm_iconbitmap(default=os.path.join(path_to_exe, "icon/icon.ico"))
         else:
-            from tkinter import Image as tkImage
+            from tkinter import PhotoImage as tkPhotoImage
 
-            app.wm_iconbitmap(
-                bitmap=tkImage("photo", file=os.path.join(path_to_exe, "icon/icon.png"))
+            app.wm_iconphoto(
+                True, tkPhotoImage(file=os.path.join(path_to_exe, "icon/icon.png"))
             )
-            del tkImage
+            del tkPhotoImage
 
         return app
 
@@ -188,7 +188,7 @@ class ViewerApp:
         ) = icon_factory.make_dropdown_icons()
 
         self.dropdown_button_id: int = canvas.create_image(
-            screen_width - (topbar_height << 1),
+            screen_width - (topbar_height + topbar_height),
             0,
             image=self.dropdown_hidden_icon,
             anchor="ne",
