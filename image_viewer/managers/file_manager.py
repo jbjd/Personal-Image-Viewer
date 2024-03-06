@@ -4,14 +4,16 @@ from tkinter.messagebox import askyesno, showinfo
 
 from PIL.Image import Image
 
+from util.action_undoer import ActionUndoer, Convert, Delete, Rename
 from util.convert import try_convert_file_and_save_new
 from util.image import CachedImage, ImageName
-from util.os import OS_name_cmp, clean_str_for_OS_path, truncate_path, walk_dir
-
-if os.name == "nt":
-    from send2trash.win.legacy import send2trash
-else:
-    from send2trash import send2trash
+from util.os import (
+    OS_name_cmp,
+    clean_str_for_OS_path,
+    trash_file,
+    truncate_path,
+    walk_dir,
+)
 
 
 class ImageFileManager:
@@ -31,6 +33,7 @@ class ImageFileManager:
     __slots__ = (
         "_files",
         "_index",
+        "action_undoer",
         "cache",
         "current_image",
         "image_directory",
@@ -52,6 +55,7 @@ class ImageFileManager:
         self._index: int = 0
         self._update_after_move_or_edit()
         self.cache: dict[str, CachedImage] = {}
+        self.action_undoer = ActionUndoer()
 
     def construct_path_to_image(self, image_name: str) -> str:
         return f"{self.image_directory}/{image_name}"
@@ -76,7 +80,7 @@ class ImageFileManager:
         ]
 
         self._files.sort()
-        self._index = self._binary_search(image_to_start_at)
+        self._index = self._binary_search(image_to_start_at)[0]
         self._update_after_move_or_edit()
 
     def refresh_image_list(self) -> None:
@@ -131,13 +135,12 @@ class ImageFileManager:
 
         self._update_after_move_or_edit()
 
-    def _clear_image_data(self) -> None:
-        self.cache.pop(self._files.pop(self._index).name, None)
-
     def remove_current_image(self, delete_from_disk: bool) -> None:
         """Deletes image from files array, cache, and optionally disk"""
         if delete_from_disk:
-            send2trash(os.path.normpath(self.path_to_current_image))
+            trash_file(self.path_to_current_image)
+            self.action_undoer.append(Delete(self.path_to_current_image))
+
         self._clear_image_data()
 
         remaining_image_count: int = len(self._files)
@@ -152,18 +155,60 @@ class ImageFileManager:
 
         self._update_after_move_or_edit()
 
-    def _ask_to_delete_old_image_after_convert(self, new_format: str) -> bool:
-        """Returns True if user agreed to delete"""
-        if askyesno(
-            "Confirm deletion",
-            f"Converted file to {new_format}, delete old file?",
+    def _clear_image_data(self) -> None:
+        self.cache.pop(self._files.pop(self._index).name, None)
+
+    def rename_or_convert_current_image(self, new_name_or_path: str) -> None:
+        """Try to either rename or convert based on input"""
+        new_dir, new_name = self._split_dir_and_name(new_name_or_path)
+
+        new_image_data = ImageName(new_name)
+        if new_image_data.suffix not in self.VALID_FILE_TYPES:
+            new_name += f".{self.current_image.suffix}"
+            new_image_data = ImageName(new_name)
+
+        original_path: str = self.path_to_current_image
+        new_full_path: str = self._construct_path_for_rename(
+            new_dir, new_image_data.name
+        )
+
+        result: Rename | Convert
+        if (
+            new_image_data.suffix != self.current_image.suffix
+            and try_convert_file_and_save_new(
+                original_path,
+                new_full_path,
+                new_image_data.suffix,
+            )
         ):
-            try:
-                self.remove_current_image(True)
-            except IndexError:
-                pass  # even if no images left, a new one will be added after this
-            return True
-        return False
+            result = self._ask_to_delete_old_image_after_convert(
+                original_path, new_full_path, new_image_data.suffix
+            )
+        else:
+            result = self._rename(original_path, new_full_path)
+
+        self.action_undoer.append(result)
+
+        # Only add image if its still in the same directory
+        if os.path.dirname(new_full_path) == os.path.dirname(original_path):
+            self.add_new_image(new_name, result.preserve_index)
+        else:
+            self._update_after_move_or_edit()
+
+    def _split_dir_and_name(self, new_name_or_path: str) -> tuple[str, str]:
+        """Returns tuple with path and file name split up"""
+        new_name: str = (
+            clean_str_for_OS_path(os.path.basename(new_name_or_path))
+            or self.current_image.name
+        )
+        new_dir: str = os.path.dirname(new_name_or_path)
+
+        if new_name == "." or new_name == "..":
+            # name is actually path specifier
+            new_dir = os.path.join(new_dir, new_name)
+            new_name = self.current_image.name
+
+        return new_dir, new_name
 
     def _construct_path_for_rename(self, new_dir: str, new_name: str) -> str:
         """Makes new path with validations when moving between directories"""
@@ -190,70 +235,80 @@ class ImageFileManager:
 
         return new_full_path
 
-    def _split_dir_and_name(self, new_name_or_path: str) -> tuple[str, str]:
-        """Returns tuple with path and file name split up"""
-        new_name: str = (
-            clean_str_for_OS_path(os.path.basename(new_name_or_path))
-            or self.current_image.name
-        )
-        new_dir: str = os.path.dirname(new_name_or_path)
+    def _ask_to_delete_old_image_after_convert(
+        self, original_path: str, new_full_path: str, new_format: str
+    ) -> Convert:
+        """Asks user to delete old file and returns Convert result"""
+        deleted: bool = False
 
-        if new_name == "." or new_name == "..":
-            # name is actually path specifier
-            new_dir = os.path.join(new_dir, new_name)
-            new_name = self.current_image.name
-
-        return new_dir, new_name
-
-    def rename_or_convert_current_image(self, new_name_or_path: str) -> None:
-        """Try to either rename or convert based on input"""
-        new_dir, new_name = self._split_dir_and_name(new_name_or_path)
-
-        new_image_data = ImageName(new_name)
-        if new_image_data.suffix not in self.VALID_FILE_TYPES:
-            new_name += f".{self.current_image.suffix}"
-            new_image_data = ImageName(new_name)
-
-        new_full_path: str = self._construct_path_for_rename(new_dir, new_name)
-
-        preserve_index: bool = False
-        if (
-            new_image_data.suffix != self.current_image.suffix
-            and try_convert_file_and_save_new(
-                self.path_to_current_image,
-                new_full_path,
-                new_image_data.suffix,
-            )
+        if askyesno(
+            "Confirm deletion",
+            f"Converted file to {new_format}, delete old file?",
         ):
-            # If not, we need to preserve index since the # of files will increase,
-            # possibly moving index away from the displayed image
-            preserve_index = not self._ask_to_delete_old_image_after_convert(
-                new_image_data.suffix
-            )
-        else:
-            os.rename(self.path_to_current_image, new_full_path)
-            self._clear_image_data()
+            try:
+                self.remove_current_image(True)
+            except IndexError:
+                pass  # even if no images left, a new one will be added after this
+            deleted = True
 
-        # Only add image if its still in the same directory
-        if os.path.dirname(new_full_path) == os.path.dirname(
-            self.path_to_current_image
-        ):
-            self.add_new_image(new_name, preserve_index)
-        else:
-            self._update_after_move_or_edit()
+        return Convert(original_path, new_full_path, deleted)
+
+    def _rename(self, original_path: str, new_full_path: str) -> Rename:
+        """Renames a file and returns the rename result"""
+        os.rename(original_path, new_full_path)
+        self._clear_image_data()
+        return Rename(original_path, new_full_path)
 
     def add_new_image(self, new_name: str, preserve_index: bool) -> None:
         """Adds a new image to the image list
         preserve_index: try to keep index at the same image it was before adding"""
         image_data = ImageName(new_name)
-        insert_index: int = self._binary_search(image_data.name)
+        insert_index: int = self._binary_search(image_data.name)[0]
         self._files.insert(insert_index, image_data)
         if preserve_index and insert_index <= self._index:
             self._index += 1
         self._update_after_move_or_edit()
 
+    def undo_rename_or_convert(self) -> bool:
+        """Undoes most recent rename/convert
+        returns if screen needs a refresh"""
+        if not self._ask_undo_last_action():
+            return False
+
+        try:
+            image_to_add, image_to_remove = self.action_undoer.undo()
+        except OSError:
+            return False  # TODO: error popup?
+
+        image_to_add = os.path.basename(image_to_add)
+        image_to_remove = os.path.basename(image_to_remove)
+
+        if image_to_remove:
+            index, found = self._binary_search(image_to_remove)
+            if found:
+                self.cache.pop(self._files.pop(index).name, None)
+
+        if image_to_add:
+            preserve_index: bool = image_to_remove == ""
+            self.add_new_image(image_to_add, preserve_index)
+        else:
+            self._update_after_move_or_edit()
+
+        return True
+
+    def _ask_undo_last_action(self) -> bool:
+        """Returns if user wants to + can undo last action"""
+        try:
+            action: str = self.action_undoer.get_last_undoable_action()
+        except IndexError:
+            return False
+        return askyesno("Undo Rename/Convert", action)
+
     def cache_image(self, cached_image: CachedImage) -> None:
         self.cache[self.current_image.name] = cached_image
+
+    def get_current_image_cache(self) -> CachedImage | None:
+        return self.cache.get(self.current_image.name)
 
     def current_image_cache_still_fresh(self) -> bool:
         """Returns True when it seems the cached image is still accurate.
@@ -266,11 +321,9 @@ class ImageFileManager:
         except (OSError, ValueError, KeyError):
             return False
 
-    def get_current_image_cache(self) -> CachedImage | None:
-        return self.cache.get(self.current_image.name)
-
-    def _binary_search(self, target_image: str) -> int:
-        """Finds index of target_image in internal list"""
+    def _binary_search(self, target_image: str) -> tuple[int, bool]:
+        """Finds index of target_image in internal list
+        returns tuple of index and if match was found"""
         files = self._files
         low: int = 0
         high: int = len(files) - 1
@@ -278,9 +331,9 @@ class ImageFileManager:
             mid: int = (low + high) >> 1
             current_image = files[mid].name
             if target_image == current_image:
-                return mid
+                return mid, True
             if OS_name_cmp(target_image, current_image):
                 high = mid - 1
             else:
                 low = mid + 1
-        return low
+        return low, False
