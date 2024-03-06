@@ -12,6 +12,9 @@ kb_size: int
 if os.name == "nt":
     from ctypes import windll
 
+    from send2trash.win.legacy import send2trash
+    from winshell import undelete, x_winshell
+
     illegal_char = compile(r'[<>:"|?*]')
     separators = r"[\\/]"
     kb_size = 1024
@@ -26,7 +29,7 @@ if os.name == "nt":
             windll.user32.MessageBoxW(
                 0,
                 f"{str(error)}\n\nWrite traceback to {error_file}?",
-                f"Unhandled {error_type.__name__} Occured",
+                f"Unhandled {error_type.__name__} Occurred",
                 MB_YESNO | MB_ICONERROR,
             )
             != IDYES
@@ -35,7 +38,15 @@ if os.name == "nt":
     def OS_name_cmp(a: str, b: str) -> bool:
         return windll.shlwapi.StrCmpLogicalW(a, b) < 0
 
+    def restore_from_bin(original_path: str) -> None:
+        try:
+            undelete(os.path.normpath(original_path))
+        except x_winshell:
+            raise OSError  # change error type so catching is not OS specific
+
 else:  # linux / can't determine / unsupported OS
+    from send2trash import send2trash
+
     illegal_char = compile(r"[]")
     separators = r"[/]"
     kb_size = 1000
@@ -45,6 +56,9 @@ else:  # linux / can't determine / unsupported OS
 
     def show_error_with_yes_no(error_type, error: Exception, error_file: str) -> bool:
         return True  # TODO: add option for linux
+
+    def restore_from_bin(original_path: str) -> None:
+        raise NotImplementedError  # TODO: add option for linux
 
 
 # Setup regex for truncating path
@@ -70,6 +84,10 @@ def clean_str_for_OS_path(file_name: str) -> str:
 def get_byte_display(bytes: int) -> str:
     size_in_kb: int = bytes // kb_size
     return f"{size_in_kb/kb_size:.2f}mb" if size_in_kb > 999 else f"{size_in_kb}kb"
+
+
+def trash_file(file_path: str) -> None:
+    send2trash(os.path.normpath(file_path))
 
 
 def walk_dir(directory_path: str) -> Iterator[str]:
