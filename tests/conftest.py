@@ -1,11 +1,17 @@
 import os
 from tkinter import Tk
+from typing import NoReturn
 
 import pytest
 
 from image_viewer.helpers.image_resizer import ImageResizer
+from image_viewer.ui.canvas import CustomCanvas
 
 WORKING_DIR: str = os.path.dirname(__file__)
+
+
+def should_not_be_called() -> NoReturn:
+    raise Exception("This function should not have been called")
 
 
 @pytest.fixture
@@ -25,3 +31,8 @@ def tk_app() -> Tk:
     app = Tk()
     app.withdraw()
     return app
+
+
+@pytest.fixture
+def canvas(tk_app) -> CustomCanvas:
+    return CustomCanvas(tk_app)
