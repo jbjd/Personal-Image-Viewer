@@ -6,7 +6,7 @@ import pytest
 
 from image_viewer.managers.file_manager import ImageFileManager
 from image_viewer.util.image import CachedImage
-from test_util.mocks import MockActionUndoer
+from test_util.mocks import MockActionUndoer, MockImage, MockStatResult
 
 
 @pytest.fixture
@@ -131,3 +131,44 @@ def test_undo(manager: ImageFileManager):
         assert len(manager._files) == 1
         assert manager._files[0].name == "b.png"
         assert manager._index == 0
+
+
+def test_get_and_show_details(manager: ImageFileManager):
+    """Should return a string containing details on current cached image and show it"""
+
+    # Will exit if no details in cache
+    PIL_image = MockImage()
+    PIL_image.info["comment"] = b"test"
+    with patch("image_viewer.managers.file_manager.showinfo") as mock_show_info:
+        manager.show_image_details(PIL_image)
+        mock_show_info.assert_not_called()
+
+    manager.cache[manager.current_image.name] = CachedImage(
+        None, 100, 100, "100kb", 9999, "P"  # type: ignore
+    )
+    # not gonna check the exact string returned, but Palette should be in it
+    # since P was passed as the mode and it should get mapped to a more readable name
+    assert "Palette" in manager.get_cached_details()
+
+    with patch.object(os, "stat", return_value=MockStatResult(0)):
+        with patch("image_viewer.managers.file_manager.showinfo") as mock_show_info:
+            manager.show_image_details(PIL_image)
+            mock_show_info.assert_called_once()
+
+    # Will not fail on OSError
+    with patch.object(os, "stat", side_effect=OSError):
+        with patch("image_viewer.managers.file_manager.showinfo") as mock_show_info:
+            manager.show_image_details(PIL_image)
+            mock_show_info.assert_called_once()
+
+
+def test_split_with_weird_names(manager: ImageFileManager):
+    """Should notice that . and .. are not file names, but part of path"""
+
+    # use join over static var so test works on all OS
+    expected_split = (os.path.join("C:/example", ".."), manager.current_image.name)
+    assert manager._split_dir_and_name("C:/example/..") == expected_split
+
+    # use join over static var so test works on all OS
+    expected_split = ("C:/example", "...")
+    assert manager._split_dir_and_name("C:/example/...") == expected_split
