@@ -1,5 +1,7 @@
 import os
+import re
 from argparse import Namespace
+from glob import glob
 from importlib import import_module
 from subprocess import Popen
 from typing import Final
@@ -11,8 +13,10 @@ from compile_utils.file_operations import (
     delete_file_globs,
     delete_folder,
     delete_folders,
+    regex_replace,
 )
 from compile_utils.nuitka import start_nuitka_compilation
+from compile_utils.regex import RegexReplacement
 from compile_utils.validation import raise_if_unsupported_python_version
 
 raise_if_unsupported_python_version()
@@ -112,17 +116,31 @@ try:
     ]
     delete_file_globs(file_globs_to_exclude)
 
+    # Removing unused Tk code so we can delete more unused files
+    regex_replace(
+        os.path.join(COMPILE_DIR, "tk/ttk/ttk.tcl"),
+        RegexReplacement(
+            pattern="proc ttk::LoadThemes.*?\n}",
+            replacement="proc ttk::LoadThemes {} {}",
+        ),
+        flags=re.DOTALL,
+    )
+
+    # delete comments in tcl files
+    for code_file in glob(os.path.join(COMPILE_DIR, "**/*.tcl"), recursive=True) + glob(
+        os.path.join(COMPILE_DIR, "**/*.tm"), recursive=True
+    ):
+        strip_comments = RegexReplacement(pattern=r"^\s*#.*", replacement="")
+        regex_replace(code_file, strip_comments, flags=re.MULTILINE)
+
+        strip_whitespace = RegexReplacement(pattern=r"\n\s+", replacement="\n")
+        regex_replace(code_file, strip_whitespace, flags=re.MULTILINE)
+
     if args.debug:
         exit(0)
 
-    existing_install_folder_backup: str = f"{os.path.normpath(install_path)}.backup"
-    delete_folder(existing_install_folder_backup)
-    try:
-        os.rename(install_path, existing_install_folder_backup)
-    except FileNotFoundError:
-        pass
+    delete_folder(install_path)
     os.rename(COMPILE_DIR, install_path)
-    delete_folder(existing_install_folder_backup)
 finally:
     if not args.debug and not args.no_cleanup:
         delete_folders([BUILD_DIR, COMPILE_DIR, TMP_DIR])
