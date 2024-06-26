@@ -9,7 +9,7 @@ from re import Pattern, compile
 illegal_char: Pattern[str]
 kb_size: int
 if os.name == "nt":
-    from ctypes import windll
+    from ctypes import windll  # type: ignore
 
     from send2trash.win.legacy import send2trash
     from winshell import undelete, x_winshell
@@ -45,7 +45,7 @@ if os.name == "nt":
 else:  # assume linux for now
     from send2trash import send2trash
 
-    illegal_char = compile(r"[]")
+    illegal_char = compile("")
     kb_size = 1000
 
     def OS_name_cmp(a: str, b: str) -> bool:
