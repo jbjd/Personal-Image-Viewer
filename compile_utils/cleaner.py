@@ -127,6 +127,13 @@ class CleanUnpsarser(ast._Unparser):  # type: ignore
         if getattr(getattr(node.value, "func", object), "attr", "") == "getLogger":
             return
 
+        if (
+            getattr(getattr(node.value, "func", object), "id", "")
+            in self.func_calls_to_skip
+        ):
+            super().visit_Pass(node)
+            return
+
         var_name: str = getattr(node.targets[0], "id", "")
         if var_name not in self.vars_to_skip:
             super().visit_Assign(node)
@@ -181,11 +188,14 @@ class CleanUnpsarser(ast._Unparser):  # type: ignore
 
     def visit_Dict(self, node: ast.Dict) -> None:
         """Replace some dict constants"""
-        node.keys = [
-            k
-            for k in node.keys
-            if getattr(k, "value", "") not in self.dict_keys_to_skip
-        ]
+        if self.dict_keys_to_skip:
+            new_dict = {
+                k: v
+                for k, v in zip(node.keys, node.values)
+                if getattr(k, "value", "") not in self.dict_keys_to_skip
+            }
+            node.keys = list(new_dict.keys())
+            node.values = list(new_dict.values())
         super().visit_Dict(node)
 
 
@@ -196,7 +206,9 @@ def clean_file_and_copy(path: str, new_path: str, module_name: str = "") -> None
     if module_name in regex_to_apply:
         regex_and_replacement: set[RegexReplacement] = regex_to_apply[module_name]
         for regex, replacement, flags in regex_and_replacement:
-            source = re.sub(regex, replacement, source, flags=flags)
+            source, count_replaced = re.subn(regex, replacement, source, flags=flags)
+            if count_replaced == 0:
+                warnings.warn(f"{module_name}: Unused regex\n{regex}\n")
 
     parsed_source: ast.Module = ast.parse(source)
     code_cleaner = CleanUnpsarser(module_name)
