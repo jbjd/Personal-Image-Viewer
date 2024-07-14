@@ -81,6 +81,12 @@ class CleanUnpsarser(ast._Unparser):  # type: ignore
 
         node.bases = [base for base in node.bases if getattr(base, "id", "") != "ABC"]
 
+        # Remove class doc strings to speed up writing to file
+        if isinstance(node.body[0], ast.Expr) and isinstance(
+            node.body[0].value, ast.Constant
+        ):
+            node.body[0].value.value = ""
+
         self.write_annotations_without_value = True
         super().visit_ClassDef(node)
         self.write_annotations_without_value = False
@@ -131,7 +137,7 @@ class CleanUnpsarser(ast._Unparser):  # type: ignore
     @staticmethod
     def _node_is_logging(node: ast.Call) -> bool:
         return (
-            getattr(node.func, "attr", "") == "warn"
+            getattr(node.func, "attr", "") in ("warn", "filterwarnings", "simplefilter")
             and getattr(node.func, "value", ast.Name("")).id == "warnings"
         ) or (
             getattr(node.func, "attr", "") == "debug"
