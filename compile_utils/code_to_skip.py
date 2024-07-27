@@ -12,7 +12,12 @@ from turbojpeg import DEFAULT_LIB_PATHS as turbojpeg_platforms
 _skip_functions_kwargs: dict[str, set[str]] = {
     "numpy.__init__": {"__dir__", "_pyinstaller_hooks_dir"},
     "numpy._utils.__init__": {"_rename_parameter"},
-    "numpy.lib._utils_impl": {"deprecate", "deprecate_with_doc"},
+    "numpy._core.function_base": {
+        "_add_docstring",
+        "_needs_add_docstring",
+        "add_newdoc",
+    },
+    "numpy.lib._utils_impl": {"deprecate", "deprecate_with_doc", "show_runtime"},
     "turbojpeg": {
         "__define_cropping_regions",
         "__find_dqt",
@@ -60,6 +65,7 @@ _skip_functions_kwargs: dict[str, set[str]] = {
         "constant",
         "darker",
         "duplicate",
+        "invert",
         "lighter",
         "soft_light",
         "hard_light",
@@ -76,6 +82,7 @@ _skip_functions_kwargs: dict[str, set[str]] = {
     "PIL.ImageOps": {
         "autocontrast",
         "colorize",
+        "cover",
         "deform",
         "equalize",
         "exif_transpose",
@@ -104,16 +111,23 @@ _skip_function_calls_kwargs: dict[str, set[str]] = {
 }
 
 _skip_vars_kwargs: dict[str, set[str]] = {
-    "numpy.__init__": {"__array_api_version__", "__future_scalars__"},
-    "numpy.version": {"full_version", "git_revision", "release"},
+    "numpy.__init__": {
+        "__array_api_version__",
+        "__future_scalars__",
+        "__former_attrs__",
+    },
+    "numpy.version": {"full_version", "git_revision", "release", "short_version"},
     "turbojpeg": {
         "TJERR_FATAL",
         "TJCS_CMYK",
-        "TJPF_BGRX",
-        "TJPF_BGRA",
         "TJPF_ABGR",
         "TJPF_ARGB",
+        "TJPF_BGRX",
+        "TJPF_BGRA",
+        "TJPF_CMYK",
+        "TJPF_XBGR",
         "TJFLAG_LIMITSCANS",
+        "TJFLAG_STOPONWARNING",
     },
     "PIL.Image": {"USE_CFFI_ACCESS", "MIME"},
     "PIL.ImageTk": {"_pilbitmap_ok"},
@@ -124,6 +138,7 @@ _skip_vars_kwargs: dict[str, set[str]] = {
 }
 
 _skip_classes_kwargs: dict[str, set[str]] = {
+    "numpy._globals": {"_CopyMode"},
     "numpy.lib._utils_impl": {"_Deprecate"},
     "PIL.Image": {"SupportsArrayInterface", "SupportsGetData"},
     "PIL.ImageFile": {
@@ -167,60 +182,68 @@ regex_to_apply: defaultdict[str, set[RegexReplacement]] = defaultdict(
     set,
     {
         "util.PIL": {RegexReplacement(pattern=r"_Image._plugins = \[\]")},
-        "numpy.__config__": {
-            RegexReplacement(
-                pattern="^.*$", replacement="def show(): return {}", flags=re.DOTALL
-            )
-        },
         "numpy.__init__": {
+            remove_numpy_pytester_re,
             RegexReplacement(
-                pattern="elif attr == .{0}.:.*?return {0}".format(module),
+                pattern=r"(el)?if attr == .char.*?return char(\.chararray)?",
                 flags=re.DOTALL,
-            )
-            for module in (
-                "core",
-                "fft",
-                "f2py",
-                "typing",
-                "polynomial",
-                "testing",
-                "random",
-                "rec",
-            )
+            ),
+            RegexReplacement(
+                pattern=r"elif attr == .array_api.:.*?\)", flags=re.DOTALL
+            ),
+            RegexReplacement(
+                pattern=r"elif attr == .distutils.:.*?\)", flags=re.DOTALL
+            ),
+            RegexReplacement(  # These are all deprecation warnings
+                pattern=r"if attr in _.*?\)", flags=re.DOTALL
+            ),
+            RegexReplacement(pattern=r"from \._expired_attrs_2_0 .*"),
+            RegexReplacement(
+                pattern=r"def (_mac_os_check|_sanity_check)\(.*?del (_mac_os_check|_sanity_check)",  # noqa E501
+                flags=re.DOTALL,
+            ),
+            RegexReplacement(
+                pattern=r"os\.environ\.get\(.NPY_PROMOTION_STATE., .weak.\)",
+                replacement="'weak'",
+            ),
+            RegexReplacement(
+                pattern=r"try:\s*__NUMPY_SETUP__.*?__NUMPY_SETUP__ = False",
+                replacement="__NUMPY_SETUP__ = False",
+                flags=re.DOTALL,
+            ),
+            RegexReplacement(
+                pattern=r"try:\s*?from numpy\.__config__.* from e", flags=re.DOTALL
+            ),
+            RegexReplacement(pattern=", einsum, einsum_path"),
+            RegexReplacement(pattern=", (_CopyMode|show_config)"),
+            RegexReplacement(pattern=", .(ctypeslib|__version__)."),
+            RegexReplacement(
+                pattern=r"from .* import (_distributor_init|(__)?version(__)?)"
+            ),
+            RegexReplacement(
+                pattern=r"from .lib._npyio_impl import .*?\)", flags=re.DOTALL
+            ),
+            RegexReplacement(pattern=r" show_runtime,"),
+            RegexReplacement(pattern=r"lib\._npyio_impl\.__all__"),
         }.union(
             {
-                remove_numpy_pytester_re,
                 RegexReplacement(
-                    pattern=r"(el)?if attr == .char.*?return char(\.chararray)?",
+                    pattern="elif attr == .{0}.:.*?return {0}".format(module),
                     flags=re.DOTALL,
-                ),
-                RegexReplacement(
-                    pattern=r"elif attr == .array_api.:.*?\)", flags=re.DOTALL
-                ),
-                RegexReplacement(
-                    pattern=r"elif attr == .distutils.:.*?\)", flags=re.DOTALL
-                ),
-                RegexReplacement(  # These are all deprecation warnings
-                    pattern=r"if attr in _.*?\)", flags=re.DOTALL
-                ),
-                RegexReplacement(pattern=r"from \._expired_attrs_2_0 .*"),
-                RegexReplacement(
-                    pattern=r"def _mac_os_check\(.*?del _mac_os_check",
-                    flags=re.DOTALL,
-                ),
-                RegexReplacement(
-                    pattern=r"def _sanity_check\(.*?del _sanity_check",
-                    flags=re.DOTALL,
-                ),
-                RegexReplacement(
-                    pattern=r"os\.environ\.get\(.NPY_PROMOTION_STATE., .weak.\)",
-                    replacement="'weak'",
-                ),
-                RegexReplacement(
-                    pattern=r"try:\s*__NUMPY_SETUP__.*?__NUMPY_SETUP__ = False",
-                    replacement="__NUMPY_SETUP__ = False",
-                    flags=re.DOTALL,
-                ),
+                )
+                for module in (
+                    "core",
+                    "ctypeslib",
+                    "fft",
+                    "f2py",
+                    "matlib",
+                    "polynomial",
+                    "random",
+                    "rec",
+                    "strings",
+                    "testing",
+                    "typing",
+                )
             }
         ),
         "numpy._core.__init__": {
@@ -230,36 +253,59 @@ regex_to_apply: defaultdict[str, set[RegexReplacement]] = defaultdict(
                 flags=re.DOTALL,
             ),
             RegexReplacement(pattern=r"from \. import _add_newdocs.*"),
+            RegexReplacement(pattern=r"from numpy\.version import .*"),
             RegexReplacement(
                 pattern=r"except ImportError as exc:.*?raise ImportError\(msg\)",
                 flags=re.DOTALL,
             ),
+            RegexReplacement(
+                pattern=r".*?einsumfunc.*",
+            ),
         },
         "numpy._core.overrides": {
-            RegexReplacement(
-                pattern=r"add_docstring\(implementation, dispatcher\.__doc__\)",
-                replacement="add_docstring(implementation, '')",
-            ),
             RegexReplacement(
                 pattern="def set_array_function_like_doc.*?return public_api",
                 replacement="def set_array_function_like_doc(a): return a",
                 flags=re.DOTALL,
             ),
+            RegexReplacement(
+                pattern=r"from numpy._core._multiarray_umath import .*?\)",
+                flags=re.DOTALL,
+            ),
+            RegexReplacement(
+                pattern="def decorator.*?return public_api",
+                replacement="def decorator(i): return i",
+                flags=re.DOTALL,
+            ),
         },
+        "numpy._globals": {RegexReplacement(pattern=", ._CopyMode.")},
         "numpy.lib.__init__": {
             remove_numpy_pytester_re,
             RegexReplacement(
                 pattern=r"elif attr == .emath.*else:\s*",
                 flags=re.DOTALL,
             ),
-            RegexReplacement(
-                pattern=r"from numpy\._core\.function_base import add_newdoc"
-            ),
-            RegexReplacement(pattern=", .add_newdoc."),
-            RegexReplacement(pattern=r"from \. import _version"),
+            RegexReplacement(pattern=r"from \. import _.*"),
+            RegexReplacement(pattern=r"from numpy\._core.* import .*"),
             RegexReplacement(pattern=r"from \._version import NumpyVersion"),
-            RegexReplacement(pattern=", .NumpyVersion."),
+            RegexReplacement(pattern=r"from \. import (introspect|mixins|npyio)"),
+            RegexReplacement(
+                pattern=r",\s+.({}).".format(
+                    "|".join(
+                        (
+                            "add_newdoc",
+                            "NumpyVersion",
+                            "introspect",
+                            "mixins",
+                            "npyio",
+                            "tracemalloc_domain",
+                            "add_docstring",
+                        )
+                    )
+                )
+            ),
         },
+        "numpy.lib._utils_impl": {RegexReplacement(pattern=r", .show_runtime.")},
         "numpy.linalg.__init__": {
             remove_numpy_pytester_re,
             RegexReplacement(pattern=r"from \. import linalg"),
