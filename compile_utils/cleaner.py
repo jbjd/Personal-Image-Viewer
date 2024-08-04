@@ -257,8 +257,10 @@ def clean_file_and_copy(path: str, new_path: str, module_name: str = "") -> None
 
     if module_name in regex_to_apply:
         regex_and_replacement: set[RegexReplacement] = regex_to_apply[module_name]
-        for regex, replacement, flags in regex_and_replacement:
-            source, count_replaced = re.subn(regex, replacement, source, flags=flags)
+        for regex, replacement, flags, count in regex_and_replacement:
+            source, count_replaced = re.subn(
+                regex, replacement, source, flags=flags, count=count
+            )
             if count_replaced == 0:
                 warnings.warn(f"{module_name}: Unused regex\n{regex}\n")
 
@@ -298,7 +300,7 @@ def move_files_to_tmp_and_clean(
 ) -> None:
     """Moves python files from dir to temp_dir and removes unused/unneeded code"""
     if modules_to_skip:
-        modules_to_skip_re = f"^({'|'.join(modules_to_skip)})"
+        modules_to_skip_re = rf"^({'|'.join(modules_to_skip)})($|\.)"
     else:
         modules_to_skip_re = ""
 
@@ -316,19 +318,20 @@ def move_files_to_tmp_and_clean(
         new_path: str = os.path.join(tmp_dir, relative_path)
         dir_path: str = os.path.dirname(new_path)
 
-        mod_name_with_ext: str = sub(separators, ".", relative_path)
+        mod_name: str = sub(separators, ".", relative_path)[:-3]  # chops .py
 
         if modules_to_skip is not None and (
-            skip_match := re.match(modules_to_skip_re, mod_name_with_ext)
+            skip_match := re.match(modules_to_skip_re, mod_name)
         ):
             match: str = skip_match.string[: skip_match.end()]
+            if match[-1] == ".":
+                match = match[:-1]
             if match in modules_to_skip:
                 modules_to_skip.remove(match)
             continue
 
         os.makedirs(dir_path, exist_ok=True)
         if python_file.endswith(".py"):
-            mod_name: str = mod_name_with_ext[:-3]  # chops .py
             clean_file_and_copy(python_file, new_path, mod_name)
         else:
             copyfile(python_file, new_path)

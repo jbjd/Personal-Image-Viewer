@@ -3,8 +3,8 @@
 import os
 import platform
 import re
-from collections import defaultdict
 import sys
+from collections import defaultdict
 
 from compile_utils.regex import RegexReplacement
 from turbojpeg import DEFAULT_LIB_PATHS as turbojpeg_platforms
@@ -12,10 +12,39 @@ from turbojpeg import DEFAULT_LIB_PATHS as turbojpeg_platforms
 _skip_functions_kwargs: dict[str, set[str]] = {
     "numpy.__init__": {"__dir__", "_pyinstaller_hooks_dir"},
     "numpy._utils.__init__": {"_rename_parameter"},
+    "numpy._core._dtype": {
+        "__repr__",
+        "__str__",
+        "_name_get",
+        "_name_includes_bit_suffix",
+    },
+    "numpy._core.arrayprint": {
+        "_void_scalar_to_string",
+        "dtype_short_repr",
+        "set_string_function",
+    },
     "numpy._core.function_base": {
         "_add_docstring",
         "_needs_add_docstring",
         "add_newdoc",
+    },
+    "numpy._core.getlimits": {"__repr__"},
+    "numpy._core.numeric": {"_frombuffer", "_full_dispatcher"},
+    "numpy._core.numerictypes": {"maximum_sctype"},
+    "numpy._core.overrides": {"verify_matching_signatures"},
+    "numpy._core.records": {"__repr__", "__str__"},
+    "numpy._core.strings": {
+        "_join",
+        "_partition",
+        "_rpartition",
+        "_rsplit",
+        "_split",
+        "_splitlines",
+    },
+    "numpy._globals": {"__repr__"},
+    "numpy.lib._histograms_impl": {
+        "_histogram_bin_edges_dispatcher",
+        "histogram_bin_edges",
     },
     "numpy.linalg._linalg": {
         "_convertarray",
@@ -127,7 +156,8 @@ _skip_vars_kwargs: dict[str, set[str]] = {
         "_specific_msg",
         "_type_info",
     },
-    "numpy.version": {"full_version", "git_revision", "release", "short_version"},
+    "numpy._core.numerictypes": {"genericTypeRank"},
+    "numpy._core.overrides": {"array_function_like_doc", "ArgSpec"},
     "turbojpeg": {
         "__buffer_size_YUV2",
         "__compressFromYUV",
@@ -236,16 +266,20 @@ regex_to_apply: defaultdict[str, set[RegexReplacement]] = defaultdict(
                 pattern=r"try:\s*?from numpy\.__config__.* from e", flags=re.DOTALL
             ),
             RegexReplacement(pattern=", einsum, einsum_path"),
-            RegexReplacement(pattern=", (_CopyMode|show_config)"),
+            RegexReplacement(
+                pattern=", (_CopyMode|show_config|histogram_bin_edges|memmap)"
+            ),
             RegexReplacement(
                 pattern=r"from .* import (_distributor_init|(__)?version(__)?)"
             ),
             RegexReplacement(pattern=r"from \.lib import .*"),
             RegexReplacement(
-                pattern=r"from \.lib\.(_npyio_impl|_utils_impl) import .*?\)",
+                pattern=r"from \.(lib\.(_npyio_impl|_utils_impl|_polynomial_impl)|matrixlib) import .*?\)",  # noqa E501
                 flags=re.DOTALL,
             ),
-            RegexReplacement(pattern=r"lib\.(_npyio_impl|_utils_impl)\.__all__"),
+            RegexReplacement(
+                pattern=r"lib\.(_npyio_impl|_utils_impl|_polynomial_impl)\.__all__"
+            ),
         }.union(
             {
                 RegexReplacement(
@@ -257,6 +291,7 @@ regex_to_apply: defaultdict[str, set[RegexReplacement]] = defaultdict(
                     "ctypeslib",
                     "fft",
                     "f2py",
+                    "ma",
                     "matlib",
                     "polynomial",
                     "random",
@@ -273,7 +308,10 @@ regex_to_apply: defaultdict[str, set[RegexReplacement]] = defaultdict(
                 pattern=r"if not.*raise ImportError\(msg.format\(path\)\)",
                 flags=re.DOTALL,
             ),
-            RegexReplacement(pattern=r"from \. import _add_newdocs.*"),
+            RegexReplacement(
+                pattern=r"from \. import (_add_newdocs|_internal|_dtype).*"
+            ),
+            RegexReplacement(pattern=r"from \.memmap import \*", count=1),
             RegexReplacement(pattern=r"from numpy\.version import .*"),
             RegexReplacement(
                 pattern=r"except ImportError as exc:.*?raise ImportError\(msg\)",
@@ -282,6 +320,12 @@ regex_to_apply: defaultdict[str, set[RegexReplacement]] = defaultdict(
             RegexReplacement(
                 pattern=r".*?einsumfunc.*",
             ),
+        },
+        "numpy._core._methods": {
+            RegexReplacement(pattern=r"from numpy\._core import _exceptions", count=1)
+        },
+        "numpy._core.numerictypes": {
+            RegexReplacement(pattern=r"from \._dtype import _kind_name", count=1),
         },
         "numpy._core.overrides": {
             RegexReplacement(
@@ -292,6 +336,9 @@ regex_to_apply: defaultdict[str, set[RegexReplacement]] = defaultdict(
             RegexReplacement(
                 pattern=r"from numpy._core._multiarray_umath import .*?\)",
                 flags=re.DOTALL,
+            ),
+            RegexReplacement(
+                pattern=r"from \.\._utils\._inspect import getargspec", count=1
             ),
             RegexReplacement(
                 pattern="def decorator.*?return public_api",
@@ -327,9 +374,6 @@ regex_to_apply: defaultdict[str, set[RegexReplacement]] = defaultdict(
                 )
             ),
         },
-        "numpy.lib._polynomial_impl": {
-            RegexReplacement(pattern=r"from numpy\.exceptions import RankWarning")
-        },
         "numpy.linalg.__init__": {
             remove_numpy_pytester_re,
             RegexReplacement(pattern=r"from \. import linalg"),
@@ -338,7 +382,6 @@ regex_to_apply: defaultdict[str, set[RegexReplacement]] = defaultdict(
             RegexReplacement(pattern="from numpy._typing.*"),
             RegexReplacement(pattern=r",\s*.(qr|cholesky)."),
         },
-        "numpy.ma.__init__": {remove_numpy_pytester_re},
         "numpy.matrixlib.__init__": {remove_numpy_pytester_re},
         "PIL.__init__": {
             RegexReplacement(
