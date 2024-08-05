@@ -499,17 +499,14 @@ if sys.platform != "linux":
         )
     )
 
-folders_to_exlcude: list[str] = ["tcl/http1.0", "tcl/tzdata", "tk/images", "tk/msgs"]
-# tcl testing and http files are inlucded in dist by nuitka
-globs_to_exlucde: list[str] = [
+data_files_to_exclude: list[str] = [
+    "tcl/http1.0",
+    "tcl/tzdata",
     "tcl*/**/http-*.tm",
     "tcl*/**/shell-*.tm",
     "tcl*/**/tcltest-*.tm",
     "tk/ttk/*Theme.tcl",
-    "libcrypto-*",
-    "_hashlib.pyd",
-    "_lzma.pyd",
-    "_bz2.pyd",
+    "tk/images",
+    "tk/msgs",
 ]
-if os.name == "nt":
-    globs_to_exlucde.append("select.pyd")
+dlls_to_exclude: list[str] = ["libcrypto-*"]
