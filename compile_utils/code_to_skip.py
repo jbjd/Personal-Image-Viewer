@@ -42,6 +42,7 @@ _skip_functions_kwargs: dict[str, set[str]] = {
         "_splitlines",
     },
     "numpy._globals": {"__repr__"},
+    "numpy.lib._arraysetops_impl": {"_ediff1d_dispatcher", "ediff1d"},
     "numpy.lib._histograms_impl": {
         "_histogram_bin_edges_dispatcher",
         "histogram_bin_edges",
@@ -148,6 +149,7 @@ _skip_function_calls_kwargs: dict[str, set[str]] = {
 
 _skip_vars_kwargs: dict[str, set[str]] = {
     "numpy.__init__": {
+        "__all__",
         "__array_api_version__",
         "__future_scalars__",
         "__former_attrs__",
@@ -269,16 +271,18 @@ regex_to_apply: defaultdict[str, set[RegexReplacement]] = defaultdict(
             RegexReplacement(
                 pattern=", (_CopyMode|show_config|histogram_bin_edges|memmap)"
             ),
+            RegexReplacement(pattern="ediff1d,"),
+            RegexReplacement(pattern=r"from \. import matrixlib.*", count=1),
             RegexReplacement(
                 pattern=r"from .* import (_distributor_init|(__)?version(__)?)"
             ),
             RegexReplacement(pattern=r"from \.lib import .*"),
             RegexReplacement(
-                pattern=r"from \.(lib\.(_npyio_impl|_utils_impl|_polynomial_impl)|matrixlib) import .*?\)",  # noqa E501
+                pattern=r"from \.(lib\.(_arraypad_impl|_npyio_impl|_utils_impl|_polynomial_impl)|matrixlib) import .*?\)",  # noqa E501
                 flags=re.DOTALL,
             ),
             RegexReplacement(
-                pattern=r"lib\.(_npyio_impl|_utils_impl|_polynomial_impl)\.__all__"
+                pattern=r"__numpy_submodules__ =.*?\}", count=1, flags=re.DOTALL
             ),
         }.union(
             {
@@ -345,6 +349,9 @@ regex_to_apply: defaultdict[str, set[RegexReplacement]] = defaultdict(
                 replacement="def decorator(i): return i",
                 flags=re.DOTALL,
             ),
+        },
+        "numpy._utils.__init__": {
+            RegexReplacement(pattern=r"from \._convertions import .*", count=1)
         },
         "numpy.lib.__init__": {
             remove_numpy_pytester_re,
