@@ -19,6 +19,7 @@ numpy._expired_attrs_2_0
 numpy._pyinstaller
 numpy._pytesttester
 numpy._typing
+numpy._utils._convertions
 numpy._utils._inspect
 numpy._utils._pep440
 numpy.char
@@ -29,6 +30,7 @@ numpy.ctypeslib
 numpy.doc.ufuncs
 numpy.f2py
 numpy.fft
+numpy.lib._arraypad_impl
 numpy.lib._datasource
 numpy.lib._npyio_impl
 numpy.lib._polynomial_impl
