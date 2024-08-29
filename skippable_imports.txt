@@ -6,12 +6,14 @@ email.message
 email.parser
 hashlib
 numpy.__config__
+numpy._array_api_info
 numpy._configtool
 numpy._core._add_newdocs
 numpy._core._add_newdocs_scalars
 numpy._core._asarray
 numpy._core._dtype
 numpy._core._internal
+numpy._core._string_helpers
 numpy._core.cversions
 numpy._core.defchararray
 numpy._core.einsumfunc
@@ -33,6 +35,7 @@ numpy.ctypeslib
 numpy.doc.ufuncs
 numpy.f2py
 numpy.fft
+numpy.lib._array_utils_impl
 numpy.lib._arraypad_impl
 numpy.lib._datasource
 numpy.lib._npyio_impl
