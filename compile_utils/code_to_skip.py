@@ -11,6 +11,7 @@ from turbojpeg import DEFAULT_LIB_PATHS as turbojpeg_platforms
 
 _skip_functions_kwargs: dict[str, set[str]] = {
     "numpy.__init__": {"__dir__", "_pyinstaller_hooks_dir", "filterwarnings"},
+    "numpy._core._exceptions": {"_display_as_base"},
     "numpy._core.arrayprint": {
         "_array_repr_dispatcher",
         "_array_repr_implementation",
@@ -27,7 +28,7 @@ _skip_functions_kwargs: dict[str, set[str]] = {
     "numpy._core.numeric": {"_frombuffer", "_full_dispatcher"},
     "numpy._core.numerictypes": {"maximum_sctype"},
     "numpy._core.overrides": {"add_docstring", "verify_matching_signatures"},
-    "numpy._core.records": {"__repr__", "__str__"},
+    "numpy._core.records": {"__repr__", "__str__", "pprint"},
     "numpy._core.strings": {
         "_join",
         "_rsplit",
@@ -41,10 +42,18 @@ _skip_functions_kwargs: dict[str, set[str]] = {
         "histogram_bin_edges",
     },
     "numpy.linalg._linalg": {
+        "_cond_dispatcher",
         "_convertarray",
         "_cholesky_dispatcher",
+        "_eigvalsh_dispatcher",
+        "_matrix_power_dispatcher",
+        "_outer_dispatcher",
         "_qr_dispatcher",
         "_raise_linalgerror_qr",
+        "_solve_dispatcher",
+        "_svd_dispatcher",
+        "_tensorinv_dispatcher",
+        "_tensorsolve_dispatcher",
         "cholesky",
         "qr",
     },
@@ -62,6 +71,7 @@ _skip_functions_kwargs: dict[str, set[str]] = {
     },
     "PIL.Image": {
         "__getstate__",
+        "__repr__",
         "__setstate__",
         "_apply_env_variables",
         "_dump",
@@ -76,6 +86,7 @@ _skip_functions_kwargs: dict[str, set[str]] = {
         "composite",
         "debug",
         "deprecate",
+        "entropy",
         "fromqimage",
         "fromqpixmap",
         "getexif",
@@ -127,7 +138,7 @@ _skip_functions_kwargs: dict[str, set[str]] = {
         "solarize",
     },
     "PIL.ImagePalette": {"random", "sepia", "wedge"},
-    "PIL.ImageTk": {"_pilbitmap_check", "_show"},
+    "PIL.ImageTk": {"_get_image_from_kw", "_pilbitmap_check", "_show"},
     "PIL.GifImagePlugin": {"_save_netpbm", "getheader", "register_mime"},
     "PIL.JpegImagePlugin": {"_getexif", "_save_cjpeg", "load_djpeg", "register_mime"},
     "PIL.PngImagePlugin": {"debug", "getLogger", "register_mime"},
@@ -146,12 +157,15 @@ _skip_vars_kwargs: dict[str, set[str]] = {
         "_specific_msg",
         "_type_info",
     },
-    "numpy._core.arrayprint": {"_default_array_repr"},
+    "numpy._array_api_info": {"__module__"},
+    "numpy._core.arrayprint": {"__docformat__", "_default_array_repr"},
+    "numpy._core.multiarray": {"__module__"},
     "numpy._core.numerictypes": {"genericTypeRank"},
     "numpy._core.overrides": {"array_function_like_doc", "ArgSpec"},
+    "numpy._core.records": {"__module__", "numfmt"},
     "numpy.lib._function_base_impl": {"__doc__"},
     "numpy.lib._shape_base_impl": {"__doc__"},
-    "numpy.linalg._linalg": {"__doc__"},
+    "numpy.linalg._linalg": {"__doc__", "array_function_dispatch", "fortran_int"},
     "turbojpeg": {
         "__buffer_size_YUV2",
         "__compressFromYUV",
@@ -196,9 +210,36 @@ _skip_classes_kwargs: dict[str, set[str]] = {
 }
 
 _skip_from_imports: dict[str, set[str]] = {
+    "numpy.__init__": {
+        "__array_namespace_info__",
+        "__version__",
+        "_distributor_init",
+        "array_repr",
+        "c_",
+        "ediff1d",
+        "einsum",
+        "einsum_path",
+        "matrixlib",
+        "r_",
+        "s_",
+        "version",
+    },
+    "numpy._core.__init__": {"version"},
+    "numpy._core._methods": {"_exceptions"},
     "numpy._core.function_base": {"add_docstring"},
-    "numpy.lib.array_utils": {"__doc__"},
+    "numpy._core.numerictypes": {
+        "LOWER_TABLE",
+        "UPPER_TABLE",
+        "_kind_name",
+        "english_capitalize",
+        "english_lower",
+        "english_upper",
+        "object",
+    },
+    "numpy._core.overrides": {"getargspec"},
     "numpy.lib.stride_tricks": {"__doc__"},
+    "numpy.linalg.__init__": {"linalg"},
+    "PIL.ImageMode": {"deprecate"},
 }
 
 _skip_dict_keys_kwargs: dict[str, set[str]] = {
@@ -206,22 +247,38 @@ _skip_dict_keys_kwargs: dict[str, set[str]] = {
 }
 
 _skip_decorators_kwargs: dict[str, set[str]] = {
-    "numpy._core.arrayprint": {"array_function_dispatch"},
+    "numpy._core._exceptions": {"_display_as_base"},
+    "numpy._core._ufunc_config": {"set_module", "wraps"},
+    "numpy._core.arrayprint": {"array_function_dispatch", "set_module", "wraps"},
     "numpy._core.fromnumeric": {"array_function_dispatch", "set_module"},
     "numpy._core.function_base": {"array_function_dispatch"},
-    "numpy._core.numeric": {"array_function_dispatch"},
+    "numpy._core.getlimits": {"set_module"},
+    "numpy._core.multiarray": {"array_function_from_c_func_and_dispatcher"},
+    "numpy._core.numeric": {
+        "array_function_dispatch",
+        "set_array_function_like_doc",
+        "set_module",
+    },
+    "numpy._core.numerictypes": {"set_module"},
+    "numpy._core.records": {"set_module"},
     "numpy._core.shape_base": {"array_function_dispatch"},
     "numpy.lib._arraysetops_impl": {"array_function_dispatch"},
-    "numpy.lib._function_base_impl": {"array_function_dispatch"},
+    "numpy.lib._function_base_impl": {"array_function_dispatch", "set_module"},
     "numpy.lib._histograms_impl": {"array_function_dispatch"},
-    "numpy.lib._index_tricks_impl": {"array_function_dispatch"},
+    "numpy.lib._index_tricks_impl": {"array_function_dispatch", "set_module"},
     "numpy.lib._nanfunctions_impl": {"array_function_dispatch"},
-    "numpy.lib._shape_base_impl": {"array_function_dispatch"},
-    "numpy.lib._stride_tricks_impl": {"array_function_dispatch"},
-    "numpy.lib._twodim_base_impl": {"array_function_dispatch"},
-    "numpy.lib._type_check_impl": {"array_function_dispatch"},
+    "numpy.lib._shape_base_impl": {"array_function_dispatch", "set_module"},
+    "numpy.lib._stride_tricks_impl": {"array_function_dispatch", "set_module"},
+    "numpy.lib._twodim_base_impl": {
+        "array_function_dispatch",
+        "set_array_function_like_doc",
+        "set_module",
+    },
+    "numpy.lib._type_check_impl": {"array_function_dispatch", "set_module"},
     "numpy.lib._ufunclike_impl": {"array_function_dispatch"},
     "numpy.linalg._linalg": {"array_function_dispatch", "set_module"},
+    "numpy.matrixlib.defmatrix": {"set_module"},
+    "PIL.Image": {"abstractmethod"},
 }
 
 
@@ -249,6 +306,12 @@ remove_numpy_pytester_re = RegexReplacement(
 regex_to_apply_py: defaultdict[str, list[RegexReplacement]] = defaultdict(
     list,
     {
+        "__main__": [
+            RegexReplacement(
+                r"if not os.path.isdir\(path_to_exe_folder\):\s*",
+                count=1,
+            )
+        ],
         "util.PIL": [RegexReplacement(pattern=r"_Image._plugins = \[\]")],
         "numpy.__init__": [
             remove_numpy_pytester_re,
@@ -279,14 +342,8 @@ regex_to_apply_py: defaultdict[str, list[RegexReplacement]] = defaultdict(
             RegexReplacement(
                 pattern=r"try:\s*?from numpy\.__config__.* from e", flags=re.DOTALL
             ),
-            RegexReplacement(pattern="einsum, einsum_path, ", count=1),
             RegexReplacement(
                 pattern=", (_CopyMode|show_config|histogram_bin_edges|memmap|require)"
-            ),
-            RegexReplacement(pattern="(ediff1d|array_repr),"),
-            RegexReplacement(pattern=r"from \. import matrixlib.*", count=1),
-            RegexReplacement(
-                pattern=r"from .* import (_distributor_init|(__)?version(__)?)"
             ),
             RegexReplacement(pattern=r"from \.lib import .*"),
             RegexReplacement(
@@ -327,7 +384,6 @@ regex_to_apply_py: defaultdict[str, list[RegexReplacement]] = defaultdict(
                 pattern=r"from \. import (_add_newdocs|_internal|_dtype).*"
             ),
             RegexReplacement(pattern=r"from \.memmap import \*", count=1),
-            RegexReplacement(pattern=r"from numpy\.version import .*"),
             RegexReplacement(
                 pattern=r"except ImportError as exc:.*?raise ImportError\(msg\)",
                 flags=re.DOTALL,
@@ -336,15 +392,16 @@ regex_to_apply_py: defaultdict[str, list[RegexReplacement]] = defaultdict(
                 pattern=r".*?einsumfunc.*",
             ),
         ],
-        "numpy._core._methods": [
-            RegexReplacement(pattern=r"from numpy\._core import _exceptions", count=1)
+        "numpy._core._ufunc_config": [
+            RegexReplacement(
+                "def _no_nep50_warning.*",
+                "def _no_nep50_warning():yield",
+                flags=re.DOTALL,
+            )
         ],
         "numpy._core.arrayprint": [RegexReplacement(pattern=", .array_repr.")],
         "numpy._core.numeric": [
             RegexReplacement(pattern=".*_asarray.*", count=3),
-        ],
-        "numpy._core.numerictypes": [
-            RegexReplacement(pattern=r"from \._dtype import _kind_name", count=1),
         ],
         "numpy._core.overrides": [
             RegexReplacement(
@@ -357,14 +414,12 @@ regex_to_apply_py: defaultdict[str, list[RegexReplacement]] = defaultdict(
                 flags=re.DOTALL,
             ),
             RegexReplacement(
-                pattern=r"from \.\._utils\._inspect import getargspec", count=1
-            ),
-            RegexReplacement(
                 pattern="def decorator.*?return public_api",
                 replacement="def decorator(i): return i",
                 flags=re.DOTALL,
             ),
         ],
+        "numpy._globals": [RegexReplacement(".*?_set_module.*")],
         "numpy._utils.__init__": [
             RegexReplacement(
                 pattern="^.*",
@@ -403,10 +458,16 @@ def set_module(_):
                 )
             ),
         ],
-        "numpy.linalg.__init__": [
-            remove_numpy_pytester_re,
-            RegexReplacement(pattern=r"from \. import linalg"),
+        "numpy.lib.array_utils": [
+            RegexReplacement(
+                "^.*",
+                """
+from numpy._core.numeric import normalize_axis_tuple,normalize_axis_index
+__all__=['normalize_axis_tuple','normalize_axis_index']""",
+                flags=re.DOTALL,
+            )
         ],
+        "numpy.linalg.__init__": [remove_numpy_pytester_re],
         "numpy.linalg._linalg": [
             RegexReplacement(pattern="from numpy._typing.*"),
             RegexReplacement(pattern=r",\s*.(qr|cholesky)."),
@@ -466,7 +527,7 @@ except ImportError:
             RegexReplacement(
                 pattern=r"try:\s*Outline.*Outline = None", flags=re.DOTALL
             ),
-            RegexReplacement(pattern="(L|l)ist, "),
+            RegexReplacement(pattern="(L|l)ist, "),  # codespell:ignore ist
             RegexReplacement(pattern="List", replacement="list"),
         ],
         "PIL.ImageFile": [RegexReplacement(pattern="use_mmap = use_mmap.*")],
@@ -479,7 +540,6 @@ except ImportError:
                 pattern=r"\(NamedTuple\):",
                 replacement=r"(namedtuple('ModeDescriptor', ['mode', 'bands', 'basemode', 'basetype', 'typestr'])):",  # noqa E501
             ),
-            RegexReplacement(pattern="from ._deprecate import deprecate"),
         ],
         "PIL.ImagePalette": [RegexReplacement(pattern="tostring = tobytes")],
         "PIL.PngImagePlugin": [
