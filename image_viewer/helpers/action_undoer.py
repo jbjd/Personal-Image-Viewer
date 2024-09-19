@@ -1,3 +1,7 @@
+"""
+Classes representing actions and a class that handles undoing them
+"""
+
 import os
 from abc import ABC
 from collections import deque
@@ -8,7 +12,7 @@ from util.os import restore_from_bin, trash_file
 class FileAction(ABC):
     """Class used to track actions done to a file"""
 
-    __slots__ = "original_path"
+    __slots__ = ("original_path",)
 
     def __init__(self, original_path: str) -> None:
         self.original_path: str = original_path
@@ -17,7 +21,7 @@ class FileAction(ABC):
 class Rename(FileAction):
     """File path changed action"""
 
-    __slots__ = "new_path", "original_file_deleted"
+    __slots__ = ("new_path", "original_file_deleted")
 
     def __init__(
         self, original_path: str, new_path: str, original_file_deleted: bool = False
@@ -42,7 +46,7 @@ class Delete(FileAction):
 class Rotate(FileAction):
     """Image display rotated action"""
 
-    __slots__ = "original_bytes"
+    __slots__ = ("original_bytes",)
 
     def __init__(self, original_path: str, original_bytes: bytes) -> None:
         super().__init__(original_path)

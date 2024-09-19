@@ -1,3 +1,7 @@
+"""
+Logic for interacting with native file dialogs
+"""
+
 from tkinter.filedialog import askopenfilename
 from typing import Iterable
 
@@ -5,7 +9,7 @@ from typing import Iterable
 class FileDialogAsker:
     """Handles asking user file dialogs"""
 
-    __slots__ = "dialog_file_types"
+    __slots__ = ("dialog_file_types",)
 
     def __init__(self, valid_file_types: Iterable[str]) -> None:
         self.dialog_file_types = [
