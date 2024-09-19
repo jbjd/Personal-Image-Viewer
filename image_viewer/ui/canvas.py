@@ -1,11 +1,12 @@
 from tkinter import Canvas, Event, Tk
+from typing import Final
 
 from PIL.ImageTk import PhotoImage
 
 from constants import TEXT_RGB, TkTags
 
 
-class CustomCanvas(Canvas):
+class CustomCanvas(Canvas):  # pylint: disable=too-many-ancestors
     """Custom version of tkinter's canvas to support internal methods"""
 
     __slots__ = (
@@ -23,11 +24,13 @@ class CustomCanvas(Canvas):
         self.pack(anchor="nw", fill="both", expand=1)
 
         master.update()  # updates winfo width and height to the current size
+        self.file_name_text_id: int = -1
         self.image_display_id: int = -1
         self.screen_width: int = master.winfo_width()
         self.screen_height: int = master.winfo_height()
         self.drag_start_x: int
         self.drag_start_y: int
+        self.topbar: PhotoImage
 
         self.create_rectangle(
             0,
@@ -68,14 +71,14 @@ class CustomCanvas(Canvas):
 
     def create_topbar(self, topbar_img: PhotoImage) -> None:
         """Creates the topbar and stores it"""
-        self.topbar: PhotoImage = topbar_img  # save from garbage collector
+        self.topbar = topbar_img  # save from garbage collector
         self.create_image(
             0, 0, image=topbar_img, anchor="nw", tag=TkTags.TOPBAR, state="hidden"
         )
 
     def create_name_text(self, x: int, y: int, font: str) -> None:
         """Creates text object used to display file name"""
-        self.file_name_text_id: int = self.create_text(
+        self.file_name_text_id = self.create_text(
             x,
             y,
             fill=TEXT_RGB,
@@ -88,7 +91,7 @@ class CustomCanvas(Canvas):
         """Puts a new image on screen"""
         self.delete(self.image_display_id)
 
-        self.image_display_id: int = self.create_image(
+        self.image_display_id = self.create_image(
             self.screen_width >> 1,
             self.screen_height >> 1,
             anchor="center",
@@ -112,7 +115,7 @@ class CustomCanvas(Canvas):
     def _clean_long_name(image_name: str) -> str:
         """Takes a name and returns a shortened version if its too long"""
         end_index: int = image_name.rfind(".")
-        MAX: int = 40
+        MAX: Final[int] = 40
         if end_index < MAX:
             return image_name
         return f"{image_name[:MAX-2]}(…){image_name[end_index:]}"
