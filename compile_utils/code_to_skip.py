@@ -15,12 +15,22 @@ _skip_functions_kwargs: dict[str, set[str]] = {
     "numpy._core.arrayprint": {
         "_array_repr_dispatcher",
         "_array_repr_implementation",
+        "_array_str_dispatcher",
+        "_array2string_dispatcher",
+        "_get_legacy_print_mode",
+        "_set_printoptions",
         "_void_scalar_to_string",
         "array_repr",
         "dtype_short_repr",
+        "get_printoptions",
+        "printoptions",
+        "set_printoptions",
     },
     "numpy._core.function_base": {
         "_add_docstring",
+        "_geomspace_dispatcher",
+        "_linspace_dispatcher",
+        "_logspace_dispatcher",
         "_needs_add_docstring",
         "add_newdoc",
     },
@@ -36,10 +46,41 @@ _skip_functions_kwargs: dict[str, set[str]] = {
         "_splitlines",
     },
     "numpy._globals": {"__repr__"},
-    "numpy.lib._arraysetops_impl": {"_ediff1d_dispatcher", "ediff1d"},
+    "numpy.lib._arraysetops_impl": {
+        "_ediff1d_dispatcher",
+        "_in1d_dispatcher",
+        "_intersect1d_dispatcher",
+        "_isin_dispatcher",
+        "_setdiff1d_dispatcher",
+        "_setxor1d_dispatcher",
+        "_union1d_dispatcher",
+        "_unique_all_dispatcher",
+        "_unique_counts_dispatcher",
+        "_unique_dispatcher",
+        "_unique_inverse_dispatcher",
+        "_unique_values_dispatcher",
+        "ediff1d",
+    },
     "numpy.lib._histograms_impl": {
         "_histogram_bin_edges_dispatcher",
+        "_histogram_dispatcher",
+        "_histogramdd_dispatcher",
         "histogram_bin_edges",
+    },
+    "numpy.lib._shape_base_impl": {
+        "_array_split_dispatcher",
+        "_hvdsplit_dispatcher",
+        "_kron_dispatcher",
+        "_put_along_axis_dispatcher",
+        "_replace_zero_by_x_arrays",
+        "_split_dispatcher",
+        "_take_along_axis_dispatcher",
+        "_tile_dispatcher",
+    },
+    "numpy.lib._stride_tricks_impl": {
+        "_broadcast_arrays_dispatcher",
+        "_broadcast_to_dispatcher",
+        "_sliding_window_view_dispatcher",
     },
     "numpy.linalg._linalg": {
         "_cond_dispatcher",
@@ -69,7 +110,19 @@ _skip_functions_kwargs: dict[str, set[str]] = {
         "encode_from_yuv",
         "scale_with_quality",
     },
-    "PIL.features": {"pilinfo"},
+    "PIL.features": {
+        "check",
+        "check_codec",
+        "check_feature",
+        "get_supported",
+        "get_supported_codecs",
+        "get_supported_features",
+        "get_supported_modules",
+        "pilinfo",
+        "version",
+        "version_codec",
+        "version_feature",
+    },
     "PIL.Image": {
         "__getstate__",
         "__repr__",
@@ -190,6 +243,7 @@ _skip_vars_kwargs: dict[str, set[str]] = {
         "TJFLAG_LIMITSCANS",
         "TJFLAG_STOPONWARNING",
     },
+    "PIL.features": {"codecs", "features"},
     "PIL.Image": {"MIME"},
     "PIL.GifImagePlugin": {"format_description", "_Palette"},
     "PIL.JpegImagePlugin": {"format_description"},
@@ -244,6 +298,7 @@ _skip_from_imports: dict[str, set[str]] = {
         "object",
     },
     "numpy._core.overrides": {"getargspec"},
+    "numpy._core.records": {"_get_legacy_print_mode"},
     "numpy.lib.stride_tricks": {"__doc__"},
     "numpy.linalg.__init__": {"linalg"},
     "PIL.features": {"deprecate"},
@@ -357,6 +412,7 @@ regex_to_apply_py: defaultdict[str, list[RegexReplacement]] = defaultdict(
             RegexReplacement(
                 pattern=r"__numpy_submodules__ =.*?\}", count=1, flags=re.DOTALL
             ),
+            RegexReplacement(pattern=r"(get)?(set)?_?printoptions,", count=3),
         ]
         + [
             RegexReplacement(
@@ -403,7 +459,10 @@ regex_to_apply_py: defaultdict[str, list[RegexReplacement]] = defaultdict(
                 flags=re.DOTALL,
             )
         ],
-        "numpy._core.arrayprint": [RegexReplacement(pattern=", .array_repr.")],
+        "numpy._core.arrayprint": [
+            RegexReplacement(pattern=", .array_repr."),
+            RegexReplacement(pattern=r"['\"](get)?(set)?_?printoptions['\"],", count=3),
+        ],
         "numpy._core.numeric": [
             RegexReplacement(pattern=".*_asarray.*", count=3),
         ],
