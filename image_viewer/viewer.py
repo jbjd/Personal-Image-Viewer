@@ -10,13 +10,13 @@ from PIL.ImageTk import PhotoImage
 from animation.frame import Frame
 from config import font, max_items_in_cache
 from constants import ButtonName, Key, Rotation, TkTags, ZoomDirection
-from factories.icon_factory import IconFactory
 from helpers.image_loader import ImageLoader, ReadImageResponse
 from helpers.image_resizer import ImageResizer
 from managers.file_manager import ImageFileManager
-from ui.button import HoverableButton, ToggleButton
+from ui.button import HoverableButtonUIElement, ToggleableButtonUIElement
+from ui.button_icon_factory import ButtonIconFactory
 from ui.canvas import CustomCanvas
-from ui.image import DropdownImage
+from ui.image import DropdownImageUIElement
 from ui.rename_entry import RenameEntry
 from util.image import ImageCache
 from util.PIL import create_dropdown_image, image_is_animated, init_PIL
@@ -26,7 +26,6 @@ class ViewerApp:
     """Main UI class handling IO and on screen widgets"""
 
     __slots__ = (
-        "_display_image",
         "animation_id",
         "app",
         "canvas",
@@ -55,7 +54,6 @@ class ViewerApp:
         self.move_id: str = ""
         self.image_load_id: str = ""
         self.animation_id: str = ""
-        self._display_image: PhotoImage
 
         self.app: Tk = self._setup_tk_app(path_to_exe)
         self.canvas: CustomCanvas = CustomCanvas(self.app)
@@ -167,9 +165,9 @@ class ViewerApp:
         # negative size makes font absolute for consistency with different monitors
         FONT: str = f"{font_family} -{self._scale_pixels_to_height(18)}"
 
-        icon_factory: IconFactory = IconFactory(icon_size)
+        button_icon_factory = ButtonIconFactory(icon_size)
 
-        canvas.create_topbar(icon_factory.make_topbar_image(screen_width))
+        canvas.create_topbar(button_icon_factory.make_topbar_image(screen_width))
         # weird case, scale x offset by height, not width, since icon to its left
         # is scaled by height, small screen could overlap otherwise
         canvas.create_name_text(
@@ -177,39 +175,41 @@ class ViewerApp:
         )
 
         button_x_offset: int = screen_width - icon_size
-        exit_button: HoverableButton = HoverableButton(
+        exit_button = HoverableButtonUIElement(
             canvas,
-            icon_factory.make_exit_icons(),
+            button_icon_factory.make_exit_icons(),
             self.exit,
         )
         exit_button.add_to_canvas(ButtonName.EXIT, button_x_offset)
 
         button_x_offset -= icon_size
-        minify_button: HoverableButton = HoverableButton(
-            canvas, icon_factory.make_minify_icons(), self.minimize
+        minify_button = HoverableButtonUIElement(
+            canvas, button_icon_factory.make_minify_icons(), self.minimize
         )
         minify_button.add_to_canvas(ButtonName.MINIFY, button_x_offset)
 
         button_x_offset -= icon_size
-        dropdown_button: ToggleButton = ToggleButton(
-            canvas, *icon_factory.make_dropdown_icons(), self.handle_dropdown
+        dropdown_button = ToggleableButtonUIElement(
+            canvas, *button_icon_factory.make_dropdown_icons(), self.handle_dropdown
         )
         dropdown_button.add_to_canvas(ButtonName.DROPDOWN, button_x_offset)
 
-        trash_button: HoverableButton = HoverableButton(
-            canvas, icon_factory.make_trash_icons(), self.trash_image
+        trash_button = HoverableButtonUIElement(
+            canvas, button_icon_factory.make_trash_icons(), self.trash_image
         )
         trash_button.add_to_canvas(ButtonName.TRASH)
 
-        rename_button: HoverableButton = HoverableButton(
-            canvas, icon_factory.make_rename_icons(), self.toggle_show_rename_window
+        rename_button = HoverableButtonUIElement(
+            canvas,
+            button_icon_factory.make_rename_icons(),
+            self.toggle_show_rename_window,
         )
         rename_button.add_to_canvas(ButtonName.RENAME)
 
         dropdown_id: int = canvas.create_image(
             screen_width, icon_size, anchor="ne", tag=TkTags.TOPBAR, state="hidden"
         )
-        self.dropdown: DropdownImage = DropdownImage(dropdown_id)
+        self.dropdown = DropdownImageUIElement(dropdown_id)
 
         rename_window_width: int = self._scale_pixels_to_width(250)
         rename_id: int = canvas.create_window(
@@ -466,15 +466,13 @@ class ViewerApp:
     def _update_existing_image_display(self, image: Image) -> None:
         """Updates display with PhotoImage version of provided Image.
         Use when the displayed image hasn't changed, but moved or went to a new frame"""
-        self._display_image = PhotoImage(image)
-        self.canvas.update_existing_image_display(self._display_image)
+        self.canvas.update_existing_image_display(PhotoImage(image))
 
     def _update_image_display(self, image: Image) -> None:
         """Updates display with PhotoImage version of provided Image.
         Use when a new image is replacing the previous and should be
         re-centered"""
-        self._display_image = PhotoImage(image)
-        self.canvas.update_image_display(self._display_image)
+        self.canvas.update_image_display(PhotoImage(image))
 
     def update_after_image_load(self, image: Image) -> None:
         """Updates app title and displayed image"""
