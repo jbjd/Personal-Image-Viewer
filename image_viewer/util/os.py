@@ -4,21 +4,18 @@ Code for OS specific stuff
 
 import os
 from collections.abc import Iterator
-from re import Pattern
 from re import compile as re_compile
 from typing import Final
 
-illegal_char: Pattern[str]
-kb_size: int
 if os.name == "nt":
     import ctypes
     from ctypes import windll  # type: ignore
+    from re import Pattern
 
     from send2trash.win.legacy import send2trash
     from winshell import undelete, x_winshell
 
-    illegal_char = re_compile(r'[<>:"|?*]')
-    kb_size = 1024
+    illegal_char: Pattern[str] = re_compile(r'[<>:"|?*]')
 
     class OPENASINFO(ctypes.Structure):
         _fields_ = [
@@ -37,15 +34,11 @@ if os.name == "nt":
             raise OSError from e  # change error type so catching is not OS specific
 
 else:  # assume linux for now
-    import subprocess
     from glob import glob
     from tkinter.messagebox import showinfo
 
     from send2trash import send2trash
     from send2trash.plat_other import HOMETRASH
-
-    illegal_char = re_compile("")
-    kb_size = 1000
 
     def OS_name_cmp(a: str, b: str) -> bool:
         return a < b
@@ -53,19 +46,16 @@ else:  # assume linux for now
     # TODO: break this function into smaller bits
     def restore_from_bin(original_path: str) -> None:
         name_start: int = original_path.rfind("/")
-        file_name_and_suffix: str = (
+        name_and_suffix: str = (
             original_path if name_start == -1 else original_path[name_start + 1 :]
         )
-        suffix_start: int = file_name_and_suffix.rfind(".")
-        if suffix_start == -1:
-            file_name = file_name_and_suffix
-            suffix = ""
-        else:
-            file_name = file_name_and_suffix[:suffix_start]
-            suffix = file_name_and_suffix[suffix_start:]
+        file_name, file_suffix = split_name_and_suffix(name_and_suffix)
 
         # Files with same name will be test.png.trashinfo, test.2.png.trashinfo
-        info_paths: list[str] = glob(f"{HOMETRASH}/info/{file_name}*{suffix}.trashinfo")
+        # or 'test 2.png.trashinfo'
+        info_paths: list[str] = glob(
+            f"{HOMETRASH}/info/{file_name}*{file_suffix}.trashinfo"
+        )
         for info_path in info_paths:
             with open(info_path, "r", encoding="utf-8") as fp:
                 line: str
@@ -110,11 +100,15 @@ def show_info_popup(hwnd: int, title: str, body: str) -> None:
 
 def clean_str_for_OS_path(path: str) -> str:
     """Removes characters that paths on this OS can't have"""
-    return illegal_char.sub("", path)
+    if os.name == "nt":
+        return illegal_char.sub("", path)
+    else:
+        return path
 
 
 def get_byte_display(size_in_bytes: int) -> str:
     """Given bytes, formats it into a string using kb or mb"""
+    kb_size: int = 1024 if os.name == "nt" else 1000
     size_in_kb: int = size_in_bytes // kb_size
     return f"{size_in_kb/kb_size:.2f}mb" if size_in_kb > 999 else f"{size_in_kb}kb"
 
@@ -129,6 +123,31 @@ def get_normalized_dir_name(path: str) -> str:
     dir_name: str = os.path.dirname(path)
     # normpath of empty string returns "."
     return os.path.normpath(dir_name) if dir_name != "" else ""
+
+
+def maybe_truncate_long_name(name_and_suffix: str) -> str:
+    """Takes a file name and returns a shortened version if its too long"""
+    name, suffix = split_name_and_suffix(name_and_suffix)
+
+    MAX: Final[int] = 40
+    if len(name) <= MAX:
+        return name_and_suffix
+
+    return f"{name[:MAX]}(…){suffix}"
+
+
+def split_name_and_suffix(name_and_suffix: str) -> tuple[str, str]:
+    """Given a file name, return the name without the suffix
+    and the suffix separately"""
+    suffix_start: int = name_and_suffix.rfind(".")
+    if suffix_start == -1:
+        file_name = name_and_suffix
+        suffix = ""
+    else:
+        file_name = name_and_suffix[:suffix_start]
+        suffix = name_and_suffix[suffix_start:]
+
+    return file_name, suffix
 
 
 def walk_dir(directory_path: str) -> Iterator[str]:
