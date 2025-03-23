@@ -22,6 +22,8 @@ from util.image import ImageCache
 from util.os import open_with, show_info_popup
 from util.PIL import create_dropdown_image, image_is_animated, init_PIL
 
+print("afasdfasdfdasdf")
+
 
 class ViewerApp:
     """Main UI class handling IO and on screen widgets"""
@@ -86,7 +88,7 @@ class ViewerApp:
         self._init_image_display()
 
         self.canvas.tag_bind(TkTags.BACKGROUND, "<Button-1>", self.handle_canvas_click)
-        self._add_keybinds_to_tk()
+        self._add_binds_to_tk(config)
 
         self.app.mainloop()
 
@@ -125,18 +127,22 @@ class ViewerApp:
         if image is None:
             self.load_image()
 
-    def _add_keybinds_to_tk(self) -> None:
-        """Assigns keybinds to Tk instance"""
+    def _add_binds_to_tk(self, config: Config) -> None:
+        """Assigns binds to Tk instance"""
         app: Tk = self.app
         app.bind("<FocusIn>", self.redraw)
         app.bind("<Escape>", self.handle_esc)
         app.bind("<KeyPress>", self.handle_key)
         app.bind("<KeyRelease>", self.handle_key_release)
         app.bind("<Control-r>", self.refresh)
-        app.bind("<Control-d>", self.show_details_popup)
+        app.bind(config.keybinds.show_details, self.show_details_popup)
         app.bind("<Control-m>", self.move_to_new_file)
         app.bind("<Control-z>", self.undo_most_recent_action)
         app.bind("<F2>", self.toggle_show_rename_window)
+        app.bind(
+            "<r>",
+            lambda e: self._only_for_this_window(e, self.toggle_show_rename_window),
+        )
         app.bind("<F5>", lambda _: self.load_image_unblocking())
         app.bind("<Up>", self.handle_up_arrow)
         app.bind("<Down>", self.handle_down_arrow)
@@ -295,6 +301,14 @@ class ViewerApp:
         else:
             self.show_topbar()
 
+    def _only_for_this_window(
+        self, event: Event, callable: Callable[[Event | None], None]
+    ) -> None:
+        """Given a callable that accepts a tkinter Event,
+        only call it if self.app is the target"""
+        if event.widget is self.app:
+            callable(event)
+
     def handle_key(self, event: Event) -> None:
         """Key binds that happen only on main app focus"""
         if event.widget is self.app:
@@ -305,8 +319,6 @@ class ViewerApp:
                     self.load_zoomed_image_unblocking(ZoomDirection.IN)
                 case Key.MINUS:
                     self.load_zoomed_image_unblocking(ZoomDirection.OUT)
-                case Key.R:
-                    self.toggle_show_rename_window(event)
 
     def handle_key_release(self, event: Event) -> None:
         """Handle key release, current just used for L/R arrow release"""
