@@ -177,13 +177,9 @@ class ImageLoader:
         ) and not self._rotation_state.try_update_state(rotation):
             return None
 
-        if rotation is not None:
-            self._rotation_state.orientation = rotation
-            rotation_angle = rotation
-        else:
-            rotation_angle = self._rotation_state.orientation
-
+        rotation_angle: int = self._rotation_state.orientation
         zoom_level: int = self._zoom_state.level
+
         if zoom_level < len(self.zoomed_image_cache):
             return rotate_image(self.zoomed_image_cache[zoom_level], rotation_angle)
 
@@ -192,21 +188,20 @@ class ImageLoader:
             zoomed_image, hit_zoom_cap = self.image_resizer.get_zoomed_image(
                 self.PIL_image, zoom_level
             )
-            if hit_zoom_cap:
-                self._zoom_state.hit_cap()
-
-            self.zoomed_image_cache.append(zoomed_image)
-
-            return rotate_image(zoomed_image, rotation_angle)
         except ValueError:
             # TODO: Refactor ValueError case (image exceeds JPEG dimension max)
             self._zoom_state.level -= 1
             self._zoom_state.hit_cap()
             return None
         except (FileNotFoundError, UnidentifiedImageError):
-            pass
+            return None
 
-        return None
+        if hit_zoom_cap:
+            self._zoom_state.hit_cap()
+
+        self.zoomed_image_cache.append(zoomed_image)
+
+        return rotate_image(zoomed_image, rotation_angle)
 
     def load_remaining_frames(
         self, original_image: Image, last_frame: int, load_id: int
