@@ -1,6 +1,7 @@
 from tkinter import Tk
 from unittest.mock import patch
 
+import pytest
 from PIL.Image import Image, Resampling
 from PIL.Image import new as new_image
 from turbojpeg import TurboJPEG
@@ -17,26 +18,26 @@ def test_jpeg_scale_factor(image_resizer: ImageResizer):
     assert image_resizer._get_jpeg_scale_factor(1, 1) is None
 
 
-def test_dimension_finder(image_resizer: ImageResizer):
-    """Should return correct interpolation and fit provided dimensiosn to the screen"""
-    # Test uses 1920x1080 as screen size, set in resizer's constructor
-    dimensions: tuple[int, int]
-    interpolation: int
-
-    # Neither dimension larger than screen, so use LANCZOS
-    # 800 / 1080 is larger than 600 / 1920 so should fit to height
-    dimensions, interpolation = image_resizer.dimension_finder(600, 800)
-    assert interpolation == Resampling.LANCZOS
-    assert dimensions[1] == 1080
-
-    # One dimension larger than screen, so use BICUBIC and fit to width
-    dimensions, interpolation = image_resizer.dimension_finder(2000, 800)
-    assert interpolation == Resampling.BICUBIC
-    assert dimensions[0] == 1920
-
-    # When both dimensions are large, HAM it
-    dimensions, interpolation = image_resizer.dimension_finder(2000, 2000)
-    assert interpolation == Resampling.HAMMING
+@pytest.mark.parametrize(
+    "dimensions,expected_dimensions,expected_interpolation",
+    [
+        ((600, 800), (810, 1080), Resampling.LANCZOS),
+        ((2000, 800), (1920, 768), Resampling.BICUBIC),
+        ((2000, 2000), (1080, 1080), Resampling.HAMMING),
+    ],
+)
+def test_fit_dimensions_to_screen_and_get_interpolation(
+    image_resizer: ImageResizer,
+    dimensions: tuple[int, int],
+    expected_dimensions: tuple[int, int],
+    expected_interpolation: Resampling,
+):
+    """Should return correct dimensions and interpolation for a 1920x1080 screen"""
+    width, height = dimensions
+    dimensions = image_resizer.fit_dimensions_to_screen(width, height)
+    interpolation = image_resizer.get_resampling(width, height)
+    assert interpolation == expected_interpolation
+    assert dimensions == expected_dimensions
 
 
 def test_get_fit_to_screen(image_resizer: ImageResizer):
@@ -48,12 +49,14 @@ def test_get_fit_to_screen(image_resizer: ImageResizer):
         mock_jpeg_fit.assert_called_once()
 
     # Any other type should use generic resize functions
-    with patch.object(ImageResizer, "_fit_to_screen") as mock_generic_fit:
+    with patch.object(
+        ImageResizer, "_get_image_fit_to_screen_with_PIL"
+    ) as mock_generic_fit:
         image_resizer.get_image_fit_to_screen(MockImage(format=ImageFormats.PNG))
         mock_generic_fit.assert_called_once()
 
 
-@patch.object(ImageResizer, "_fit_to_screen")
+@patch.object(ImageResizer, "_get_image_fit_to_screen_with_PIL")
 def test_jpeg_fit_to_screen_small_image(tk_app: Tk, image_resizer: ImageResizer):
     """When fitting a small jpeg, should fallback to generic fit function"""
     image: Image = new_image("RGB", (1000, 1000))  # smaller than screen
@@ -68,7 +71,7 @@ def test_generic_fit_to_screen(tk_app: Tk, image_resizer: ImageResizer):
     image: Image = new_image("RGB", (10, 10))
 
     with patch("image_viewer.image.resizer.resize", return_value=image) as mock_resize:
-        assert type(image_resizer._fit_to_screen(image)) is Image
+        assert type(image_resizer._get_image_fit_to_screen_with_PIL(image)) is Image
         mock_resize.assert_called_once()
 
 
