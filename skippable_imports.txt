@@ -18,6 +18,7 @@ numpy._core._string_helpers
 numpy._core.cversions
 numpy._core.defchararray
 numpy._core.einsumfunc
+numpy._core.function_base
 numpy._core.memmap
 numpy._core.strings
 numpy._core.tests
@@ -58,6 +59,7 @@ numpy.lib._ufunclike_impl
 numpy.lib._user_array_impl
 numpy.lib._utils_impl
 numpy.lib._version
+numpy.lib.array_utils
 numpy.lib.format
 numpy.lib.introspect
 numpy.lib.mixins
