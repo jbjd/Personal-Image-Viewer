@@ -21,7 +21,7 @@
  *
  * Returns WINBOOL if successful. If it fails, call GetLastError for information.
  */
-static WINBOOL set_win_clipboard(const HWND hwnd, const UINT format, void *data)
+static inline WINBOOL set_win_clipboard(const HWND hwnd, const UINT format, void *data)
 {
     return !OpenClipboard(hwnd) || !EmptyClipboard() || !SetClipboardData(format, data) || !CloseClipboard();
 }
@@ -32,7 +32,7 @@ static WINBOOL set_win_clipboard(const HWND hwnd, const UINT format, void *data)
  *
  * Caller must free this string.
  */
-static char *normalize_str_for_file_op(const char *str)
+static inline char *normalize_str_for_file_op(const char *str)
 {
     int i = 0;
     char *buffer = (char *)malloc((strlen(str) + 2) * sizeof(char));
@@ -52,7 +52,7 @@ static char *normalize_str_for_file_op(const char *str)
  *
  * Caller responsible for ensuring provided string has enough space for one additional char.
  */
-static void ensure_double_null_terminated(char *str)
+static inline void ensure_double_null_terminated(char *str)
 {
     size_t strLen = strlen(str);
     str[strLen + 1] = '\0';
@@ -298,16 +298,20 @@ static PyObject *open_with(PyObject *self, PyObject *args)
     return Py_None;
 }
 
-static PyObject *drop_file_to_clipboard(PyObject *self, PyObject *args)
+static PyObject *drop_file_to_clipboard(PyObject *self, PyObject *const *args, Py_ssize_t argLen)
 {
-    const HWND hwnd;
-    const char *path;
-    Py_ssize_t pathSize;
-
-    if (!PyArg_ParseTuple(args, "is#", &hwnd, &path, &pathSize))
+    if (argLen != 2)
     {
+        PyErr_SetString(PyExc_TypeError, "drop_file_to_clipboard takes exactly two arguments");
         return NULL;
     }
+
+    #pragma GCC diagnostic ignored "-Wint-to-pointer-cast"
+    const HWND hwnd = (HWND)PyLong_AsLong(args[0]);
+    #pragma GCC diagnostic pop
+
+    Py_ssize_t pathSize;
+    const char *path = PyUnicode_AsUTF8AndSize(args[1], &pathSize);
 
     Py_BEGIN_ALLOW_THREADS;
 
@@ -406,7 +410,7 @@ static PyMethodDef os_methods[] = {
     {"restore_file", restore_file, METH_VARARGS, NULL},
     {"get_files_in_folder", get_files_in_folder, METH_O, NULL},
     {"open_with", open_with, METH_VARARGS, NULL},
-    {"drop_file_to_clipboard", drop_file_to_clipboard, METH_VARARGS, NULL},
+    {"drop_file_to_clipboard", (PyCFunction)drop_file_to_clipboard, METH_FASTCALL, NULL},
     {"convert_file_to_base64_and_save_to_clipboard", convert_file_to_base64_and_save_to_clipboard, METH_O, NULL},
     {NULL, NULL, 0, NULL}};
 
