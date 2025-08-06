@@ -7,44 +7,10 @@ import pytest
 
 from image_viewer.constants import Key
 from image_viewer.files.file_manager import ImageFileManager
-from image_viewer.image.cache import ImageCache
 from image_viewer.image.loader import ImageLoader
 from image_viewer.ui.canvas import CustomCanvas
 from image_viewer.viewer import ViewerApp
-from tests.conftest import EXAMPLE_IMG_PATH
 from tests.test_util.mocks import MockEvent
-
-
-@pytest.fixture
-def file_manager(empty_image_cache: ImageCache) -> ImageFileManager:
-    return ImageFileManager(EXAMPLE_IMG_PATH, empty_image_cache)
-
-
-@pytest.fixture
-def partial_viewer(tk_app: Tk, image_loader: ImageLoader, file_manager) -> ViewerApp:
-    """A Viewer object that's not properly initialized.
-    Can be used to test standalone parts of the class"""
-
-    def mock_viewer_init(self, *_):
-        self.app = tk_app
-        self.file_manager = file_manager
-        self.image_loader = image_loader
-        self.animation_id = ""
-        self.move_id = ""
-        self.need_to_redraw = False
-
-    with patch.object(ViewerApp, "__init__", mock_viewer_init):
-        return ViewerApp("", "")
-
-
-@pytest.fixture(scope="module")
-def focused_event(tk_app: Tk) -> MockEvent:
-    return MockEvent(tk_app)
-
-
-@pytest.fixture(scope="module")
-def unfocused_event() -> MockEvent:
-    return MockEvent()
 
 
 def test_pixel_scaling(partial_viewer: ViewerApp):
@@ -108,9 +74,7 @@ def test_clear_image(partial_viewer: ViewerApp):
             mock_reset.assert_called_once()
 
 
-def test_handle_key(
-    partial_viewer: ViewerApp, focused_event: MockEvent, unfocused_event: MockEvent
-):
+def test_handle_key(partial_viewer: ViewerApp, focused_event: MockEvent):
     """Should only accept input when user focused on main app"""
 
     with patch.object(ViewerApp, "handle_lr_arrow") as mock_lr_arrow:
