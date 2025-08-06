@@ -8,6 +8,7 @@ from typing import IO
 from PIL import Image as _Image  # avoid name conflicts
 from PIL.Image import Image, Resampling, new, register_open
 from PIL.ImageDraw import ImageDraw
+from PIL.ImageFont import truetype
 from PIL.JpegImagePlugin import JpegImageFile
 
 from constants import TEXT_RGB
@@ -101,8 +102,8 @@ def create_dropdown_image(text: str) -> Image:
     width: int = line_width + x_padding
     height: int = (line_height * line_count) + y_padding
 
-    DROPDOWN_RGBA: tuple[int, int, int, int] = (40, 40, 40, 170)
-    image: Image = new("RGBA", (width, height), DROPDOWN_RGBA)
+    dropdown_rgba: tuple[int, int, int, int] = (40, 40, 40, 170)
+    image: Image = new("RGBA", (width, height), dropdown_rgba)
 
     draw: ImageDraw = ImageDraw(image)
     draw.text((10, line_spacing), text, fill="white", spacing=line_spacing)
@@ -126,8 +127,8 @@ def get_placeholder_for_errored_image(
     # Placeholder is black with brownish line going diagonally across
     blank_image: Image = new("RGB", (screen_width, screen_height))
     draw: ImageDraw = ImageDraw(blank_image)
-    LINE_RGB: tuple[int, int, int] = (30, 20, 20)
-    draw.line((0, 0, screen_width, screen_height), LINE_RGB, width=100)
+    line_rgb: tuple[int, int, int] = (30, 20, 20)
+    draw.line((0, 0, screen_width, screen_height), line_rgb, width=100)
 
     # Write title
     w: int
@@ -170,7 +171,7 @@ def _preinit() -> None:
     _Image._initialized = 2
 
 
-def _stop_unwanted_PIL_imports() -> None:
+def _stop_unwanted_PIL_imports() -> None:  # pylint: disable=invalid-name
     """Edits parts of PIL module to prevent excessive imports"""
     from PIL.JpegImagePlugin import MARKER, Skip
 
@@ -185,11 +186,9 @@ def _stop_unwanted_PIL_imports() -> None:
     _Image.preinit = _preinit
 
 
-def init_PIL(font_file: str, font_size: int) -> None:
+def init_PIL(font_file: str, font_size: int) -> None:  # pylint: disable=invalid-name
     """Sets up font and edit PIL's internal list of plugins to load"""
-    from PIL.ImageFont import truetype
 
     ImageDraw.font = truetype(font_file, font_size)
-    del truetype
 
     _stop_unwanted_PIL_imports()
