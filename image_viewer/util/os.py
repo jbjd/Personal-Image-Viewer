@@ -147,6 +147,7 @@ def split_name_and_suffix(name_and_suffix: str) -> tuple[str, str]:
 
 
 def get_path_to_exe_folder() -> str:
-    """Returns path to folder containing exe/py file
-    of running program"""
+    """Returns the folder path containing the file running the program
+
+    :returns: The folder path"""
     return os.path.dirname(sys.argv[0])

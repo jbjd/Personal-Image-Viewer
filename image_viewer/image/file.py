@@ -3,7 +3,7 @@
 from collections import namedtuple
 from typing import Iterable
 
-from constants import ImageFormats
+from constants import ImageFormats, Movement
 from util.os import os_name_cmp
 
 
@@ -45,9 +45,6 @@ class ImageNameList(list[ImageName]):
     def get_current_image(self) -> ImageName:
         return self[self._display_index]
 
-    def get_current_image_name(self) -> str:
-        return self[self._display_index].name
-
     def move_index(self, amount: int) -> None:
         """Moves display_index by the provided amount with wraparound"""
         image_count: int = len(self)
@@ -59,8 +56,11 @@ class ImageNameList(list[ImageName]):
         super().sort()
         self._display_index, _ = self.get_index_of_image(image_to_start_at)
 
-    def remove_current_image(self) -> None:
-        """Safely removes current index"""
+    def remove_current_image(self, index_movement: Movement = Movement.NONE) -> None:
+        """Safely removes the entry at the current index.
+
+        :param index_movement: The direction to move the index. If NONE passed,
+        index will try to preserve its current position."""
         try:
             super().pop(self._display_index)
         except IndexError:
@@ -68,8 +68,20 @@ class ImageNameList(list[ImageName]):
 
         image_count: int = len(self)
 
-        if self._display_index >= image_count:
-            self._display_index = image_count - 1
+        # Weird logic here: moving BACKWARD is normal
+        # but, if FORWARD then we need to do nothing since
+        # keeping index the same and removing an item from the list
+        # will effectively move forward. However, if index now exceeds
+        # the list size, when NONE we need to wrap back to the end of the list
+        # to preserve being at the end of the list. if FORWARD we need to wrap
+        # around to index 0
+        if index_movement == Movement.BACKWARD:
+            self.move_index(-1)
+        elif self._display_index >= image_count:
+            if index_movement == Movement.NONE:
+                self._display_index = image_count - 1
+            else:  # Must be Movement.FORWARD
+                self._display_index = 0
 
     def get_index_of_image(self, target_image: str) -> ImageSearchResult:
         """Finds index of target_image.

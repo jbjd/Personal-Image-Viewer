@@ -59,9 +59,10 @@ def try_convert_file_and_save_new(
 
 
 def read_memory_as_base64(image_buffer: memoryview) -> str:
-    """Given a memory view, decode it into a base64 string.
+    """Decodes some memory into a base64 string.
 
-    Errors are ignored during byte -> str conversion."""
+    :param image_buffer: The memory buffer of an image to decode
+    :returns: The decoded base64"""
 
     return binascii.b2a_base64(image_buffer, newline=False).decode(
         "ascii", errors="ignore"

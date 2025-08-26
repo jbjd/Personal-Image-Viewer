@@ -3,7 +3,7 @@ define other constants used within tests"""
 
 import os
 from tkinter import Tk
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 from PIL.Image import Image
@@ -90,31 +90,32 @@ def rename_entry_fixture(tk_app: Tk, canvas: CustomCanvas) -> RenameEntry:
     return RenameEntry(tk_app, canvas, rename_id, 250, DEFAULT_FONT)
 
 
-@pytest.fixture(name="partial_viewer")
-def partial_viewer_fixture(
-    tk_app: Tk, image_loader: ImageLoader, file_manager
-) -> ViewerApp:
-    """A Viewer object that's not properly initialized.
-    Can be used to test standalone parts of the class"""
+@pytest.fixture(name="viewer")
+def viewer_fixture() -> ViewerApp:
+    """A Viewer object with visual UI elements mocked out"""
 
-    def mock_viewer_init(self, *_):
-        self.app = tk_app
-        self.file_manager = file_manager
-        self.image_loader = image_loader
-        self.animation_id = ""
-        self.move_id = ""
-        self.need_to_redraw = False
+    # This function needs to be unpacked so we must explicitly define it
+    mock_icon_factory = MagicMock()
+    mock_icon_factory.return_value.make_dropdown_icons.return_value = (
+        MagicMock(),
+        MagicMock(),
+    )
 
-    with patch.object(ViewerApp, "__init__", mock_viewer_init):
-        return ViewerApp("", "")
-
-
-@pytest.fixture(name="focused_event", scope="module")
-def focused_event_fixture(tk_app: Tk) -> MockEvent:
-    return MockEvent(tk_app)
+    with (
+        patch.object(ViewerApp, "_init_image_display"),
+        patch("image_viewer.viewer.Tk"),
+        patch("image_viewer.viewer.CustomCanvas"),
+        patch("image_viewer.viewer.ButtonIconFactory", mock_icon_factory),
+    ):
+        return ViewerApp(EXAMPLE_IMG_PATH, CODE_DIR)
 
 
-@pytest.fixture(name="unfocused_event", scope="module")
+@pytest.fixture(name="focused_event")
+def focused_event_fixture(viewer: ViewerApp) -> MockEvent:
+    return MockEvent(viewer.app)
+
+
+@pytest.fixture(name="unfocused_event")
 def unfocused_event_fixture() -> MockEvent:
     return MockEvent()
 
