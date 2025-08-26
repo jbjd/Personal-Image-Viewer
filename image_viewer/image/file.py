@@ -3,7 +3,7 @@
 from collections import namedtuple
 from typing import Iterable
 
-from constants import ImageFormats
+from constants import ImageFormats, Movement
 from util.os import os_name_cmp
 
 
@@ -56,11 +56,11 @@ class ImageNameList(list[ImageName]):
         super().sort()
         self._display_index, _ = self.get_index_of_image(image_to_start_at)
 
-    def remove_current_image(self, move_backwards: bool = False) -> None:
+    def remove_current_image(self, index_movement: Movement = Movement.NONE) -> None:
         """Safely removes the entry at the current index.
 
-        :param move_backwards: Sets the display index back one. By default,
-        not editing the index will effectively move the index forward."""
+        :param index_movement: The direction to move the index. If NONE passed,
+        index will try to preserve its current position."""
         try:
             super().pop(self._display_index)
         except IndexError:
@@ -68,10 +68,11 @@ class ImageNameList(list[ImageName]):
 
         image_count: int = len(self)
 
-        if move_backwards:
-            self.move_index(-1)
-        elif self._display_index >= image_count:
-            self._display_index = image_count - 1
+        if index_movement == Movement.NONE:
+            if self._display_index >= image_count:
+                self._display_index = image_count - 1
+        else:
+            self.move_index(index_movement)
 
     def get_index_of_image(self, target_image: str) -> ImageSearchResult:
         """Finds index of target_image.

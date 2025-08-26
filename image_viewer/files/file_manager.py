@@ -8,7 +8,7 @@ from PIL.Image import Image
 
 from actions.types import Convert, Delete, Rename
 from actions.undoer import ActionUndoer, UndoResponse
-from constants import VALID_FILE_TYPES
+from constants import VALID_FILE_TYPES, Movement
 from files.file_dialog_asker import FileDialogAsker
 from image.cache import ImageCache, ImageCacheEntry
 from image.file import ImageName, ImageNameList
@@ -198,13 +198,13 @@ class ImageFileManager:
             pass
         self.remove_current_image()
 
-    def remove_current_image(self, move_backwards: bool = False) -> None:
+    def remove_current_image(self, index_movement: Movement = Movement.NONE) -> None:
         """Removes current image from files list and cache.
 
-        :param move_backwards: Sets the current image to be the previous one
-        in order rather than the next one."""
+        :param index_movement: The direction to move the index. If NONE passed,
+        index will try to preserve its current position."""
 
-        self._files.remove_current_image(move_backwards)
+        self._files.remove_current_image(index_movement)
         self.image_cache.pop_safe(self.path_to_image)
         self._update_after_move_or_edit()
 

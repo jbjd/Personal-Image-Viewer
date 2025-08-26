@@ -9,7 +9,7 @@ from PIL.ImageTk import PhotoImage
 
 from animation.frame import Frame
 from config import Config
-from constants import ButtonName, Key, Rotation, TkTags, ZoomDirection
+from constants import ButtonName, Key, Movement, Rotation, TkTags, ZoomDirection
 from files.file_manager import ImageFileManager
 from image.cache import ImageCache
 from image.loader import ImageLoader
@@ -280,7 +280,7 @@ class ViewerApp:
                 ZoomDirection.IN if event.delta > 0 else ZoomDirection.OUT
             )
         else:
-            self.move(-1 if event.delta > 0 else 1)
+            self.move(Movement.BACKWARD if event.delta > 0 else Movement.FORWARD)
 
     def handle_rotate_image(self, event: Event) -> None:
         """Rotates image, saves it to disk, and updates the display"""
@@ -468,8 +468,10 @@ class ViewerApp:
         self.hide_rename_window()
         self.file_manager.move_index(amount)
 
-        move_backwards_on_failure: bool = amount < 0
-        self.load_image_unblocking(move_backwards_on_failure)
+        movement_on_failure: Movement = (
+            Movement.BACKWARD if amount < 0 else Movement.FORWARD
+        )
+        self.load_image_unblocking(movement_on_failure)
 
     def redraw(self, event: Event) -> None:
         """Redraws screen if current image has a different size then when it was loaded,
@@ -546,19 +548,19 @@ class ViewerApp:
         """Wraps ImageLoader's load call with path from FileManager"""
         return self.image_loader.load_image(self.file_manager.path_to_image)
 
-    def load_image(self, move_backwards_on_failure: bool = False) -> None:
+    def load_image(self, movement_on_failure: Movement = Movement.NONE) -> None:
         """Loads an image and updates the display. On load failure, bad images are
          removed and the next image in order is loaded until one completes successfully.
 
-        :param move_backwards_on_failure: On load failure, move backwards in the image
-        order rather than forwards."""
+        :param movement_on_failure: On load failure, which direction should be moved
+        to load  further images."""
         self.clear_image()
         self.dropdown.need_refresh = True
 
         # When load fails, keep removing bad image and trying to load next
         current_image: Image | None
         while (current_image := self._load_image_at_current_path()) is None:
-            self.remove_current_image(move_backwards_on_failure)
+            self.remove_current_image(movement_on_failure)
 
         self.update_after_image_load(current_image)
         if self.canvas.is_widget_visible(TkTags.TOPBAR):
@@ -566,12 +568,14 @@ class ViewerApp:
 
         self._end_image_load()
 
-    def load_image_unblocking(self, move_backwards_on_failure: bool = False) -> None:
+    def load_image_unblocking(
+        self, movement_on_failure: Movement = Movement.NONE
+    ) -> None:
         """Calls load_image in a new tkinter thread.
 
-        :param move_backwards_on_failure: On load failure, move backwards in the image
-        order rather than forwards."""
-        self._start_image_load(self.load_image, move_backwards_on_failure)
+        :param movement_on_failure: On load failure, which direction should be moved
+        to load  further images."""
+        self._start_image_load(self.load_image, movement_on_failure)
 
     def show_topbar(self, _: Event | None = None) -> None:
         """Shows all topbar elements and updates its display"""
@@ -583,14 +587,14 @@ class ViewerApp:
         self.canvas.itemconfigure(TkTags.TOPBAR, state="hidden")
         self.hide_rename_window()
 
-    def remove_current_image(self, move_backwards: bool = False) -> None:
+    def remove_current_image(self, index_movement: Movement = Movement.NONE) -> None:
         """Removes current image from file manager.
         Exits the program when the last image is removed.
 
-        :param move_backwards: Sets the current image to be the previous one
-        in order rather than the next one."""
+        :param index_movement: The direction to move the index. If NONE passed,
+        index will try to preserve its current position."""
         try:
-            self.file_manager.remove_current_image(move_backwards)
+            self.file_manager.remove_current_image(index_movement)
         except IndexError:
             self.exit()
 
