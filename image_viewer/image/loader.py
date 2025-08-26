@@ -2,7 +2,6 @@
 
 from collections.abc import Callable
 from io import BytesIO
-from os import stat
 from threading import Thread
 
 from PIL import UnidentifiedImageError
@@ -133,7 +132,6 @@ class ImageLoader:
             return None
 
         original_image: Image = read_image_response.image
-        byte_size: int = stat(path_to_image).st_size
 
         self.PIL_image = original_image
         self.image_buffer = read_image_response.image_buffer
@@ -142,19 +140,22 @@ class ImageLoader:
         # check if cached and not changed outside of program
         resized_image: Image
         cached_image_data = self.image_cache.get(path_to_image)
-        if cached_image_data is not None and byte_size == cached_image_data.byte_size:
+        if (
+            cached_image_data is not None
+            and self.image_buffer.byte_size == cached_image_data.byte_size
+        ):
             resized_image = cached_image_data.image
         else:
             original_mode: str = original_image.mode
             resized_image = self._resize_or_get_placeholder()
 
-            size_display: str = get_byte_display(byte_size)
+            size_display: str = get_byte_display(self.image_buffer.byte_size)
 
             self.image_cache[path_to_image] = ImageCacheEntry(
                 resized_image,
                 original_image.size,
                 size_display,
-                byte_size,
+                self.image_buffer.byte_size,
                 original_mode,
                 read_image_response.format,
             )

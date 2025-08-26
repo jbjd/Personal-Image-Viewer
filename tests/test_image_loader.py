@@ -8,7 +8,6 @@ from PIL.Image import Image
 from image_viewer.animation.frame import Frame
 from image_viewer.image.cache import ImageCacheEntry
 from image_viewer.image.loader import ImageLoader, ReadImageResponse
-from tests.test_util.mocks import MockStatResult
 
 _MODULE_PATH: str = "image_viewer.image.loader"
 
@@ -66,15 +65,15 @@ def test_load_image_in_cache(image_loader: ImageLoader):
     )
     image_loader.image_cache["some/path"] = cached_data
 
-    mock_os_stat = MockStatResult(image_byte_size)
+    mock_image_buffer = MagicMock()
+    mock_image_buffer.byte_size = image_byte_size
     with (
         patch.object(
             ImageLoader,
             "read_image",
-            lambda *_: ReadImageResponse(MagicMock(), Image(), image_format),
+            lambda *_: ReadImageResponse(mock_image_buffer, Image(), image_format),
         ),
         patch(f"{_MODULE_PATH}.open_image", lambda *_: Image()),
-        patch(f"{_MODULE_PATH}.stat", lambda _: mock_os_stat),
     ):
         assert image_loader.load_image("some/path") is cached_image
 
