@@ -36,4 +36,4 @@ if __name__ == "__main__" and len(sys.argv) > 1:  # pragma: no cover
     if not __debug__:
         sys.excepthook = partial(exception_hook, destination_folder=path_to_exe_folder)
 
-    ViewerApp(sys.argv[1], path_to_exe_folder)
+    ViewerApp(sys.argv[1], path_to_exe_folder).start()

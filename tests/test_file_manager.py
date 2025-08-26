@@ -18,7 +18,7 @@ def test_image_file_manager(file_manager: ImageFileManager):
     """Test various functions of the file manager with empty image files"""
     assert len(file_manager._files) == 1
 
-    file_manager.find_all_images()
+    file_manager.update_files_with_known_starting_image()
     assert len(file_manager._files) == 4
     assert file_manager._files.get_index_of_image("a.png") == (0, True)
 
@@ -210,7 +210,7 @@ def test_split_with_weird_names(file_manager: ImageFileManager):
 def test_move_to_new_file(file_manager: ImageFileManager):
     """When user chooses a file in file dialog, should move to selected file"""
     chosen_path: str = os.path.join(IMG_DIR, "d.jpg")
-    file_manager.image_directory = "some/path"
+    file_manager.image_folder = "some/path"
 
     with patch(
         "image_viewer.files.file_manager.FileDialogAsker.ask_open_image",
@@ -218,7 +218,7 @@ def test_move_to_new_file(file_manager: ImageFileManager):
     ):
         assert file_manager.move_to_new_file()
         assert file_manager.path_to_image == chosen_path
-        assert file_manager.image_directory == IMG_DIR
+        assert file_manager.image_folder == IMG_DIR
 
 
 def test_move_to_new_file_cancelled(file_manager: ImageFileManager):
