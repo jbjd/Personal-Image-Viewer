@@ -9,6 +9,8 @@ from tests.test_util.mocks import MockEvent
 
 _MODULE_PATH: str = "image_viewer.viewer"
 
+# mypy: disable-error-code="method-assign"
+
 
 def test_pixel_scaling(viewer: ViewerApp):
     """Should correctly scale to screen size"""
