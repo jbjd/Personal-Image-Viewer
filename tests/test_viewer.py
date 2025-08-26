@@ -1,11 +1,9 @@
 """Viewer is hard to test due to being all UI code, testing what I can here"""
 
-from tkinter import Tk
 from unittest.mock import MagicMock, patch
 
 import pytest
 
-from image_viewer.ui.canvas import CustomCanvas
 from image_viewer.viewer import ViewerApp
 from tests.test_util.mocks import MockEvent
 
@@ -59,55 +57,61 @@ def test_redraw(
 
 def test_clear_image(viewer: ViewerApp):
     """Should stop animations and ask image loader to also clear data"""
-    with patch.object(Tk, "after_cancel") as mock_after_cancel:
+    mock_after_cancel = MagicMock()
+    viewer.app.after_cancel = mock_after_cancel
+
+    viewer.clear_current_image_data()
+    mock_after_cancel.assert_not_called()
+
+    viewer.animation_id = "123"
+
+    with patch(f"{_MODULE_PATH}.ImageLoader.reset_and_setup") as mock_reset:
         viewer.clear_current_image_data()
-        mock_after_cancel.assert_not_called()
-
-        viewer.animation_id = "123"
-
-        with patch(f"{_MODULE_PATH}.ImageLoader.reset_and_setup") as mock_reset:
-            viewer.clear_current_image_data()
-            mock_after_cancel.assert_called_once()
-            mock_reset.assert_called_once()
+        mock_after_cancel.assert_called_once()
+        mock_reset.assert_called_once()
 
 
-def test_exit(viewer: ViewerApp, canvas: CustomCanvas):
+def test_exit(viewer: ViewerApp):
     """Should clean up and exit"""
+
+    del viewer.canvas
 
     # Cleans up properly when not fully initialized
     with pytest.raises(SystemExit) as exception_cm:
         viewer.exit(exit_code=1)
     assert exception_cm.value.code == 1
 
-    viewer.canvas = canvas
-    canvas.file_name_text_id = 0
+    viewer.canvas = MagicMock()
+    viewer.canvas.file_name_text_id = 0
+    mock_destroy = MagicMock()
+    viewer.app.destroy = mock_destroy
 
-    with patch.object(Tk, "destroy") as mock_destroy:
-        with pytest.raises(SystemExit) as exception_cm:
-            viewer.exit()
-        assert exception_cm.value.code == 0
-        mock_destroy.assert_called_once()
+    with pytest.raises(SystemExit) as exception_cm:
+        viewer.exit()
+    assert exception_cm.value.code == 0
+    mock_destroy.assert_called_once()
 
 
 def test_minimize(viewer: ViewerApp):
     """Should mark that app needs to be redrawn and
     cancel scheduled moved functions"""
 
-    with (
-        patch.object(Tk, "after_cancel") as mock_after_cancel,
-        patch.object(Tk, "iconify") as mock_iconify,
-    ):
-        viewer.minimize()
-        assert viewer.need_to_redraw
-        assert mock_iconify.call_count == 1
-        assert mock_after_cancel.call_count == 0
+    mock_after_cancel = MagicMock()
+    mock_iconify = MagicMock()
+    viewer.app.after_cancel = mock_after_cancel
+    viewer.app.iconify = mock_iconify
 
-        viewer.need_to_redraw = False
-        viewer.move_id = "12"
-        viewer.minimize()
-        assert viewer.need_to_redraw
-        assert mock_iconify.call_count == 2
-        assert mock_after_cancel.call_count == 1
+    viewer.minimize()
+    assert viewer.need_to_redraw
+    assert mock_iconify.call_count == 1
+    assert mock_after_cancel.call_count == 0
+
+    viewer.need_to_redraw = False
+    viewer.move_id = "12"
+    viewer.minimize()
+    assert viewer.need_to_redraw
+    assert mock_iconify.call_count == 2
+    assert mock_after_cancel.call_count == 1
 
 
 @pytest.mark.parametrize(

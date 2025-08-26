@@ -103,6 +103,7 @@ def viewer_fixture() -> ViewerApp:
 
     with (
         patch.object(ViewerApp, "_init_image_display"),
+        patch("image_viewer.viewer.Tk"),
         patch("image_viewer.viewer.CustomCanvas"),
         patch("image_viewer.viewer.ButtonIconFactory", mock_icon_factory),
     ):
