@@ -68,11 +68,20 @@ class ImageNameList(list[ImageName]):
 
         image_count: int = len(self)
 
-        if index_movement == Movement.NONE:
-            if self._display_index >= image_count:
+        # Weird logic here: moving BACKWARD is normal
+        # but, if FORWARD then we need to do nothing since
+        # keeping index the same and removing an item from the list
+        # will effectively move forward. However, if index now exceeds
+        # the list size, when NONE we need to wrap back to the end of the list
+        # to preserve being at the end of the list. if FORWARD we need to wrap
+        # around to index 0
+        if index_movement == Movement.BACKWARD:
+            self.move_index(-1)
+        elif self._display_index >= image_count:
+            if index_movement == Movement.NONE:
                 self._display_index = image_count - 1
-        else:
-            self.move_index(index_movement)
+            else:  # Must be Movement.FORWARD
+                self._display_index = 0
 
     def get_index_of_image(self, target_image: str) -> ImageSearchResult:
         """Finds index of target_image.
