@@ -69,7 +69,7 @@ class ViewerApp:
 
         self.app: Tk = self._setup_tk_app(path_to_exe_folder)
         self.app_id: int = self.app.winfo_id()
-        self.canvas: CustomCanvas = CustomCanvas(self.app, config.background_color)
+        self.canvas = CustomCanvas(self.app, config.background_color)
         screen_height: int = self.canvas.screen_height
         screen_width: int = self.canvas.screen_width
 
@@ -96,8 +96,6 @@ class ViewerApp:
 
         self.canvas.tag_bind(TkTags.BACKGROUND, "<Button-1>", self.handle_canvas_click)
         self._add_binds_to_tk(config)
-
-        self.app.mainloop()
 
     @staticmethod
     def _setup_tk_app(path_to_exe_folder: str) -> Tk:
@@ -223,9 +221,13 @@ class ViewerApp:
         minify_button.add_to_canvas(ButtonName.MINIFY, button_x_offset)
 
         button_x_offset -= icon_size
+        dropdown_icons_down, dropdown_icons_up = (
+            button_icon_factory.make_dropdown_icons()
+        )
         dropdown_button = ToggleableButtonUIElement(
             canvas,
-            *button_icon_factory.make_dropdown_icons(),
+            dropdown_icons_down,
+            dropdown_icons_up,
             self.toggle_show_dropdown,
         )
         dropdown_button.add_to_canvas(ButtonName.DROPDOWN, button_x_offset)
@@ -267,6 +269,10 @@ class ViewerApp:
     def _scale_pixels_to_width(self, original_pixels: int) -> int:
         """Normalize all pixels relative to a 1920 pixel wide screen"""
         return int(original_pixels * self.width_ratio)
+
+    def start(self) -> None:
+        """Starts tkinter main loop"""
+        self.app.mainloop()
 
     # Functions handling specific user input
 
@@ -448,7 +454,7 @@ class ViewerApp:
     def refresh(self, _: Event) -> None:
         """Updates list of all images in directory.
         Display may change if image was removed outside of program"""
-        self.clear_image()
+        self.clear_current_image_data()
         try:
             self.file_manager.refresh_files_with_known_starting_image()
         except IndexError:
@@ -485,7 +491,7 @@ class ViewerApp:
 
     def trash_image(self) -> None:
         """Move current image to trash and moves to next"""
-        self.clear_image()
+        self.clear_current_image_data()
         self.hide_rename_window()
         self.delete_current_image()
         self.load_image_unblocking()
@@ -554,7 +560,7 @@ class ViewerApp:
 
         :param movement_on_failure: On load failure, which direction should be moved
         to load  further images."""
-        self.clear_image()
+        self.clear_current_image_data()
         self.dropdown.need_refresh = True
 
         # When load fails, keep removing bad image and trying to load next
@@ -632,7 +638,11 @@ class ViewerApp:
         )
 
     def _show_next_frame(self, ms_backoff: int) -> None:
-        """Displays a frame on screen and loops to next frame after a delay"""
+        """Displays a frame on screen and starts a new tkinter thread
+        to call itself on the next frame after a delay.
+        If next frame isn't loaded yet, increase delay and stays on current frame.
+
+        :param ms_backoff: Milliseconds until next frame should appear."""
         start: float = perf_counter()
         frame: Frame | None = self.image_loader.get_next_frame()
 
@@ -647,15 +657,15 @@ class ViewerApp:
 
         self.animation_loop(ms_until_next_frame, ms_backoff)
 
-    def clear_image(self) -> None:
-        """Clears all image data"""
+    def clear_current_image_data(self) -> None:
+        """Clears all stored data about the current image."""
         if self.currently_animating():
             self.app.after_cancel(self.animation_id)
             self.animation_id = ""
         self.image_loader.reset_and_setup()
 
     def update_details_dropdown(self) -> None:
-        """Updates the information and state of dropdown image"""
+        """Updates the information and state of dropdown image."""
         dropdown = self.dropdown
         if dropdown.show:
             if dropdown.need_refresh:
