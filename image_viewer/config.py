@@ -14,23 +14,27 @@ DEFAULT_BACKGROUND_COLOR: str = "#000000"
 
 
 def _validate_hex_or_default(hex_color: str, default: str) -> str:
-    """Returns hex_color if its in the valid hex format or default if not"""
+    """Returns hex_color if its in the valid hex format or default if not
+
+    :param hex_color: A possible hex color
+    :param default: What to return if hex_color is invalid
+    :returns: Either hex_color if its valid or default"""
 
     return hex_color if is_valid_hex_color(hex_color) else default
 
 
 def _validate_keybind_or_default(keybind: str, default: str) -> str:
-    """Returns keybind if it follows the format:
+    """Returns keybind if its in a valid format or default if not
 
-    <F[0-9]> <F1[0-2]> <Control-[a-zA-Z0-9]>
-
-    or default if not"""
+    :param keybind: A possible keybind
+    :param default: What to return if keybind is invalid
+    :returns: Either keybind if its valid or default"""
 
     return keybind if is_valid_keybind(keybind) else default
 
 
 class DefaultKeybinds(StrEnum):
-    """Defaults for keybinds that config.ini can override"""
+    """Defaults for keybinds that config.ini can override."""
 
     COPY_TO_CLIPBOARD_AS_BASE64 = "<Control-E>"
     MOVE_TO_NEW_FILE = "<Control-m>"
@@ -42,7 +46,7 @@ class DefaultKeybinds(StrEnum):
 
 
 class Config:
-    """Reads configs from config.ini"""
+    """Reads values from config.ini file."""
 
     __slots__ = ("background_color", "font_file", "keybinds", "max_items_in_cache")
 
@@ -78,7 +82,7 @@ class Config:
 
 
 class KeybindConfig:
-    """Contains configurable tkinter keybinds"""
+    """Contains configurable tkinter keybinds."""
 
     __slots__ = (
         "copy_to_clipboard_as_base64",
@@ -122,10 +126,10 @@ class KeybindConfig:
 
 
 class ConfigParserExt(ConfigParser):
-    """Extends ConfigParser to add safer implementations of get"""
+    """Extends ConfigParser to add safer implementations of get."""
 
     def get_int_safe(self, section: str, option: str, fallback: int) -> int:
-        """Returns config option converted to int or default if convert fails"""
+        """Returns config option converted to int or default if convert fails."""
         try:
             result: int = int(super().get(section, option, fallback=fallback))
         except ValueError:
@@ -134,7 +138,7 @@ class ConfigParserExt(ConfigParser):
         return result
 
     def get_string_safe(self, section: str, option: str, fallback: str = "") -> str:
-        """Returns config option as string or default if missing or empty"""
+        """Returns config option as string or default if missing or empty."""
         result: str = super().get(section, option, fallback=fallback).strip("'\"")
 
         return result or fallback
