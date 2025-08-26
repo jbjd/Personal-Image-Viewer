@@ -23,7 +23,7 @@ class _ShouldPreserveIndex(Enum):
 
 
 class ImageFileManager:
-    """Manages internal list of images"""
+    """Manages interaction with and tracking of image files"""
 
     __slots__ = (
         "_files",
@@ -31,13 +31,13 @@ class ImageFileManager:
         "current_image",
         "file_dialog_asker",
         "image_cache",
-        "image_directory",
+        "image_folder",
         "path_to_image",
     )
 
     def __init__(self, first_image_path: str, image_cache: ImageCache) -> None:
         """Load single file for display before we load the rest"""
-        self.image_directory: str = get_normalized_dir_name(first_image_path)
+        self.image_folder: str = get_normalized_dir_name(first_image_path)
         self.image_cache: ImageCache = image_cache
 
         self.action_undoer: ActionUndoer = ActionUndoer()
@@ -62,24 +62,16 @@ class ImageFileManager:
     def move_to_new_file(self) -> bool:
         """Opens native open file dialog and points to new image if selected.
         Returns True if user selected a file, False if dialog was exited"""
-        new_file_path: str = self.file_dialog_asker.ask_open_image(self.image_directory)
+        new_file_path: str = self.file_dialog_asker.ask_open_image(self.image_folder)
         if new_file_path == "":
             return False
 
         chosen_file: str = os.path.basename(new_file_path)
         new_dir: str = get_normalized_dir_name(new_file_path)
 
-        if new_dir != self.image_directory:
-            self.image_directory = new_dir
-            self.refresh_image_list()
-
-        index: int
-        found: bool
-        index, found = self._files.move_index_to_image(chosen_file)
-        if not found:
-            self.add_new_image(chosen_file, index=index)
-        else:
-            self._update_after_move_or_edit()
+        if new_dir != self.image_folder:
+            self.image_folder = new_dir
+            self.refresh_files_with_known_starting_image(chosen_file)
 
         return True
 
@@ -88,7 +80,7 @@ class ImageFileManager:
         if image_name is None:
             image_name = self.current_image.name
 
-        return os.path.normpath(f"{self.image_directory}/{image_name}")
+        return os.path.normpath(f"{self.image_folder}/{image_name}")
 
     def _update_after_move_or_edit(self) -> None:
         """Sets variables about current image.
@@ -96,14 +88,22 @@ class ImageFileManager:
         self.current_image = self._files.get_current_image()
         self.path_to_image = self.get_path_to_image()
 
-    def find_all_images(self) -> None:
-        """Finds all supported image in directory"""
-        image_to_start_at: str = self._files.get_current_image_name()
+    def update_files_with_known_starting_image(
+        self, image_to_start_at: str | None = None
+    ) -> None:
+        """Updates files list with all images in the folder
+        and updates the index to where image_to_start_at now is.
+
+        :param image_to_start_at: File name of an image. Starting index will be where
+        this falls in the files list. If None, the current image's name will be used.
+        """
+        if image_to_start_at is None:
+            image_to_start_at = self.current_image.name
 
         self._files = ImageNameList(
             [
                 image_path
-                for path in get_files_in_folder(self.image_directory)
+                for path in get_files_in_folder(self.image_folder)
                 if (image_path := ImageName(path)).suffix in VALID_FILE_TYPES
             ]
         )
@@ -111,10 +111,13 @@ class ImageFileManager:
         self._files.sort_and_preserve_index(image_to_start_at)
         self._update_after_move_or_edit()
 
-    def refresh_image_list(self) -> None:
-        """Clears cache and finds all images in directory"""
+    def refresh_files_with_known_starting_image(
+        self, image_to_start_at: str | None = None
+    ) -> None:
+        """Clears cache, updates files list with all images in the folder,
+        and updates the index to where image_to_start_at now is."""
         self.image_cache.clear()
-        self.find_all_images()
+        self.update_files_with_known_starting_image(image_to_start_at)
 
     def get_cached_metadata(self, get_all_details: bool = True) -> str:
         """Returns formatted string of cached metadata on current image.
@@ -182,7 +185,7 @@ class ImageFileManager:
         return details
 
     def move_index(self, amount: int) -> None:
-        """Moves internal index with safe wrap around"""
+        """Moves index with safe wrap around"""
         self._files.move_index(amount)
         self._update_after_move_or_edit()
 
@@ -195,14 +198,18 @@ class ImageFileManager:
             pass
         self.remove_current_image()
 
-    def remove_current_image(self) -> None:
-        """Removes image from files array and cache"""
-        self._files.remove_current_image()
+    def remove_current_image(self, move_backwards: bool = False) -> None:
+        """Removes current image from files list and cache.
+
+        :param move_backwards: Sets the current image to be the previous one
+        in order rather than the next one."""
+
+        self._files.remove_current_image(move_backwards)
         self.image_cache.pop_safe(self.path_to_image)
         self._update_after_move_or_edit()
 
     def remove_image(self, index: int) -> None:
-        """Removes image at index from files array and cache"""
+        """Removes image at index from files list and cache."""
         deleted_name: str = self._files.pop(index).name
         key: str = self.get_path_to_image(deleted_name)
         self.image_cache.pop_safe(key)
@@ -278,7 +285,7 @@ class ImageFileManager:
         new_full_path: str
         if will_move_dirs:
             if not os.path.isabs(new_dir):
-                new_dir = os.path.normpath(os.path.join(self.image_directory, new_dir))
+                new_dir = os.path.normpath(os.path.join(self.image_folder, new_dir))
             if not os.path.exists(new_dir):
                 raise OSError
             new_full_path = os.path.join(new_dir, new_name)
@@ -321,7 +328,7 @@ class ImageFileManager:
 
     @staticmethod
     def _should_preserve_index_on_rename(result: Rename) -> bool:
-        """Returns True when image list shifted or changed size so internal index
+        """Returns True when image list shifted or changed size so index
         needs to be changed to keep on the same image"""
         if isinstance(result, Convert):
             return not result.original_file_deleted

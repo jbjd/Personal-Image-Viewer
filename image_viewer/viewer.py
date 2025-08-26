@@ -125,7 +125,7 @@ class ViewerApp:
         if image is not None:
             self.update_after_image_load(image)
 
-        self.file_manager.find_all_images()
+        self.file_manager.update_files_with_known_starting_image()
 
         # if first load failed, load new one now that all other images are found
         if image is None:
@@ -174,7 +174,7 @@ class ViewerApp:
                 lambda _: open_with(self.app_id, self.file_manager.path_to_image),
             )
             app.bind(
-                "<Control-D>",
+                "<Control-c>",
                 lambda _: drop_file_to_clipboard(
                     self.app_id, self.file_manager.path_to_image
                 ),
@@ -450,7 +450,7 @@ class ViewerApp:
         Display may change if image was removed outside of program"""
         self.clear_image()
         try:
-            self.file_manager.refresh_image_list()
+            self.file_manager.refresh_files_with_known_starting_image()
         except IndexError:
             self.exit()
         self.load_image_unblocking()
@@ -461,10 +461,15 @@ class ViewerApp:
             self.load_image_unblocking()
 
     def move(self, amount: int) -> None:
-        """Moves some amount of images forward/backward"""
+        """Moves some amount of images forward/backward, loads the new image
+        in a tkinter thread, then updates the display.
+
+        :param amount: A non-zero int of how many images to move."""
         self.hide_rename_window()
         self.file_manager.move_index(amount)
-        self.load_image_unblocking()
+
+        move_backwards_on_failure: bool = amount < 0
+        self.load_image_unblocking(move_backwards_on_failure)
 
     def redraw(self, event: Event) -> None:
         """Redraws screen if current image has a different size then when it was loaded,
@@ -541,14 +546,19 @@ class ViewerApp:
         """Wraps ImageLoader's load call with path from FileManager"""
         return self.image_loader.load_image(self.file_manager.path_to_image)
 
-    def load_image(self) -> None:
-        """Loads an image and updates display"""
+    def load_image(self, move_backwards_on_failure: bool = False) -> None:
+        """Loads an image and updates the display. On load failure, bad images are
+         removed and the next image in order is loaded until one completes successfully.
+
+        :param move_backwards_on_failure: On load failure, move backwards in the image
+        order rather than forwards."""
         self.clear_image()
+        self.dropdown.need_refresh = True
 
         # When load fails, keep removing bad image and trying to load next
         current_image: Image | None
         while (current_image := self._load_image_at_current_path()) is None:
-            self.remove_current_image()
+            self.remove_current_image(move_backwards_on_failure)
 
         self.update_after_image_load(current_image)
         if self.canvas.is_widget_visible(TkTags.TOPBAR):
@@ -556,10 +566,12 @@ class ViewerApp:
 
         self._end_image_load()
 
-    def load_image_unblocking(self) -> None:
-        """Starts new thread for loading image"""
-        self.dropdown.need_refresh = True
-        self._start_image_load(self.load_image)
+    def load_image_unblocking(self, move_backwards_on_failure: bool = False) -> None:
+        """Calls load_image in a new tkinter thread.
+
+        :param move_backwards_on_failure: On load failure, move backwards in the image
+        order rather than forwards."""
+        self._start_image_load(self.load_image, move_backwards_on_failure)
 
     def show_topbar(self, _: Event | None = None) -> None:
         """Shows all topbar elements and updates its display"""
@@ -571,10 +583,14 @@ class ViewerApp:
         self.canvas.itemconfigure(TkTags.TOPBAR, state="hidden")
         self.hide_rename_window()
 
-    def remove_current_image(self) -> None:
-        """Removes current image from internal image list"""
+    def remove_current_image(self, move_backwards: bool = False) -> None:
+        """Removes current image from file manager.
+        Exits the program when the last image is removed.
+
+        :param move_backwards: Sets the current image to be the previous one
+        in order rather than the next one."""
         try:
-            self.file_manager.remove_current_image()
+            self.file_manager.remove_current_image(move_backwards)
         except IndexError:
             self.exit()
 
@@ -647,18 +663,25 @@ class ViewerApp:
                     return  # data not present in cache
 
                 dropdown.image = PhotoImage(create_dropdown_image(details))
+                dropdown.need_refresh = False
 
             self.canvas.itemconfigure(dropdown.id, image=dropdown.image, state="normal")
         else:
             self.canvas.itemconfigure(dropdown.id, state="hidden")
 
-    def _start_image_load(self, function: Callable, *args):
-        """Cancels any previous image load thread and starts a new one"""
+    def _start_image_load(
+        self, image_load_function: Callable[..., None], *args
+    ) -> None:
+        """Cancels any previous image load tkinter thread and starts a new one.
+
+        :param image_load_function: A function that loads an image and updates
+        the display. Must call _end_image_load when it completes.
+        :param args: args to be passed to the image_load_function."""
         if self.image_load_id != "":
             self.app.after_cancel(self.image_load_id)
 
-        self.image_load_id = self.app.after(0, function, *args)
+        self.image_load_id = self.app.after(0, image_load_function, *args)
 
     def _end_image_load(self) -> None:
-        """Indicates function called by _start_image_load has finished"""
+        """Indicates function called by _start_image_load has finished."""
         self.image_load_id = ""

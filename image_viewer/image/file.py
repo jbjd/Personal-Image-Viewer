@@ -45,9 +45,6 @@ class ImageNameList(list[ImageName]):
     def get_current_image(self) -> ImageName:
         return self[self._display_index]
 
-    def get_current_image_name(self) -> str:
-        return self[self._display_index].name
-
     def move_index(self, amount: int) -> None:
         """Moves display_index by the provided amount with wraparound"""
         image_count: int = len(self)
@@ -59,8 +56,11 @@ class ImageNameList(list[ImageName]):
         super().sort()
         self._display_index, _ = self.get_index_of_image(image_to_start_at)
 
-    def remove_current_image(self) -> None:
-        """Safely removes current index"""
+    def remove_current_image(self, move_backwards: bool = False) -> None:
+        """Safely removes the entry at the current index.
+
+        :param move_backwards: Sets the display index back one. By default,
+        not editing the index will effectively move the index forward."""
         try:
             super().pop(self._display_index)
         except IndexError:
@@ -68,7 +68,9 @@ class ImageNameList(list[ImageName]):
 
         image_count: int = len(self)
 
-        if self._display_index >= image_count:
+        if move_backwards:
+            self.move_index(-1)
+        elif self._display_index >= image_count:
             self._display_index = image_count - 1
 
     def get_index_of_image(self, target_image: str) -> ImageSearchResult:
