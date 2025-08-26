@@ -9,7 +9,7 @@ from PIL.ImageTk import PhotoImage
 
 from animation.frame import Frame
 from config import Config
-from constants import ButtonName, Key, Rotation, TkTags, ZoomDirection
+from constants import ButtonName, Key, Movement, Rotation, TkTags, ZoomDirection
 from files.file_manager import ImageFileManager
 from image.cache import ImageCache
 from image.loader import ImageLoader
@@ -69,7 +69,7 @@ class ViewerApp:
 
         self.app: Tk = self._setup_tk_app(path_to_exe_folder)
         self.app_id: int = self.app.winfo_id()
-        self.canvas: CustomCanvas = CustomCanvas(self.app, config.background_color)
+        self.canvas = CustomCanvas(self.app, config.background_color)
         screen_height: int = self.canvas.screen_height
         screen_width: int = self.canvas.screen_width
 
@@ -97,8 +97,6 @@ class ViewerApp:
         self.canvas.tag_bind(TkTags.BACKGROUND, "<Button-1>", self.handle_canvas_click)
         self._add_binds_to_tk(config)
 
-        self.app.mainloop()
-
     @staticmethod
     def _setup_tk_app(path_to_exe_folder: str) -> Tk:
         """Creates and setups Tk class"""
@@ -125,7 +123,7 @@ class ViewerApp:
         if image is not None:
             self.update_after_image_load(image)
 
-        self.file_manager.find_all_images()
+        self.file_manager.update_files_with_known_starting_image()
 
         # if first load failed, load new one now that all other images are found
         if image is None:
@@ -174,7 +172,7 @@ class ViewerApp:
                 lambda _: open_with(self.app_id, self.file_manager.path_to_image),
             )
             app.bind(
-                "<Control-D>",
+                "<Control-c>",
                 lambda _: drop_file_to_clipboard(
                     self.app_id, self.file_manager.path_to_image
                 ),
@@ -223,9 +221,13 @@ class ViewerApp:
         minify_button.add_to_canvas(ButtonName.MINIFY, button_x_offset)
 
         button_x_offset -= icon_size
+        dropdown_icons_down, dropdown_icons_up = (
+            button_icon_factory.make_dropdown_icons()
+        )
         dropdown_button = ToggleableButtonUIElement(
             canvas,
-            *button_icon_factory.make_dropdown_icons(),
+            dropdown_icons_down,
+            dropdown_icons_up,
             self.toggle_show_dropdown,
         )
         dropdown_button.add_to_canvas(ButtonName.DROPDOWN, button_x_offset)
@@ -268,6 +270,10 @@ class ViewerApp:
         """Normalize all pixels relative to a 1920 pixel wide screen"""
         return int(original_pixels * self.width_ratio)
 
+    def start(self) -> None:
+        """Starts tkinter main loop"""
+        self.app.mainloop()
+
     # Functions handling specific user input
 
     def handle_mouse_wheel(self, event: Event) -> None:
@@ -280,7 +286,7 @@ class ViewerApp:
                 ZoomDirection.IN if event.delta > 0 else ZoomDirection.OUT
             )
         else:
-            self.move(-1 if event.delta > 0 else 1)
+            self.move(Movement.BACKWARD if event.delta > 0 else Movement.FORWARD)
 
     def handle_rotate_image(self, event: Event) -> None:
         """Rotates image, saves it to disk, and updates the display"""
@@ -448,9 +454,9 @@ class ViewerApp:
     def refresh(self, _: Event) -> None:
         """Updates list of all images in directory.
         Display may change if image was removed outside of program"""
-        self.clear_image()
+        self.clear_current_image_data()
         try:
-            self.file_manager.refresh_image_list()
+            self.file_manager.refresh_files_with_known_starting_image()
         except IndexError:
             self.exit()
         self.load_image_unblocking()
@@ -461,10 +467,17 @@ class ViewerApp:
             self.load_image_unblocking()
 
     def move(self, amount: int) -> None:
-        """Moves some amount of images forward/backward"""
+        """Moves some amount of images forward/backward, loads the new image
+        in a tkinter thread, then updates the display.
+
+        :param amount: A non-zero int of how many images to move."""
         self.hide_rename_window()
         self.file_manager.move_index(amount)
-        self.load_image_unblocking()
+
+        movement_on_failure: Movement = (
+            Movement.BACKWARD if amount < 0 else Movement.FORWARD
+        )
+        self.load_image_unblocking(movement_on_failure)
 
     def redraw(self, event: Event) -> None:
         """Redraws screen if current image has a different size then when it was loaded,
@@ -478,7 +491,7 @@ class ViewerApp:
 
     def trash_image(self) -> None:
         """Move current image to trash and moves to next"""
-        self.clear_image()
+        self.clear_current_image_data()
         self.hide_rename_window()
         self.delete_current_image()
         self.load_image_unblocking()
@@ -541,14 +554,19 @@ class ViewerApp:
         """Wraps ImageLoader's load call with path from FileManager"""
         return self.image_loader.load_image(self.file_manager.path_to_image)
 
-    def load_image(self) -> None:
-        """Loads an image and updates display"""
-        self.clear_image()
+    def load_image(self, movement_on_failure: Movement = Movement.NONE) -> None:
+        """Loads an image and updates the display. On load failure, bad images are
+         removed and the next image in order is loaded until one completes successfully.
+
+        :param movement_on_failure: On load failure, which direction should be moved
+        to load  further images."""
+        self.clear_current_image_data()
+        self.dropdown.need_refresh = True
 
         # When load fails, keep removing bad image and trying to load next
         current_image: Image | None
         while (current_image := self._load_image_at_current_path()) is None:
-            self.remove_current_image()
+            self.remove_current_image(movement_on_failure)
 
         self.update_after_image_load(current_image)
         if self.canvas.is_widget_visible(TkTags.TOPBAR):
@@ -556,10 +574,14 @@ class ViewerApp:
 
         self._end_image_load()
 
-    def load_image_unblocking(self) -> None:
-        """Starts new thread for loading image"""
-        self.dropdown.need_refresh = True
-        self._start_image_load(self.load_image)
+    def load_image_unblocking(
+        self, movement_on_failure: Movement = Movement.NONE
+    ) -> None:
+        """Calls load_image in a new tkinter thread.
+
+        :param movement_on_failure: On load failure, which direction should be moved
+        to load  further images."""
+        self._start_image_load(self.load_image, movement_on_failure)
 
     def show_topbar(self, _: Event | None = None) -> None:
         """Shows all topbar elements and updates its display"""
@@ -571,10 +593,14 @@ class ViewerApp:
         self.canvas.itemconfigure(TkTags.TOPBAR, state="hidden")
         self.hide_rename_window()
 
-    def remove_current_image(self) -> None:
-        """Removes current image from internal image list"""
+    def remove_current_image(self, index_movement: Movement = Movement.NONE) -> None:
+        """Removes current image from file manager.
+        Exits the program when the last image is removed.
+
+        :param index_movement: The direction to move the index. If NONE passed,
+        index will try to preserve its current position."""
         try:
-            self.file_manager.remove_current_image()
+            self.file_manager.remove_current_image(index_movement)
         except IndexError:
             self.exit()
 
@@ -612,7 +638,11 @@ class ViewerApp:
         )
 
     def _show_next_frame(self, ms_backoff: int) -> None:
-        """Displays a frame on screen and loops to next frame after a delay"""
+        """Displays a frame on screen and starts a new tkinter thread
+        to call itself on the next frame after a delay.
+        If next frame isn't loaded yet, increase delay and stays on current frame.
+
+        :param ms_backoff: Milliseconds until next frame should appear."""
         start: float = perf_counter()
         frame: Frame | None = self.image_loader.get_next_frame()
 
@@ -627,15 +657,15 @@ class ViewerApp:
 
         self.animation_loop(ms_until_next_frame, ms_backoff)
 
-    def clear_image(self) -> None:
-        """Clears all image data"""
+    def clear_current_image_data(self) -> None:
+        """Clears all stored data about the current image."""
         if self.currently_animating():
             self.app.after_cancel(self.animation_id)
             self.animation_id = ""
         self.image_loader.reset_and_setup()
 
     def update_details_dropdown(self) -> None:
-        """Updates the information and state of dropdown image"""
+        """Updates the information and state of dropdown image."""
         dropdown = self.dropdown
         if dropdown.show:
             if dropdown.need_refresh:
@@ -647,18 +677,25 @@ class ViewerApp:
                     return  # data not present in cache
 
                 dropdown.image = PhotoImage(create_dropdown_image(details))
+                dropdown.need_refresh = False
 
             self.canvas.itemconfigure(dropdown.id, image=dropdown.image, state="normal")
         else:
             self.canvas.itemconfigure(dropdown.id, state="hidden")
 
-    def _start_image_load(self, function: Callable, *args):
-        """Cancels any previous image load thread and starts a new one"""
+    def _start_image_load(
+        self, image_load_function: Callable[..., None], *args
+    ) -> None:
+        """Cancels any previous image load tkinter thread and starts a new one.
+
+        :param image_load_function: A function that loads an image and updates
+        the display. Must call _end_image_load when it completes.
+        :param args: args to be passed to the image_load_function."""
         if self.image_load_id != "":
             self.app.after_cancel(self.image_load_id)
 
-        self.image_load_id = self.app.after(0, function, *args)
+        self.image_load_id = self.app.after(0, image_load_function, *args)
 
     def _end_image_load(self) -> None:
-        """Indicates function called by _start_image_load has finished"""
+        """Indicates function called by _start_image_load has finished."""
         self.image_load_id = ""

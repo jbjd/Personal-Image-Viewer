@@ -40,6 +40,14 @@ class ZoomDirection(IntEnum):
     OUT = -1
 
 
+class Movement(IntEnum):
+    """Common movement amounts between images"""
+
+    FORWARD = 1
+    NONE = 0
+    BACKWARD = -1
+
+
 class TkTags(StrEnum):
     """Tags for items on the UI"""
 
