@@ -1,7 +1,7 @@
 import pytest
 
 from image_viewer.constants import ImageFormats, Movement
-from image_viewer.image.file import magic_number_guess, ImageName, ImageNameList
+from image_viewer.image.file import ImageName, ImageNameList, magic_number_guess
 
 
 @pytest.mark.parametrize(
