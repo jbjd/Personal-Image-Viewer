@@ -1,4 +1,4 @@
-"""Viewer is hard to test due to being all UI code, testing what I can here"""
+"""Tests for the ViewerApp class."""
 
 from unittest.mock import MagicMock, patch
 
@@ -13,7 +13,7 @@ _MODULE_PATH: str = "image_viewer.viewer"
 
 
 def test_pixel_scaling(viewer: ViewerApp):
-    """Should correctly scale to screen size"""
+    """Should correctly scale sizes to the screen."""
 
     viewer.height_ratio = 1
     viewer.width_ratio = 1
@@ -29,16 +29,7 @@ def test_pixel_scaling(viewer: ViewerApp):
 def test_redraw(
     viewer: ViewerApp, focused_event: MockEvent, unfocused_event: MockEvent
 ):
-    """Should only redraw when necessary"""
-
-    viewer.need_to_redraw = True
-
-    # Will immediately exit if widget is not tk app
-    with patch(
-        f"{_MODULE_PATH}.ImageFileManager.current_image_cache_still_fresh",
-    ) as mock_check_cache:
-        viewer.redraw(unfocused_event)
-        mock_check_cache.assert_not_called()
+    """Should only redraw the current image when necessary."""
 
     with patch(f"{_MODULE_PATH}.ViewerApp.load_image_unblocking") as mock_refresh:
         with patch(
@@ -48,7 +39,13 @@ def test_redraw(
             viewer.redraw(focused_event)
             mock_refresh.assert_not_called()
 
-        viewer.need_to_redraw = True
+        with patch(
+            f"{_MODULE_PATH}.ImageFileManager.current_image_cache_still_fresh",
+            side_effect=lambda: False,
+        ):
+            viewer.redraw(unfocused_event)
+            mock_refresh.assert_not_called()
+
         with patch(
             f"{_MODULE_PATH}.ImageFileManager.current_image_cache_still_fresh",
             side_effect=lambda: False,
@@ -58,7 +55,7 @@ def test_redraw(
 
 
 def test_clear_image(viewer: ViewerApp):
-    """Should stop animations and ask image loader to also clear data"""
+    """Should stop animations and reset image loader."""
     mock_after_cancel = MagicMock()
     viewer.app.after_cancel = mock_after_cancel
 
@@ -74,7 +71,7 @@ def test_clear_image(viewer: ViewerApp):
 
 
 def test_exit(viewer: ViewerApp):
-    """Should clean up and exit"""
+    """Should clean up and exit tkinter."""
 
     del viewer.canvas
 
@@ -95,8 +92,7 @@ def test_exit(viewer: ViewerApp):
 
 
 def test_minimize(viewer: ViewerApp):
-    """Should mark that app needs to be redrawn and
-    cancel scheduled moved functions"""
+    """Should iconify the app and cancel scheduled movements."""
 
     mock_after_cancel = MagicMock()
     mock_iconify = MagicMock()
@@ -104,14 +100,11 @@ def test_minimize(viewer: ViewerApp):
     viewer.app.iconify = mock_iconify
 
     viewer.minimize()
-    assert viewer.need_to_redraw
     assert mock_iconify.call_count == 1
     assert mock_after_cancel.call_count == 0
 
-    viewer.need_to_redraw = False
     viewer.move_id = "12"
     viewer.minimize()
-    assert viewer.need_to_redraw
     assert mock_iconify.call_count == 2
     assert mock_after_cancel.call_count == 1
 
@@ -128,7 +121,7 @@ def test_minimize(viewer: ViewerApp):
 def test_update_details_dropdown(
     viewer: ViewerApp, dropdown_show: bool, dropdown_needs_refresh: bool
 ):
-    """Should correctly update dropdown given provided state"""
+    """Should correctly update dropdown given provided state."""
     viewer.canvas.itemconfigure = MagicMock()
 
     viewer.dropdown.show = dropdown_show
