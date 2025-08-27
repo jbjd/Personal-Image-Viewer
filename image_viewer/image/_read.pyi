@@ -8,8 +8,9 @@ class CMemoryViewBuffer:
     """Contains a memoryview object to malloc'ed C data.
     Only intended to be created within C code and consumed by Python code"""
 
-    __slots__ = ("view",)
+    __slots__ = ("byte_size", "view")
 
+    byte_size: int
     view: memoryview
 
 class CMemoryViewBufferJpeg(CMemoryViewBuffer):
