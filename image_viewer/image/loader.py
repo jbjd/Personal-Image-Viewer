@@ -132,10 +132,10 @@ class ImageLoader:
             return None
 
         original_image: Image = read_image_response.image
-        byte_size: int = self.image_buffer.byte_size
+        byte_size: int = read_image_response.image_buffer.byte_size
 
-        self.PIL_image = original_image
         self.image_buffer = read_image_response.image_buffer
+        self.PIL_image = original_image
         self.current_load_id += 1
 
         # check if cached and not changed outside of program
