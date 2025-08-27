@@ -8,6 +8,7 @@
 
 // CMemoryViewBuffer Start
 static PyMemberDef CMemoryViewBuffer_members[] = {
+    {"byte_size", Py_T_ULONG, offsetof(CMemoryViewBuffer, bufferSize), Py_READONLY, 0},
     {"view", Py_T_OBJECT_EX, offsetof(CMemoryViewBuffer, view), Py_READONLY, 0},
     {NULL}};
 
