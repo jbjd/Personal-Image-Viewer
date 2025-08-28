@@ -146,7 +146,7 @@ class CompileArgumentParser(ArgumentParser):
     ) -> tuple[CompileNamespace, list[str]]:
         """Returns CompileNamespace of user args and list of args to pass to nuitka"""
         args, nuitka_args = super().parse_known_args(namespace=CompileNamespace())
-        self._validate_args(nuitka_args, args.debug)
+        self._validate_args(nuitka_args)
 
         # Preserve just what the user inputted since this list will get expanded
         args.user_nuitka_args = nuitka_args[:]
@@ -154,8 +154,12 @@ class CompileArgumentParser(ArgumentParser):
 
         return args, nuitka_args
 
-    def _validate_args(self, nuitka_args: list[str], debug: bool) -> None:
-        """Validates root privilege and no unknown arguments present"""
+    def _validate_args(self, nuitka_args: list[str]) -> None:
+        """Validates that all unrecognized args are part of the subset of
+        nuitka args this program accepts.
+
+        :raises ValueError: If any argument isn't part of that subset."""
+
         for extra_arg in nuitka_args:
             if extra_arg.split("=")[0] not in self.VALID_NUITKA_ARGS:
                 raise ValueError(f"Unknown argument {extra_arg}")
