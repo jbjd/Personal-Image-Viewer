@@ -19,8 +19,7 @@
             "program": "C:/Python/Viewer/compile.py",
             "args": [
                 "--debug",
-                "--no-cleanup",
-                "--standalone"
+                "--no-cleanup"
             ],
             "console": "integratedTerminal",
             "justMyCode": false
