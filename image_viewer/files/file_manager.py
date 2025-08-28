@@ -51,10 +51,12 @@ class ImageFileManager:
         self._update_after_move_or_edit()
 
     def validate_current_path(self) -> None:
-        """Raises ValueError if current image path is invalid"""
-        path = self.get_path_to_image()
+        """Checks that current path exists and its extension is a valid file type.
+
+        :raises ValueError: If current path is invalid."""
+
         if (
-            not os.path.isfile(path)
+            not os.path.isfile(self.path_to_image)
             or self.current_image.suffix not in VALID_FILE_TYPES
         ):
             raise ValueError
@@ -75,10 +77,10 @@ class ImageFileManager:
 
         return True
 
-    def get_path_to_image(self, image_name: str | None = None) -> str:
-        """Returns full path to image, defaulting to the current image displayed"""
-        if image_name is None:
-            image_name = self.current_image.name
+    def get_path_to_image(self, image_name: str) -> str:
+        """Given an image file name, returns the full path using the current folder.
+
+        :returns: The full path to the image."""
 
         return os.path.normpath(f"{self.image_folder}/{image_name}")
 
@@ -86,7 +88,7 @@ class ImageFileManager:
         """Sets variables about current image.
         Should be called after adding/deleting an image"""
         self.current_image = self._files.get_current_image()
-        self.path_to_image = self.get_path_to_image()
+        self.path_to_image = self.get_path_to_image(self.current_image.name)
 
     def update_files_with_known_starting_image(
         self, image_to_start_at: str | None = None
@@ -360,9 +362,10 @@ class ImageFileManager:
         self._update_after_move_or_edit()
 
     def undo_most_recent_action(self) -> bool:
-        """Undoes most recent rename/convert
-        returns if screen needs a refresh"""
-        if not self._ask_to_confirm_undo():
+        """Attempts to undo most recent action after confirming with user.
+
+        :returns: True if most recent action was undone."""
+        if not self._confirm_undo():
             return False
 
         try:
@@ -392,14 +395,13 @@ class ImageFileManager:
 
         return True
 
-    def _ask_to_confirm_undo(self) -> bool:
-        """Returns if user wants to + can undo last action"""
-        try:
-            undo_message: str = self.action_undoer.get_undo_message()
-        except IndexError:
-            return False  # There was no action to undo
+    def _confirm_undo(self) -> bool:
+        """Checks that there is an action to undo and shows a yes/no confirmation popup.
 
-        return askyesno("Undo Rename/Convert", undo_message)
+        :returns: True if theres something to undo and user said yes"""
+        undo_message: str | None = self.action_undoer.get_undo_message()
+
+        return False if undo_message is None else askyesno("Undo Action", undo_message)
 
     def current_image_cache_still_fresh(self) -> bool:
         """Checks if cache for currently displayed image is still up to date"""

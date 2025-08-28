@@ -58,10 +58,14 @@ class ActionUndoer(deque[FileAction]):
 
         assert False  # pragma: no cover (unreachable)
 
-    def get_undo_message(self) -> str:
-        """Looks at top of deque and formats the information in a string.
-        Throws IndexError when empty"""
+    def get_undo_message(self) -> str | None:
+        """Returns a friendly message about what the undo action will do.
+
+        :returns: A friendly message or None if self is empty."""
         # pylint: disable=unidiomatic-typecheck
+
+        if len(self) == 0:
+            return None
 
         action: FileAction = self[-1]
 
