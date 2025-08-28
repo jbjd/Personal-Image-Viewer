@@ -133,7 +133,7 @@ def test_undo(file_manager: ImageFileManager):
     """Test correct behavior adding/removing with undo"""
     with patch.object(
         ImageFileManager,
-        "_ask_to_confirm_undo",
+        "_confirm_undo",
         return_value=False,
     ):
         assert not file_manager.undo_most_recent_action()
@@ -142,7 +142,7 @@ def test_undo(file_manager: ImageFileManager):
     file_to_remove = file_manager._files[0].name
     mock_undo_response = UndoResponse(file_to_restore, file_to_remove)
     with (
-        patch.object(ImageFileManager, "_ask_to_confirm_undo", return_value=True),
+        patch.object(ImageFileManager, "_confirm_undo", return_value=True),
         patch.object(
             ActionUndoer, "undo", return_value=mock_undo_response
         ) as mock_undo,
