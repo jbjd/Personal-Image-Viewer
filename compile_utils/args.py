@@ -85,15 +85,7 @@ class CompileArgumentParser(ArgumentParser):
             f"Adds {NuitkaArgs.REPORT.with_value(REPORT_FILE)} flag to nuitka.",
         )
         self.add_argument_ext(
-            "--debug",
-            (
-                "Doesn't move compiled code to install path, doesn't check for root, "
-                "doesn't cleanup, doesn't pass Go, doesn't collect $200, adds "
-                f"{NuitkaArgs.WARN_IMPLICIT_EXCEPTIONS}, {NuitkaArgs.WARN_UNUSUAL_CODE}"
-                f", {NuitkaArgs.REPORT.with_value(REPORT_FILE)}, and "
-                f"{NuitkaArgs.WINDOWS_CONSOLE_MODE}={ConsoleMode.FORCE}"
-                " flags to nuitka."
-            ),
+            "--build-info-file", f"Includes {BUILD_INFO_FILE} with distribution."
         )
         self.add_argument_ext(
             "--strip",
@@ -101,13 +93,25 @@ class CompileArgumentParser(ArgumentParser):
                 "Calls strip on all .exe/.dll/.pyd files after compilation. "
                 "Requires strip being installed and on PATH."
             ),
-            is_standalone_only=True,
+        )
+        self.add_argument_ext(
+            "--debug",
+            (
+                "Doesn't move compiled code to install path, doesn't check for root, "
+                "assumes --no-cleanup and --report, adds "
+                f"{NuitkaArgs.WARN_IMPLICIT_EXCEPTIONS}, {NuitkaArgs.WARN_UNUSUAL_CODE}"
+                f", and {NuitkaArgs.WINDOWS_CONSOLE_MODE}={ConsoleMode.FORCE} "
+                f"flags to nuitka."
+            ),
+            is_debug=True,
         )
         self.add_argument_ext(
             "--skip-nuitka",
             (
                 "Skips running nuitka so no compilation takes place. "
-                "Only creates the tmp directory as it would be before compilation."
+                "Only creates the tmp folder as it would be before compilation."
+                "Assumes --no-cleanup however nuitka's build folder is never made "
+                "so only the tmp folder is not cleaned up."
             ),
             is_debug=True,
         )
@@ -116,9 +120,6 @@ class CompileArgumentParser(ArgumentParser):
             "Does not delete temporary files used for compilation/installation.",
             is_debug=True,
         )
-        self.add_argument_ext(
-            "--build-info-file", f"Includes {BUILD_INFO_FILE} with distribution."
-        )
 
     def add_argument_ext(
         self,
@@ -126,15 +127,16 @@ class CompileArgumentParser(ArgumentParser):
         help_text: str,
         default: str | bool = False,
         is_debug: bool = False,
-        is_standalone_only: bool = False,
     ) -> None:
         """Extension of add_argument to simplify repeated patterns.
-        Help text is expanded if is_debug or is_standalone_only are True.
-        Infers if argument is store or store_true based on passed default."""
+
+        :param name: The name of the argument.
+        :param: help_text: A description of what the argument does.
+        :param default: The default value. Bools use store_true and strings use store.
+        :param is_debug: Adds to help text that this is intended for debugging."""
+
         if is_debug:
             help_text += " This option is exposed for debugging."
-        if is_standalone_only:
-            help_text += " This option only works for standalone builds."
 
         action: str = "store_true" if isinstance(default, bool) else "store"
 
@@ -150,7 +152,7 @@ class CompileArgumentParser(ArgumentParser):
 
         # Preserve just what the user inputted since this list will get expanded
         args.user_nuitka_args = nuitka_args[:]
-        nuitka_args = self._expand_nuitka_args(args, nuitka_args, modules_to_skip)
+        self._expand_nuitka_args(args, nuitka_args, modules_to_skip)
 
         return args, nuitka_args
 
@@ -158,6 +160,7 @@ class CompileArgumentParser(ArgumentParser):
         """Validates that all unrecognized args are part of the subset of
         nuitka args this program accepts.
 
+        :param nuitka_args: A list of possibly valid nuitka arguments
         :raises ValueError: If any argument isn't part of that subset."""
 
         for extra_arg in nuitka_args:
@@ -167,9 +170,9 @@ class CompileArgumentParser(ArgumentParser):
     @staticmethod
     def _expand_nuitka_args(
         args: CompileNamespace, nuitka_args: list[str], modules_to_skip: list[str]
-    ) -> list[str]:
-        """Given the input list of nuitka args, adds extra arguments
-        based on flags user specified"""
+    ) -> None:
+        """Updates nuitka_args list with all non-user controlled args
+        to be passed to nuitka."""
         nuitka_args.append(NuitkaArgs.STANDALONE)
 
         if args.report or args.debug:
@@ -211,5 +214,3 @@ class CompileArgumentParser(ArgumentParser):
                     ConsoleMode.FORCE if args.debug else ConsoleMode.DISABLE
                 )
             )
-
-        return nuitka_args
