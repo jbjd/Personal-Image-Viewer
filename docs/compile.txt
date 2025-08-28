@@ -1,3 +1,0 @@
-Flags which should not be included in compilation:
-    CCFLAGS:
-        -Ofast / -fallow-store-data-races (Unsafe in multithreaded context)
