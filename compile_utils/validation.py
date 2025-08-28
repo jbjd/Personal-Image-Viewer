@@ -61,7 +61,7 @@ def validate_module_requirements() -> None:
     if len(missing_modules) != 0:
         raise PackageNotFoundError(
             f"Missing module dependencies {missing_modules}\n"
-            "Please install them to compile as standalone"
+            "Please install them to compile"
         )
 
 
