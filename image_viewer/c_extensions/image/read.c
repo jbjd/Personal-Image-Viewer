@@ -4,6 +4,7 @@
 #include <stddef.h>
 #include <turbojpeg.h>
 
+#include "../c_optimizations.h"
 #include "read.h"
 
 // CMemoryViewBuffer Start
@@ -75,7 +76,7 @@ static inline CMemoryViewBufferJpeg *CMemoryViewBufferJpeg_New(PyObject *pyMemor
 static PyObject *read_image_into_buffer(PyObject *self, PyObject *arg)
 {
     const char *path = PyUnicode_AsUTF8(arg);
-    if (path == NULL)
+    if (unlikely(path == NULL))
     {
         return NULL;
     }
@@ -97,7 +98,7 @@ static PyObject *read_image_into_buffer(PyObject *self, PyObject *arg)
     }
 
     char *buffer = (char *)malloc(size * sizeof(char));
-    if (buffer == NULL)
+    if (unlikely(buffer == NULL))
     {
         fclose(file);
         goto error;
@@ -111,7 +112,7 @@ static PyObject *read_image_into_buffer(PyObject *self, PyObject *arg)
     }
 
     PyObject *pyMemoryView = PyMemoryView_FromMemory(buffer, size, PyBUF_READ);
-    if (pyMemoryView == NULL)
+    if (unlikely(pyMemoryView == NULL))
     {
         goto error;
     }
@@ -128,7 +129,7 @@ static inline int get_scaled_dimension(int dimension, int numerator, int denomin
 
 static PyObject *decode_scaled_jpeg(PyObject *self, PyObject *const *args, Py_ssize_t argLen)
 {
-    if (argLen != 2)
+    if (unlikely(argLen != 2))
     {
         PyErr_SetString(PyExc_TypeError, "decode_scaled_jpeg takes exactly two arguments");
         return NULL;
@@ -137,13 +138,13 @@ static PyObject *decode_scaled_jpeg(PyObject *self, PyObject *const *args, Py_ss
     CMemoryViewBuffer *memoryViewBuffer = (CMemoryViewBuffer *)args[0];
 
     int scaledNumerator, scaledDenominator;
-    if (!PyArg_ParseTuple(args[1], "ii", &scaledNumerator, &scaledDenominator))
+    if (unlikely(!PyArg_ParseTuple(args[1], "ii", &scaledNumerator, &scaledDenominator)))
     {
         return NULL;
     }
 
     tjhandle decompressHandle = tjInitDecompress();
-    if (decompressHandle == NULL)
+    if (unlikely(decompressHandle == NULL))
     {
         return NULL;
     }
@@ -161,7 +162,7 @@ static PyObject *decode_scaled_jpeg(PyObject *self, PyObject *const *args, Py_ss
 
     unsigned long resizedJpegBufferSize = scaledWidth * scaledHeight * pixelSize * sizeof(char);
     char *resizedJpegBuffer = (char *)malloc(resizedJpegBufferSize);
-    if (resizedJpegBuffer == NULL)
+    if (unlikely(resizedJpegBuffer == NULL))
     {
         return NULL;
     }
@@ -181,7 +182,7 @@ static PyObject *decode_scaled_jpeg(PyObject *self, PyObject *const *args, Py_ss
     }
 
     PyObject *pyJpegMemoryView = PyMemoryView_FromMemory(resizedJpegBuffer, resizedJpegBufferSize, PyBUF_READ);
-    if (pyJpegMemoryView == NULL)
+    if (unlikely(pyJpegMemoryView == NULL))
     {
         goto destroy;
     }
@@ -207,16 +208,18 @@ static struct PyModuleDef jpeg_module = {
 
 PyMODINIT_FUNC PyInit__read(void)
 {
-    if (PyType_Ready(&CMemoryViewBuffer_Type) < 0 ||
-        PyType_Ready(&CMemoryViewBufferJpeg_Type) < 0)
+    if (unlikely(
+            PyType_Ready(&CMemoryViewBuffer_Type) < 0 ||
+            PyType_Ready(&CMemoryViewBufferJpeg_Type) < 0))
     {
         return NULL;
     }
 
     PyObject *module = PyModule_Create(&jpeg_module);
 
-    if (PyModule_AddObjectRef(module, "CMemoryViewBuffer", (PyObject *)&CMemoryViewBuffer_Type) < 0 ||
-        PyModule_AddObjectRef(module, "CMemoryViewBufferJpeg", (PyObject *)&CMemoryViewBufferJpeg_Type) < 0)
+    if (unlikely(
+            PyModule_AddObjectRef(module, "CMemoryViewBuffer", (PyObject *)&CMemoryViewBuffer_Type) < 0 ||
+            PyModule_AddObjectRef(module, "CMemoryViewBufferJpeg", (PyObject *)&CMemoryViewBufferJpeg_Type) < 0))
     {
         Py_DECREF(module);
         return NULL;
