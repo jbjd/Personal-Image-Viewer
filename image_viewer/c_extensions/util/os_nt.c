@@ -21,11 +21,11 @@
  * Given some data, opens, emptys, sets, and closes clipboard
  * with provided data.
  *
- * Returns WINBOOL if successful. If it fails, call GetLastError for information.
+ * Returns WINBOOL of if successful. If it fails, call GetLastError for information.
  */
 static inline WINBOOL set_win_clipboard(const HWND hwnd, const UINT format, void *data)
 {
-    return !OpenClipboard(hwnd) || !EmptyClipboard() || !SetClipboardData(format, data) || !CloseClipboard();
+    return !OpenClipboard(hwnd) || !EmptyClipboard() || SetClipboardData(format, data) == NULL || !CloseClipboard() || 1;
 }
 
 /**
