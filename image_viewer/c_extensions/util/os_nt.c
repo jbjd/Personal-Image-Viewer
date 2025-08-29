@@ -8,6 +8,7 @@
 #include <shlwapi.h>
 #include <windows.h>
 
+#include "../c_optimizations.h"
 #include "b64/cencode.h"
 #include "image/read.h"
 
@@ -16,6 +17,19 @@
 #else
 #include <shlobj_core.h>
 #endif
+
+/**
+ * Given a PyObject representing an int in Python,
+ * cast it to an HWND.
+ *
+ * Returns casted HWND.
+ */
+static inline HWND PyLong_AsHWND(PyObject *pyLong)
+{
+#pragma GCC diagnostic ignored "-Wint-to-pointer-cast"
+    return (HWND)PyLong_AsLong(pyLong);
+#pragma GCC diagnostic pop
+}
 
 /**
  * Given some data, opens, emptys, sets, and closes clipboard
@@ -62,19 +76,17 @@ static inline void ensure_double_null_terminated(char *str)
 
 static PyObject *trash_file(PyObject *self, PyObject *const *args, Py_ssize_t argLen)
 {
-    if (argLen != 2)
+    if (unlikely(argLen != 2))
     {
         PyErr_SetString(PyExc_TypeError, "trash_file takes exactly two arguments");
         return NULL;
     }
 
-#pragma GCC diagnostic ignored "-Wint-to-pointer-cast"
-    const HWND hwnd = (HWND)PyLong_AsLong(args[0]);
-#pragma GCC diagnostic pop
+    const HWND hwnd = PyLong_AsHWND(args[0]);
 
     Py_ssize_t rawPathSize;
     const char *rawPath = PyUnicode_AsUTF8AndSize(args[1], &rawPathSize);
-    if (rawPath == NULL)
+    if (unlikely(rawPath == NULL))
     {
         return NULL;
     }
@@ -95,19 +107,17 @@ static PyObject *trash_file(PyObject *self, PyObject *const *args, Py_ssize_t ar
 
 static PyObject *restore_file(PyObject *self, PyObject *const *args, Py_ssize_t argLen)
 {
-    if (argLen != 2)
+    if (unlikely(argLen != 2))
     {
         PyErr_SetString(PyExc_TypeError, "restore_file takes exactly two arguments");
         return NULL;
     }
 
-#pragma GCC diagnostic ignored "-Wint-to-pointer-cast"
-    const HWND hwnd = (HWND)PyLong_AsLong(args[0]);
-#pragma GCC diagnostic pop
+    const HWND hwnd = PyLong_AsHWND(args[0]);
 
     Py_ssize_t rawOriginalPathSize;
     const char *rawOriginalPath = PyUnicode_AsUTF8AndSize(args[1], &rawOriginalPathSize);
-    if (rawOriginalPath == NULL)
+    if (unlikely(rawOriginalPath == NULL))
     {
         return NULL;
     }
@@ -247,22 +257,21 @@ static PyObject *get_files_in_folder(PyObject *self, PyObject *arg)
 {
     Py_ssize_t pathSize;
     const char *path = PyUnicode_AsUTF8AndSize(arg, &pathSize);
-    if (path == NULL)
+    if (unlikely(path == NULL))
     {
         return NULL;
     }
 
     PyObject *pyFiles = PyList_New(0);
-    if (pyFiles == NULL)
+    if (unlikely(pyFiles == NULL))
     {
         return NULL;
     }
 
-    const char pathLastChar = path[pathSize - 1];
-
     char pathWithStar[pathSize + 3];
     strcpy(pathWithStar, path);
 
+    const char pathLastChar = path[pathSize - 1];
     const char *fuzzySearchEnding = pathLastChar != '/' && pathLastChar != '\\' ? "/*\0" : "*\0";
     strcat(pathWithStar, fuzzySearchEnding);
 
@@ -292,18 +301,16 @@ end:
 
 static PyObject *open_with(PyObject *self, PyObject *const *args, Py_ssize_t argLen)
 {
-    if (argLen != 2)
+    if (unlikely(argLen != 2))
     {
         PyErr_SetString(PyExc_TypeError, "open_with takes exactly two arguments");
         return NULL;
     }
 
-#pragma GCC diagnostic ignored "-Wint-to-pointer-cast"
-    const HWND hwnd = (HWND)PyLong_AsLong(args[0]);
-#pragma GCC diagnostic pop
+    const HWND hwnd = (HWND)PyLong_AsHWND(args[0]);
 
     wchar_t *path = PyUnicode_AsWideCharString(args[1], 0);
-    if (path == NULL)
+    if (unlikely(path == NULL))
     {
         return NULL;
     }
@@ -315,6 +322,7 @@ static PyObject *open_with(PyObject *self, PyObject *const *args, Py_ssize_t arg
 
     Py_END_ALLOW_THREADS;
 
+    // Unlike PyUnicode_AsUTF8, PyUnicode_AsWideCharString needs to be freed
     PyMem_Free(path);
 
     return Py_None;
@@ -322,19 +330,17 @@ static PyObject *open_with(PyObject *self, PyObject *const *args, Py_ssize_t arg
 
 static PyObject *drop_file_to_clipboard(PyObject *self, PyObject *const *args, Py_ssize_t argLen)
 {
-    if (argLen != 2)
+    if (unlikely(argLen != 2))
     {
         PyErr_SetString(PyExc_TypeError, "drop_file_to_clipboard takes exactly two arguments");
         return NULL;
     }
 
-#pragma GCC diagnostic ignored "-Wint-to-pointer-cast"
-    const HWND hwnd = (HWND)PyLong_AsLong(args[0]);
-#pragma GCC diagnostic pop
+    const HWND hwnd = PyLong_AsHWND(args[0]);
 
     Py_ssize_t pathSize;
     const char *path = PyUnicode_AsUTF8AndSize(args[1], &pathSize);
-    if (path == NULL)
+    if (unlikely(path == NULL))
     {
         return NULL;
     }
@@ -344,13 +350,13 @@ static PyObject *drop_file_to_clipboard(PyObject *self, PyObject *const *args, P
     size_t sizeToAlloc = sizeof(DROPFILES) + pathSize + 2;
 
     HGLOBAL hGlobal = GlobalAlloc(GHND, sizeToAlloc);
-    if (hGlobal == NULL)
+    if (unlikely(hGlobal == NULL))
     {
         goto end;
     }
 
     DROPFILES *pDropFiles = (DROPFILES *)GlobalLock(hGlobal);
-    if (pDropFiles == NULL)
+    if (unlikely(pDropFiles == NULL))
     {
         goto error_free_memory;
     }
@@ -384,7 +390,7 @@ static PyObject *read_memory_as_base64_and_save_to_clipboard(PyObject *self, PyO
 
     // encoded data is ~4/3x the size of the original data so make encoded buffer 2x the size.
     HGLOBAL hGlobal = GlobalAlloc(GHND, 2 * remainingBytesToEncode);
-    if (hGlobal == NULL)
+    if (unlikely(hGlobal == NULL))
     {
         goto end;
     }
@@ -393,7 +399,7 @@ static PyObject *read_memory_as_base64_and_save_to_clipboard(PyObject *self, PyO
     char *encodedBuffer = (char *)GlobalLock(hGlobal);
     char *encodedBufferPosition = encodedBuffer;
 
-    if (encodedBuffer == NULL)
+    if (unlikely(encodedBuffer == NULL))
     {
         GlobalFree(hGlobal);
         goto end;
