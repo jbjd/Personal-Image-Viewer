@@ -2,14 +2,15 @@
 Classes representing undoable actions that a user can do
 """
 
-from abc import ABC
+from abc import abstractmethod
 
 
-class FileAction(ABC):
+class FileAction:
     """Class used to track actions done to a file"""
 
     __slots__ = ("original_path",)
 
+    @abstractmethod
     def __init__(self, original_path: str) -> None:
         self.original_path: str = original_path
 

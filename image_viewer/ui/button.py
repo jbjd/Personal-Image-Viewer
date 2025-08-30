@@ -42,7 +42,8 @@ class HoverableButtonUIElement(ButtonUIElementBase):
         :param x_offset: The on-screen X offset.
         :param y_offset: The on-screen Y offset."""
 
-        self.id = self.canvas.create_button(
+        # Mypy can't see this is in super's slots
+        self.id = self.canvas.create_button(  # type: ignore
             self,
             name,
             x_offset,

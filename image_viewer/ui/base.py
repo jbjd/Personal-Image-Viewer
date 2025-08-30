@@ -1,14 +1,15 @@
 """Base classes for UI elements on a tkinter canvas."""
 
-from abc import ABC, abstractmethod
+from abc import abstractmethod
 from tkinter import Event
 
 
-class UIElementBase(ABC):
+class UIElementBase:
     """Base class for any element on a tkinter canvas."""
 
     __slots__ = ("id",)
 
+    @abstractmethod
     def __init__(self, id: int = -1) -> None:
         self.id: int = id
 

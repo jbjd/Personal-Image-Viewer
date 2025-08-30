@@ -25,17 +25,17 @@ from personal_python_ast_optimizer.regex.classes import RegexReplacement
 from compile_utils.code_to_skip import (
     classes_to_skip,
     constants_to_fold,
+    decorators_to_always_skip,
     decorators_to_skip,
     dict_keys_to_skip,
     from_imports_to_skip,
+    functions_to_always_skip,
     functions_to_skip,
     module_imports_to_skip,
+    no_warn_tokens,
     regex_to_apply_py,
     regex_to_apply_tk,
     vars_to_skip,
-    functions_to_always_skip,
-    decorators_to_always_skip,
-    no_warn_tokens,
 )
 from compile_utils.package_info import IMAGE_VIEWER_NAME
 from compile_utils.validation import get_required_python_version
