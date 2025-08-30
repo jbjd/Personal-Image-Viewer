@@ -104,9 +104,9 @@ class ImageFileManager:
 
         self._files = ImageNameList(
             [
-                image_path
-                for path in get_files_in_folder(self.image_folder)
-                if (image_path := ImageName(path)).suffix in VALID_FILE_TYPES
+                image_name
+                for image_name_raw in get_files_in_folder(self.image_folder)
+                if (image_name := ImageName(image_name_raw)).suffix in VALID_FILE_TYPES
             ]
         )
 

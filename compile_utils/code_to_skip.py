@@ -10,6 +10,14 @@ from personal_python_ast_optimizer.regex.classes import RegexReplacement
 from compile_utils.package_info import IMAGE_VIEWER_NAME
 from image_viewer.constants import TEXT_RGB
 
+# Module independent skips
+
+decorators_to_always_skip: set[str] = {"override"}
+functions_to_always_skip: set[str] = {"warn"}
+no_warn_tokens = decorators_to_always_skip | functions_to_always_skip
+
+# Module dependent skips
+
 functions_to_skip: dict[str, set[str]] = {
     "PIL._binary": {"i8", "si16be", "si16le", "si32be", "si32le"},
     "PIL._util": {"new"},

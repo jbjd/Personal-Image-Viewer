@@ -33,6 +33,9 @@ from compile_utils.code_to_skip import (
     regex_to_apply_py,
     regex_to_apply_tk,
     vars_to_skip,
+    functions_to_always_skip,
+    decorators_to_always_skip,
+    no_warn_tokens,
 )
 from compile_utils.package_info import IMAGE_VIEWER_NAME
 from compile_utils.validation import get_required_python_version
@@ -110,7 +113,9 @@ def move_files_to_tmp_and_clean(
     else:
         modules_to_skip_re = ""
 
-    for python_file in _files_in_folder_iter(source_dir, (".py", ".pyd", ".so")):
+    for python_file in _get_files_in_folder_with_filter(
+        source_dir, (".py", ".pyd", ".so")
+    ):
         if (
             os.path.basename(python_file) == "__main__.py"
             and module_name != IMAGE_VIEWER_NAME
@@ -193,7 +198,7 @@ def clean_tk_files(compile_dir: str) -> None:
     starting_new_line = RegexReplacement(pattern="^\n", count=1)
     whitespace_between_brackets = RegexReplacement(pattern="}\n}", replacement="}}")
 
-    for code_file in _files_in_folder_iter(compile_dir, (".tcl", ".tm")):
+    for code_file in _get_files_in_folder_with_filter(compile_dir, (".tcl", ".tm")):
         apply_regex_to_file(
             code_file,
             [
@@ -218,7 +223,9 @@ def strip_files(compile_dir: str) -> None:
     """Runs strip on all exe/dll files in provided dir"""
 
     # Had issues adding .so here on linux. Should be revisited here at some point
-    for strippable_file in _files_in_folder_iter(compile_dir, (".exe", ".dll", ".pyd")):
+    for strippable_file in _get_files_in_folder_with_filter(
+        compile_dir, (".exe", ".dll", ".pyd")
+    ):
         result = subprocess.run(["strip", "--strip-all", strippable_file], check=False)
 
         if result.returncode != 0:
@@ -236,10 +243,15 @@ def _get_tokens_to_skip_config(module_import_path: str) -> TokensConfig:
     functions: set[str] | None = functions_to_skip.pop(module_import_path, None)
     variables: set[str] | None = vars_to_skip.pop(module_import_path, None)
 
-    if functions is not None:
-        functions.add("warn")
+    if decorators is None:
+        decorators = decorators_to_always_skip
     else:
-        functions = {"warn"}
+        decorators.union(decorators_to_always_skip)
+
+    if functions is None:
+        functions = functions_to_always_skip
+    else:
+        functions.union(functions_to_always_skip)
 
     return TokensConfig(
         classes_to_skip=classes,
@@ -249,9 +261,12 @@ def _get_tokens_to_skip_config(module_import_path: str) -> TokensConfig:
         module_imports_to_skip=module_imports,
         functions_to_skip=functions,
         variables_to_skip=variables,
-        no_warn={"warn"},
+        no_warn=no_warn_tokens,
     )
 
 
-def _files_in_folder_iter(folder: str, ext_filter: tuple[str, ...]) -> Iterator[str]:
-    return iter(p for p in walk_folder(folder) if p.endswith(ext_filter))
+def _get_files_in_folder_with_filter(
+    folder_path: str, extension_filter: tuple[str, ...]
+) -> Iterator[str]:
+    """Gets files in a folder and subfolders that end with certain extensions."""
+    return iter(p for p in walk_folder(folder_path) if p.endswith(extension_filter))
