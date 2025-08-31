@@ -18,7 +18,7 @@ from ui.button_icon_factory import ButtonIconFactory
 from ui.canvas import CustomCanvas
 from ui.image import DropdownImageUIElement
 from ui.rename_entry import RenameEntry
-from util.io import read_memory_as_base64
+from util.convert import read_memory_as_base64
 from util.os import show_info
 from util.PIL import create_dropdown_image, init_PIL
 

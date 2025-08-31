@@ -1,10 +1,9 @@
-"""
-Deals with converting between image file types and some basic IO
-"""
+"""Conversion between image file types."""
 
 import binascii
 
 from PIL.Image import open as open_image
+from PIL.JpegImagePlugin import RAWMODE as VALID_JPEG_MODES
 
 from constants import VALID_FILE_TYPES
 from image.file import magic_number_guess
@@ -42,8 +41,8 @@ def try_convert_file_and_save_new(
 
             if target_format in ("jpg", "jpeg", "jif", "jfif", "jpe"):
                 target_format = "jpeg"
-                if temp_img.mode != "RGB":
-                    temp_img = temp_img.convert("RGB")  # must be RGB to save as jpg
+                if temp_img.mode not in VALID_JPEG_MODES:
+                    temp_img = temp_img.convert("RGB")
             elif target_format == "gif":
                 # This pop fixes missing bitmap error during webp -> gif conversion
                 temp_img.info.pop("background", None)
