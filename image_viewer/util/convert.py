@@ -1,4 +1,4 @@
-"""Conversion between image file types."""
+"""Conversion between image file types and representations."""
 
 import binascii
 
