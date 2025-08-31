@@ -40,7 +40,7 @@ class ImageCacheEntry:
 
 
 class ImageCache(OrderedDict[str, ImageCacheEntry]):
-    """Dictionary for caching image data using paths as keys"""
+    """Dictionary for caching image data using paths as keys."""
 
     __slots__ = ("max_items_in_cache",)
 

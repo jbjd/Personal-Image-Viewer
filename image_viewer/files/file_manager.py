@@ -11,7 +11,7 @@ from actions.undoer import ActionUndoer, UndoResponse
 from constants import VALID_FILE_TYPES, Movement
 from files.file_dialog_asker import FileDialogAsker
 from image.cache import ImageCache, ImageCacheEntry
-from image.file import ImageName, ImageNameList
+from image.file import ImageName, ImageNameList, ImageSearchResult
 from util.io import try_convert_file_and_save_new
 from util.os import get_files_in_folder, get_normalized_dir_name, trash_file
 
@@ -91,16 +91,16 @@ class ImageFileManager:
         self.path_to_image = self.get_path_to_image(self.current_image.name)
 
     def update_files_with_known_starting_image(
-        self, image_to_start_at: str | None = None
+        self, image_name_to_start_at: str | None = None
     ) -> None:
         """Updates files list with all images in the folder
-        and updates the index to where image_to_start_at now is.
+        and updates the index to where image_name_to_start_at now is.
 
-        :param image_to_start_at: File name of an image. Starting index will be where
-        this falls in the files list. If None, the current image's name will be used.
-        """
-        if image_to_start_at is None:
-            image_to_start_at = self.current_image.name
+        :param image_name_to_start_at: The image name to set index to after updating.
+        If None, the current image's name will be used."""
+
+        if image_name_to_start_at is None:
+            image_name_to_start_at = self.current_image.name
 
         self._files = ImageNameList(
             [
@@ -110,16 +110,20 @@ class ImageFileManager:
             ]
         )
 
-        self._files.sort_and_preserve_index(image_to_start_at)
+        self._files.sort_and_preserve_index(image_name_to_start_at)
         self._update_after_move_or_edit()
 
     def refresh_files_with_known_starting_image(
-        self, image_to_start_at: str | None = None
+        self, image_name_to_start_at: str | None = None
     ) -> None:
         """Clears cache, updates files list with all images in the folder,
-        and updates the index to where image_to_start_at now is."""
+        and updates the index to where image_name_to_start_at now is.
+
+        :param image_name_to_start_at: The image name to set index to after refresh.
+        If None, the current image's name will be used."""
+
         self.image_cache.clear()
-        self.update_files_with_known_starting_image(image_to_start_at)
+        self.update_files_with_known_starting_image(image_name_to_start_at)
 
     def get_cached_metadata(self, get_all_details: bool = True) -> str:
         """Returns formatted string of cached metadata on current image.
@@ -350,7 +354,7 @@ class ImageFileManager:
         index: where the image is inserted if provided"""
         image_name: ImageName = ImageName(new_name)
         if index < 0:
-            index, _ = self._files.get_index_of_image(image_name.name)
+            index = self._files.search(image_name.name).index
 
         self._files.insert(index, image_name)
         if preserve_index == _ShouldPreserveIndex.YES or (
@@ -377,11 +381,9 @@ class ImageFileManager:
         image_to_remove: str = os.path.basename(undo_response.path_to_remove)
 
         if image_to_remove != "":
-            index: int
-            found: bool
-            index, found = self._files.get_index_of_image(image_to_remove)
-            if found:
-                self.remove_image(index)
+            search_result: ImageSearchResult = self._files.search(image_to_remove)
+            if search_result.found:
+                self.remove_image(search_result.index)
 
         if image_to_add != "":
             preserve_index: _ShouldPreserveIndex = (

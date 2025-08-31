@@ -1,36 +1,41 @@
-"""Classes representing metadata of image files and functions for reading them"""
+"""
+Deals with storing known image file paths and determining their true file extension.
+"""
 
-from collections import namedtuple
 from typing import Iterable
 
 from constants import ImageFormats, Movement
-from util.os import os_name_cmp
+from util.os import os_name_compare
 
 
 class ImageName:
-    """Full name and suffix of loaded image files"""
+    """Stores the image file's name and suffix and allows for sorting."""
 
     __slots__ = ("name", "suffix")
 
     def __init__(self, name: str) -> None:
-        index: int = name.rfind(".") + 1
-        self.suffix: str = name[index:].lower() if index else ""
         self.name: str = name
 
+        index: int = name.rfind(".") + 1
+        self.suffix: str = name[index:].lower() if index else ""
+
     def __lt__(self, other: "ImageName") -> bool:
-        return os_name_cmp(self.name, other.name)
+        return os_name_compare(self.name, other.name)
 
 
-class ImageSearchResult(namedtuple("ImageSearchResult", ["index", "found"])):
+class ImageSearchResult:
     """Represents a search such that index is where the image is or would be inserted
-    and found is True when a match was found"""
+    depending on if found is True or False respectively."""
 
-    index: int
-    found: bool
+    __slots__ = ("index", "found")
+
+    def __init__(self, index: int, found: bool) -> None:
+        self.index: int = index
+        self.found = found
 
 
 class ImageNameList(list[ImageName]):
-    """Represents list of ImageName objects with extension methods"""
+    """Represents list of ImageName objects with extension methods."""
 
     __slots__ = ("_display_index",)
 
@@ -43,24 +48,44 @@ class ImageNameList(list[ImageName]):
         return self._display_index
 
     def get_current_image(self) -> ImageName:
+        """Gets the image at the current.
+
+        :returns: The image at the current index."""
+
         return self[self._display_index]
 
     def move_index(self, amount: int) -> None:
-        """Moves display_index by the provided amount with wraparound"""
+        """Moves index by the provided amount with wrap around.
+
+        :param amount: Amount to move the index."""
+
         image_count: int = len(self)
         if image_count > 0:
             self._display_index = (self._display_index + amount) % len(self)
 
-    def sort_and_preserve_index(self, image_to_start_at: str) -> None:
-        """Sorts and keeps index at the same image"""
+    def set_index_to_image(self, target_image_name: str) -> None:
+        """Sets index to location of target_image_name or where target_image_name would
+        be inserted if not present.
+
+        :param target_image_name: The name to search for."""
+
+        search_response: ImageSearchResult = self.search(target_image_name)
+        self._display_index = search_response.index
+
+    def sort_and_preserve_index(self, target_image_name: str) -> None:
+        """Sorts while keeping index at the same image.
+
+        :param target_image_name: The name to set index to after sorting."""
+
         super().sort()
-        self._display_index, _ = self.get_index_of_image(image_to_start_at)
+        self.set_index_to_image(target_image_name)
 
     def remove_current_image(self, index_movement: Movement = Movement.NONE) -> None:
         """Safely removes the entry at the current index.
 
         :param index_movement: The direction to move the index. If NONE passed,
         index will try to preserve its current position."""
+
         try:
             super().pop(self._display_index)
         except IndexError:
@@ -83,30 +108,38 @@ class ImageNameList(list[ImageName]):
             else:  # Must be Movement.FORWARD
                 self._display_index = 0
 
-    def get_index_of_image(self, target_image: str) -> ImageSearchResult:
-        """Finds index of target_image.
-        If no match found, index returned is where image would be inserted."""
+    def search(self, target_image_name: str) -> ImageSearchResult:
+        """Searches for index of target.
+        If no match found, index returned is where image would be inserted.
+
+        :param target_image_name: The name to search for.
+        :returns: Search result with index and boolean if a match was found or not."""
+
         low: int = 0
         high: int = len(self) - 1
         while low <= high:
             mid: int = (low + high) >> 1
             current_image = self[mid].name
-            if target_image == current_image:
+
+            if current_image == target_image_name:
                 return ImageSearchResult(index=mid, found=True)
-            if os_name_cmp(target_image, current_image):
+
+            if os_name_compare(target_image_name, current_image):
                 high = mid - 1
             else:
                 low = mid + 1
-        return ImageSearchResult(index=low, found=False)
 
-    def move_index_to_image(self, target_image: str) -> ImageSearchResult:
-        search_response: ImageSearchResult = self.get_index_of_image(target_image)
-        self._display_index = search_response.index
-        return search_response
+        return ImageSearchResult(index=low, found=False)
 
 
 def magic_number_guess(magic: bytes) -> str:
-    """Given bytes, make best guess at file type of image"""
+    """Given a 4 byte long sequence representing an image's magic bytes,
+    guess what image it represents. Defaults to AVIF since its the
+    only supported image format where the magic is not the first 4 bytes.
+
+    :param magic: The 4 byte long magic number at the start of an image file.
+    :returns: The format this magic most likely represents."""
+
     match magic:
         case b"\x89PNG":
             return ImageFormats.PNG
