@@ -172,8 +172,11 @@ class ViewerApp:
             )
             app.bind(
                 "<Control-c>",
-                lambda _: drop_file_to_clipboard(
-                    self.app_id, self.file_manager.path_to_image
+                lambda e: self._only_for_this_window(
+                    e,
+                    drop_file_to_clipboard,
+                    self.app_id,
+                    self.file_manager.path_to_image,
                 ),
             )
             app.bind("<MouseWheel>", self.handle_mouse_wheel)
@@ -312,7 +315,7 @@ class ViewerApp:
             self.show_topbar()
 
     def _only_for_this_window(
-        self, event: Event, function_to_call: Callable[[], None], *args
+        self, event: Event, function_to_call: Callable[..., None], *args
     ) -> None:
         """Given a callable that accepts a tkinter Event,
         only call it if self.app is the target"""

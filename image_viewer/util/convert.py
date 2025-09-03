@@ -18,8 +18,7 @@ def try_convert_file_and_save_new(
     Returns True if conversion performed,
     False if converting to the same type or an invalid format
 
-    Raises ValueError if converting animated file to non-animated format
-    """
+    Raises ValueError if converting animated file to non-animated format"""
 
     target_format = target_format.lower()
 
@@ -60,8 +59,8 @@ def try_convert_file_and_save_new(
 def read_memory_as_base64(image_buffer: memoryview) -> str:
     """Decodes some memory into a base64 string.
 
-    :param image_buffer: The memory buffer of an image to decode
-    :returns: The decoded base64"""
+    :param image_buffer: The memory buffer of an image to decode.
+    :returns: The decoded base64."""
 
     return binascii.b2a_base64(image_buffer, newline=False).decode(
         "ascii", errors="ignore"
