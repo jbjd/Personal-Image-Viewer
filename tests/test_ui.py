@@ -21,14 +21,14 @@ def test_show_dropdown_image():
 def test_button(canvas: CustomCanvas, button_icons: IconImages):
     """Ensure buttons can add themselves to canvas and
     on click/enter/leave events work as expected"""
-    function_to_bind = MagicMock()
-    button = HoverableButtonUIElement(canvas, button_icons, function_to_bind)
+    on_click_function = MagicMock()
+    button = HoverableButtonUIElement(canvas, button_icons, on_click_function)
 
-    button.add_to_canvas(ButtonName.EXIT, 0, 0)
+    button.create(ButtonName.EXIT, 0, 0)
     assert button.id != -1
 
     button.on_click()
-    function_to_bind.assert_called_once()
+    on_click_function.assert_called_once()
 
     default_image_tag: str = canvas.itemcget(button.id, option="image")
 
@@ -44,11 +44,11 @@ def test_button(canvas: CustomCanvas, button_icons: IconImages):
 # TODO: add checks for using different images in active/inactive states
 def test_toggleable_button(canvas: CustomCanvas, button_icons: IconImages):
     """Ensure toggleable button goes between active/inactive states"""
-    function_to_bind = MagicMock()
+    on_click_function = MagicMock()
     button = ToggleableButtonUIElement(
-        canvas, button_icons, button_icons, function_to_bind
+        canvas, button_icons, button_icons, on_click_function
     )
-    button.add_to_canvas(ButtonName.EXIT, 0, 0)
+    button.create(ButtonName.EXIT, 0, 0)
 
     assert not button.is_active
 

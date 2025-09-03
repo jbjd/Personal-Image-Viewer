@@ -125,14 +125,15 @@ class CustomCanvas(Canvas):
             tag=TkTags.BACKGROUND,
             image=new_image,
         )
-        self.image_display.update(image=new_image, id=new_id)
+        self.image_display.image = new_image
+        self.image_display.id = new_id
         self.tag_raise(TkTags.TOPBAR)
         self.master.update_idletasks()
 
     def update_existing_image_display(self, new_image: PhotoImage) -> None:
         """Updates existing image on screen with a new PhotoImage"""
         self.itemconfig(self.image_display.id, image=new_image)
-        self.image_display.update(image=new_image)
+        self.image_display.image = new_image
         self.master.update_idletasks()
 
     def update_file_name(self, new_name: str) -> int:
