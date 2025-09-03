@@ -1,12 +1,13 @@
-"""Functions the help work with jpeg files"""
+"""C extensions that interact with image files."""
 
 from typing import Callable
 
 from PIL.Image import Image
 
 class CMemoryViewBuffer:
-    """Contains a memoryview object to malloc'ed C data.
-    Only intended to be created within C code and consumed by Python code"""
+    """Can't be instantiated in Python.
+
+    Contains a memoryview object to malloc'ed C data."""
 
     __slots__ = ("byte_size", "view")
 
@@ -14,22 +15,27 @@ class CMemoryViewBuffer:
     view: memoryview
 
 class CMemoryViewBufferJpeg(CMemoryViewBuffer):
-    """Contains a memoryview object to malloc'ed C data containing a JPEG.
-    Only intended to be created within C code and consumed by Python code"""
+    """Can't be instantiated in Python.
+
+    Contains a memoryview object to malloc'ed C data containing a JPEG."""
 
     __slots__ = ("dimensions",)
 
     dimensions: tuple[int, int]
 
-def read_image_into_buffer(image_path: str) -> CMemoryViewBuffer | None:
-    """Returns am image's bytes as a CMemoryViewBuffer or None if an error occurred
-    while reading the file"""
+def read_image_into_buffer(image_path: str, /) -> CMemoryViewBuffer | None:
+    """Reads an image file path and stores it in a buffer.
+
+    :param image_path: A path to a file containing an image.
+    :returns: A buffer containing the image data or None on failure."""
 
 def decode_scaled_jpeg(
-    image_bytes: CMemoryViewBuffer, scale_factor: tuple[int, int]
+    image_buffer: CMemoryViewBuffer, scale_factor: tuple[int, int], /
 ) -> CMemoryViewBufferJpeg:
-    """Given an image's bytes, decode them as a scaled jpeg and return its bytes as a CMemoryViewBuffer
-    or None if reading the image failed"""
+    """Given an image buffer, decode it as a jpeg and return a new scaled buffer.
 
-del Callable
-del Image
+    :param image_buffer: An image to decode and scale.
+    :param scale_factor: A ratio to scale the image dimensions by.
+    :returns: A new buffer containing the scaled and decoded jpeg."""
+
+del Callable, Image
