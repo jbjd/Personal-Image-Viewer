@@ -40,11 +40,11 @@ class ImageFileManager:
         self.image_folder: str = get_normalized_dir_name(first_image_path)
         self.image_cache: ImageCache = image_cache
 
-        self.action_undoer: ActionUndoer = ActionUndoer()
-        self.file_dialog_asker: FileDialogAsker = FileDialogAsker(VALID_FILE_TYPES)
+        self.action_undoer = ActionUndoer()
+        self.file_dialog_asker = FileDialogAsker(VALID_FILE_TYPES)
 
-        first_image_name: ImageName = ImageName(os.path.basename(first_image_path))
-        self._files: ImageNameList = ImageNameList([first_image_name])
+        first_image_name = ImageName(os.path.basename(first_image_path))
+        self._files = ImageNameList([first_image_name])
 
         self.current_image: ImageName
         self.path_to_image: str
@@ -400,11 +400,15 @@ class ImageFileManager:
     def _confirm_undo(self) -> bool:
         """Checks that there is an action to undo and shows a yes/no confirmation popup.
 
-        :returns: True if theres something to undo and user said yes"""
+        :returns: True if there's something to undo and user said yes."""
+
         undo_message: str | None = self.action_undoer.get_undo_message()
 
         return False if undo_message is None else askyesno("Undo Action", undo_message)
 
     def current_image_cache_still_fresh(self) -> bool:
-        """Checks if cache for currently displayed image is still up to date"""
+        """Checks if cache for currently displayed image is still up to date.
+
+        :returns: True if cache up to date, otherwise image needs to be reloaded."""
+
         return self.image_cache.image_cache_still_fresh(self.path_to_image)
