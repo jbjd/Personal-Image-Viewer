@@ -1,12 +1,10 @@
-"""
-File with constants needed in multiple spots of the codebase
-"""
+"""Constants needed in multiple spots of the codebase."""
 
 from enum import IntEnum, StrEnum
 
 
 class ImageFormats(StrEnum):
-    """Image format strings that this app supports"""
+    """Image formats that this program supports."""
 
     AVIF = "AVIF"
     DDS = "DDS"
@@ -17,7 +15,7 @@ class ImageFormats(StrEnum):
 
 
 class Key(IntEnum):
-    """Keysym numbers for various keys"""
+    """Tkinter keysym numbers."""
 
     LEFT = 65361
     RIGHT = 65363
@@ -25,7 +23,7 @@ class Key(IntEnum):
 
 
 class Rotation(IntEnum):
-    """Denotes angle of rotation"""
+    """Angles the image can be rotated."""
 
     UP = 0
     LEFT = 90
@@ -34,14 +32,14 @@ class Rotation(IntEnum):
 
 
 class ZoomDirection(IntEnum):
-    """Either up or down on the mouse wheel"""
+    """Direction for the zoom movement."""
 
     IN = 1
     OUT = -1
 
 
 class Movement(IntEnum):
-    """Common movement amounts between images"""
+    """Common movement amounts between images."""
 
     FORWARD = 1
     NONE = 0
@@ -49,14 +47,14 @@ class Movement(IntEnum):
 
 
 class TkTags(StrEnum):
-    """Tags for items on the UI"""
+    """Tags for items on the UI."""
 
     TOPBAR = "topbar"
     BACKGROUND = "back"
 
 
 class ButtonName(StrEnum):
-    """Names of buttons on the UI"""
+    """Names of buttons on the UI."""
 
     EXIT = "exit"
     MINIFY = "minify"
