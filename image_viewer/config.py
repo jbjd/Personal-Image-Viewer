@@ -1,6 +1,4 @@
-"""
-Reads config.ini from root directory and stores results or defaults
-"""
+"""Config values and tools to read them."""
 
 import os
 from configparser import ConfigParser

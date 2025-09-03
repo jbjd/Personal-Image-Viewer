@@ -1,13 +1,13 @@
-"""Base classes for state"""
+"""Base classes for states."""
 
-from abc import ABC, abstractmethod
+from abc import abstractmethod
 
 
-class StateBase(ABC):
-    """Base class for states"""
+class StateBase:
+    """Base class for states."""
 
     __slots__ = ()
 
     @abstractmethod
     def reset(self) -> None:
-        """Reset state to default values"""
+        """Reset state to default values."""

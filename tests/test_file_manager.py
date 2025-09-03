@@ -9,6 +9,7 @@ from image_viewer.constants import ImageFormats
 from image_viewer.files.file_dialog_asker import FileDialogAsker
 from image_viewer.files.file_manager import ImageFileManager, _ShouldPreserveIndex
 from image_viewer.image.cache import ImageCache, ImageCacheEntry
+from image_viewer.image.file import ImageSearchResult
 from tests.conftest import EXAMPLE_IMG_PATH, IMG_DIR
 from tests.test_util.exception import safe_wrapper
 from tests.test_util.mocks import MockImage, MockStatResult
@@ -20,7 +21,10 @@ def test_image_file_manager(file_manager: ImageFileManager):
 
     file_manager.update_files_with_known_starting_image()
     assert len(file_manager._files) == 4
-    assert file_manager._files.get_index_of_image("a.png") == (0, True)
+
+    search_result: ImageSearchResult = file_manager._files.search("a.png")
+    assert search_result.index == 0
+    assert search_result.found
 
     file_manager.add_new_image("y.jpeg", _ShouldPreserveIndex.NO)
     assert len(file_manager._files) == 5

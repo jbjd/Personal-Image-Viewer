@@ -1,10 +1,9 @@
-"""
-Deals with converting between image file types and some basic IO
-"""
+"""Conversion between image file types and representations."""
 
 import binascii
 
 from PIL.Image import open as open_image
+from PIL.JpegImagePlugin import RAWMODE as VALID_JPEG_MODES
 
 from constants import VALID_FILE_TYPES
 from image.file import magic_number_guess
@@ -19,8 +18,7 @@ def try_convert_file_and_save_new(
     Returns True if conversion performed,
     False if converting to the same type or an invalid format
 
-    Raises ValueError if converting animated file to non-animated format
-    """
+    Raises ValueError if converting animated file to non-animated format"""
 
     target_format = target_format.lower()
 
@@ -42,8 +40,8 @@ def try_convert_file_and_save_new(
 
             if target_format in ("jpg", "jpeg", "jif", "jfif", "jpe"):
                 target_format = "jpeg"
-                if temp_img.mode != "RGB":
-                    temp_img = temp_img.convert("RGB")  # must be RGB to save as jpg
+                if temp_img.mode not in VALID_JPEG_MODES:
+                    temp_img = temp_img.convert("RGB")
             elif target_format == "gif":
                 # This pop fixes missing bitmap error during webp -> gif conversion
                 temp_img.info.pop("background", None)
@@ -61,8 +59,8 @@ def try_convert_file_and_save_new(
 def read_memory_as_base64(image_buffer: memoryview) -> str:
     """Decodes some memory into a base64 string.
 
-    :param image_buffer: The memory buffer of an image to decode
-    :returns: The decoded base64"""
+    :param image_buffer: The memory buffer of an image to decode.
+    :returns: The decoded base64."""
 
     return binascii.b2a_base64(image_buffer, newline=False).decode(
         "ascii", errors="ignore"

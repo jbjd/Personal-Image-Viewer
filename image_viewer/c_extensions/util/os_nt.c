@@ -380,7 +380,7 @@ end:
     return Py_None;
 }
 
-static PyObject *read_memory_as_base64_and_save_to_clipboard(PyObject *self, PyObject *arg)
+static PyObject *read_buffer_as_base64_and_copy_to_clipboard(PyObject *self, PyObject *arg)
 {
     CMemoryViewBuffer *memoryViewBuffer = (CMemoryViewBuffer *)arg;
     unsigned long remainingBytesToEncode = memoryViewBuffer->bufferSize;
@@ -434,7 +434,7 @@ static PyMethodDef os_methods[] = {
     {"get_files_in_folder", get_files_in_folder, METH_O, NULL},
     {"open_with", (PyCFunction)open_with, METH_FASTCALL, NULL},
     {"drop_file_to_clipboard", (PyCFunction)drop_file_to_clipboard, METH_FASTCALL, NULL},
-    {"read_memory_as_base64_and_save_to_clipboard", read_memory_as_base64_and_save_to_clipboard, METH_O, NULL},
+    {"read_buffer_as_base64_and_copy_to_clipboard", read_buffer_as_base64_and_copy_to_clipboard, METH_O, NULL},
     {NULL, NULL, 0, NULL}};
 
 static struct PyModuleDef os_module = {
