@@ -1,9 +1,5 @@
 """C extensions that interact with image files."""
 
-from typing import Callable
-
-from PIL.Image import Image
-
 class CMemoryViewBuffer:
     """Can't be instantiated in Python.
 
@@ -37,5 +33,3 @@ def decode_scaled_jpeg(
     :param image_buffer: An image to decode and scale.
     :param scale_factor: A ratio to scale the image dimensions by.
     :returns: A new buffer containing the scaled and decoded jpeg."""
-
-del Callable, Image
