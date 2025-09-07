@@ -42,5 +42,3 @@ if os.name == "nt":
         """Given an image buffer, converts it to base64 and copies it to clipboard.
 
         :param image_buffer: The image buffer to convert."""
-
-del CMemoryViewBuffer, os
