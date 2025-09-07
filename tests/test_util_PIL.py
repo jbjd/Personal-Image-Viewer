@@ -35,8 +35,7 @@ def test_init_PIL():  # pylint: disable=invalid-name
     assert len(_Image._plugins) == 0
     assert ImageDraw.font is not None
 
-    del _Image
-    del ImageDraw
+    del _Image, ImageDraw
 
 
 def test_create_images():
