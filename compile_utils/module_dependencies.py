@@ -103,7 +103,7 @@ modules_to_skip: list[str] = [
 
 
 if os.name == "nt":
-    modules_to_skip += ["PIL._tkinter_finder", "selectors", "send2trash", "tempfile"]
+    modules_to_skip += ["PIL._tkinter_finder", "selectors", "tempfile"]
 else:
     # TODO: Skip everything but plat other?
     modules_to_skip += [
