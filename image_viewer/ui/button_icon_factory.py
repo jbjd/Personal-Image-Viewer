@@ -6,8 +6,8 @@ from PIL.Image import new as new_image
 from PIL.ImageDraw import ImageDraw
 from PIL.ImageTk import PhotoImage
 
-from ui.button import IconImages
-from util.PIL import resize
+from image_viewer.ui.button import IconImages
+from image_viewer.util.PIL import resize
 
 DEFAULT_ICON_SIZE: tuple[int, int] = (32, 32)
 

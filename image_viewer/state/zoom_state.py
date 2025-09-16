@@ -1,7 +1,7 @@
 """Classes that represent the zoom state"""
 
-from constants import ZoomDirection
-from state.base import StateBase
+from image_viewer.constants import ZoomDirection
+from image_viewer.state.base import StateBase
 
 
 class ZoomState(StateBase):

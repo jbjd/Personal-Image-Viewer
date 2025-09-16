@@ -4,8 +4,8 @@ Deals with storing known image file paths and determining their true file extens
 
 from typing import Iterable
 
-from constants import ImageFormats, Movement
-from util.os import os_name_compare
+from image_viewer.constants import ImageFormats, Movement
+from image_viewer.util.os import os_name_compare
 
 
 class ImageName:

@@ -6,9 +6,9 @@ from typing import Callable, override
 
 from PIL.ImageTk import PhotoImage
 
-from constants import ButtonName
-from ui.base import ButtonUIElementBase
-from ui.canvas import CustomCanvas
+from image_viewer.constants import ButtonName
+from image_viewer.ui.base import ButtonUIElementBase
+from image_viewer.ui.canvas import CustomCanvas
 
 
 class IconImages(namedtuple("IconImages", ["default", "hovered"])):

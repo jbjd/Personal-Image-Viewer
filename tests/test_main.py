@@ -2,7 +2,7 @@
 
 from unittest.mock import mock_open, patch
 
-from image_viewer.__main__ import exception_hook
+from image_viewer.exception import exception_hook
 
 
 def test_exception_hook():
