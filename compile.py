@@ -23,14 +23,13 @@ from compile_utils.cleaner import (
     strip_files,
     warn_unused_code_skips,
 )
-from compile_utils.constants import BUILD_INFO_FILE
+from compile_utils.constants import BUILD_INFO_FILE, IMAGE_VIEWER_NAME
 from compile_utils.module_dependencies import (
     get_normalized_module_name,
     module_dependencies,
     modules_to_skip,
 )
 from compile_utils.nuitka_ext import start_nuitka_compilation
-from compile_utils.package_info import IMAGE_VIEWER_NAME
 from compile_utils.validation import (
     raise_if_not_root,
     validate_module_requirements,

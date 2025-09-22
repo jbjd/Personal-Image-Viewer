@@ -7,7 +7,7 @@ from collections import defaultdict
 
 from personal_python_ast_optimizer.regex.classes import RegexReplacement
 
-from compile_utils.package_info import IMAGE_VIEWER_NAME
+from compile_utils.constants import IMAGE_VIEWER_NAME
 from image_viewer.animation.frame import DEFAULT_ANIMATION_SPEED_MS
 from image_viewer.config import DEFAULT_BACKGROUND_COLOR, DEFAULT_MAX_ITEMS_IN_CACHE
 from image_viewer.constants import TEXT_RGB
