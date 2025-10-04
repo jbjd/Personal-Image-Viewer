@@ -14,8 +14,8 @@ from personal_compile_tools.requirement_operators import Operators
 from personal_compile_tools.requirements import Requirement, parse_requirements_file
 from personal_compile_tools.validation import is_root
 
+from compile_utils.constants import PROJECT_FILE
 from compile_utils.module_dependencies import module_dependencies
-from compile_utils.package_info import PROJECT_FILE
 
 
 @lru_cache

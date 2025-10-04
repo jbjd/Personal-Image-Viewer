@@ -1,8 +1,8 @@
 from tkinter import Canvas, Entry, Event, Tk
 from typing import Literal
 
-from constants import TEXT_RGB
-from ui.base import UIElementBase
+from image_viewer.constants import TEXT_RGB
+from image_viewer.ui.base import UIElementBase
 
 
 class RenameEntry(Entry, UIElementBase):

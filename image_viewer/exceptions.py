@@ -1,6 +1,5 @@
-"""Entrypoint for the lightweight personal image viewer."""
+"""Handling of uncaught exceptions."""
 
-import sys
 from types import TracebackType
 
 
@@ -21,17 +20,3 @@ def exception_hook(
             traceback.print_exception(error_type, error, trace, file=fp)
     except OSError:
         pass
-
-
-if __name__ == "__main__" and len(sys.argv) > 1:  # pragma: no cover
-    from util.os import get_path_to_exe_folder
-    from viewer import ViewerApp
-
-    path_to_exe_folder: str = get_path_to_exe_folder()
-
-    if not __debug__:
-        sys.excepthook = lambda error_type, error, trace: exception_hook(
-            error_type, error, trace, path_to_exe_folder
-        )
-
-    ViewerApp(sys.argv[1], path_to_exe_folder).start()
