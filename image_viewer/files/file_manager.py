@@ -6,14 +6,18 @@ from tkinter.messagebox import askyesno
 
 from PIL.Image import Image
 
-from actions.types import Convert, Delete, Rename
-from actions.undoer import ActionUndoer, UndoResponse
-from constants import VALID_FILE_TYPES, Movement
-from files.file_dialog_asker import FileDialogAsker
-from image.cache import ImageCache, ImageCacheEntry
-from image.file import ImageName, ImageNameList, ImageSearchResult
-from util.convert import try_convert_file_and_save_new
-from util.os import get_files_in_folder, get_normalized_dir_name, trash_file
+from image_viewer.actions.types import Convert, Delete, Rename
+from image_viewer.actions.undoer import ActionUndoer, UndoResponse
+from image_viewer.constants import VALID_FILE_TYPES, Movement
+from image_viewer.files.file_dialog_asker import FileDialogAsker
+from image_viewer.image.cache import ImageCache, ImageCacheEntry
+from image_viewer.image.file import ImageName, ImageNameList, ImageSearchResult
+from image_viewer.util.convert import try_convert_file_and_save_new
+from image_viewer.util.os import (
+    get_files_in_folder,
+    get_normalized_dir_name,
+    trash_file,
+)
 
 
 class _ShouldPreserveIndex(Enum):

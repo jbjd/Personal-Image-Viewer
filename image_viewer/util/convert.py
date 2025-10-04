@@ -5,9 +5,9 @@ import binascii
 from PIL.Image import open as open_image
 from PIL.JpegImagePlugin import RAWMODE as VALID_JPEG_MODES
 
-from constants import VALID_FILE_TYPES
-from image.file import magic_number_guess
-from util.PIL import image_is_animated, save_image
+from image_viewer.constants import VALID_FILE_TYPES
+from image_viewer.image.file import magic_number_guess
+from image_viewer.util.PIL import image_is_animated, save_image
 
 
 def try_convert_file_and_save_new(
