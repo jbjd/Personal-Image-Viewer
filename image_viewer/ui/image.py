@@ -2,7 +2,7 @@
 
 from PIL.ImageTk import PhotoImage
 
-from ui.base import UIElementBase
+from image_viewer.ui.base import UIElementBase
 
 
 class ImageUIElement(UIElementBase):

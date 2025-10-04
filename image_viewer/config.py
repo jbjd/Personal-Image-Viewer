@@ -4,7 +4,7 @@ import os
 from configparser import ConfigParser
 from enum import StrEnum
 
-from util._generic import is_valid_hex_color, is_valid_keybind
+from image_viewer.util._generic import is_valid_hex_color, is_valid_keybind
 
 DEFAULT_FONT: str = "arial.ttf" if os.name == "nt" else "LiberationSans-Regular.ttf"
 DEFAULT_MAX_ITEMS_IN_CACHE: int = 20

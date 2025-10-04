@@ -7,23 +7,30 @@ from typing import NoReturn
 from PIL.Image import Image
 from PIL.ImageTk import PhotoImage
 
-from animation.frame import Frame
-from config import Config
-from constants import ButtonName, Key, Movement, Rotation, TkTags, ZoomDirection
-from files.file_manager import ImageFileManager
-from image.cache import ImageCache
-from image.loader import ImageLoader
-from ui.button import HoverableButtonUIElement, ToggleableButtonUIElement
-from ui.button_icon_factory import ButtonIconFactory
-from ui.canvas import CustomCanvas
-from ui.image import DropdownImageUIElement
-from ui.rename_entry import RenameEntry
-from util.convert import read_memory_as_base64
-from util.os import show_info
-from util.PIL import create_dropdown_image, init_PIL
+from image_viewer.animation.frame import Frame
+from image_viewer.config import Config
+from image_viewer.constants import (
+    ButtonName,
+    Key,
+    Movement,
+    Rotation,
+    TkTags,
+    ZoomDirection,
+)
+from image_viewer.files.file_manager import ImageFileManager
+from image_viewer.image.cache import ImageCache
+from image_viewer.image.loader import ImageLoader
+from image_viewer.ui.button import HoverableButtonUIElement, ToggleableButtonUIElement
+from image_viewer.ui.button_icon_factory import ButtonIconFactory
+from image_viewer.ui.canvas import CustomCanvas
+from image_viewer.ui.image import DropdownImageUIElement
+from image_viewer.ui.rename_entry import RenameEntry
+from image_viewer.util.convert import read_memory_as_base64
+from image_viewer.util.os import show_info
+from image_viewer.util.PIL import create_dropdown_image, init_PIL
 
 if os.name == "nt":
-    from util._os_nt import (
+    from image_viewer.util._os_nt import (
         drop_file_to_clipboard,
         open_with,
         read_buffer_as_base64_and_copy_to_clipboard,

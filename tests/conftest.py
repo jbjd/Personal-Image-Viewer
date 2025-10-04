@@ -26,7 +26,7 @@ from tests.test_util.mocks import MockEvent, MockImage
 WORKING_DIR: str = os.path.dirname(__file__)
 IMG_DIR: str = os.path.join(WORKING_DIR, "example_images")
 EXAMPLE_IMG_PATH: str = os.path.join(IMG_DIR, "a.png")
-CODE_DIR: str = os.path.join(os.path.dirname(WORKING_DIR), "image_viewer")
+MAIN_DIR: str = os.path.dirname(WORKING_DIR)
 
 
 @pytest.fixture(name="tk_app", scope="session")
@@ -107,7 +107,7 @@ def viewer_fixture() -> ViewerApp:
         patch("image_viewer.viewer.CustomCanvas"),
         patch("image_viewer.viewer.ButtonIconFactory", mock_icon_factory),
     ):
-        return ViewerApp(EXAMPLE_IMG_PATH, CODE_DIR)
+        return ViewerApp(EXAMPLE_IMG_PATH, MAIN_DIR)
 
 
 @pytest.fixture(name="focused_event")

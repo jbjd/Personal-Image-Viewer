@@ -5,8 +5,8 @@ Classes that handle undoing things a user did
 import os
 from collections import deque
 
-from actions.types import Convert, Delete, FileAction, Rename
-from util.os import restore_file, trash_file
+from image_viewer.actions.types import Convert, Delete, FileAction, Rename
+from image_viewer.util.os import restore_file, trash_file
 
 
 class UndoResponse:
