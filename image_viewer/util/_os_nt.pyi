@@ -2,7 +2,7 @@
 
 import os
 
-from image._read import CMemoryViewBuffer
+from image_viewer.image._read import CMemoryViewBuffer
 
 if os.name == "nt":
     def trash_file(hwnd: int, file_path: str, /) -> None:

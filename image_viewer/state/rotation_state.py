@@ -1,7 +1,7 @@
 """Classes that represent the rotation state"""
 
-from constants import Rotation
-from state.base import StateBase
+from image_viewer.constants import Rotation
+from image_viewer.state.base import StateBase
 
 
 class RotationState(StateBase):

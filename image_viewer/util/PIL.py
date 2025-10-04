@@ -11,7 +11,7 @@ from PIL.ImageDraw import ImageDraw
 from PIL.ImageFont import truetype
 from PIL.JpegImagePlugin import JpegImageFile
 
-from constants import TEXT_RGB
+from image_viewer.constants import TEXT_RGB
 
 
 def save_image(
