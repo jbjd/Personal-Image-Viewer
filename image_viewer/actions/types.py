@@ -43,3 +43,6 @@ class Delete(FileAction):
     """Represents a file being deleted and sent to the recycle bin"""
 
     __slots__ = ()
+
+    def __init__(self, original_path: str) -> None:
+        super().__init__(original_path)

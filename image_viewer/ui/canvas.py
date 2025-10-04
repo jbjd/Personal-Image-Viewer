@@ -4,10 +4,10 @@ from tkinter import Canvas, Event, Tk
 
 from PIL.ImageTk import PhotoImage
 
-from constants import TEXT_RGB, TkTags
-from ui.base import ButtonUIElementBase
-from ui.image import ImageUIElement
-from util.os import maybe_truncate_long_name
+from image_viewer.constants import TEXT_RGB, TkTags
+from image_viewer.ui.base import ButtonUIElementBase
+from image_viewer.ui.image import ImageUIElement
+from image_viewer.util.os import maybe_truncate_long_name
 
 
 class CustomCanvas(Canvas):

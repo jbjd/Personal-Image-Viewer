@@ -37,7 +37,6 @@ from compile_utils.code_to_skip import (
     regex_to_apply_tk,
     vars_to_skip,
 )
-from compile_utils.package_info import IMAGE_VIEWER_NAME
 from compile_utils.validation import get_required_python_version
 
 if os.name == "nt":
@@ -116,19 +115,15 @@ def move_files_to_tmp_and_clean(
     for python_file in _get_files_in_folder_with_filter(
         source_dir, (".py", ".pyd", ".so")
     ):
-        if (
-            os.path.basename(python_file) == "__main__.py"
-            and module_name != IMAGE_VIEWER_NAME
-        ):
-            continue  # skip __main__ in modules other than this one
+        if os.path.basename(python_file) == "__main__.py":
+            continue
 
         python_file = os.path.abspath(python_file)
         relative_path: str = python_file.replace(source_dir, "").strip("/\\")
         module_import_path: str = sub(SEPARATORS, ".", f"{module_name}.{relative_path}")
         module_import_path = module_import_path[:-3]  # chops .py
 
-        if module_name != IMAGE_VIEWER_NAME:
-            relative_path = os.path.join(module_name, relative_path)
+        relative_path = os.path.join(module_name, relative_path)
 
         new_path: str = os.path.join(tmp_dir, relative_path)
 
