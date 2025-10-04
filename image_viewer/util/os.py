@@ -10,15 +10,15 @@ from typing import Final
 if os.name == "nt":
     from ctypes import windll  # type: ignore
 
-    from image_viewer.util._os_nt import get_files_in_folder as _get_files_in_folder
-    from image_viewer.util._os_nt import restore_file as _restore_file
-    from image_viewer.util._os_nt import trash_file as _trash_file
+    from image_viewer.util._os_nt import get_files_in_folder as _get_files_in_folder_nt
+    from image_viewer.util._os_nt import restore_file as _restore_file_nt
+    from image_viewer.util._os_nt import trash_file as _trash_file_nt
 
     def os_name_compare(a: str, b: str) -> bool:
         return windll.shlwapi.StrCmpLogicalW(a, b) < 0
 
     def get_files_in_folder(directory_path: str) -> Iterator[str]:
-        files: list[str] = _get_files_in_folder(directory_path)
+        files: list[str] = _get_files_in_folder_nt(directory_path)
         return iter(files)
 
 else:  # assume linux for now
@@ -31,7 +31,7 @@ else:  # assume linux for now
         return a < b
 
     # TODO: break this function into smaller bits
-    def _restore_file(original_path: str) -> None:
+    def _restore_file_linux(original_path: str) -> None:
         name_start: int = original_path.rfind("/")
         name_and_suffix: str = (
             original_path if name_start == -1 else original_path[name_start + 1 :]
@@ -101,7 +101,7 @@ def get_byte_display(size_in_bytes: int) -> str:
 def trash_file(path: str) -> None:
     """OS generic way to send files to trash"""
     if os.name == "nt":
-        _trash_file(0, path)
+        _trash_file_nt(0, path)
     else:
         send2trash(path)
 
@@ -109,9 +109,9 @@ def trash_file(path: str) -> None:
 def restore_file(path: str) -> None:
     """OS Generic way to restore a file from trash"""
     if os.name == "nt":
-        _restore_file(0, path)
+        _restore_file_nt(0, path)
     else:
-        _restore_file(path)
+        _restore_file_linux(path)
 
 
 def get_normalized_dir_name(path: str) -> str:
