@@ -201,13 +201,14 @@ class ImageFileManager:
         self._files.move_index(amount)
         self._update_after_move_or_edit()
 
-    def delete_current_image(self) -> None:
-        """Safely deletes the image at the current file path"""
+    def trash_current_image(self) -> None:
+        """Safely sends current image to trash."""
         try:
             trash_file(self.path_to_image)
             self.action_undoer.append(Delete(self.path_to_image))
         except (OSError, FileNotFoundError):
             pass
+
         self.remove_current_image()
 
     def remove_current_image(self, index_movement: Movement = Movement.NONE) -> None:
@@ -326,7 +327,7 @@ class ImageFileManager:
             f"Converted file to {new_format}, delete old file?",
         ):
             try:
-                self.delete_current_image()
+                self.trash_current_image()
             except IndexError:
                 pass  # even if no images left, a new one will be added after this
             deleted = True
