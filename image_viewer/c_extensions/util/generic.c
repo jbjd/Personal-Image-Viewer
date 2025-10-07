@@ -35,10 +35,13 @@ static PyObject *is_valid_keybind(PyObject *self, PyObject *arg)
 {
     if (compile_valid_keybind_regex)
     {
-        compile_valid_keybind_regex = tre_regcomp(&valid_keybind_regex, "^<((F([1-9]|(1[0-2])))|(Control-[a-zA-Z0-9]))>$", REG_EXTENDED);
+        compile_valid_keybind_regex = tre_regcomp(&valid_keybind_regex, "^<(F([1-9]|1[0-2])|Control-[a-zA-Z0-9])>$", REG_EXTENDED);
         if (compile_valid_keybind_regex)
         {
-            // Failed to compile regex
+            // Can uncomment below for debugging
+            // char regError[256];
+            // tre_regerror(compile_valid_keybind_regex, &valid_keybind_regex, regError, 256);
+            // PyErr_SetString(PyExc_ValueError, regError);
             return NULL;
         }
     }
