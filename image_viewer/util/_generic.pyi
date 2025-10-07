@@ -11,5 +11,5 @@ def is_valid_keybind(keybind: str, /) -> bool:
 
     :param keybind: A possible keybind.
     :returns: True if keybind follows one of the following regex:
-    <F[0-9]> <F1[0-2]> <Control-[a-zA-Z0-9]>
+    <F[0-9]> <F1[0-2]> <(Control-|Alt-)+[a-zA-Z0-9]>
     """

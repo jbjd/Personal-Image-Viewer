@@ -66,8 +66,11 @@ def test_config_reader_int_fallback():
 @pytest.mark.parametrize(
     "keybind,expected_keybind",
     [
-        ("asdvbiu34uiyg", _DEFAULT),
+        ("Control-d", _DEFAULT),
         ("<Control-d>", "<Control-d>"),
+        ("<Alt-P>", "<Alt-P>"),
+        ("<Alt-Control-P>", "<Alt-Control-P>"),
+        ("<Control-Alt-P>", "<Control-Alt-P>"),
         ("<Control->", _DEFAULT),
         ("<F0>", _DEFAULT),
         ("<F1>", "<F1>"),
@@ -75,6 +78,8 @@ def test_config_reader_int_fallback():
         ("<F13>", _DEFAULT),
         ("<F91>", _DEFAULT),
         ("<k>", _DEFAULT),
+        # Couldn't find a way to make this illegal in regex, but tkinter allows it
+        ("<Alt-Alt-Alt-P>", "<Alt-Alt-Alt-P>"),
     ],
 )
 def test_validate_keybind_or_default(keybind: str, expected_keybind: str):
