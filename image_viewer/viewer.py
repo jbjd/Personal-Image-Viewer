@@ -242,7 +242,7 @@ class ViewerApp:
         dropdown_button.create(ButtonName.DROPDOWN, button_x_offset)
 
         trash_button = HoverableButtonUIElement(
-            canvas, button_icon_factory.make_trash_icons(), self.trash_image
+            canvas, button_icon_factory.make_trash_icons(), self.trash_current_image
         )
         trash_button.create(ButtonName.TRASH)
 
@@ -512,11 +512,16 @@ class ViewerApp:
 
         self.load_image_unblocking()
 
-    def trash_image(self) -> None:
-        """Move current image to trash and moves to next"""
+    def trash_current_image(self) -> None:
+        """Sends current image to trash and loads next image."""
         self.clear_current_image_data()
         self.hide_rename_window()
-        self.delete_current_image()
+
+        try:
+            self.file_manager.trash_current_image()
+        except IndexError:
+            self.exit()
+
         self.load_image_unblocking()
 
     def hide_rename_window(self) -> None:
@@ -624,13 +629,6 @@ class ViewerApp:
         index will try to preserve its current position."""
         try:
             self.file_manager.remove_current_image(index_movement)
-        except IndexError:
-            self.exit()
-
-    def delete_current_image(self) -> None:
-        """Deletes current image from disk list"""
-        try:
-            self.file_manager.delete_current_image()
         except IndexError:
             self.exit()
 
