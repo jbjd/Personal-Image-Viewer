@@ -45,6 +45,7 @@ else
 	@echo "Nothing to do for build-util-os-nt:"
 endif
 
+# To call tre_regerror, need to add -lintl -liconv
 build-util-generic:
 	gcc $(C_SOURCE)/util/generic.c $(C_FLAGS_SHARED) -o image_viewer/util/_generic.$(COMPILED_EXT) -Wl,-Bstatic,-Bsymbolic -ltre -Wl,-Bdynamic
 
