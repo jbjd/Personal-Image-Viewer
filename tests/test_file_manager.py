@@ -101,7 +101,7 @@ def test_delete_file(file_manager: ImageFileManager):
 
     with tempfile.NamedTemporaryFile() as tmp:
         file_manager.path_to_image = tmp.name
-        file_manager.delete_current_image()
+        file_manager.trash_current_image()
         assert len(file_manager._files) == 1
 
 
