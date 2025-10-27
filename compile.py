@@ -177,7 +177,8 @@ finally:
         delete_folders([BUILD_FOLDER, COMPILE_FOLDER, TMP_FOLDER])
         delete_file(os.path.join(WORKING_FOLDER, f"{TARGET_MODULE}.cmd"))
 
-_logger.info("\nFinished\nInstalled to %s", install_path)
+_logger.info("\nFinished")
+_logger.info("Installed to %s", install_path)
 
 install_byte_size: int = get_folder_size(install_path)
 _logger.info("Install Size: %s bytes", f"{install_byte_size:,}")
