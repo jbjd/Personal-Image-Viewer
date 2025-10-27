@@ -44,6 +44,8 @@ if os.name == "nt":
 else:
     SEPARATORS = r"[/]"
 
+MINIFIER_FAILED_FILE_NAME: str = "minifier_failure.py.example"
+
 _logger = getLogger(__name__)
 
 
@@ -67,18 +69,19 @@ def clean_file_and_copy(
 ) -> None:
     """Given a python file path,
     applies regexes/skips/minification and writes results to new_path"""
+
+    with open(path, "r", encoding="utf-8") as fp:
+        source: str = fp.read()
+
+    if module_import_path in regex_to_apply_py:
+        regex_replacements: list[RegexReplacement] = regex_to_apply_py.pop(
+            module_import_path
+        )
+        source = apply_regex(source, regex_replacements, module_import_path)
+
+    code_cleaner = MinifyUnparserExt()
+
     try:
-        with open(path, "r", encoding="utf-8") as fp:
-            source: str = fp.read()
-
-        if module_import_path in regex_to_apply_py:
-            regex_replacements: list[RegexReplacement] = regex_to_apply_py.pop(
-                module_import_path
-            )
-            source = apply_regex(source, regex_replacements, module_import_path)
-
-        code_cleaner = MinifyUnparserExt()
-
         source = run_minify_parser(
             code_cleaner,
             source,
@@ -94,14 +97,20 @@ def clean_file_and_copy(
                 ),
             ),
         )
-
-        source = run_autoflake(source, remove_unused_imports=True)
-
-        with open(new_path, "w", encoding="utf-8") as fp:
-            fp.write(source)
     except Exception:
-        _logger.error("Error when cleaning file %s", module_import_path)
+        _logger.error(
+            "Error when running minifier on file %s\nWriting source to %s",
+            module_import_path,
+            MINIFIER_FAILED_FILE_NAME,
+        )
+        with open(MINIFIER_FAILED_FILE_NAME, "w", encoding="utf-8") as fp:
+            fp.write(source)
         raise
+
+    source = run_autoflake(source, remove_unused_imports=True)
+
+    with open(new_path, "w", encoding="utf-8") as fp:
+        fp.write(source)
 
 
 def move_files_to_tmp_and_clean(

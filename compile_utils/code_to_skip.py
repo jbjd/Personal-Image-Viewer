@@ -129,16 +129,21 @@ functions_to_skip: dict[str, set[str]] = {
 
 
 vars_to_skip: dict[str, set[str]] = {
+    "PIL._util": {"TYPE_CHECKING"},
     "PIL.Image": {"MIME", "TYPE_CHECKING"},
     "PIL.ImageDraw": {"Outline", "TYPE_CHECKING"},
     "PIL.ImageFile": {"TYPE_CHECKING"},
     "PIL.ImageFont": {"TYPE_CHECKING"},
+    "PIL.ImageMath": {"TYPE_CHECKING"},
     "PIL.ImagePalette": {"TYPE_CHECKING"},
+    "PIL.ImageSequence": {"TYPE_CHECKING"},
     "PIL.ImageTk": {"TYPE_CHECKING"},
     "PIL.GifImagePlugin": {"TYPE_CHECKING", "_Palette", "format_description"},
+    "PIL.GimpGradientFile": {"TYPE_CHECKING"},
+    "PIL.GimpPaletteFile": {"TYPE_CHECKING"},
     "PIL.JpegImagePlugin": {"TYPE_CHECKING", "format_description"},
     "PIL.PngImagePlugin": {"TYPE_CHECKING", "format_description"},
-    "PIL.WebPImagePlugin": {"format_description"},
+    "PIL.WebPImagePlugin": {"TYPE_CHECKING", "format_description"},
 }
 
 if os.name == "nt":
@@ -294,6 +299,7 @@ from collections import namedtuple""",
             RegexReplacement(
                 pattern="from typing import .*",
                 replacement="from typing import IO, cast\nfrom collections import namedtuple",  # noqa E501
+                count=1,
             ),
             RegexReplacement(
                 pattern=r"_RewindState\(NamedTuple\)",
