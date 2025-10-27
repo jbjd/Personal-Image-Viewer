@@ -135,7 +135,7 @@ try:
     delete_folder(COMPILE_FOLDER)
     target_file_path: str = f"{TMP_FOLDER}/{TARGET_FILE}"
     default_python: str = "python" if os.name == "nt" else "bin/python3"
-    python_path: str = f"{sys.exec_prefix}/{default_python}"
+    python_path: str = os.path.join(sys.exec_prefix, default_python)
     process: Popen = start_nuitka_compilation(
         python_path, target_file_path, WORKING_FOLDER, nuitka_args
     )
