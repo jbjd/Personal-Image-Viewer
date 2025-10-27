@@ -55,7 +55,9 @@ def validate_module_requirements() -> None:
             if not matches_installed:
                 installed_version: str = get_module_version(requirement.name)
                 _logger.warning(
-                    "Expected %s but found version %s ", requirement, installed_version
+                    "Expected requirement %s but found version %s",
+                    requirement,
+                    installed_version,
                 )
         except PackageNotFoundError:
             missing_modules.append(requirement.name)
@@ -73,7 +75,7 @@ def validate_python_version() -> None:
 
     if used_python != required_python:
         _logger.warning(
-            "Expecting python %s but found %s", required_python, used_python
+            "Expecting python version %s but found %s", required_python, used_python
         )
 
     version: str = version_tuple_to_str(used_python)

@@ -161,7 +161,7 @@ def move_files_to_tmp_and_clean(
     if modules_to_skip:
         _logger.warning(
             "Some modules were marked to skip but were not found: %s",
-            " ".join(modules_to_skip),
+            ", ".join(modules_to_skip),
         )
 
 
