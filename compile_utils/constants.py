@@ -9,3 +9,7 @@ PROJECT_FILE: str = "pyproject.toml"
 
 BUILD_INFO_FILE: str = "build_info.txt"
 REPORT_FILE: str = "compilation-report.xml"
+
+# Logging
+
+LOGGER_NAME: str = "personal_logger"
