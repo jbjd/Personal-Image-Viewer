@@ -17,7 +17,7 @@ def start_nuitka_compilation(
     _logger.info("Using python install %s for nuitka", python_path)
 
     compile_env = os.environ.copy()
-    # -march=native had a race condition that segfaulted on startup
+    # -march=native had a race condition that segfault'ed on startup
     # -mtune=native works as intended
     compile_env["CFLAGS"] = "-O3 -fno-signed-zeros -mtune=native"
 

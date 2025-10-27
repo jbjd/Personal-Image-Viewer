@@ -45,6 +45,7 @@ if os.name == "nt":
 else:
     SEPARATORS = r"[/]"
 
+# Ensure this file is git ignored
 MINIFIER_FAILED_FILE_NAME: str = "minifier_failure.py.example"
 
 _logger = getLogger(LOGGER_NAME)
@@ -100,7 +101,7 @@ def clean_file_and_copy(
         )
     except Exception:
         _logger.error(
-            "Error when running minifier on file %s\nWriting source to %s",
+            "Error when running minifier on file %s, writing source to %s",
             module_import_path,
             MINIFIER_FAILED_FILE_NAME,
         )
