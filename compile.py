@@ -24,6 +24,7 @@ from compile_utils.cleaner import (
     warn_unused_code_skips,
 )
 from compile_utils.constants import BUILD_INFO_FILE, IMAGE_VIEWER_NAME
+from compile_utils.log import setup_logging
 from compile_utils.module_dependencies import (
     get_normalized_module_name,
     module_dependencies,
@@ -79,6 +80,8 @@ if os.name == "nt":
         ),
     ]
 
+_logger = setup_logging()
+
 validate_module_requirements()
 
 delete_folder(TMP_FOLDER)
@@ -100,8 +103,7 @@ try:
 
         module = import_module(module_name)
         if module.__file__ is None:
-            print(f"Error getting module {module_name}'s filepath")
-            continue
+            raise ValueError(f"Module {module_name}'s file path not set")
 
         base_file_name: str = os.path.basename(module.__file__)
 
@@ -138,7 +140,7 @@ try:
         python_path, target_file_path, WORKING_FOLDER, nuitka_args
     )
 
-    print("Waiting for nuitka compilation...")
+    _logger.info("Waiting for nuitka compilation...")
 
     install_path: str = args.install_path if not args.debug else COMPILE_FOLDER
 
@@ -175,8 +177,7 @@ finally:
         delete_folders([BUILD_FOLDER, COMPILE_FOLDER, TMP_FOLDER])
         delete_file(os.path.join(WORKING_FOLDER, f"{TARGET_MODULE}.cmd"))
 
-print("\nFinished")
-print("Installed to", install_path)
+_logger.info("\nFinished\nInstalled to %s", install_path)
 
 install_byte_size: int = get_folder_size(install_path)
-print(f"Install Size: {install_byte_size:,} bytes")
+_logger.info("Install Size: %s bytes", f"{install_byte_size:,}")

@@ -37,6 +37,7 @@ from compile_utils.code_to_skip import (
     regex_to_apply_tk,
     vars_to_skip,
 )
+from compile_utils.constants import LOGGER_NAME
 from compile_utils.validation import get_required_python_version
 
 if os.name == "nt":
@@ -46,7 +47,7 @@ else:
 
 MINIFIER_FAILED_FILE_NAME: str = "minifier_failure.py.example"
 
-_logger = getLogger(__name__)
+_logger = getLogger(LOGGER_NAME)
 
 
 class MinifyUnparserExt(MinifyUnparser):

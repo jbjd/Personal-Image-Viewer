@@ -1,7 +1,12 @@
 """Functions to help with calling nuitka"""
 
 import os
+from logging import getLogger
 from subprocess import Popen
+
+from compile_utils.constants import LOGGER_NAME
+
+_logger = getLogger(LOGGER_NAME)
 
 
 def start_nuitka_compilation(
@@ -9,8 +14,7 @@ def start_nuitka_compilation(
 ) -> Popen:
     """Begins nuitka compilation in another process"""
 
-    print("Starting compilation with nuitka")
-    print("Using python install", python_path)
+    _logger.info("Using python install %s for nuitka", python_path)
 
     compile_env = os.environ.copy()
     # -march=native had a race condition that segfaulted on startup

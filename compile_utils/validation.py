@@ -14,10 +14,10 @@ from personal_compile_tools.requirement_operators import Operators
 from personal_compile_tools.requirements import Requirement, parse_requirements_file
 from personal_compile_tools.validation import is_root
 
-from compile_utils.constants import PROJECT_FILE
+from compile_utils.constants import LOGGER_NAME, PROJECT_FILE
 from compile_utils.module_dependencies import module_dependencies
 
-_logger = getLogger(__name__)
+_logger = getLogger(LOGGER_NAME)
 
 
 @lru_cache
@@ -84,7 +84,7 @@ def validate_python_version() -> None:
 def raise_if_not_root() -> None:
     """Raises PermissionError if current context isn't root."""
     if not is_root():
-        raise PermissionError("need root privileges to compile and install")
+        raise PermissionError("Need root privileges to compile and install")
 
 
 def _personal_module_matches_installed_version(name: str, source_url: str) -> bool:
