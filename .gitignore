@@ -13,6 +13,7 @@ build/
 
 # Image Viewer
 ERROR.log
+minifier_failure.py.example
 
 # Nuitka
 *.bin

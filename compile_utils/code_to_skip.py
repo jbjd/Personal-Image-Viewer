@@ -32,7 +32,6 @@ functions_to_skip: dict[str, set[str]] = {
         "__setstate__",
         "_apply_env_variables",
         "_dump",
-        "_expand",
         "_repr_image",
         "_repr_jpeg_",
         "_repr_pretty_",
@@ -85,7 +84,7 @@ functions_to_skip: dict[str, set[str]] = {
         "subtract",
     },
     "PIL.ImageDraw": {"_color_diff", "getdraw", "floodfill"},
-    "PIL.ImageFile": {"get_format_mimetype", "verify", "raise_oserror"},
+    "PIL.ImageFile": {"get_format_mimetype", "verify"},
     "PIL.ImageFont": {
         "__getstate__",
         "__setstate__",
@@ -94,8 +93,7 @@ functions_to_skip: dict[str, set[str]] = {
         "load_default",
         "load_path",
     },
-    "PIL.ImageMath": {"deprecate", "eval", "unsafe_eval"},
-    "PIL.ImageMode": {"deprecate"},
+    "PIL.ImageMath": {"unsafe_eval"},
     "PIL.ImageOps": {
         "_color",
         "autocontrast",
@@ -123,13 +121,7 @@ functions_to_skip: dict[str, set[str]] = {
     },
     "PIL.ImageTk": {"_get_image_from_kw", "getimage"},
     "PIL.GifImagePlugin": {"_save_netpbm", "getheader", "register_mime"},
-    "PIL.JpegImagePlugin": {
-        "_getexif",
-        "_save_cjpeg",
-        "deprecate",
-        "load_djpeg",
-        "register_mime",
-    },
+    "PIL.JpegImagePlugin": {"_getexif", "load_djpeg", "register_mime"},
     "PIL.PngImagePlugin": {"debug", "deprecate", "getLogger", "register_mime"},
     "PIL.WebPImagePlugin": {"register_mime"},
     "PIL.TiffTags": {"_populate"},
@@ -137,16 +129,21 @@ functions_to_skip: dict[str, set[str]] = {
 
 
 vars_to_skip: dict[str, set[str]] = {
+    "PIL._util": {"TYPE_CHECKING"},
     "PIL.Image": {"MIME", "TYPE_CHECKING"},
     "PIL.ImageDraw": {"Outline", "TYPE_CHECKING"},
     "PIL.ImageFile": {"TYPE_CHECKING"},
     "PIL.ImageFont": {"TYPE_CHECKING"},
+    "PIL.ImageMath": {"TYPE_CHECKING"},
     "PIL.ImagePalette": {"TYPE_CHECKING"},
+    "PIL.ImageSequence": {"TYPE_CHECKING"},
     "PIL.ImageTk": {"TYPE_CHECKING"},
     "PIL.GifImagePlugin": {"TYPE_CHECKING", "_Palette", "format_description"},
+    "PIL.GimpGradientFile": {"TYPE_CHECKING"},
+    "PIL.GimpPaletteFile": {"TYPE_CHECKING"},
     "PIL.JpegImagePlugin": {"TYPE_CHECKING", "format_description"},
     "PIL.PngImagePlugin": {"TYPE_CHECKING", "format_description"},
-    "PIL.WebPImagePlugin": {"format_description"},
+    "PIL.WebPImagePlugin": {"TYPE_CHECKING", "format_description"},
 }
 
 if os.name == "nt":
@@ -177,9 +174,6 @@ classes_to_skip: dict[str, set[str]] = {
 
 from_imports_to_skip: dict[str, set[str]] = {
     "PIL.Image": {"deprecate"},
-    "PIL.ImageMath": {"deprecate"},
-    "PIL.ImageMode": {"deprecate"},
-    "PIL.JpegImagePlugin": {"deprecate"},
 }
 
 dict_keys_to_skip: dict[str, set[str]] = {}
@@ -248,7 +242,6 @@ except ImportError:
             ),
         ],
         "PIL.ImageDraw": [
-            RegexReplacement(pattern="_Ink =.*"),
             RegexReplacement(
                 pattern=r"def Draw.*?return ImageDraw.*?\)",
                 replacement="""def Draw(im,mode=None):return ImageDraw(im,mode)""",
@@ -278,11 +271,6 @@ from collections import namedtuple""",
                 flags=re.DOTALL,
             ),
             RegexReplacement(pattern=r"MAX_STRING_LENGTH is not None and"),
-            RegexReplacement(
-                pattern=r"""try:\s+from packaging\.version import parse as parse_version
-.*?DeprecationWarning,\s+\)""",
-                flags=re.DOTALL,
-            ),
         ],
         "PIL.ImageMode": [
             RegexReplacement(
@@ -311,6 +299,7 @@ from collections import namedtuple""",
             RegexReplacement(
                 pattern="from typing import .*",
                 replacement="from typing import IO, cast\nfrom collections import namedtuple",  # noqa E501
+                count=1,
             ),
             RegexReplacement(
                 pattern=r"_RewindState\(NamedTuple\)",
