@@ -4,8 +4,8 @@ import ast
 import os
 import re
 import subprocess
-import warnings
 from glob import glob
+from logging import getLogger
 from re import sub
 from typing import Iterator
 
@@ -37,12 +37,18 @@ from compile_utils.code_to_skip import (
     regex_to_apply_tk,
     vars_to_skip,
 )
+from compile_utils.constants import LOGGER_NAME
 from compile_utils.validation import get_required_python_version
 
 if os.name == "nt":
     SEPARATORS = r"[\\/]"
 else:
     SEPARATORS = r"[/]"
+
+# Ensure this file is git ignored
+MINIFIER_FAILED_FILE_NAME: str = "minifier_failure.py.example"
+
+_logger = getLogger(LOGGER_NAME)
 
 
 class MinifyUnparserExt(MinifyUnparser):
@@ -77,21 +83,31 @@ def clean_file_and_copy(
 
     code_cleaner = MinifyUnparserExt()
 
-    source = run_minify_parser(
-        code_cleaner,
-        source,
-        SkipConfig(
-            module_import_path,
-            get_required_python_version(),
-            constants_to_fold[module_name],
-            SectionsConfig(skip_name_equals_main=True),
-            _get_tokens_to_skip_config(module_import_path),
-            ExtrasConfig(
-                fold_constants=False,  # Nuitka does this internally
-                skip_overload_functions=True,
+    try:
+        source = run_minify_parser(
+            code_cleaner,
+            source,
+            SkipConfig(
+                module_import_path,
+                get_required_python_version(),
+                constants_to_fold[module_name],
+                SectionsConfig(skip_name_equals_main=True),
+                _get_tokens_to_skip_config(module_import_path),
+                ExtrasConfig(
+                    fold_constants=False,  # Nuitka does this internally
+                    skip_overload_functions=True,
+                ),
             ),
-        ),
-    )
+        )
+    except Exception:
+        _logger.error(
+            "Error when running minifier on file %s, writing source to %s",
+            module_import_path,
+            MINIFIER_FAILED_FILE_NAME,
+        )
+        with open(MINIFIER_FAILED_FILE_NAME, "w", encoding="utf-8") as fp:
+            fp.write(source)
+        raise
 
     source = run_autoflake(source, remove_unused_imports=True)
 
@@ -144,9 +160,9 @@ def move_files_to_tmp_and_clean(
             copy_file(python_file, new_path)
 
     if modules_to_skip:
-        warnings.warn(
-            "Some modules were marked to skip but were not found: "
-            + " ".join(modules_to_skip)
+        _logger.warning(
+            "Some modules were marked to skip but were not found: %s",
+            ", ".join(modules_to_skip),
         )
 
 
@@ -164,9 +180,10 @@ def warn_unused_code_skips() -> None:
         (regex_to_apply_py, "with regex"),
     ):
         for module in skips:
-            warnings.warn(
-                f"Asked to skip {friendly_name} in module {module} "
-                "but it was not found"
+            _logger.warning(
+                "Asked to skip %s in module %s, but was not found",
+                friendly_name,
+                module,
             )
 
 
@@ -176,7 +193,7 @@ def clean_tk_files(compile_dir: str) -> None:
     for path_or_glob, regexes in regex_to_apply_tk.items():
         glob_result: list[str] = glob(os.path.join(compile_dir, path_or_glob))
         if not glob_result:
-            warnings.warn(f"{path_or_glob}: Glob not found")
+            _logger.warning("Glob not found: %s", path_or_glob)
             continue
 
         # globs are used since files may have versioning in name
@@ -224,7 +241,7 @@ def strip_files(compile_dir: str) -> None:
         result = subprocess.run(["strip", "--strip-all", strippable_file], check=False)
 
         if result.returncode != 0:
-            warnings.warn(f"Failed to strip file {strippable_file}")
+            _logger.warning("Failed to strip file %s", strippable_file)
 
 
 def _get_tokens_to_skip_config(module_import_path: str) -> TokensConfig:

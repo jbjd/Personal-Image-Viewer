@@ -1,10 +1,10 @@
 """Validation functions for compilation requirements"""
 
 import tomllib
-import warnings
 from functools import lru_cache
 from importlib.metadata import PackageNotFoundError
 from importlib.metadata import version as get_module_version
+from logging import getLogger
 from sys import version_info
 from typing import Any
 
@@ -14,8 +14,10 @@ from personal_compile_tools.requirement_operators import Operators
 from personal_compile_tools.requirements import Requirement, parse_requirements_file
 from personal_compile_tools.validation import is_root
 
-from compile_utils.constants import PROJECT_FILE
+from compile_utils.constants import LOGGER_NAME, PROJECT_FILE
 from compile_utils.module_dependencies import module_dependencies
+
+_logger = getLogger(LOGGER_NAME)
 
 
 @lru_cache
@@ -52,8 +54,10 @@ def validate_module_requirements() -> None:
             )
             if not matches_installed:
                 installed_version: str = get_module_version(requirement.name)
-                warnings.warn(
-                    f"Expected {requirement} but found version {installed_version}"
+                _logger.warning(
+                    "Expected requirement %s but found version %s",
+                    requirement,
+                    installed_version,
                 )
         except PackageNotFoundError:
             missing_modules.append(requirement.name)
@@ -70,7 +74,9 @@ def validate_python_version() -> None:
     used_python: tuple[int, int] = version_info[:2]
 
     if used_python != required_python:
-        warnings.warn(f"Expecting python {required_python} but found {used_python}")
+        _logger.warning(
+            "Expecting python version %s but found %s", required_python, used_python
+        )
 
     version: str = version_tuple_to_str(used_python)
     if version in PythonVersions.getNotYetSupportedPythonVersions():
@@ -80,7 +86,7 @@ def validate_python_version() -> None:
 def raise_if_not_root() -> None:
     """Raises PermissionError if current context isn't root."""
     if not is_root():
-        raise PermissionError("need root privileges to compile and install")
+        raise PermissionError("Need root privileges to compile and install")
 
 
 def _personal_module_matches_installed_version(name: str, source_url: str) -> bool:
