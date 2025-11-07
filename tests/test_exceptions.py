@@ -1,4 +1,4 @@
-"""Tests for the __main__.py file."""
+"""Tests for generic exception handling code."""
 
 from unittest.mock import mock_open, patch
 
