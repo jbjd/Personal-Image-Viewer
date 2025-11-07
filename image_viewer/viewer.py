@@ -1,5 +1,3 @@
-from collections.abc import Callable
-from time import perf_counter
 from tkinter import Event, Tk
 from typing import NoReturn
 
@@ -15,7 +13,3 @@ class ViewerApp:
         app: Tk = Tk()
 
         return app
-
-    def start(self) -> None:
-        """Starts tkinter main loop"""
-        self.app.mainloop()
