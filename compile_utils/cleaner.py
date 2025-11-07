@@ -131,7 +131,7 @@ def move_files_to_tmp_and_clean(
     for python_file in _get_files_in_folder_with_filter(
         source_dir, (".py", ".pyd", ".so")
     ):
-        if os.path.basename(python_file) == "__main__.py":
+        if os.path.basename(python_file) == "main.py":
             continue
 
         python_file = os.path.abspath(python_file)
