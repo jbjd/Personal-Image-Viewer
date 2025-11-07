@@ -49,16 +49,13 @@ BUILD_FOLDER: str = os.path.join(WORKING_FOLDER, f"{TARGET_MODULE}.build")
 
 EXECUTABLE_EXT: str
 DEFAULT_INSTALL_PATH: str
-ICON_RELATIVE_PATH: str
 
 if os.name == "nt":
     EXECUTABLE_EXT = ".exe"
     DEFAULT_INSTALL_PATH = "C:/Program Files/Personal Image Viewer/"
-    ICON_RELATIVE_PATH = "icon/icon.ico"
 else:
     EXECUTABLE_EXT = ".bin"
     DEFAULT_INSTALL_PATH = "/usr/local/personal-image-viewer/"
-    ICON_RELATIVE_PATH = "icon/icon.png"
 
 EXECUTABLE_NAME: str = "viewer" + EXECUTABLE_EXT
 FILES_TO_INCLUDE: list[str] = []
@@ -73,12 +70,7 @@ if not args.debug and not args.skip_nuitka:
     raise_if_not_root()
 
 if os.name == "nt":
-    nuitka_args += [
-        NuitkaArgs.MINGW64,
-        NuitkaArgs.WINDOWS_ICON_FROM_ICO.with_value(
-            os.path.join(WORKING_FOLDER, ICON_RELATIVE_PATH)
-        ),
-    ]
+    nuitka_args += [NuitkaArgs.MINGW64]
 
 _logger = setup_logging()
 
