@@ -3,9 +3,6 @@ from time import perf_counter
 from tkinter import Event, Tk
 from typing import NoReturn
 
-from PIL.Image import Image
-from PIL.ImageTk import PhotoImage
-
 
 class ViewerApp:
 
