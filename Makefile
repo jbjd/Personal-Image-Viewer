@@ -1,11 +1,11 @@
 ifeq ($(OS),Windows_NT)
     PYTHON = python
-	PYTHON_DLL = python312
+	PYTHON_DLL = python313
 	COMPILED_EXT = pyd
 	OS_FLAGS =
 else
-    PYTHON = python3.12
-	PYTHON_DLL = python3.12
+    PYTHON = python3.13
+	PYTHON_DLL = python3.13
 	COMPILED_EXT = so
 	OS_FLAGS = -fPIC
 endif
@@ -31,8 +31,8 @@ ifeq ($(OS),Windows_NT)
 	PYTHON_INCLUDES := $(PYTHON_BASE_PREFIX)/include/
 else
     PYTHON_FOR_INSTALL_STEP := $(INSTALL_STEP_PREFIX)/bin/$(PYTHON)
-	PYTHON_LIBS := $(PYTHON_BASE_PREFIX)/libs/python3.12/
-	PYTHON_INCLUDES := $(PYTHON_BASE_PREFIX)/include/python3.12/
+	PYTHON_LIBS := $(PYTHON_BASE_PREFIX)/libs/python3.13/
+	PYTHON_INCLUDES := $(PYTHON_BASE_PREFIX)/include/python3.13/
 endif
 
 C_SOURCE = image_viewer/c_extensions

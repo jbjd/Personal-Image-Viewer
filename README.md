@@ -1,6 +1,6 @@
 # Personal Image Viewer
 
-A lightweight "Personal Image Viewer" written in Python 3.12
+A lightweight "Personal Image Viewer" written in Python 3.13
 
 ## Supported File Types
 
@@ -25,7 +25,7 @@ Feel free to take this code and edit it however you like. Please don't use it fo
 
 ## Instructions To Get It Running
 
-1. Have Python 3.12.x installed.
+1. Have Python 3.13.x installed.
 
 1. (Linux) Install *libjpeg-turbo-official* and *libtre-dev*.
 
