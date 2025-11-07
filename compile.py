@@ -40,7 +40,7 @@ from compile_utils.validation import (
 validate_python_version()
 
 WORKING_FOLDER: str = os.path.normpath(os.path.dirname(__file__))
-TARGET_MODULE: str = "__main__"
+TARGET_MODULE: str = "main"
 TARGET_FILE: str = f"{TARGET_MODULE}.py"
 TMP_FOLDER: str = os.path.join(WORKING_FOLDER, "tmp")
 CODE_FOLDER: str = os.path.join(WORKING_FOLDER, IMAGE_VIEWER_NAME)
