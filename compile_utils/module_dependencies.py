@@ -11,12 +11,7 @@ module_dependencies: list[Requirement] = parse_requirements_file("requirements.t
 
 # Some modules can't be followed normally or need to
 # be checked explicitly
-modules_to_include: list[str] = [
-    "image_viewer.image._read",
-    "image_viewer.util._generic",
-]
-if os.name == "nt":
-    modules_to_include.append("image_viewer.util._os_nt")
+modules_to_include: list[str] = []
 
 modules_to_skip: list[str] = [
     "argparse",

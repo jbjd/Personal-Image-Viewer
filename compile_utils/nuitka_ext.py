@@ -19,7 +19,7 @@ def start_nuitka_compilation(
     compile_env = os.environ.copy()
     # -march=native had a race condition that segfault'ed on startup
     # -mtune=native works as intended
-    compile_env["CFLAGS"] = "-O3 -fno-signed-zeros -mtune=native"
+    compile_env["CFLAGS"] = "-O3 -fno-signed-zeros -march=native -mtune=native"
 
     command: list[str] = get_nuitka_command(python_path, input_file, nuitka_args)
 
@@ -38,6 +38,8 @@ def get_nuitka_command(
         input_file,
         "--python-flag=-OO,no_annotations,no_warnings,static_hashes",
         "--output-filename=viewer",
+        "--debug",
+        "--no-debug-c-warnings",
     ] + nuitka_args
 
     return command

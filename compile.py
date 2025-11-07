@@ -61,7 +61,7 @@ else:
     ICON_RELATIVE_PATH = "icon/icon.png"
 
 EXECUTABLE_NAME: str = "viewer" + EXECUTABLE_EXT
-FILES_TO_INCLUDE: list[str] = [ICON_RELATIVE_PATH, "image_viewer/config.ini"]
+FILES_TO_INCLUDE: list[str] = []
 
 parser = CompileArgumentParser(DEFAULT_INSTALL_PATH)
 
