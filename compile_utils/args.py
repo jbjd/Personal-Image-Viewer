@@ -177,11 +177,6 @@ class CompileArgumentParser(ArgumentParser):
 
         if args.report or args.debug:
             nuitka_args.append(NuitkaArgs.REPORT.with_value(REPORT_FILE))
-            if args.debug:
-                nuitka_args += [
-                    NuitkaArgs.WARN_IMPLICIT_EXCEPTIONS,
-                    NuitkaArgs.WARN_UNUSUAL_CODE,
-                ]
 
         if not args.debug:
             nuitka_args.append(NuitkaArgs.DEPLOYMENT)
@@ -190,27 +185,3 @@ class CompileArgumentParser(ArgumentParser):
                 nuitka_args.append(NuitkaArgs.REMOVE_OUTPUT)
 
         nuitka_args.append(NuitkaArgs.ENABLE_PLUGIN.with_value("tk-inter"))
-
-        nuitka_args += [
-            NuitkaArgs.NO_FOLLOW_IMPORT.with_value(module) for module in modules_to_skip
-        ]
-        nuitka_args += [
-            NuitkaArgs.NO_INCLUDE_DATA_FILES.with_value(glob)
-            for glob in data_files_to_exclude
-        ]
-        nuitka_args += [
-            NuitkaArgs.INCLUDE_MODULE.with_value(module)
-            for module in modules_to_include
-        ]
-        nuitka_args += [
-            NuitkaArgs.NO_INCLUDE_DLLS.with_value(glob) for glob in dlls_to_exclude
-        ]
-
-        if not any(
-            arg.startswith(NuitkaArgs.WINDOWS_CONSOLE_MODE) for arg in nuitka_args
-        ):
-            nuitka_args.append(
-                NuitkaArgs.WINDOWS_CONSOLE_MODE.with_value(
-                    ConsoleMode.FORCE if args.debug else ConsoleMode.DISABLE
-                )
-            )
