@@ -16,11 +16,7 @@ def start_nuitka_compilation(
 
     _logger.info("Using python install %s for nuitka", python_path)
 
-    compile_env = os.environ.copy()
-    # -march=native had a race condition that segfault'ed on startup
-    # -mtune=native works as intended
-    compile_env["CFLAGS"] = "-O3 -fno-signed-zeros -mtune=native"
-
+    compile_env = get_nuitka_env()
     command: list[str] = get_nuitka_command(python_path, input_file, nuitka_args)
 
     return Popen(command, cwd=working_dir, env=compile_env)
@@ -41,3 +37,17 @@ def get_nuitka_command(
     ] + nuitka_args
 
     return command
+
+
+def get_nuitka_env() -> dict[str, str]:
+    compile_env = os.environ.copy()
+
+    # -march=native had a race condition that segfault'ed on startup.
+    # Segfaults stop when avx instructions are turned off
+    compile_env["CFLAGS"] = (
+        "-march=native -mtune=native -mno-avx -O3 "
+        "-ffinite-math-only -fgcse-las -fgcse-sm -fisolate-erroneous-paths-attribute "
+        "-fno-signed-zeros -frename-registers -fsched-pressure"
+    )
+
+    return compile_env
