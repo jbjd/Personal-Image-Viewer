@@ -1,7 +1,6 @@
 """Validation functions for compilation requirements"""
 
 import tomllib
-from functools import lru_cache
 from importlib.metadata import PackageNotFoundError
 from importlib.metadata import version as get_module_version
 from logging import getLogger
@@ -19,16 +18,24 @@ from compile_utils.module_dependencies import module_dependencies
 
 _logger = getLogger(LOGGER_NAME)
 
+_required_python_version: tuple[int, int] | None = None
 
-@lru_cache
+
 def get_required_python_version() -> tuple[int, int]:
     """Returns tuple representing the required python version
     by parsing it out of the pyproject.toml file."""
+    global _required_python_version
+
+    if _required_python_version is not None:
+        return _required_python_version
 
     with open(PROJECT_FILE, "rb") as fp:
         project: dict[str, Any] = tomllib.load(fp)["project"]
 
-    return version_str_to_tuple(project["requires-python"][2:])  # type: ignore
+    _required_python_version = version_str_to_tuple(
+        project["requires-python"][2:]  # type: ignore
+    )
+    return _required_python_version  # type: ignore
 
 
 def validate_module_requirements() -> None:
@@ -62,7 +69,7 @@ def validate_module_requirements() -> None:
         except PackageNotFoundError:
             missing_modules.append(requirement.name)
 
-    if len(missing_modules) != 0:
+    if missing_modules:
         raise PackageNotFoundError(
             f"Missing module dependencies {missing_modules}\n"
             "Please install them to compile"
@@ -96,4 +103,4 @@ def _personal_module_matches_installed_version(name: str, source_url: str) -> bo
     with the version"""
     installed_version: str = get_module_version(name)
 
-    return source_url.endswith(installed_version)
+    return source_url.endswith(f"@v{installed_version}")
