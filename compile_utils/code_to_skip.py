@@ -418,3 +418,21 @@ if sys.platform != "darwin":
     data_files_to_exclude.append("tcl/encoding/mac*.enc")
 
 dlls_to_exclude: list[str] = ["libcrypto-*", "vcruntime*_1.dll"]
+
+
+# Custom nuitka implementation
+_skippable_std_modules = ["__phello__"]
+
+custom_nuitka_regex: list[tuple[str, RegexReplacement]] = [
+    (
+        "importing/Recursion.py",
+        RegexReplacement(
+            r"if is_stdlib and module_name in detectStdlibAutoInclusionModules\(\)\:",
+            """if is_stdlib and module_name in detectStdlibAutoInclusionModules():
+        return True, f'{module_name} Including as part of the non-excluded parts of standard library.'""",
+            # if module_name in {_skippable_std_modules}:
+            #     return False, 'Excluding unnecessary parts of standard library.'""",
+            count=1,
+        ),
+    )
+]
