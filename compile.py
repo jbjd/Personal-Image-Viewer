@@ -2,7 +2,6 @@
 
 import os
 import sys
-from importlib import import_module
 from importlib.metadata import version as get_module_version
 from subprocess import Popen
 
@@ -14,6 +13,7 @@ from personal_compile_tools.file_operations import (
     delete_folders,
     get_folder_size,
 )
+from personal_compile_tools.modules import get_module_file_path
 
 from compile_utils.args import CompileArgumentParser, CompileNamespace, NuitkaArgs
 from compile_utils.cleaner import (
@@ -101,30 +101,25 @@ try:
             i for i in modules_to_skip if i.startswith(module_name)
         )
 
-        module = import_module(module_name)
-        if module.__file__ is None:
-            raise ValueError(f"Module {module_name}'s file path not set")
-
-        base_file_name: str = os.path.basename(module.__file__)
+        module_file_path: str = get_module_file_path(module_name)
+        module_file: str = os.path.basename(module_file_path)
+        module_folder_path: str = os.path.dirname(module_file_path)
 
         if module_name == "PIL" and os.name != "nt":
-            site_packages_path = os.path.dirname(os.path.dirname(module.__file__))
+            site_packages_path = os.path.dirname(module_folder_path)
             lib_path = os.path.join(site_packages_path, "pillow.libs")
             copy_folder(lib_path, os.path.join(TMP_FOLDER, "pillow.libs"))
 
-        if base_file_name == "__init__.py":  # Its a folder
-            move_files_to_tmp_and_clean(
-                os.path.dirname(module.__file__),
-                TMP_FOLDER,
-                module_name,
-                sub_modules_to_skip,
-            )
-        else:  # Its one file
+        if module_folder_path.endswith("site-packages"):  # Its one file
             clean_file_and_copy(
-                module.__file__,
-                os.path.join(TMP_FOLDER, base_file_name),
+                module_file_path,
+                os.path.join(TMP_FOLDER, module_file),
                 module_name,
                 module_name,
+            )
+        else:  # Its a folder
+            move_files_to_tmp_and_clean(
+                module_folder_path, TMP_FOLDER, module_name, sub_modules_to_skip
             )
 
     warn_unused_code_skips()
