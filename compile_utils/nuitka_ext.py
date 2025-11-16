@@ -28,6 +28,8 @@ def get_nuitka_command(
     """Returns the command that this package uses to compile"""
     command: list[str] = [
         python_path,
+        "-X",
+        "frozen_modules=off",
         "-OO",
         "-m",
         "nuitka",
@@ -49,5 +51,7 @@ def get_nuitka_env() -> dict[str, str]:
         "-ffinite-math-only -fgcse-las -fgcse-sm -fisolate-erroneous-paths-attribute "
         "-fno-signed-zeros -frename-registers -fsched-pressure"
     )
+
+    compile_env["PYTHONHASHSEED"] = "0"
 
     return compile_env
