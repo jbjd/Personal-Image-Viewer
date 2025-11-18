@@ -1,6 +1,7 @@
 """Functions to help with calling nuitka"""
 
 import os
+import sys
 from logging import getLogger
 from subprocess import Popen
 
@@ -65,6 +66,31 @@ def get_nuitka_env() -> dict[str, str]:
         "-fno-signed-zeros -frename-registers -fsched-pressure"
     )
 
+    # Setup like nuitka would to avoid re-execute
+    os.environ["NUITKA_SYS_PREFIX"] = sys.prefix
+
+    from custom_nuitka.importing.PreloadedPackages import (
+        detectPreLoadedPackagePaths,
+        detectPthImportedPackages,
+    )
+
+    os.environ["NUITKA_NAMESPACES"] = repr(detectPreLoadedPackagePaths())
+
+    site_filename = sys.modules["site"].__file__
+    if site_filename is not None:
+        if site_filename.endswith(".pyc"):
+            site_filename = site_filename[:-4] + ".py"
+
+        os.environ["NUITKA_SITE_FILENAME"] = site_filename
+
+    os.environ["NUITKA_PTH_IMPORTED"] = repr(detectPthImportedPackages())
+
+    user_site = getattr(sys.modules["site"], "USER_SITE", None)
+    if user_site is not None:
+        os.environ["NUITKA_USER_SITE"] = repr(user_site)
+
+    os.environ["NUITKA_PYTHONPATH"] = repr(sys.path)
+
     return compile_env
 
 
@@ -75,7 +101,6 @@ _CUSTOM_NUITKA_VERSION: int = 0
 
 
 def setup_custom_nuitka_install(base_nuitka_path: str, custom_nuitka_path: str):
-    pass
     # version_file_path: str = os.path.join(
     #     custom_nuitka_path, _CUSTOM_NUITKA_VERSION_FILE
     # )
@@ -89,9 +114,9 @@ def setup_custom_nuitka_install(base_nuitka_path: str, custom_nuitka_path: str):
     #     if found_version == _CUSTOM_NUITKA_VERSION:
     #         return  # Up to date
 
-    # delete_folder(custom_nuitka_path)
-    # copy_folder(base_nuitka_path, custom_nuitka_path)
+    delete_folder(custom_nuitka_path)
+    copy_folder(base_nuitka_path, custom_nuitka_path)
 
-    # for relative_path, regex in custom_nuitka_regex:
-    #     path: str = os.path.join(custom_nuitka_path, relative_path)
-    #     apply_regex_to_file(path, regex, "custom_nuitka")
+    for relative_path, regex in custom_nuitka_regex:
+        path: str = os.path.join(custom_nuitka_path, relative_path)
+        apply_regex_to_file(path, regex, "custom_nuitka")

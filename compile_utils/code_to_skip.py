@@ -425,6 +425,14 @@ _skippable_std_modules = ["__phello__"]
 
 custom_nuitka_regex: list[tuple[str, RegexReplacement]] = [
     (
+        "__main__.py",
+        RegexReplacement(
+            """if sys.flags.no_site == 0:
+        needs_re_execution = True""",
+            count=1,
+        ),
+    ),
+    (
         "importing/Recursion.py",
         RegexReplacement(
             r"if is_stdlib and module_name in detectStdlibAutoInclusionModules\(\)\:",
@@ -434,5 +442,5 @@ custom_nuitka_regex: list[tuple[str, RegexReplacement]] = [
             #     return False, 'Excluding unnecessary parts of standard library.'""",
             count=1,
         ),
-    )
+    ),
 ]
