@@ -24,6 +24,7 @@ from compile_utils.cleaner import (
     warn_unused_code_skips,
 )
 from compile_utils.constants import BUILD_INFO_FILE, IMAGE_VIEWER_NAME
+from compile_utils.custom_python import setup_custom_python
 from compile_utils.log import setup_logging
 from compile_utils.module_dependencies import (
     get_normalized_module_name,
@@ -43,6 +44,7 @@ WORKING_FOLDER: str = os.path.normpath(os.path.dirname(__file__))
 TARGET_MODULE: str = "main"
 TARGET_FILE: str = f"{TARGET_MODULE}.py"
 TMP_FOLDER: str = os.path.join(WORKING_FOLDER, "tmp")
+CUSTOM_PYTHON_FOLDER: str = os.path.join(WORKING_FOLDER, "custom-python")
 CODE_FOLDER: str = os.path.join(WORKING_FOLDER, IMAGE_VIEWER_NAME)
 COMPILE_FOLDER: str = os.path.join(WORKING_FOLDER, f"{TARGET_MODULE}.dist")
 BUILD_FOLDER: str = os.path.join(WORKING_FOLDER, f"{TARGET_MODULE}.build")
@@ -124,13 +126,15 @@ try:
 
     warn_unused_code_skips()
 
+    setup_custom_python(CUSTOM_PYTHON_FOLDER)
+
     if args.skip_nuitka:
         sys.exit(0)
 
     delete_folder(COMPILE_FOLDER)
     target_file_path: str = f"{TMP_FOLDER}/{TARGET_FILE}"
     default_python: str = "python" if os.name == "nt" else "bin/python3"
-    python_path: str = os.path.join(sys.exec_prefix, default_python)
+    python_path: str = os.path.join(CUSTOM_PYTHON_FOLDER, default_python)
     process: Popen = start_nuitka_compilation(
         python_path, target_file_path, WORKING_FOLDER, nuitka_args
     )
