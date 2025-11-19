@@ -4,6 +4,7 @@ import os
 import sys
 from logging import getLogger
 from subprocess import Popen
+from sysconfig import get_paths
 
 from nuitka.Version import getNuitkaVersion
 from personal_compile_tools.file_operations import delete_folder, walk_folder
@@ -12,8 +13,8 @@ from personal_python_ast_optimizer.regex.apply import apply_regex
 from compile_utils.code_to_skip import custom_nuitka_regex
 from compile_utils.constants import LOGGER_NAME
 from compile_utils.file_operations import (
-    read_file_utf8,
     make_folder_and_write_file_utf8,
+    read_file_utf8,
     write_file_utf8,
 )
 
@@ -123,9 +124,7 @@ def setup_custom_nuitka_install(custom_nuitka_path: str):
     delete_folder(custom_nuitka_path)
     os.makedirs(custom_nuitka_path)
 
-    import sysconfig
-
-    base_nuitka_path: str = os.path.join(sysconfig.get_paths()["purelib"], "nuitka")
+    base_nuitka_path: str = os.path.join(get_paths()["purelib"], "nuitka")
 
     for path in walk_folder(base_nuitka_path, folders_to_ignore=["__pycache__"]):
         source: str = read_file_utf8(path)
