@@ -430,14 +430,28 @@ _skippable_std_modules = [
     "_aix_support",
     "cgi",
     "cgitb",
+    "difflib",
+    "filecmp",
+    "fileinput",
+    "ftplib",
     "json",
+    "mailcap",
+    "netrc",
+    "nturl2path",
     "pickletools",
+    "pipes",
+    "pkgutil",
+    "pyclbr",
     "tomllib",
     "trace",
+    "webbrowser",
+    "xdrlib",
 ]
 
 if not sys.version_info < (3, 13):
-    raise Exception("cgi and cgitb need to be removed from _skippable_std_modules")
+    raise Exception(
+        "cgi, cgitb, mailcap, and pipes need to be removed from _skippable_std_modules"
+    )
 
 custom_nuitka_regex: dict[str, list[RegexReplacement]] = {
     "__main__.py": [
