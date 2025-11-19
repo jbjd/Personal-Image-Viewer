@@ -117,9 +117,11 @@ try:
             pass
         else:
             if cached_iteration == cleaned_module_iteration:
-                _logger.info("Using cached version of module %s", module.name)
+                _logger.info("Using cached version of module: %s", module.name)
                 warn_unused_skips = False
                 continue
+
+        _logger.info("Setting up module: %s", module.name)
 
         module_import_name: str = get_normalized_module_name(module)
         sub_modules_to_skip: set[str] = set(
