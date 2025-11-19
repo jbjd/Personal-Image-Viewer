@@ -421,7 +421,15 @@ dlls_to_exclude: list[str] = ["libcrypto-*", "vcruntime*_1.dll"]
 
 
 # Custom nuitka implementation
-_skippable_std_modules = ["__hello__", "__phello__", "json", "pickletools", "tomllib"]
+_skippable_std_modules = [
+    "__hello__",
+    "__phello__",
+    "_aix_support",
+    "json",
+    "pickletools",
+    "tomllib",
+    "trace",
+]
 
 custom_nuitka_regex: dict[str, list[RegexReplacement]] = {
     "__main__.py": [
