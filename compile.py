@@ -23,7 +23,9 @@ from compile_utils.cleaner import (
     strip_files,
     warn_unused_code_skips,
 )
+from compile_utils.code_to_skip import SKIP_ITERATION
 from compile_utils.constants import BUILD_INFO_FILE, IMAGE_VIEWER_NAME
+from compile_utils.file_operations import read_file_utf8, write_file_utf8
 from compile_utils.log import setup_logging
 from compile_utils.module_dependencies import (
     get_normalized_module_name,
@@ -88,8 +90,7 @@ _logger = setup_logging()
 
 validate_module_requirements()
 
-delete_folder(TMP_FOLDER)
-os.makedirs(TMP_FOLDER)
+os.makedirs(TMP_FOLDER, exist_ok=True)
 try:
     # Setup custom nuitka
     setup_custom_nuitka_install(CUSTOM_NUITKA_FOLDER)
@@ -102,17 +103,34 @@ try:
     )
     move_files_to_tmp_and_clean(CODE_FOLDER, TMP_FOLDER, IMAGE_VIEWER_NAME)
 
+    warn_unused_skips: bool = True
+
     for module in module_dependencies:
-        module_name: str = get_normalized_module_name(module)
+        cleaned_module_iteration: str = (
+            f"{get_module_version(module.name)}-{SKIP_ITERATION}"
+        )
+        cached_iteration_path: str = os.path.join(TMP_FOLDER, module.name) + ".txt"
+
+        try:
+            cached_iteration: str = read_file_utf8(cached_iteration_path)
+        except FileNotFoundError:
+            pass
+        else:
+            if cached_iteration == cleaned_module_iteration:
+                _logger.info("Using cached version of module %s", module.name)
+                warn_unused_skips = False
+                continue
+
+        module_import_name: str = get_normalized_module_name(module)
         sub_modules_to_skip: set[str] = set(
-            i for i in modules_to_skip if i.startswith(module_name)
+            i for i in modules_to_skip if i.startswith(module_import_name)
         )
 
-        module_file_path: str = get_module_file_path(module_name)
+        module_file_path: str = get_module_file_path(module_import_name)
         module_file: str = os.path.basename(module_file_path)
         module_folder_path: str = os.path.dirname(module_file_path)
 
-        if module_name == "PIL" and os.name != "nt":
+        if module_import_name == "PIL" and os.name != "nt":
             site_packages_path = os.path.dirname(module_folder_path)
             lib_path = os.path.join(site_packages_path, "pillow.libs")
             copy_folder(lib_path, os.path.join(TMP_FOLDER, "pillow.libs"))
@@ -121,15 +139,19 @@ try:
             clean_file_and_copy(
                 module_file_path,
                 os.path.join(TMP_FOLDER, module_file),
-                module_name,
-                module_name,
+                module_import_name,
+                module_import_name,
             )
         else:  # Its a folder
+            delete_folder(os.path.join(TMP_FOLDER, module_import_name))
             move_files_to_tmp_and_clean(
-                module_folder_path, TMP_FOLDER, module_name, sub_modules_to_skip
+                module_folder_path, TMP_FOLDER, module_import_name, sub_modules_to_skip
             )
 
-    warn_unused_code_skips()
+        write_file_utf8(cached_iteration_path, cleaned_module_iteration)
+
+    if warn_unused_skips:
+        warn_unused_code_skips()
 
     if args.skip_nuitka:
         sys.exit(0)
