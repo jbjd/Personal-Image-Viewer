@@ -11,7 +11,11 @@ from personal_python_ast_optimizer.regex.apply import apply_regex
 
 from compile_utils.code_to_skip import custom_nuitka_regex
 from compile_utils.constants import LOGGER_NAME
-from compile_utils.file_operations import read_utf8_file, write_utf8_file
+from compile_utils.file_operations import (
+    read_file_utf8,
+    make_folder_and_write_file_utf8,
+    write_file_utf8,
+)
 
 _logger = getLogger(LOGGER_NAME)
 
@@ -106,8 +110,7 @@ def setup_custom_nuitka_install(custom_nuitka_path: str):
     expected_version: str = f"{getNuitkaVersion()}-{_CUSTOM_NUITKA_VERSION}"
 
     try:
-        with open(version_file_path, "r", encoding="utf-8") as fp:
-            found_version: str = fp.read().strip()
+        found_version: str = read_file_utf8(version_file_path).strip()
     except FileNotFoundError:
         pass
     else:
@@ -125,7 +128,7 @@ def setup_custom_nuitka_install(custom_nuitka_path: str):
     base_nuitka_path: str = os.path.join(sysconfig.get_paths()["purelib"], "nuitka")
 
     for path in walk_folder(base_nuitka_path, folders_to_ignore=["__pycache__"]):
-        source: str = read_utf8_file(path)
+        source: str = read_file_utf8(path)
 
         rel_path: str = path.removeprefix(base_nuitka_path)[1:]
         if os.name == "nt":
@@ -136,9 +139,8 @@ def setup_custom_nuitka_install(custom_nuitka_path: str):
                 source = apply_regex(source, regex, "custom_nuitka")
 
         new_path: str = os.path.join(custom_nuitka_path, rel_path)
-        write_utf8_file(new_path, source)
+        make_folder_and_write_file_utf8(new_path, source)
 
-    with open(version_file_path, "w", encoding="utf-8") as fp:
-        fp.write(expected_version)
+    write_file_utf8(version_file_path, expected_version)
 
     _logger.warning("Setup complete")
