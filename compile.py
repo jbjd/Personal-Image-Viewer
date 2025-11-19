@@ -23,14 +23,19 @@ from compile_utils.cleaner import (
     strip_files,
     warn_unused_code_skips,
 )
+from compile_utils.code_to_skip import SKIP_ITERATION
 from compile_utils.constants import BUILD_INFO_FILE, IMAGE_VIEWER_NAME
+from compile_utils.file_operations import read_file_utf8, write_file_utf8
 from compile_utils.log import setup_logging
 from compile_utils.module_dependencies import (
     get_normalized_module_name,
     module_dependencies,
     modules_to_skip,
 )
-from compile_utils.nuitka_ext import start_nuitka_compilation
+from compile_utils.nuitka_ext import (
+    setup_custom_nuitka_install,
+    start_nuitka_compilation,
+)
 from compile_utils.validation import (
     raise_if_not_root,
     validate_module_requirements,
@@ -43,6 +48,7 @@ WORKING_FOLDER: str = os.path.normpath(os.path.dirname(__file__))
 TARGET_MODULE: str = "main"
 TARGET_FILE: str = f"{TARGET_MODULE}.py"
 TMP_FOLDER: str = os.path.join(WORKING_FOLDER, "tmp")
+CUSTOM_NUITKA_FOLDER: str = os.path.join(WORKING_FOLDER, "nuitka")
 CODE_FOLDER: str = os.path.join(WORKING_FOLDER, IMAGE_VIEWER_NAME)
 COMPILE_FOLDER: str = os.path.join(WORKING_FOLDER, f"{TARGET_MODULE}.dist")
 BUILD_FOLDER: str = os.path.join(WORKING_FOLDER, f"{TARGET_MODULE}.build")
@@ -84,9 +90,11 @@ _logger = setup_logging()
 
 validate_module_requirements()
 
-delete_folder(TMP_FOLDER)
-os.makedirs(TMP_FOLDER)
+os.makedirs(TMP_FOLDER, exist_ok=True)
 try:
+    # Setup custom nuitka
+    setup_custom_nuitka_install(CUSTOM_NUITKA_FOLDER)
+
     clean_file_and_copy(
         f"{WORKING_FOLDER}/{TARGET_FILE}",
         f"{TMP_FOLDER}/{TARGET_FILE}",
@@ -95,34 +103,59 @@ try:
     )
     move_files_to_tmp_and_clean(CODE_FOLDER, TMP_FOLDER, IMAGE_VIEWER_NAME)
 
+    warn_unused_skips: bool = True
+
     for module in module_dependencies:
-        module_name: str = get_normalized_module_name(module)
+        cleaned_module_iteration: str = (
+            f"{get_module_version(module.name)}-{SKIP_ITERATION}"
+        )
+        cached_iteration_path: str = os.path.join(TMP_FOLDER, module.name) + ".txt"
+
+        try:
+            cached_iteration: str = read_file_utf8(cached_iteration_path)
+        except FileNotFoundError:
+            pass
+        else:
+            if cached_iteration == cleaned_module_iteration:
+                _logger.info("Using cached version of module: %s", module.name)
+                warn_unused_skips = False
+                continue
+
+        _logger.info("Setting up module: %s", module.name)
+
+        module_import_name: str = get_normalized_module_name(module)
         sub_modules_to_skip: set[str] = set(
-            i for i in modules_to_skip if i.startswith(module_name)
+            i for i in modules_to_skip if i.startswith(module_import_name)
         )
 
-        module_file_path: str = get_module_file_path(module_name)
+        module_file_path: str = get_module_file_path(module_import_name)
         module_file: str = os.path.basename(module_file_path)
         module_folder_path: str = os.path.dirname(module_file_path)
 
-        if module_name == "PIL" and os.name != "nt":
+        if module_import_name == "PIL" and os.name != "nt":
             site_packages_path = os.path.dirname(module_folder_path)
-            lib_path = os.path.join(site_packages_path, "pillow.libs")
-            copy_folder(lib_path, os.path.join(TMP_FOLDER, "pillow.libs"))
+            old_lib_path: str = os.path.join(site_packages_path, "pillow.libs")
+            new_lib_path: str = os.path.join(TMP_FOLDER, "pillow.libs")
+            delete_folder(new_lib_path)
+            copy_folder(old_lib_path, new_lib_path)
 
         if module_folder_path.endswith("site-packages"):  # Its one file
             clean_file_and_copy(
                 module_file_path,
                 os.path.join(TMP_FOLDER, module_file),
-                module_name,
-                module_name,
+                module_import_name,
+                module_import_name,
             )
         else:  # Its a folder
+            delete_folder(os.path.join(TMP_FOLDER, module_import_name))
             move_files_to_tmp_and_clean(
-                module_folder_path, TMP_FOLDER, module_name, sub_modules_to_skip
+                module_folder_path, TMP_FOLDER, module_import_name, sub_modules_to_skip
             )
 
-    warn_unused_code_skips()
+        write_file_utf8(cached_iteration_path, cleaned_module_iteration)
+
+    if warn_unused_skips:
+        warn_unused_code_skips()
 
     if args.skip_nuitka:
         sys.exit(0)
@@ -132,7 +165,7 @@ try:
     default_python: str = "python" if os.name == "nt" else "bin/python3"
     python_path: str = os.path.join(sys.exec_prefix, default_python)
     process: Popen = start_nuitka_compilation(
-        python_path, target_file_path, WORKING_FOLDER, nuitka_args
+        python_path, target_file_path, nuitka_args, WORKING_FOLDER
     )
 
     _logger.info("Waiting for nuitka compilation...")
