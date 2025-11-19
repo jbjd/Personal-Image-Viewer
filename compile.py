@@ -134,8 +134,10 @@ try:
 
         if module_import_name == "PIL" and os.name != "nt":
             site_packages_path = os.path.dirname(module_folder_path)
-            lib_path = os.path.join(site_packages_path, "pillow.libs")
-            copy_folder(lib_path, os.path.join(TMP_FOLDER, "pillow.libs"))
+            old_lib_path: str = os.path.join(site_packages_path, "pillow.libs")
+            new_lib_path: str = os.path.join(TMP_FOLDER, "pillow.libs")
+            delete_folder(new_lib_path)
+            copy_folder(old_lib_path, new_lib_path)
 
         if module_folder_path.endswith("site-packages"):  # Its one file
             clean_file_and_copy(
