@@ -289,13 +289,14 @@ class ViewerApp:
         """On mouse wheel: either moves between images
         or zooms when right mouse held"""
         right_mouse_held: bool = getattr(event, "state", 0) & 1024 == 1024
+        forward_scroll: bool = event.delta > 0 if os.name == "nt" else event.num == 4
 
         if right_mouse_held:
             self.load_zoomed_or_rotated_image_unblocking(
-                ZoomDirection.IN if event.delta > 0 else ZoomDirection.OUT
+                ZoomDirection.IN if forward_scroll else ZoomDirection.OUT
             )
         else:
-            self.move(Movement.BACKWARD if event.delta > 0 else Movement.FORWARD)
+            self.move(Movement.BACKWARD if forward_scroll else Movement.FORWARD)
 
     def handle_rotate_image(self, event: Event) -> None:
         """Rotates image, saves it to disk, and updates the display"""
