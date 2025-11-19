@@ -15,13 +15,16 @@ build/
 ERROR.log
 minifier_failure.py.example
 
+# Image Viewer Compilation
+tmp*/
+nuitka/
+
 # Nuitka
 *.bin
 *.exe
 *.cmd
 *.build/
 *.dist/
-tmp*/
 compilation-report.xml
 nuitka-crash-report.xml
 
