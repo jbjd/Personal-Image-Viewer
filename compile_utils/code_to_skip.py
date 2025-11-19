@@ -13,6 +13,9 @@ from image_viewer.config import DEFAULT_BACKGROUND_COLOR, DEFAULT_MAX_ITEMS_IN_C
 from image_viewer.constants import TEXT_RGB
 from image_viewer.image.resizer import JPEG_MAX_DIMENSION
 
+# Increment when edits to this file are merged into main or syntax optimizer is bumped
+SKIP_ITERATION: int = 0
+
 # Module independent skips
 
 decorators_to_always_skip: set[str] = {"abstractmethod", "override"}
@@ -357,35 +360,35 @@ class TrashPermissionError(PermissionError):
 
 
 # Keys are relative paths or globs. globs should target a single file
-regex_to_apply_tk: defaultdict[str, set[RegexReplacement]] = defaultdict(
-    set,
+regex_to_apply_tk: defaultdict[str, list[RegexReplacement]] = defaultdict(
+    list,
     {
-        "tk/ttk/ttk.tcl": {
+        "tk/ttk/ttk.tcl": [
             # Loads themes that are not used
             RegexReplacement(
                 pattern="proc ttk::LoadThemes.*?\n}",
                 replacement="proc ttk::LoadThemes {} {}",
                 flags=re.DOTALL,
             ),
-        },
-        "tcl8/*/platform-*.tm": {
+        ],
+        "tcl8/*/platform-*.tm": [
             # Discontinued OS
             RegexReplacement(pattern=r"osf1 \{.*?\}", count=1, flags=re.DOTALL),
             RegexReplacement(
                 pattern=r"solaris(\*-\*)? \{(.*?\{.*?\}.*?)*?\}", flags=re.DOTALL
             ),
-        },
+        ],
     },
 )
 
 if sys.platform != "darwin":
-    regex_to_apply_tk["tcl8/*/platform-*.tm"].add(
+    regex_to_apply_tk["tcl8/*/platform-*.tm"].append(
         RegexReplacement(
             pattern=r"darwin \{.*?aix", replacement="aix", flags=re.DOTALL, count=1
         )
     )
 
-    regex_to_apply_tk["tcl/auto.tcl"].add(
+    regex_to_apply_tk["tcl/auto.tcl"].append(
         RegexReplacement(
             pattern=r'if \{\$tcl_platform\(platform\) eq "unix".*?\}.*?\}',
             flags=re.DOTALL,
@@ -393,7 +396,7 @@ if sys.platform != "darwin":
         )
     )
 
-    regex_to_apply_tk["tcl/init.tcl"].add(
+    regex_to_apply_tk["tcl/init.tcl"].append(
         RegexReplacement(
             pattern=r'if \{\$tcl_platform\(os\) eq "Darwin".*?else.*?\}\s*?\}',
             replacement="package unknown {::tcl::tm::UnknownHandler ::tclPkgUnknown}",
@@ -418,3 +421,56 @@ if sys.platform != "darwin":
     data_files_to_exclude.append("tcl/encoding/mac*.enc")
 
 dlls_to_exclude: list[str] = ["libcrypto-*", "vcruntime*_1.dll"]
+
+
+# Custom nuitka implementation
+_skippable_std_modules = [
+    "__hello__",
+    "__phello__",
+    "_aix_support",
+    "_pylong",
+    "cgi",
+    "cgitb",
+    "difflib",
+    "filecmp",
+    "fileinput",
+    "ftplib",
+    "html",
+    "json",
+    "mailcap",
+    "netrc",
+    "nturl2path",
+    "pickletools",
+    "pipes",
+    "pkgutil",
+    "pyclbr",
+    "socketserver",
+    "tomllib",
+    "trace",
+    "webbrowser",
+    "xdrlib",
+]
+
+if not sys.version_info < (3, 13):
+    raise Exception(
+        "cgi, cgitb, mailcap, and pipes need to be removed from _skippable_std_modules"
+    )
+
+custom_nuitka_regex: dict[str, list[RegexReplacement]] = {
+    "__main__.py": [
+        RegexReplacement(  # This is handled in nuitka_ext.py
+            """if sys.flags.no_site == 0:
+        needs_re_execution = True""",
+            count=1,
+        ),
+    ],
+    "importing/Recursion.py": [
+        RegexReplacement(
+            r"if is_stdlib and module_name in detectStdlibAutoInclusionModules\(\)\:",
+            f"""if is_stdlib and module_name in detectStdlibAutoInclusionModules():
+        if module_name in {_skippable_std_modules}:
+            return False, 'Excluding unnecessary parts of standard library.'""",
+            count=1,
+        )
+    ],
+}

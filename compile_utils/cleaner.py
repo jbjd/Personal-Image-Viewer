@@ -38,6 +38,7 @@ from compile_utils.code_to_skip import (
     vars_to_skip,
 )
 from compile_utils.constants import LOGGER_NAME
+from compile_utils.file_operations import read_file_utf8, write_file_utf8
 from compile_utils.validation import get_required_python_version
 
 if os.name == "nt":
@@ -72,8 +73,7 @@ def clean_file_and_copy(
     """Given a python file path,
     applies regexes/skips/minification and writes results to new_path"""
 
-    with open(path, "r", encoding="utf-8") as fp:
-        source: str = fp.read()
+    source: str = read_file_utf8(path)
 
     if module_import_path in regex_to_apply_py:
         regex_replacements: list[RegexReplacement] = regex_to_apply_py.pop(
@@ -105,14 +105,12 @@ def clean_file_and_copy(
             module_import_path,
             MINIFIER_FAILED_FILE_NAME,
         )
-        with open(MINIFIER_FAILED_FILE_NAME, "w", encoding="utf-8") as fp:
-            fp.write(source)
+        write_file_utf8(MINIFIER_FAILED_FILE_NAME, source)
         raise
 
     source = run_autoflake(source, remove_unused_imports=True)
 
-    with open(new_path, "w", encoding="utf-8") as fp:
-        fp.write(source)
+    write_file_utf8(new_path, source)
 
 
 def move_files_to_tmp_and_clean(
