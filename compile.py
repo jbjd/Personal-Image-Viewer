@@ -46,8 +46,7 @@ WORKING_FOLDER: str = os.path.normpath(os.path.dirname(__file__))
 TARGET_MODULE: str = "main"
 TARGET_FILE: str = f"{TARGET_MODULE}.py"
 TMP_FOLDER: str = os.path.join(WORKING_FOLDER, "tmp")
-CUSTOM_NUITKA: str = "custom_nuitka"
-CUSTOM_NUITKA_FOLDER: str = os.path.join(WORKING_FOLDER, CUSTOM_NUITKA)
+CUSTOM_NUITKA_FOLDER: str = os.path.join(WORKING_FOLDER, "nuitka")
 CODE_FOLDER: str = os.path.join(WORKING_FOLDER, IMAGE_VIEWER_NAME)
 COMPILE_FOLDER: str = os.path.join(WORKING_FOLDER, f"{TARGET_MODULE}.dist")
 BUILD_FOLDER: str = os.path.join(WORKING_FOLDER, f"{TARGET_MODULE}.build")
@@ -93,8 +92,7 @@ delete_folder(TMP_FOLDER)
 os.makedirs(TMP_FOLDER)
 try:
     # Setup custom nuitka
-    base_nuitka_path: str = os.path.dirname(get_module_file_path("nuitka"))
-    setup_custom_nuitka_install(base_nuitka_path, CUSTOM_NUITKA_FOLDER)
+    setup_custom_nuitka_install(CUSTOM_NUITKA_FOLDER)
 
     clean_file_and_copy(
         f"{WORKING_FOLDER}/{TARGET_FILE}",
@@ -141,7 +139,7 @@ try:
     default_python: str = "python" if os.name == "nt" else "bin/python3"
     python_path: str = os.path.join(sys.exec_prefix, default_python)
     process: Popen = start_nuitka_compilation(
-        python_path, CUSTOM_NUITKA, target_file_path, nuitka_args, WORKING_FOLDER
+        python_path, target_file_path, nuitka_args, WORKING_FOLDER
     )
 
     _logger.info("Waiting for nuitka compilation...")

@@ -357,35 +357,35 @@ class TrashPermissionError(PermissionError):
 
 
 # Keys are relative paths or globs. globs should target a single file
-regex_to_apply_tk: defaultdict[str, set[RegexReplacement]] = defaultdict(
-    set,
+regex_to_apply_tk: defaultdict[str, list[RegexReplacement]] = defaultdict(
+    list,
     {
-        "tk/ttk/ttk.tcl": {
+        "tk/ttk/ttk.tcl": [
             # Loads themes that are not used
             RegexReplacement(
                 pattern="proc ttk::LoadThemes.*?\n}",
                 replacement="proc ttk::LoadThemes {} {}",
                 flags=re.DOTALL,
             ),
-        },
-        "tcl8/*/platform-*.tm": {
+        ],
+        "tcl8/*/platform-*.tm": [
             # Discontinued OS
             RegexReplacement(pattern=r"osf1 \{.*?\}", count=1, flags=re.DOTALL),
             RegexReplacement(
                 pattern=r"solaris(\*-\*)? \{(.*?\{.*?\}.*?)*?\}", flags=re.DOTALL
             ),
-        },
+        ],
     },
 )
 
 if sys.platform != "darwin":
-    regex_to_apply_tk["tcl8/*/platform-*.tm"].add(
+    regex_to_apply_tk["tcl8/*/platform-*.tm"].append(
         RegexReplacement(
             pattern=r"darwin \{.*?aix", replacement="aix", flags=re.DOTALL, count=1
         )
     )
 
-    regex_to_apply_tk["tcl/auto.tcl"].add(
+    regex_to_apply_tk["tcl/auto.tcl"].append(
         RegexReplacement(
             pattern=r'if \{\$tcl_platform\(platform\) eq "unix".*?\}.*?\}',
             flags=re.DOTALL,
@@ -393,7 +393,7 @@ if sys.platform != "darwin":
         )
     )
 
-    regex_to_apply_tk["tcl/init.tcl"].add(
+    regex_to_apply_tk["tcl/init.tcl"].append(
         RegexReplacement(
             pattern=r'if \{\$tcl_platform\(os\) eq "Darwin".*?else.*?\}\s*?\}',
             replacement="package unknown {::tcl::tm::UnknownHandler ::tclPkgUnknown}",
@@ -421,26 +421,23 @@ dlls_to_exclude: list[str] = ["libcrypto-*", "vcruntime*_1.dll"]
 
 
 # Custom nuitka implementation
-_skippable_std_modules = ["__phello__"]
+_skippable_std_modules = ["__hello__", "__phello__"]
 
-custom_nuitka_regex: list[tuple[str, RegexReplacement]] = [
-    (
-        "__main__.py",
-        RegexReplacement(
+custom_nuitka_regex: dict[str, list[RegexReplacement]] = {
+    "__main__.py": [
+        RegexReplacement(  # This is handled in nuitka_ext.py
             """if sys.flags.no_site == 0:
         needs_re_execution = True""",
             count=1,
         ),
-    ),
-    (
-        "importing/Recursion.py",
+    ],
+    "importing/Recursion.py": [
         RegexReplacement(
             r"if is_stdlib and module_name in detectStdlibAutoInclusionModules\(\)\:",
-            """if is_stdlib and module_name in detectStdlibAutoInclusionModules():
-        return True, f'{module_name} Including as part of the non-excluded parts of standard library.'""",
-            # if module_name in {_skippable_std_modules}:
-            #     return False, 'Excluding unnecessary parts of standard library.'""",
+            f"""if is_stdlib and module_name in detectStdlibAutoInclusionModules():
+        if module_name in {_skippable_std_modules}:
+            return False, 'Excluding unnecessary parts of standard library.'""",
             count=1,
-        ),
-    ),
-]
+        )
+    ],
+}

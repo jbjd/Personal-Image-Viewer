@@ -5,18 +5,19 @@ import sys
 from logging import getLogger
 from subprocess import Popen
 
-from personal_compile_tools.file_operations import copy_folder, delete_folder
-from personal_python_ast_optimizer.regex.apply import apply_regex_to_file
+from nuitka.Version import getNuitkaVersion
+from personal_compile_tools.file_operations import delete_folder, walk_folder
+from personal_python_ast_optimizer.regex.apply import apply_regex
 
 from compile_utils.code_to_skip import custom_nuitka_regex
 from compile_utils.constants import LOGGER_NAME
+from compile_utils.file_operations import read_utf8_file, write_utf8_file
 
 _logger = getLogger(LOGGER_NAME)
 
 
 def start_nuitka_compilation(
     python_path: str,
-    nuitka_install: str,
     input_file: str,
     nuitka_args: list[str],
     working_dir: str,
@@ -26,15 +27,13 @@ def start_nuitka_compilation(
     _logger.info("Using python install %s for nuitka", python_path)
 
     compile_env = get_nuitka_env()
-    command: list[str] = get_nuitka_command(
-        python_path, nuitka_install, input_file, nuitka_args
-    )
+    command: list[str] = get_nuitka_command(python_path, input_file, nuitka_args)
 
     return Popen(command, cwd=working_dir, env=compile_env)
 
 
 def get_nuitka_command(
-    python_path: str, nuitka_install: str, input_file: str, nuitka_args: list[str]
+    python_path: str, input_file: str, nuitka_args: list[str]
 ) -> list[str]:
     """Returns the command that this package uses to compile"""
     command: list[str] = [
@@ -43,7 +42,7 @@ def get_nuitka_command(
         "frozen_modules=off",
         "-OO",
         "-m",
-        nuitka_install,
+        "nuitka",
         input_file,
         "--must-not-re-execute",
         "--python-flag=-OO,no_annotations,no_warnings,static_hashes",
@@ -69,7 +68,7 @@ def get_nuitka_env() -> dict[str, str]:
     # Setup like nuitka would to avoid re-execute
     os.environ["NUITKA_SYS_PREFIX"] = sys.prefix
 
-    from custom_nuitka.importing.PreloadedPackages import (
+    from nuitka.importing.PreloadedPackages import (  # type: ignore
         detectPreLoadedPackagePaths,
         detectPthImportedPackages,
     )
@@ -100,23 +99,46 @@ _CUSTOM_NUITKA_VERSION_FILE: str = "version.txt"
 _CUSTOM_NUITKA_VERSION: int = 0
 
 
-def setup_custom_nuitka_install(base_nuitka_path: str, custom_nuitka_path: str):
-    # version_file_path: str = os.path.join(
-    #     custom_nuitka_path, _CUSTOM_NUITKA_VERSION_FILE
-    # )
+def setup_custom_nuitka_install(custom_nuitka_path: str):
+    version_file_path: str = os.path.join(
+        custom_nuitka_path, _CUSTOM_NUITKA_VERSION_FILE
+    )
+    expected_version: str = f"{getNuitkaVersion()}-{_CUSTOM_NUITKA_VERSION}"
 
-    # try:
-    #     with open(version_file_path, "r", encoding="utf-8") as fp:
-    #         found_version: int = int(fp.read().strip())
-    # except FileNotFoundError:
-    #     pass
-    # else:
-    #     if found_version == _CUSTOM_NUITKA_VERSION:
-    #         return  # Up to date
+    try:
+        with open(version_file_path, "r", encoding="utf-8") as fp:
+            found_version: str = fp.read().strip()
+    except FileNotFoundError:
+        pass
+    else:
+        if found_version == expected_version:
+            _logger.info("Custom nuitka setup up-to-date")
+            return
+
+    _logger.warning("Setting up custom nuitka implementation...")
 
     delete_folder(custom_nuitka_path)
-    copy_folder(base_nuitka_path, custom_nuitka_path)
+    os.makedirs(custom_nuitka_path)
 
-    for relative_path, regex in custom_nuitka_regex:
-        path: str = os.path.join(custom_nuitka_path, relative_path)
-        apply_regex_to_file(path, regex, "custom_nuitka")
+    import sysconfig
+
+    base_nuitka_path: str = os.path.join(sysconfig.get_paths()["purelib"], "nuitka")
+
+    for path in walk_folder(base_nuitka_path, folders_to_ignore=["__pycache__"]):
+        source: str = read_utf8_file(path)
+
+        rel_path: str = path.removeprefix(base_nuitka_path)[1:]
+        if os.name == "nt":
+            rel_path = rel_path.replace("\\", "/")
+
+        if rel_path in custom_nuitka_regex:
+            for regex in custom_nuitka_regex[rel_path]:
+                source = apply_regex(source, regex, "custom_nuitka")
+
+        new_path: str = os.path.join(custom_nuitka_path, rel_path)
+        write_utf8_file(new_path, source)
+
+    with open(version_file_path, "w", encoding="utf-8") as fp:
+        fp.write(expected_version)
+
+    _logger.warning("Setup complete")
