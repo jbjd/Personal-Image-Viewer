@@ -13,7 +13,7 @@ from image_viewer.config import DEFAULT_BACKGROUND_COLOR, DEFAULT_MAX_ITEMS_IN_C
 from image_viewer.constants import TEXT_RGB
 from image_viewer.image.resizer import JPEG_MAX_DIMENSION
 
-# Increment when edits to this file are merged into main or syntax optimizer is bumped
+# Increment when edits to this file are merged into main
 SKIP_ITERATION: int = 0
 
 # Module independent skips
