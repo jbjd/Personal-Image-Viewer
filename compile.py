@@ -103,9 +103,14 @@ try:
 
     warn_unused_skips: bool = True
 
+    minifier_version: str = get_module_version("personal_python_ast_optimizer")
     for module in module_dependencies:
         cleaned_module_iteration: str = (
-            f"{get_module_version(module.name)}-{SKIP_ITERATION}"
+            get_module_version(module.name)
+            + "-"
+            + minifier_version
+            + "-"
+            + str(SKIP_ITERATION)
         )
         cached_iteration_path: str = os.path.join(TMP_FOLDER, module.name) + ".txt"
 
