@@ -91,9 +91,9 @@ def clean_file_and_copy(
                 module_import_path,
                 get_required_python_version(),
                 constants_to_fold[module_name],
-                SectionsConfig(skip_name_equals_main=True),
-                _get_tokens_to_skip_config(module_import_path),
-                ExtrasConfig(
+                sections_config=SectionsConfig(skip_name_equals_main=True),
+                tokens_config=_get_tokens_to_skip_config(module_import_path),
+                extras_config=ExtrasConfig(
                     fold_constants=False,  # Nuitka does this internally
                     skip_overload_functions=True,
                 ),
