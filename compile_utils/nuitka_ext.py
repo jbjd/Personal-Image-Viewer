@@ -2,11 +2,11 @@
 
 import os
 import sys
+from importlib.metadata import version as get_module_version
 from logging import getLogger
 from subprocess import Popen
 from sysconfig import get_paths
 
-from nuitka.Version import getNuitkaVersion
 from personal_compile_tools.file_operations import delete_folder, walk_folder
 from personal_python_ast_optimizer.regex.apply import apply_regex
 
@@ -22,10 +22,7 @@ _logger = getLogger(LOGGER_NAME)
 
 
 def start_nuitka_compilation(
-    python_path: str,
-    input_file: str,
-    nuitka_args: list[str],
-    working_dir: str,
+    python_path: str, input_file: str, nuitka_args: list[str], working_dir: str
 ) -> Popen:
     """Begins nuitka compilation in another process"""
 
@@ -108,7 +105,7 @@ def setup_custom_nuitka_install(custom_nuitka_path: str):
     version_file_path: str = os.path.join(
         custom_nuitka_path, _CUSTOM_NUITKA_VERSION_FILE
     )
-    expected_version: str = f"{getNuitkaVersion()}-{_CUSTOM_NUITKA_VERSION}"
+    expected_version: str = f"{get_module_version('nuitka')}-{_CUSTOM_NUITKA_VERSION}"
 
     try:
         found_version: str = read_file_utf8(version_file_path).strip()
