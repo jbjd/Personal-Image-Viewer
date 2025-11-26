@@ -42,8 +42,6 @@ from compile_utils.validation import (
     validate_python_version,
 )
 
-validate_python_version()
-
 WORKING_FOLDER: str = os.path.normpath(os.path.dirname(__file__))
 TARGET_MODULE: str = "main"
 TARGET_FILE: str = f"{TARGET_MODULE}.py"
@@ -86,15 +84,15 @@ if os.name == "nt":
         ),
     ]
 
+setup_custom_nuitka_install(CUSTOM_NUITKA_FOLDER)
+validate_python_version()
+
 _logger = setup_logging()
 
 validate_module_requirements()
 
 os.makedirs(TMP_FOLDER, exist_ok=True)
 try:
-    # Setup custom nuitka
-    setup_custom_nuitka_install(CUSTOM_NUITKA_FOLDER)
-
     clean_file_and_copy(
         f"{WORKING_FOLDER}/{TARGET_FILE}",
         f"{TMP_FOLDER}/{TARGET_FILE}",
