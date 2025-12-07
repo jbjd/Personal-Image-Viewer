@@ -96,6 +96,7 @@ def clean_file_and_copy(
                 extras_config=ExtrasConfig(
                     fold_constants=False,  # Nuitka does this internally
                     skip_overload_functions=True,
+                    assume_this_machine=True,
                 ),
             ),
         )
