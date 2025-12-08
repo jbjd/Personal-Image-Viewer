@@ -18,6 +18,7 @@ modules_to_include: list[str] = [
 if os.name == "nt":
     modules_to_include.append("image_viewer.util._os_nt")
 
+# This this list is edited, bump SKIP_ITERATION in code_to_skip.py
 modules_to_skip: list[str] = [
     "argparse",
     "bz2",
@@ -28,6 +29,7 @@ modules_to_skip: list[str] = [
     "hashlib",
     "lzma",
     "packaging",
+    "PIL.__main__",
     "PIL._deprecate",
     "PIL._typing",
     "PIL._version",
