@@ -6,6 +6,7 @@ import sys
 from collections import defaultdict
 
 from personal_python_ast_optimizer.regex.classes import RegexReplacement
+from PIL.AvifImagePlugin import DECODE_CODEC_CHOICE
 
 from compile_utils.constants import IMAGE_VIEWER_NAME
 from image_viewer.animation.frame import DEFAULT_ANIMATION_SPEED_MS
@@ -198,7 +199,7 @@ vars_to_fold: defaultdict[str, dict[str, int | str]] = defaultdict(
             "JPEG_MAX_DIMENSION": JPEG_MAX_DIMENSION,
             "TEXT_RGB": TEXT_RGB,
         },
-        "PIL": {"SUPPORTED": True},
+        "PIL": {"DECODE_CODEC_CHOICE": DECODE_CODEC_CHOICE, "SUPPORTED": True},
     },
 )
 
