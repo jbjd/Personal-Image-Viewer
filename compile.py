@@ -38,6 +38,7 @@ from compile_utils.nuitka_ext import (
 )
 from compile_utils.validation import (
     raise_if_not_root,
+    validate_PIL,
     validate_module_requirements,
     validate_python_version,
 )
@@ -86,10 +87,10 @@ if os.name == "nt":
 
 setup_custom_nuitka_install(CUSTOM_NUITKA_FOLDER)
 validate_python_version()
+validate_module_requirements()
+validate_PIL()
 
 _logger = setup_logging()
-
-validate_module_requirements()
 
 os.makedirs(TMP_FOLDER, exist_ok=True)
 try:
