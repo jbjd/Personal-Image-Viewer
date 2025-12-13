@@ -258,12 +258,12 @@ def _get_tokens_to_skip_config(module_import_path: str) -> TokensConfig:
     if decorators is None:
         decorators = decorators_to_always_skip
     else:
-        decorators.union(decorators_to_always_skip)
+        decorators |= decorators.union(decorators_to_always_skip)
 
     if functions is None:
         functions = functions_to_always_skip
     else:
-        functions.union(functions_to_always_skip)
+        functions |= functions.union(functions_to_always_skip)
 
     return TokensConfig(
         classes_to_skip=classes,
