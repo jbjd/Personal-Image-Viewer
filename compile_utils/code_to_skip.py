@@ -186,10 +186,12 @@ decorators_to_skip: dict[str, set[str]] = {}
 module_imports_to_skip: dict[str, set[str]] = {}
 
 
-constants_to_fold: defaultdict[str, dict[str, int | str]] = defaultdict(
+vars_to_fold: defaultdict[str, dict[str, int | str]] = defaultdict(
     dict,
     {
         IMAGE_VIEWER_NAME: {
+            "__debug__": False,
+            "__name__": "__main__",
             "DEFAULT_ANIMATION_SPEED_MS": DEFAULT_ANIMATION_SPEED_MS,
             "DEFAULT_BACKGROUND_COLOR": DEFAULT_BACKGROUND_COLOR,
             "DEFAULT_MAX_ITEMS_IN_CACHE": DEFAULT_MAX_ITEMS_IN_CACHE,

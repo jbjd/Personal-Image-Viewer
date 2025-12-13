@@ -12,10 +12,10 @@ from typing import Iterator
 from personal_compile_tools.file_operations import copy_file, walk_folder
 from personal_python_ast_optimizer.flake_wrapper import run_autoflake
 from personal_python_ast_optimizer.parser.config import (
-    ExtrasConfig,
-    SectionsConfig,
+    OptimizationsConfig,
     SkipConfig,
     TokensConfig,
+    TokenTypesConfig,
 )
 from personal_python_ast_optimizer.parser.minifier import MinifyUnparser
 from personal_python_ast_optimizer.parser.run import run_minify_parser
@@ -24,7 +24,6 @@ from personal_python_ast_optimizer.regex.classes import RegexReplacement
 
 from compile_utils.code_to_skip import (
     classes_to_skip,
-    constants_to_fold,
     decorators_to_always_skip,
     decorators_to_skip,
     dict_keys_to_skip,
@@ -35,6 +34,7 @@ from compile_utils.code_to_skip import (
     no_warn_tokens,
     regex_to_apply_py,
     regex_to_apply_tk,
+    vars_to_fold,
     vars_to_skip,
 )
 from compile_utils.constants import LOGGER_NAME
@@ -89,13 +89,14 @@ def clean_file_and_copy(
             source,
             SkipConfig(
                 module_import_path,
-                get_required_python_version(),
-                constants_to_fold[module_name],
-                sections_config=SectionsConfig(skip_name_equals_main=True),
+                target_python_version=get_required_python_version(),
                 tokens_config=_get_tokens_to_skip_config(module_import_path),
-                extras_config=ExtrasConfig(
+                token_types_config=TokenTypesConfig(
+                    skip_name_equals_main=True, skip_overload_functions=True
+                ),
+                optimizations_config=OptimizationsConfig(
+                    vars_to_fold=vars_to_fold[module_name],
                     fold_constants=False,  # Nuitka does this internally
-                    skip_overload_functions=True,
                     assume_this_machine=True,
                 ),
             ),
