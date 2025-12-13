@@ -14,7 +14,7 @@ from image_viewer.constants import TEXT_RGB
 from image_viewer.image.resizer import JPEG_MAX_DIMENSION
 
 # Increment when edits to this file or module_dependencies are merged into main
-SKIP_ITERATION: int = 1
+SKIP_ITERATION: int = 2
 
 # Module independent skips
 
@@ -198,6 +198,7 @@ vars_to_fold: defaultdict[str, dict[str, int | str]] = defaultdict(
             "JPEG_MAX_DIMENSION": JPEG_MAX_DIMENSION,
             "TEXT_RGB": TEXT_RGB,
         },
+        "PIL": {"SUPPORTED": True},
     },
 )
 
@@ -217,6 +218,14 @@ regex_to_apply_py: defaultdict[str, list[RegexReplacement]] = defaultdict(
             RegexReplacement(
                 pattern=r"from \. import _version.*del _version", flags=re.DOTALL
             ),
+        ],
+        "PIL.AvifImagePlugin": [
+            RegexReplacement(
+                pattern=r"try:\s+?from \. import _avif.*?SUPPORTED = False",
+                replacement="from . import _avif;SUPPORTED = True",
+                flags=re.DOTALL,
+                count=1,
+            )
         ],
         "PIL.GifImagePlugin": [
             RegexReplacement(
@@ -315,17 +324,25 @@ from collections import namedtuple""",
                 replacement="_Frame(namedtuple('_Frame', ['im', 'bbox', 'encoderinfo']))",  # noqa E501
             ),
         ],
+        "PIL.WebPImagePlugin": [
+            RegexReplacement(
+                pattern=r"try:\s+?from \. import _webp.*?SUPPORTED = False",
+                replacement="from . import _webp;SUPPORTED = True",
+                flags=re.DOTALL,
+                count=1,
+            )
+        ],
     },
 )
 if os.name == "nt":
-    regex_to_apply_py["PIL.AvifImagePlugin"] = [
+    regex_to_apply_py["PIL.AvifImagePlugin"].append(
         RegexReplacement(
             r"def _get_default_max_threads\(\).*?or 1",
             "def _get_default_max_threads():return os.cpu_count() or 1",
             flags=re.DOTALL,
             count=1,
         )
-    ]
+    )
 else:
     regex_to_apply_py["send2trash.__init__"] = [remove_all_re]
     regex_to_apply_py["send2trash.compat"] = [  # Fix issue with autoflake

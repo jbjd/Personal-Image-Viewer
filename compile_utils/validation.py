@@ -90,6 +90,34 @@ def validate_python_version() -> None:
         raise Exception(f"{version} not supported by Nuitka yet")
 
 
+def validate_PIL() -> None:
+    """Ensures installed version of PIL has expected optional modules installed.
+    Normal PIL installations will have these, but since PIL can be built from
+    source with these beeing turned off, these need to be validated."""
+
+    missing_modules: list[str] = []
+
+    try:
+        from PIL import _avif
+    except ImportError:
+        missing_modules.append("AVIF")
+    else:
+        del _avif
+
+    try:
+        from PIL import _webp
+    except ImportError:
+        missing_modules.append("WEBP")
+    else:
+        del _webp
+
+    if missing_modules:
+        raise Exception(
+            "Current PIL installation missing necessary modules: "
+            + ",".join(missing_modules)
+        )
+
+
 def raise_if_not_root() -> None:
     """Raises PermissionError if current context isn't root."""
     if not is_root():
