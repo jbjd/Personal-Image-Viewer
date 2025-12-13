@@ -14,7 +14,7 @@ from image_viewer.constants import TEXT_RGB
 from image_viewer.image.resizer import JPEG_MAX_DIMENSION
 
 # Increment when edits to this file or module_dependencies are merged into main
-SKIP_ITERATION: int = 2
+SKIP_ITERATION: int = 0
 
 # Module independent skips
 
