@@ -91,9 +91,7 @@ def clean_file_and_copy(
                 module_import_path,
                 target_python_version=get_required_python_version(),
                 tokens_config=_get_tokens_to_skip_config(module_import_path),
-                token_types_config=TokenTypesConfig(
-                    skip_name_equals_main=True, skip_overload_functions=True
-                ),
+                token_types_config=TokenTypesConfig(skip_overload_functions=True),
                 optimizations_config=OptimizationsConfig(
                     vars_to_fold=vars_to_fold[module_name],
                     fold_constants=False,  # Nuitka does this internally
