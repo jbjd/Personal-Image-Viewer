@@ -38,8 +38,8 @@ from compile_utils.nuitka_ext import (
 )
 from compile_utils.validation import (
     raise_if_not_root,
-    validate_PIL,
     validate_module_requirements,
+    validate_PIL,
     validate_python_version,
 )
 
