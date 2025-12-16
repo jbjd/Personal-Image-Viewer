@@ -34,6 +34,7 @@ if os.name == "nt":
         drop_file_to_clipboard,
         open_with,
         read_buffer_as_base64_and_copy_to_clipboard,
+        set_hwnd,
     )
 else:
     from tkinter import PhotoImage as tkPhotoImage
@@ -74,6 +75,10 @@ class ViewerApp:
 
         self.app: Tk = self._setup_tk_app(path_to_exe_folder)
         self.app_id: int = self.app.winfo_id()
+
+        if os.name == "nt":
+            set_hwnd(self.app_id)
+
         self.canvas = CustomCanvas(self.app, config.background_color)
         screen_height: int = self.canvas.screen_height
         screen_width: int = self.canvas.screen_width
@@ -175,15 +180,12 @@ class ViewerApp:
         if os.name == "nt":
             app.bind(
                 "<Control-b>",
-                lambda _: open_with(self.app_id, self.file_manager.path_to_image),
+                lambda _: open_with(self.file_manager.path_to_image),
             )
             app.bind(
                 "<Control-c>",
                 lambda e: self._only_for_this_window(
-                    e,
-                    drop_file_to_clipboard,
-                    self.app_id,
-                    self.file_manager.path_to_image,
+                    e, drop_file_to_clipboard, self.file_manager.path_to_image
                 ),
             )
             app.bind("<MouseWheel>", self.handle_mouse_wheel)

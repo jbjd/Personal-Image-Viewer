@@ -18,6 +18,8 @@
 #include <shlobj_core.h>
 #endif
 
+HWND g_hwnd = 0;
+
 /**
  * Given a PyObject representing an int in Python,
  * cast it to an HWND.
@@ -37,9 +39,9 @@ static inline HWND PyLong_AsHWND(PyObject *pyLong)
  *
  * Returns WINBOOL of if successful. If it fails, call GetLastError for information.
  */
-static inline WINBOOL set_win_clipboard(const HWND hwnd, const UINT format, void *data)
+static inline WINBOOL set_win_clipboard(const UINT format, void *data)
 {
-    return !OpenClipboard(hwnd) || !EmptyClipboard() || SetClipboardData(format, data) == NULL || !CloseClipboard() || 1;
+    return !OpenClipboard(g_hwnd) || !EmptyClipboard() || SetClipboardData(format, data) == NULL || !CloseClipboard() || 1;
 }
 
 /**
@@ -74,18 +76,23 @@ static inline void ensure_double_null_terminated(char *str)
     str[strLen + 1] = '\0';
 }
 
-static PyObject *trash_file(PyObject *self, PyObject *const *args, Py_ssize_t argLen)
+
+/**
+ * Sets the hwnd value for all functions called in this module.
+ * hwnd will be 0 until this is set.
+ */
+static PyObject *set_hwnd(PyObject *self, PyObject *arg)
 {
-    if (unlikely(argLen != 2))
-    {
-        PyErr_SetString(PyExc_TypeError, "trash_file takes exactly two arguments");
-        return NULL;
-    }
+    g_hwnd = PyLong_AsHWND(arg);
 
-    const HWND hwnd = PyLong_AsHWND(args[0]);
+    return Py_None;
+}
 
+
+static PyObject *trash_file(PyObject *self, PyObject *arg)
+{
     Py_ssize_t rawPathSize;
-    const char *rawPath = PyUnicode_AsUTF8AndSize(args[1], &rawPathSize);
+    const char *rawPath = PyUnicode_AsUTF8AndSize(arg, &rawPathSize);
     if (unlikely(rawPath == NULL))
     {
         return NULL;
@@ -95,7 +102,7 @@ static PyObject *trash_file(PyObject *self, PyObject *const *args, Py_ssize_t ar
 
     char *path = normalize_str_for_file_op(rawPath, rawPathSize);
 
-    SHFILEOPSTRUCTA fileOp = {hwnd, FO_DELETE, path, NULL, FOF_ALLOWUNDO | FOF_FILESONLY | FOF_NOCONFIRMATION | FOF_NOERRORUI};
+    SHFILEOPSTRUCTA fileOp = {g_hwnd, FO_DELETE, path, NULL, FOF_ALLOWUNDO | FOF_FILESONLY | FOF_NOCONFIRMATION | FOF_NOERRORUI};
     SHFileOperationA(&fileOp);
 
     free(path);
@@ -105,18 +112,10 @@ static PyObject *trash_file(PyObject *self, PyObject *const *args, Py_ssize_t ar
     return Py_None;
 }
 
-static PyObject *restore_file(PyObject *self, PyObject *const *args, Py_ssize_t argLen)
+static PyObject *restore_file(PyObject *self, PyObject *arg)
 {
-    if (unlikely(argLen != 2))
-    {
-        PyErr_SetString(PyExc_TypeError, "restore_file takes exactly two arguments");
-        return NULL;
-    }
-
-    const HWND hwnd = PyLong_AsHWND(args[0]);
-
     Py_ssize_t rawOriginalPathSize;
-    const char *rawOriginalPath = PyUnicode_AsUTF8AndSize(args[1], &rawOriginalPathSize);
+    const char *rawOriginalPath = PyUnicode_AsUTF8AndSize(arg, &rawOriginalPathSize);
     if (unlikely(rawOriginalPath == NULL))
     {
         return NULL;
@@ -129,7 +128,7 @@ static PyObject *restore_file(PyObject *self, PyObject *const *args, Py_ssize_t 
     CoInitializeEx(NULL, COINIT_APARTMENTTHREADED);
 
     LPITEMIDLIST pidlRecycleBin;
-    hr = SHGetSpecialFolderLocation(hwnd, CSIDL_BITBUCKET, &pidlRecycleBin);
+    hr = SHGetSpecialFolderLocation(g_hwnd, CSIDL_BITBUCKET, &pidlRecycleBin);
     if (FAILED(hr))
     {
         goto end;
@@ -143,7 +142,7 @@ static PyObject *restore_file(PyObject *self, PyObject *const *args, Py_ssize_t 
     }
 
     IEnumIDList *recycleBinIterator = NULL;
-    hr = recycleBinFolder->lpVtbl->EnumObjects(recycleBinFolder, hwnd, SHCONTF_NONFOLDERS, &recycleBinIterator);
+    hr = recycleBinFolder->lpVtbl->EnumObjects(recycleBinFolder, g_hwnd, SHCONTF_NONFOLDERS, &recycleBinIterator);
     if (FAILED(hr))
     {
         goto fail_enum;
@@ -236,7 +235,7 @@ static PyObject *restore_file(PyObject *self, PyObject *const *args, Py_ssize_t 
 
     if (NULL != targetToRestore)
     {
-        SHFILEOPSTRUCTA fileOp = {hwnd, FO_MOVE, targetToRestore, originalPath, FOF_RENAMEONCOLLISION | FOF_ALLOWUNDO | FOF_FILESONLY | FOF_NOCONFIRMATION | FOF_NOERRORUI};
+        SHFILEOPSTRUCTA fileOp = {g_hwnd, FO_MOVE, targetToRestore, originalPath, FOF_RENAMEONCOLLISION | FOF_ALLOWUNDO | FOF_FILESONLY | FOF_NOCONFIRMATION | FOF_NOERRORUI};
         SHFileOperationA(&fileOp);
 
         CoTaskMemFree(targetToRestore);
@@ -299,17 +298,9 @@ end:
     return pyFiles;
 }
 
-static PyObject *open_with(PyObject *self, PyObject *const *args, Py_ssize_t argLen)
+static PyObject *open_with(PyObject *self, PyObject *arg)
 {
-    if (unlikely(argLen != 2))
-    {
-        PyErr_SetString(PyExc_TypeError, "open_with takes exactly two arguments");
-        return NULL;
-    }
-
-    const HWND hwnd = (HWND)PyLong_AsHWND(args[0]);
-
-    wchar_t *path = PyUnicode_AsWideCharString(args[1], 0);
+    wchar_t *path = PyUnicode_AsWideCharString(arg, 0);
     if (unlikely(path == NULL))
     {
         return NULL;
@@ -318,7 +309,7 @@ static PyObject *open_with(PyObject *self, PyObject *const *args, Py_ssize_t arg
     Py_BEGIN_ALLOW_THREADS;
 
     const OPENASINFO openAsInfo = {path, NULL, OAIF_EXEC | OAIF_HIDE_REGISTRATION};
-    SHOpenWithDialog(hwnd, &openAsInfo);
+    SHOpenWithDialog(g_hwnd, &openAsInfo);
 
     Py_END_ALLOW_THREADS;
 
@@ -328,18 +319,10 @@ static PyObject *open_with(PyObject *self, PyObject *const *args, Py_ssize_t arg
     return Py_None;
 }
 
-static PyObject *drop_file_to_clipboard(PyObject *self, PyObject *const *args, Py_ssize_t argLen)
+static PyObject *drop_file_to_clipboard(PyObject *self, PyObject *arg)
 {
-    if (unlikely(argLen != 2))
-    {
-        PyErr_SetString(PyExc_TypeError, "drop_file_to_clipboard takes exactly two arguments");
-        return NULL;
-    }
-
-    const HWND hwnd = PyLong_AsHWND(args[0]);
-
     Py_ssize_t pathSize;
-    const char *path = PyUnicode_AsUTF8AndSize(args[1], &pathSize);
+    const char *path = PyUnicode_AsUTF8AndSize(arg, &pathSize);
     if (unlikely(path == NULL))
     {
         return NULL;
@@ -369,7 +352,7 @@ static PyObject *drop_file_to_clipboard(PyObject *self, PyObject *const *args, P
 
     GlobalUnlock(hGlobal);
 
-    if (!set_win_clipboard(hwnd, CF_HDROP, hGlobal))
+    if (!set_win_clipboard(CF_HDROP, hGlobal))
     {
     error_free_memory:
         GlobalFree(hGlobal);
@@ -421,7 +404,7 @@ static PyObject *read_buffer_as_base64_and_copy_to_clipboard(PyObject *self, PyO
 
     GlobalUnlock(hGlobal);
 
-    set_win_clipboard(0, CF_TEXT, encodedBuffer);
+    set_win_clipboard(CF_TEXT, encodedBuffer);
 
 end:
     Py_END_ALLOW_THREADS;
@@ -429,11 +412,12 @@ end:
 }
 
 static PyMethodDef os_methods[] = {
-    {"trash_file", (PyCFunction)trash_file, METH_FASTCALL, NULL},
-    {"restore_file", (PyCFunction)restore_file, METH_FASTCALL, NULL},
+    {"set_hwnd", set_hwnd, METH_O, NULL},
+    {"trash_file", trash_file, METH_O, NULL},
+    {"restore_file", restore_file, METH_O, NULL},
     {"get_files_in_folder", get_files_in_folder, METH_O, NULL},
-    {"open_with", (PyCFunction)open_with, METH_FASTCALL, NULL},
-    {"drop_file_to_clipboard", (PyCFunction)drop_file_to_clipboard, METH_FASTCALL, NULL},
+    {"open_with", open_with, METH_O, NULL},
+    {"drop_file_to_clipboard", drop_file_to_clipboard, METH_O, NULL},
     {"read_buffer_as_base64_and_copy_to_clipboard", read_buffer_as_base64_and_copy_to_clipboard, METH_O, NULL},
     {NULL, NULL, 0, NULL}};
 
