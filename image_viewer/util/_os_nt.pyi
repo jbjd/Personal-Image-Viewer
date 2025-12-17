@@ -5,29 +5,30 @@ import os
 from image_viewer.image._read import CMemoryViewBuffer
 
 if os.name == "nt":
-    def trash_file(hwnd: int, file_path: str, /) -> None:
+    def set_hwnd(hwnd: int, /) -> None:
+        """Sets the hwnd value for all functions called in this module.
+
+        :param hwnd: The id of the window calling the functions."""
+
+    def trash_file(file_path: str, /) -> None:
         """Moves a file to trash.
 
-        :param hwnd: The handle of the window performing the operation.
         :param file_path: The file path to trash."""
 
-    def restore_file(hwnd: int, file_path: str, /) -> None:
+    def restore_file(file_path: str, /) -> None:
         """Restores a file from recycling bin.
 
-        :param hwnd: The handle of the window performing the operation.
         :param file_path: The file path to restore."""
 
-    def open_with(hwnd: int, file_path: str, /) -> None:
+    def open_with(file_path: str, /) -> None:
         """Calls SHOpenWithDialog without registration option
         on provided file.
 
-        :param hwnd: The handle of the window performing the operation.
         :param file_path: The file path to use."""
 
-    def drop_file_to_clipboard(hwnd: int, file_path: str, /) -> None:
+    def drop_file_to_clipboard(file_path: str, /) -> None:
         """Copies a file to clipboard as an HDROP.
 
-        :param hwnd: The handle of the window performing the operation.
         :param file_path: The file path to drop to clipboard."""
 
     def get_files_in_folder(folder_path: str, /) -> list[str]:
