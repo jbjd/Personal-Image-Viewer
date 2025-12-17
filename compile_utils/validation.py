@@ -93,7 +93,7 @@ def validate_python_version() -> None:
 def validate_PIL() -> None:
     """Ensures installed version of PIL has expected optional modules installed.
     Normal PIL installations will have these, but since PIL can be built from
-    source with these beeing turned off, these need to be validated."""
+    source with these turned off, it needs to be checked."""
 
     missing_modules: list[str] = []
 
