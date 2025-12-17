@@ -101,7 +101,7 @@ def get_byte_display(size_in_bytes: int) -> str:
 def trash_file(path: str) -> None:
     """OS generic way to send files to trash"""
     if os.name == "nt":
-        _trash_file_nt(0, path)
+        _trash_file_nt(path)
     else:
         send2trash(path)
 
@@ -109,7 +109,7 @@ def trash_file(path: str) -> None:
 def restore_file(path: str) -> None:
     """OS Generic way to restore a file from trash"""
     if os.name == "nt":
-        _restore_file_nt(0, path)
+        _restore_file_nt(path)
     else:
         _restore_file_linux(path)
 
