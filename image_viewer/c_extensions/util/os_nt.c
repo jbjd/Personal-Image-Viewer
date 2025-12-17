@@ -149,6 +149,7 @@ static PyObject *restore_file(PyObject *self, PyObject *arg)
     }
 
     char *originalPath = normalize_str_for_file_op(rawOriginalPath, rawOriginalPathSize);
+    originalPath[0] = tolower(originalPath[0]);  // Bin API can return upper or lower case drives so need to normalize on something
     char *targetToRestore = NULL;
     DATE targetRecycledTime = 0;
 
@@ -185,6 +186,7 @@ static PyObject *restore_file(PyObject *self, PyObject *arg)
         SHUnicodeToTChar(variant.bstrVal, deletedFileOriginalPath, ARRAYSIZE(deletedFileOriginalPath));
         strcat(deletedFileOriginalPath, "\\");
         strcat(deletedFileOriginalPath, displayNameBuffer);
+        deletedFileOriginalPath[0] = tolower(deletedFileOriginalPath[0]);
 
         if (strcmp(originalPath, deletedFileOriginalPath))
         {
@@ -213,12 +215,9 @@ static PyObject *restore_file(PyObject *self, PyObject *arg)
                 continue;
             }
 
-            if (NULL != targetToRestore)
-            {
-                CoTaskMemFree(targetToRestore);
-            }
-
+            CoTaskMemFree(targetToRestore);
             targetToRestore = CoTaskMemAlloc(MAX_PATH + 1);
+
             if (StrRetToBufA(&binDisplayName, pidlItem, targetToRestore, MAX_PATH) != S_OK)
             {
                 CoTaskMemFree(pidlItem);
