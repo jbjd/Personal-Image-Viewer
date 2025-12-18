@@ -346,7 +346,7 @@ if os.name == "nt":
     )
 else:
     regex_to_apply_py["send2trash.__init__"] = [remove_all_re]
-    regex_to_apply_py["send2trash.compat"] = [  # Fix issue with autoflake
+    regex_to_apply_py["send2trash.compat"] = [
         RegexReplacement(
             pattern="^.*$",
             replacement=(
@@ -354,8 +354,9 @@ else:
 text_type = str
 binary_type = bytes
 from collections.abc import Iterable
-iterable_type = Iterable"""
-                + ("" if os.name == "nt" else "\nimport os\nenvironb = os.environb")
+iterable_type = Iterable
+import os
+environb = os.environb"""
             ),
             flags=re.DOTALL,
             count=1,
