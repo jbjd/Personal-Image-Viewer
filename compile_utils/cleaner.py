@@ -10,7 +10,6 @@ from re import sub
 from typing import Iterator
 
 from personal_compile_tools.file_operations import copy_file, walk_folder
-from personal_python_ast_optimizer.flake_wrapper import run_autoflake
 from personal_python_ast_optimizer.parser.config import (
     OptimizationsConfig,
     SkipConfig,
@@ -107,8 +106,6 @@ def clean_file_and_copy(
         )
         write_file_utf8(MINIFIER_FAILED_FILE_NAME, source)
         raise
-
-    source = run_autoflake(source, remove_unused_imports=True)
 
     write_file_utf8(new_path, source)
 
