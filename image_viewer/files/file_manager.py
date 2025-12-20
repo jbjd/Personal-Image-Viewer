@@ -15,7 +15,7 @@ from image_viewer.image.file import ImageName, ImageNameList, ImageSearchResult
 from image_viewer.util.convert import try_convert_file_and_save_new
 from image_viewer.util.os import (
     get_files_in_folder,
-    get_normalized_dir_name,
+    get_normalized_folder_name,
     trash_file,
 )
 
@@ -41,7 +41,7 @@ class ImageFileManager:
 
     def __init__(self, first_image_path: str, image_cache: ImageCache) -> None:
         """Load single file for display before we load the rest"""
-        self.image_folder: str = get_normalized_dir_name(first_image_path)
+        self.image_folder: str = get_normalized_folder_name(first_image_path)
         self.image_cache: ImageCache = image_cache
 
         self.action_undoer = ActionUndoer()
@@ -73,7 +73,7 @@ class ImageFileManager:
             return False
 
         chosen_file: str = os.path.basename(new_file_path)
-        new_dir: str = get_normalized_dir_name(new_file_path)
+        new_dir: str = get_normalized_folder_name(new_file_path)
 
         if new_dir != self.image_folder:
             self.image_folder = new_dir
@@ -264,7 +264,9 @@ class ImageFileManager:
         self.action_undoer.append(result)
 
         # Only add image if its still in the directory we are currently in
-        if get_normalized_dir_name(new_path) == get_normalized_dir_name(original_path):
+        if get_normalized_folder_name(new_path) == get_normalized_folder_name(
+            original_path
+        ):
             preserve_index: _ShouldPreserveIndex = (
                 _ShouldPreserveIndex.YES
                 if was_at_last_index
@@ -282,7 +284,7 @@ class ImageFileManager:
     def _split_dir_and_name(self, new_name_or_path: str) -> tuple[str, str]:
         """Returns tuple with path and file name split up"""
         new_name: str = os.path.basename(new_name_or_path) or self.current_image.name
-        new_dir: str = get_normalized_dir_name(new_name_or_path)
+        new_dir: str = get_normalized_folder_name(new_name_or_path)
 
         if new_name in (".", ".."):
             # name is actually path specifier
