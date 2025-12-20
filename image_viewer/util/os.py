@@ -34,7 +34,7 @@ else:  # assume linux for now
     def os_name_compare(a: str, b: str) -> bool:
         return a < b
 
-    # TODO: break this function into smaller bits
+    # TODO: Port this to C and see if its faster
     def _restore_file_linux(original_path: str) -> None:
 
         name_re: re.Pattern = _get_trashinfo_regex(original_path)
@@ -55,7 +55,7 @@ else:  # assume linux for now
                 continue  # Malformed trashinfo
 
             if deleted_file_original_path == original_path:
-                deleted_file_name = file[:-10]  # Chop .trashinfo
+                deleted_file_name: str = file[:-10]  # Chop .trashinfo
                 path_to_trashed_file: str = f"{HOMETRASH}/files/{deleted_file_name}"
 
                 # trashinfo file may exist, but actual file does not
