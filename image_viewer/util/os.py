@@ -23,6 +23,8 @@ if os.name == "nt":
 
 else:  # assume linux for now
     import re
+    from configparser import ConfigParser
+    from configparser import Error as ConfigParserError
     from tkinter.messagebox import showinfo
 
     from send2trash.plat_other import HOMETRASH, send2trash
@@ -42,23 +44,25 @@ else:  # assume linux for now
                 continue
 
             info_path: str = TRASH_INFO + file
-            with open(info_path, "r", encoding="utf-8") as fp:
-                line: str
-                while line := fp.readline().strip():  # TODO: use configparser instead
-                    if line.startswith("Path="):
-                        break
-                else:
-                    return  # no line with Path= was found
-                deleted_file_original_path: str = line.strip().replace("Path=", "", 1)
-                if deleted_file_original_path == original_path:
-                    deleted_file_name = info_path[info_path.rfind("/info/") + 6 : -10]
-                    path_to_trashed_file: str = f"{HOMETRASH}/files/{deleted_file_name}"
+            config_parser = ConfigParser()
+            config_parser.read(info_path)
 
-                    # trashinfo file may exist, but actual file does not
-                    if os.path.exists(path_to_trashed_file):
-                        os.rename(path_to_trashed_file, original_path)
-                        os.remove(info_path)
-                        break
+            try:
+                deleted_file_original_path: str = config_parser.get(
+                    "Trash Info", "Path"
+                )
+            except ConfigParserError:
+                continue  # Malformed trashinfo
+
+            if deleted_file_original_path == original_path:
+                deleted_file_name = info_path[info_path.rfind("/info/") + 6 : -10]
+                path_to_trashed_file: str = f"{HOMETRASH}/files/{deleted_file_name}"
+
+                # trashinfo file may exist, but actual file does not
+                if os.path.exists(path_to_trashed_file):
+                    os.rename(path_to_trashed_file, original_path)
+                    os.remove(info_path)
+                    break  # TODO: restore oldest first?
 
     def _get_trashinfo_regex(original_path: str) -> re.Pattern:
         name_start: int = original_path.rfind("/")
@@ -66,21 +70,17 @@ else:  # assume linux for now
             original_path if name_start == -1 else original_path[name_start + 1 :]
         )
 
-        file_name, file_suffix = split_name_and_suffix(name_and_suffix)
+        file_name, file_suffix = split_name_and_suffix(name_and_suffix, False)
         # Files with same name will be test.png.trashinfo, test.2.png.trashinfo
         # or 'test 2.png.trashinfo'
         file_suffix_pattern: str = (
             rf"\{file_suffix}" if file_suffix.startswith(".") else file_suffix
         )
-        file_name_pattern: str
-        if file_name[0] == ".":
-            file_name_pattern = (
-                rf"(\.[0-9]+)?{file_name}{file_suffix_pattern}\.trashinfo"
-            )
-        else:
-            file_name_pattern = (
-                rf"{file_name}(\.[0-9]+)?{file_suffix_pattern}\.trashinfo"
-            )
+
+        # This is silly how linux handles these names
+        file_name_pattern: str = (
+            rf"{file_name}(( |\.)[0-9]+)?{file_suffix_pattern}\.trashinfo"
+        )
 
         return re.compile(file_name_pattern)
 
@@ -154,10 +154,12 @@ def maybe_truncate_long_name(name_and_suffix: str) -> str:
     return f"{name[:MAX]}(…){suffix}"
 
 
-def split_name_and_suffix(name_and_suffix: str) -> tuple[str, str]:
+def split_name_and_suffix(name_and_suffix: str, rfind: bool = True) -> tuple[str, str]:
     """Given a file name, return the name without the suffix
     and the suffix separately"""
-    suffix_start: int = name_and_suffix.rfind(".")
+    suffix_start: int = (
+        name_and_suffix.rfind(".") if rfind else name_and_suffix.find(".")
+    )
     if suffix_start == -1:
         file_name = name_and_suffix
         suffix = ""
