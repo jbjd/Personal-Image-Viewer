@@ -55,7 +55,7 @@ else:  # assume linux for now
                 continue  # Malformed trashinfo
 
             if deleted_file_original_path == original_path:
-                deleted_file_name = info_path[info_path.rfind("/info/") + 6 : -10]
+                deleted_file_name = file[:-10]  # Chop .trashinfo
                 path_to_trashed_file: str = f"{HOMETRASH}/files/{deleted_file_name}"
 
                 # trashinfo file may exist, but actual file does not
@@ -63,6 +63,8 @@ else:  # assume linux for now
                     os.rename(path_to_trashed_file, original_path)
                     os.remove(info_path)
                     break  # TODO: restore oldest first?
+                else:
+                    os.remove(info_path)
 
     def _get_trashinfo_regex(original_path: str) -> re.Pattern:
         name_start: int = original_path.rfind("/")
