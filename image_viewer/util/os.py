@@ -1,11 +1,10 @@
-"""
-Code for OS specific stuff
-"""
+"""Utilities that are OS generic."""
 
 import os
 import sys
 from collections.abc import Iterator
-from typing import Final
+
+FILE_NAME_MAX_LEN: int = 40
 
 if os.name == "nt":
     from ctypes import windll  # type: ignore
@@ -66,11 +65,15 @@ else:  # assume linux for now
                 else:
                     os.remove(info_path)
 
-    def _get_trashinfo_regex(original_path: str) -> re.Pattern:
-        name_start: int = original_path.rfind("/")
-        name_and_suffix: str = (
-            original_path if name_start == -1 else original_path[name_start + 1 :]
-        )
+    def _get_trashinfo_regex(path: str) -> re.Pattern:
+        """Returns a regex to detect if trashinfo files could contain
+        info for the provided path.
+
+        :param path: A path to build the regex off of.
+        :returns: A compiled regex to match against trashinfo files."""
+
+        name_start: int = path.rfind("/")
+        name_and_suffix: str = path if name_start == -1 else path[name_start + 1 :]
 
         file_name, file_suffix = split_name_and_suffix(name_and_suffix, False)
         # Files with same name will be test.png.trashinfo, test.2.png.trashinfo
@@ -86,11 +89,22 @@ else:  # assume linux for now
 
         return re.compile(file_name_pattern)
 
-    def get_files_in_folder(directory_path: str) -> Iterator[str]:
-        """Copied from OS module and edited to yield each file
-        and only files instead of including dirs/extra info"""
+    def _split_file_and_suffix_for_trashinfo(file_name: str) -> tuple[str, str]:
+        """Given a file name, return the name and the suffix separately
+        where the suffix starts at the first dot.
 
-        with os.scandir(directory_path) as scandir_iter:
+        :param name_and_suffix: A file name.
+        :returns: The name and suffix"""
+        suffix_start: int = file_name.find(".")
+        return _split_str_at_index(file_name, suffix_start)
+
+    def get_files_in_folder(folder_path: str) -> Iterator[str]:
+        """Yields each file in a folder. Edited version of OS module implementaiton.
+
+        :params folder_path: A path to a folder.
+        :returns: The iterator over that folder."""
+
+        with os.scandir(folder_path) as scandir_iter:
             while True:
                 try:
                     entry = next(scandir_iter)
@@ -107,8 +121,11 @@ else:  # assume linux for now
 
 
 def show_info(hwnd: int, title: str, body: str) -> None:
-    """If on Windows, shows info popup as child of parent
-    Otherwise shows parent-less info popup"""
+    """Shows popup with a message.
+
+    :param hwnd: The ID of the window making the call (Only used on Windows).
+    :param title: The title of the popup.
+    :param body: The body of the popup"""
     if os.name == "nt":
         windll.user32.MessageBoxW(hwnd, body, title, 0)
     else:
@@ -116,14 +133,19 @@ def show_info(hwnd: int, title: str, body: str) -> None:
 
 
 def get_byte_display(size_in_bytes: int) -> str:
-    """Given bytes, formats it into a string using kb or mb"""
+    """Given a size in bytes, formats it using kb or mb.
+
+    :param size_in_bytes: A byte size to display.
+    :returns: The formatted representation of the byte value."""
     kb_size: int = 1024 if os.name == "nt" else 1000
     size_in_kb: int = size_in_bytes // kb_size
     return f"{size_in_kb/kb_size:.2f}mb" if size_in_kb > 999 else f"{size_in_kb}kb"
 
 
 def trash_file(path: str) -> None:
-    """OS generic way to send files to trash"""
+    """OS generic way to send files to trash.
+
+    :param path: A path to trash."""
     if os.name == "nt":
         _trash_file_nt(path)
     else:
@@ -131,49 +153,61 @@ def trash_file(path: str) -> None:
 
 
 def restore_file(path: str) -> None:
-    """OS Generic way to restore a file from trash"""
+    """OS generic way to restore a file from trash.
+
+    :param path: A path to restore."""
     if os.name == "nt":
         _restore_file_nt(path)
     else:
         _restore_file_linux(path)
 
 
-def get_normalized_dir_name(path: str) -> str:
-    """Gets directory name of a file path and normalizes it"""
+def get_normalized_folder_name(path: str) -> str:
+    """Nomalizes a folders name.
+
+    :param path: A path.
+    :returns: Normalized version of the path."""
     dir_name: str = os.path.dirname(path)
+
     # normpath of empty string returns "."
     return os.path.normpath(dir_name) if dir_name != "" else ""
 
 
-def maybe_truncate_long_name(name_and_suffix: str) -> str:
-    """Takes a file name and returns a shortened version if its too long"""
-    name, suffix = split_name_and_suffix(name_and_suffix)
+def maybe_truncate_long_name(file_name: str) -> str:
+    """Given a file name, return a truncated version if its too long.
 
-    MAX: Final[int] = 40
-    if len(name) <= MAX:
-        return name_and_suffix
+    :param file_name: A file name to check.
+    :returns: The original file name or a truncated version."""
+    name, suffix = split_name_and_suffix(file_name)
 
-    return f"{name[:MAX]}(…){suffix}"
-
-
-def split_name_and_suffix(name_and_suffix: str, rfind: bool = True) -> tuple[str, str]:
-    """Given a file name, return the name without the suffix
-    and the suffix separately"""
-    suffix_start: int = (
-        name_and_suffix.rfind(".") if rfind else name_and_suffix.find(".")
+    return (
+        file_name
+        if len(name) <= FILE_NAME_MAX_LEN
+        else f"{name[:FILE_NAME_MAX_LEN]}(…){suffix}"
     )
-    if suffix_start == -1:
-        file_name = name_and_suffix
-        suffix = ""
-    else:
-        file_name = name_and_suffix[:suffix_start]
-        suffix = name_and_suffix[suffix_start:]
 
-    return file_name, suffix
+
+def split_name_and_suffix(file_name: str) -> tuple[str, str]:
+    """Given a file name, return the name and the suffix separately
+    where the suffix starts at the last dot.
+
+    :param file_name: A file name.
+    :returns: The name and suffix"""
+    suffix_start: int = file_name.rfind(".")
+    return _split_str_at_index(file_name, suffix_start)
+
+
+def _split_str_at_index(to_split: str, index: int) -> tuple[str, str]:
+    """Given a string, return two strings split of the original.
+
+    :param to_split: A string to split.
+    :param index: An index to split the string at.
+    :returns: The string up to index and the string at and after index."""
+    return (to_split, "") if index == -1 else (to_split[:index], to_split[index:])
 
 
 def get_path_to_exe_folder() -> str:
-    """Returns the folder path containing the file running the program
+    """Returns the folder path containing the file running the program.
 
-    :returns: The folder path"""
+    :returns: The folder path."""
     return os.path.dirname(sys.argv[0])
