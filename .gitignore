@@ -33,3 +33,4 @@ nuitka-crash-report.xml
 *.so
 
 *.ipynb
+test.py
