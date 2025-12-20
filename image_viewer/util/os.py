@@ -22,28 +22,26 @@ if os.name == "nt":
         return iter(files)
 
 else:  # assume linux for now
-    from glob import glob
+    import re
     from tkinter.messagebox import showinfo
 
     from send2trash.plat_other import HOMETRASH, send2trash
+
+    TRASH_INFO: str = f"{HOMETRASH}/info/"
 
     def os_name_compare(a: str, b: str) -> bool:
         return a < b
 
     # TODO: break this function into smaller bits
     def _restore_file_linux(original_path: str) -> None:
-        name_start: int = original_path.rfind("/")
-        name_and_suffix: str = (
-            original_path if name_start == -1 else original_path[name_start + 1 :]
-        )
-        file_name, file_suffix = split_name_and_suffix(name_and_suffix)
 
-        # Files with same name will be test.png.trashinfo, test.2.png.trashinfo
-        # or 'test 2.png.trashinfo'
-        info_paths: list[str] = glob(
-            f"{HOMETRASH}/info/{file_name}*{file_suffix}.trashinfo"
-        )
-        for info_path in info_paths:
+        name_re: re.Pattern = _get_trashinfo_regex(original_path)
+
+        for file in get_files_in_folder(TRASH_INFO):
+            if not name_re.match(file):
+                continue
+
+            info_path: str = TRASH_INFO + file
             with open(info_path, "r", encoding="utf-8") as fp:
                 line: str
                 while line := fp.readline().strip():  # TODO: use configparser instead
@@ -61,6 +59,30 @@ else:  # assume linux for now
                         os.rename(path_to_trashed_file, original_path)
                         os.remove(info_path)
                         break
+
+    def _get_trashinfo_regex(original_path: str) -> re.Pattern:
+        name_start: int = original_path.rfind("/")
+        name_and_suffix: str = (
+            original_path if name_start == -1 else original_path[name_start + 1 :]
+        )
+
+        file_name, file_suffix = split_name_and_suffix(name_and_suffix)
+        # Files with same name will be test.png.trashinfo, test.2.png.trashinfo
+        # or 'test 2.png.trashinfo'
+        file_suffix_pattern: str = (
+            rf"\{file_suffix}" if file_suffix.startswith(".") else file_suffix
+        )
+        file_name_pattern: str
+        if file_name[0] == ".":
+            file_name_pattern = (
+                rf"(\.[0-9]+)?{file_name}{file_suffix_pattern}\.trashinfo"
+            )
+        else:
+            file_name_pattern = (
+                rf"{file_name}(\.[0-9]+)?{file_suffix_pattern}\.trashinfo"
+            )
+
+        return re.compile(file_name_pattern)
 
     def get_files_in_folder(directory_path: str) -> Iterator[str]:
         """Copied from OS module and edited to yield each file
