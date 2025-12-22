@@ -12,6 +12,8 @@ from personal_compile_tools.file_operations import (
     delete_folder,
     delete_folders,
     get_folder_size,
+    read_file_utf8,
+    write_file_utf8,
 )
 from personal_compile_tools.modules import get_module_file_path
 
@@ -25,7 +27,6 @@ from compile_utils.cleaner import (
 )
 from compile_utils.code_to_skip import SKIP_ITERATION
 from compile_utils.constants import BUILD_INFO_FILE, IMAGE_VIEWER_NAME
-from compile_utils.file_operations import read_file_utf8, write_file_utf8
 from compile_utils.log import setup_logging
 from compile_utils.module_dependencies import (
     get_normalized_module_name,
