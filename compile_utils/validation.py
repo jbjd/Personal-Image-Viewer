@@ -11,7 +11,6 @@ from nuitka import PythonVersions
 from personal_compile_tools.converters import version_str_to_tuple, version_tuple_to_str
 from personal_compile_tools.requirement_operators import Operators
 from personal_compile_tools.requirements import Requirement, parse_requirements_file
-from personal_compile_tools.validation import is_root
 
 from compile_utils.constants import LOGGER_NAME, PROJECT_FILE
 from compile_utils.module_dependencies import module_dependencies
@@ -116,12 +115,6 @@ def validate_PIL() -> None:
             "Current PIL installation missing necessary modules: "
             + ",".join(missing_modules)
         )
-
-
-def raise_if_not_root() -> None:
-    """Raises PermissionError if current context isn't root."""
-    if not is_root():
-        raise PermissionError("Need root privileges to compile and install")
 
 
 def _personal_module_matches_installed_version(name: str, source_url: str) -> bool:
