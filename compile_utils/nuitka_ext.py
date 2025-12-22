@@ -7,16 +7,16 @@ from logging import getLogger
 from subprocess import Popen
 from sysconfig import get_paths
 
-from personal_compile_tools.file_operations import delete_folder, walk_folder
+from personal_compile_tools.file_operations import (
+    delete_folder,
+    read_file_utf8,
+    walk_folder,
+    write_file_utf8,
+)
 from personal_python_ast_optimizer.regex.apply import apply_regex
 
 from compile_utils.code_to_skip import custom_nuitka_regex
 from compile_utils.constants import LOGGER_NAME
-from compile_utils.file_operations import (
-    make_folder_and_write_file_utf8,
-    read_file_utf8,
-    write_file_utf8,
-)
 
 _logger = getLogger(LOGGER_NAME)
 
@@ -135,7 +135,7 @@ def setup_custom_nuitka_install(custom_nuitka_path: str):
                 source = apply_regex(source, regex, "custom_nuitka")
 
         new_path: str = os.path.join(custom_nuitka_path, rel_path)
-        make_folder_and_write_file_utf8(new_path, source)
+        write_file_utf8(new_path, source, make_folders=True)
 
     write_file_utf8(version_file_path, expected_version)
 
