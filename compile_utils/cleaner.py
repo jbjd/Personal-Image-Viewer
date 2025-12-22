@@ -1,6 +1,5 @@
 """Classes and functions that remove unused code and annotations"""
 
-import ast
 import os
 import re
 import subprocess
@@ -55,21 +54,6 @@ MINIFIER_FAILED_FILE_NAME: str = "minifier_failure.py.example"
 _logger = getLogger(LOGGER_NAME)
 
 
-class MinifyUnparserExt(MinifyUnparser):
-    """Extends parent to exclude some specific things only relevant to this codebase"""
-
-    __slots__ = ()
-
-    def visit_If(self, node: ast.If) -> None:
-        # Skip PIL's blocks about typechecking
-        if isinstance(node.test, ast.Name) and node.test.id == "TYPE_CHECKING":
-            if node.orelse:
-                super().traverse(node.orelse)
-            return
-
-        super().visit_If(node)
-
-
 def clean_file_and_copy(
     path: str, new_path: str, module_name: str, module_import_path: str
 ) -> None:
@@ -84,7 +68,7 @@ def clean_file_and_copy(
         )
         source = apply_regex(source, regex_replacements, module_import_path)
 
-    code_cleaner = MinifyUnparserExt()
+    code_cleaner = MinifyUnparser()
 
     try:
         source = run_minify_parser(

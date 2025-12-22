@@ -133,21 +133,12 @@ functions_to_skip: dict[str, set[str]] = {
 
 
 vars_to_skip: dict[str, set[str]] = {
-    "PIL._util": {"TYPE_CHECKING"},
-    "PIL.Image": {"MIME", "TYPE_CHECKING"},
-    "PIL.ImageDraw": {"Outline", "TYPE_CHECKING"},
-    "PIL.ImageFile": {"TYPE_CHECKING"},
-    "PIL.ImageFont": {"TYPE_CHECKING"},
-    "PIL.ImageMath": {"TYPE_CHECKING"},
-    "PIL.ImagePalette": {"TYPE_CHECKING"},
-    "PIL.ImageSequence": {"TYPE_CHECKING"},
-    "PIL.ImageTk": {"TYPE_CHECKING"},
-    "PIL.GifImagePlugin": {"TYPE_CHECKING", "_Palette", "format_description"},
-    "PIL.GimpGradientFile": {"TYPE_CHECKING"},
-    "PIL.GimpPaletteFile": {"TYPE_CHECKING"},
-    "PIL.JpegImagePlugin": {"TYPE_CHECKING", "format_description"},
-    "PIL.PngImagePlugin": {"TYPE_CHECKING", "format_description"},
-    "PIL.WebPImagePlugin": {"TYPE_CHECKING", "format_description"},
+    "PIL.Image": {"MIME"},
+    "PIL.ImageDraw": {"Outline"},
+    "PIL.GifImagePlugin": {"_Palette", "format_description"},
+    "PIL.JpegImagePlugin": {"format_description"},
+    "PIL.PngImagePlugin": {"format_description"},
+    "PIL.WebPImagePlugin": {"format_description"},
 }
 
 if os.name == "nt":
@@ -199,7 +190,11 @@ vars_to_fold: defaultdict[str, dict[str, int | str]] = defaultdict(
             "JPEG_MAX_DIMENSION": JPEG_MAX_DIMENSION,
             "TEXT_RGB": TEXT_RGB,
         },
-        "PIL": {"DECODE_CODEC_CHOICE": DECODE_CODEC_CHOICE, "SUPPORTED": True},
+        "PIL": {
+            "DECODE_CODEC_CHOICE": DECODE_CODEC_CHOICE,
+            "SUPPORTED": True,
+            "TYPE_CHECKING": False,
+        },
     },
 )
 
