@@ -9,7 +9,12 @@ from logging import getLogger
 from re import sub
 from typing import Iterator
 
-from personal_compile_tools.file_operations import copy_file, walk_folder
+from personal_compile_tools.file_operations import (
+    copy_file,
+    read_file_utf8,
+    walk_folder,
+    write_file_utf8,
+)
 from personal_python_ast_optimizer.parser.config import (
     OptimizationsConfig,
     SkipConfig,
@@ -37,7 +42,6 @@ from compile_utils.code_to_skip import (
     vars_to_skip,
 )
 from compile_utils.constants import LOGGER_NAME
-from compile_utils.file_operations import read_file_utf8, write_file_utf8
 from compile_utils.validation import get_required_python_version
 
 if os.name == "nt":
