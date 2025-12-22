@@ -16,7 +16,7 @@ the clutter that other image viewers have.
 Features Include:
 
 * Optimized JPEG decoding with turbojpeg
-* Renaming/Conversion/Deletion of images
+* Rename/convert/delete images
 * Undoing rename/convert/delete
 * Drop via clipboard (Windows only)
 * Exporting image as base64
