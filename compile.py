@@ -16,6 +16,7 @@ from personal_compile_tools.file_operations import (
     write_file_utf8,
 )
 from personal_compile_tools.modules import get_module_file_path
+from personal_compile_tools.validation import raise_if_not_root
 
 from compile_utils.args import CompileArgumentParser, CompileNamespace, NuitkaArgs
 from compile_utils.cleaner import (
@@ -38,7 +39,6 @@ from compile_utils.nuitka_ext import (
     start_nuitka_compilation,
 )
 from compile_utils.validation import (
-    raise_if_not_root,
     validate_module_requirements,
     validate_PIL,
     validate_python_version,
@@ -76,7 +76,7 @@ nuitka_args: list[str]
 args, nuitka_args = parser.parse_known_args(modules_to_skip)
 
 if not args.debug and not args.skip_nuitka:
-    raise_if_not_root()
+    raise_if_not_root("Need root privileges to compile and install")
 
 if os.name == "nt":
     nuitka_args += [
