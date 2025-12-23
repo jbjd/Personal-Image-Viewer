@@ -415,7 +415,7 @@ class ViewerApp:
         self, direction: ZoomDirection | None, rotation: Rotation | None
     ) -> None:
         """Loads zoomed image and updates display"""
-        if direction is None and rotation is None:
+        if __debug__ and direction is None and rotation is None:
             raise ValueError
 
         zoomed_image: Image | None = self.image_loader.get_zoomed_or_rotated_image(
