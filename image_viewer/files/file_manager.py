@@ -342,12 +342,12 @@ class ImageFileManager:
 
     @staticmethod
     def _should_preserve_index_on_rename(result: Rename) -> bool:
-        """Returns True when image list shifted or changed size so index
-        needs to be changed to keep on the same image"""
-        if isinstance(result, Convert):
-            return not result.original_file_deleted
+        """Index must be perserved when a new image was added due to a conversion
+        occuring.
 
-        return False
+        :param result: A rename result which may have resulted in a conversion.
+        :returns: If index must be preserved."""
+        return isinstance(result, Convert) and not result.original_file_deleted
 
     def add_new_image(
         self,
