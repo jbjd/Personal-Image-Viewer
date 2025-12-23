@@ -16,8 +16,8 @@ if os.name == "nt":
     def os_name_compare(a: str, b: str) -> bool:
         return windll.shlwapi.StrCmpLogicalW(a, b) < 0
 
-    def get_files_in_folder(directory_path: str) -> Iterator[str]:
-        files: list[str] = _get_files_in_folder_nt(directory_path)
+    def get_files_in_folder(folder_path: str) -> Iterator[str]:
+        files: list[str] = _get_files_in_folder_nt(folder_path)
         return iter(files)
 
 else:  # assume linux for now
@@ -75,7 +75,7 @@ else:  # assume linux for now
         name_start: int = path.rfind("/")
         name_and_suffix: str = path if name_start == -1 else path[name_start + 1 :]
 
-        file_name, file_suffix = split_name_and_suffix(name_and_suffix, False)
+        file_name, file_suffix = _split_file_and_suffix_for_trashinfo(name_and_suffix)
         # Files with same name will be test.png.trashinfo, test.2.png.trashinfo
         # or 'test 2.png.trashinfo'
         file_suffix_pattern: str = (

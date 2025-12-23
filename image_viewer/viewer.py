@@ -677,7 +677,9 @@ class ViewerApp:
         else:
             self._update_existing_image_display(frame.image)
             elapsed: int = round((perf_counter() - start) * 1000)
-            ms_until_next_frame = max(frame.ms_until_next_frame - elapsed, 1)
+
+            # Tkinter handles negative values
+            ms_until_next_frame = frame.ms_until_next_frame - elapsed
 
         self.animation_loop(ms_until_next_frame, ms_backoff)
 
