@@ -258,8 +258,6 @@ class ImageFileManager:
             )
         else:
             result = self._rename(original_path, new_path)
-            self._files.remove_current_image()
-            self.image_cache.update_key(self.path_to_image, new_path)
 
         self.action_undoer.append(result)
 
@@ -322,23 +320,24 @@ class ImageFileManager:
         self, original_path: str, new_full_path: str, new_format: str
     ) -> Convert:
         """Asks user to delete old file and returns Convert result"""
-        deleted: bool = False
-
-        if askyesno(
+        delete: bool = askyesno(
             "Confirm deletion",
             f"Converted file to {new_format}, delete old file?",
-        ):
+        )
+
+        if delete:
             try:
                 self.trash_current_image()
             except IndexError:
                 pass  # even if no images left, a new one will be added after this
-            deleted = True
 
-        return Convert(original_path, new_full_path, deleted)
+        return Convert(original_path, new_full_path, delete)
 
     def _rename(self, original_path: str, new_path: str) -> Rename:
         """Renames a file and returns the rename result"""
         os.rename(original_path, new_path)
+        self._files.remove_current_image()
+        self.image_cache.update_key(self.path_to_image, new_path)
         return Rename(original_path, new_path)
 
     @staticmethod
