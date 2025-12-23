@@ -383,21 +383,21 @@ class ImageFileManager:
         except OSError:
             return False  # TODO: error popup?
 
-        image_to_add: str = os.path.basename(undo_response.path_to_restore)
-        image_to_remove: str = os.path.basename(undo_response.path_to_remove)
+        image_added: str = os.path.basename(undo_response.path_restored)
+        image_removed: str = os.path.basename(undo_response.path_removed)
 
-        if image_to_remove != "":
-            search_result: ImageSearchResult = self._files.search(image_to_remove)
+        if image_removed != "":
+            search_result: ImageSearchResult = self._files.search(image_removed)
             if search_result.found:
                 self.remove_image(search_result.index)
 
-        if image_to_add != "":
+        if image_added != "":
             preserve_index: _ShouldPreserveIndex = (
                 _ShouldPreserveIndex.IF_INSERTED_AT_OR_BEFORE
-                if image_to_remove == ""
+                if image_removed == ""
                 else _ShouldPreserveIndex.NO
             )
-            self.add_new_image(image_to_add, preserve_index)
+            self.add_new_image(image_added, preserve_index)
         else:
             self._update_after_move_or_edit()
 

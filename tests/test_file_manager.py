@@ -142,9 +142,9 @@ def test_undo(file_manager: ImageFileManager):
     ):
         assert not file_manager.undo_most_recent_action()
 
-    file_to_restore = "b.png"
-    file_to_remove = file_manager._files[0].name
-    mock_undo_response = UndoResponse(file_to_restore, file_to_remove)
+    file_restored = "b.png"
+    file_removed = file_manager._files[0].name
+    mock_undo_response = UndoResponse(file_restored, file_removed)
     with (
         patch.object(ImageFileManager, "_confirm_undo", return_value=True),
         patch.object(
@@ -154,7 +154,7 @@ def test_undo(file_manager: ImageFileManager):
         file_manager.action_undoer = ActionUndoer()
         assert file_manager.undo_most_recent_action()
         assert len(file_manager._files) == 1
-        assert file_manager._files[0].name == file_to_restore
+        assert file_manager._files[0].name == file_restored
         assert file_manager._files.display_index == 0
 
         mock_undo.assert_called_once()
