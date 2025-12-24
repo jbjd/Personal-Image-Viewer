@@ -11,7 +11,7 @@ from image_viewer.ui.canvas import CustomCanvas
 
 
 class IconImages:
-    """Icons for on-screen buttons with a defualt and a hovered image."""
+    """Icons for on-screen buttons with a default and a hovered image."""
 
     __slots__ = ("default", "hovered")
 

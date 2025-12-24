@@ -5,8 +5,8 @@ import re
 import sys
 from collections import defaultdict
 
-from personal_python_ast_optimizer.regex.classes import RegexReplacement
 from personal_python_ast_optimizer.parser.config import ConstantValue
+from personal_python_ast_optimizer.regex.classes import RegexReplacement
 from PIL.AvifImagePlugin import DECODE_CODEC_CHOICE
 from PIL.DdsImagePlugin import DDS_MAGIC
 from PIL.GimpGradientFile import EPSILON
