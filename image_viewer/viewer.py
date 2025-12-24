@@ -415,7 +415,7 @@ class ViewerApp:
         self, direction: ZoomDirection | None, rotation: Rotation | None
     ) -> None:
         """Loads zoomed image and updates display"""
-        if direction is None and rotation is None:
+        if __debug__ and direction is None and rotation is None:
             raise ValueError
 
         zoomed_image: Image | None = self.image_loader.get_zoomed_or_rotated_image(
@@ -677,7 +677,9 @@ class ViewerApp:
         else:
             self._update_existing_image_display(frame.image)
             elapsed: int = round((perf_counter() - start) * 1000)
-            ms_until_next_frame = max(frame.ms_until_next_frame - elapsed, 1)
+
+            # Tkinter handles negative values
+            ms_until_next_frame = frame.ms_until_next_frame - elapsed
 
         self.animation_loop(ms_until_next_frame, ms_backoff)
 

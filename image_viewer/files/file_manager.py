@@ -258,8 +258,6 @@ class ImageFileManager:
             )
         else:
             result = self._rename(original_path, new_path)
-            self._files.remove_current_image()
-            self.image_cache.update_key(self.path_to_image, new_path)
 
         self.action_undoer.append(result)
 
@@ -322,33 +320,34 @@ class ImageFileManager:
         self, original_path: str, new_full_path: str, new_format: str
     ) -> Convert:
         """Asks user to delete old file and returns Convert result"""
-        deleted: bool = False
-
-        if askyesno(
+        delete: bool = askyesno(
             "Confirm deletion",
             f"Converted file to {new_format}, delete old file?",
-        ):
+        )
+
+        if delete:
             try:
                 self.trash_current_image()
             except IndexError:
                 pass  # even if no images left, a new one will be added after this
-            deleted = True
 
-        return Convert(original_path, new_full_path, deleted)
+        return Convert(original_path, new_full_path, delete)
 
     def _rename(self, original_path: str, new_path: str) -> Rename:
         """Renames a file and returns the rename result"""
         os.rename(original_path, new_path)
+        self._files.remove_current_image()
+        self.image_cache.update_key(self.path_to_image, new_path)
         return Rename(original_path, new_path)
 
     @staticmethod
     def _should_preserve_index_on_rename(result: Rename) -> bool:
-        """Returns True when image list shifted or changed size so index
-        needs to be changed to keep on the same image"""
-        if isinstance(result, Convert):
-            return not result.original_file_deleted
+        """Index must be perserved when a new image was added due to a conversion
+        occuring.
 
-        return False
+        :param result: A rename result which may have resulted in a conversion.
+        :returns: If index must be preserved."""
+        return isinstance(result, Convert) and not result.original_file_deleted
 
     def add_new_image(
         self,
@@ -384,21 +383,21 @@ class ImageFileManager:
         except OSError:
             return False  # TODO: error popup?
 
-        image_to_add: str = os.path.basename(undo_response.path_to_restore)
-        image_to_remove: str = os.path.basename(undo_response.path_to_remove)
+        image_added: str = os.path.basename(undo_response.path_restored)
+        image_removed: str = os.path.basename(undo_response.path_removed)
 
-        if image_to_remove != "":
-            search_result: ImageSearchResult = self._files.search(image_to_remove)
+        if image_removed != "":
+            search_result: ImageSearchResult = self._files.search(image_removed)
             if search_result.found:
                 self.remove_image(search_result.index)
 
-        if image_to_add != "":
+        if image_added != "":
             preserve_index: _ShouldPreserveIndex = (
                 _ShouldPreserveIndex.IF_INSERTED_AT_OR_BEFORE
-                if image_to_remove == ""
+                if image_removed == ""
                 else _ShouldPreserveIndex.NO
             )
-            self.add_new_image(image_to_add, preserve_index)
+            self.add_new_image(image_added, preserve_index)
         else:
             self._update_after_move_or_edit()
 

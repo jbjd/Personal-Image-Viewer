@@ -84,11 +84,11 @@ def _assert_correct_undo_response(action: FileAction, undo_response: UndoRespons
     # pylint: disable=unidiomatic-typecheck
 
     if type(action) is Delete:
-        assert not undo_response.path_to_remove
+        assert not undo_response.path_removed
     else:
-        assert undo_response.path_to_remove
+        assert undo_response.path_removed
 
     if type(action) is Convert and not action.original_file_deleted:
-        assert not undo_response.path_to_restore
+        assert not undo_response.path_restored
     else:
-        assert undo_response.path_to_restore
+        assert undo_response.path_restored
