@@ -34,6 +34,11 @@ def test_max_length():
     assert len(action_undoer) == max_length
 
 
+def test_get_message_when_empty():
+    action_undoer = ActionUndoer()
+    assert action_undoer.get_undo_message() is None
+
+
 @pytest.mark.parametrize(
     "action",
     [
@@ -48,7 +53,6 @@ def test_undo_action(action: FileAction):
     # pylint: disable=unidiomatic-typecheck
 
     action_undoer = ActionUndoer()
-    assert action_undoer.get_undo_message() is None
 
     action_undoer.append(action)
     assert action_undoer.get_undo_message()
