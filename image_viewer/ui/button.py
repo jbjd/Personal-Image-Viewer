@@ -1,6 +1,5 @@
 """Classes representing button UI elements"""
 
-from collections import namedtuple
 from tkinter import Event
 from typing import Callable, override
 
@@ -11,11 +10,14 @@ from image_viewer.ui.base import ButtonUIElementBase
 from image_viewer.ui.canvas import CustomCanvas
 
 
-class IconImages(namedtuple("IconImages", ["default", "hovered"])):
-    """Tuple with default and hovered icons for on-screen buttons"""
+class IconImages:
+    """Icons for on-screen buttons with a defualt and a hovered image."""
 
-    default: PhotoImage
-    hovered: PhotoImage
+    __slots__ = ("default", "hovered")
+
+    def __init__(self, default: PhotoImage, hovered: PhotoImage) -> None:
+        self.default = default
+        self.hovered = hovered
 
 
 class HoverableButtonUIElement(ButtonUIElementBase):
@@ -42,8 +44,7 @@ class HoverableButtonUIElement(ButtonUIElementBase):
         :param x_offset: The on-screen X offset.
         :param y_offset: The on-screen Y offset."""
 
-        # Mypy can't see this is in super's slots
-        self.id = self.canvas.create_button(  # type: ignore
+        self.id = self.canvas.create_button(
             self,
             name,
             x_offset,
@@ -56,9 +57,8 @@ class HoverableButtonUIElement(ButtonUIElementBase):
         self.canvas.tag_bind(self.id, "<ButtonRelease-1>", self.on_click)
 
     @override
-    def on_click(self, _: Event | None = None) -> None:
+    def on_click(self, event: Event | None = None) -> None:
         """Calls the on-click function."""
-
         self.on_click_function()
 
     @override
@@ -108,7 +108,7 @@ class ToggleableButtonUIElement(HoverableButtonUIElement):
         self.is_active: bool = False
 
     @override
-    def on_click(self, _: Event | None = None) -> None:
+    def on_click(self, event: Event | None = None) -> None:
         """Toggles between active state and calls the on-click function."""
         self.is_active = not self.is_active
         self.on_enter()  # fake mouse hover
