@@ -62,7 +62,7 @@ class ActionUndoer(deque[FileAction]):
         :returns: A friendly message or None if self is empty."""
         # pylint: disable=unidiomatic-typecheck
 
-        if len(self) == 0:
+        if not self:
             return None
 
         action: FileAction = self[-1]
