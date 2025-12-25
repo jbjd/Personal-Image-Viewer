@@ -10,8 +10,9 @@ from image_viewer.ui.button_icon_factory import ButtonIconFactory
 
 def _assert_icons_type(icons: IconImages):
     """Asserts icons are expected types."""
-    icon, icon_hovered = icons
-    assert isinstance(icon, PhotoImage) and isinstance(icon_hovered, PhotoImage)
+    assert isinstance(icons.default, PhotoImage) and isinstance(
+        icons.hovered, PhotoImage
+    )
 
 
 def test_create_icons(
