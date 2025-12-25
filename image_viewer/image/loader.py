@@ -12,7 +12,6 @@ from image_viewer.animation.frame import Frame
 from image_viewer.constants import Rotation, ZoomDirection
 from image_viewer.image._read import CMemoryViewBuffer, read_image_into_buffer
 from image_viewer.image.cache import ImageCache, ImageCacheEntry
-from image_viewer.image.file import magic_number_guess
 from image_viewer.image.resizer import ImageResizer, ZoomedImageResult
 from image_viewer.state.rotation_state import RotationState
 from image_viewer.state.zoom_state import ZoomState
@@ -117,10 +116,9 @@ class ImageLoader:
                 return None
 
             image_bytes_io = BytesIO(image_buffer.view)
-            expected_format: str = magic_number_guess(image_buffer.view[:4].tobytes())
-            image: Image = open_image(image_bytes_io, "r", (expected_format,))
+            image: Image = open_image(image_bytes_io, "r", (image_buffer.format_guess,))
 
-            return ReadImageResponse(image_buffer, image, expected_format)
+            return ReadImageResponse(image_buffer, image, image_buffer.format_guess)
         except (FileNotFoundError, UnidentifiedImageError, OSError):
             return None
 

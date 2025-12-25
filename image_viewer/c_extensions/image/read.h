@@ -7,6 +7,7 @@ typedef struct
     char *buffer;
     unsigned long bufferSize;
     PyObject *view;
+    char formatGuess[5];
 } CMemoryViewBuffer;
 
 typedef struct

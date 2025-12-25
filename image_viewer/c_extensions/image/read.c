@@ -10,6 +10,7 @@
 // CMemoryViewBuffer Start
 static PyMemberDef CMemoryViewBuffer_members[] = {
     {"byte_size", Py_T_ULONG, offsetof(CMemoryViewBuffer, bufferSize), Py_READONLY, 0},
+    {"format_guess", Py_T_STRING_INPLACE, offsetof(CMemoryViewBuffer, formatGuess), Py_READONLY, 0},
     {"view", Py_T_OBJECT_EX, offsetof(CMemoryViewBuffer, view), Py_READONLY, 0},
     {NULL}};
 
@@ -29,12 +30,35 @@ static PyTypeObject CMemoryViewBuffer_Type = {
     .tp_members = CMemoryViewBuffer_members,
 };
 
+static inline void _magic_number_guess(CMemoryViewBuffer *view_buffer)
+{
+    if (strncmp(view_buffer->buffer, "\x89PNG", 4) == 0){
+        strcpy(view_buffer->formatGuess, "png");
+    }
+    else if (strncmp(view_buffer->buffer, "RIFF", 4) == 0){
+        strcpy(view_buffer->formatGuess, "webp");
+    }
+    else if (strncmp(view_buffer->buffer, "GIF8", 4) == 0){
+        strcpy(view_buffer->formatGuess, "gif");
+    }
+    else if (strncmp(view_buffer->buffer, "DDS ", 4) == 0){
+        strcpy(view_buffer->formatGuess, "dds");
+    }
+    else if (strncmp(view_buffer->buffer, "\xff\xd8\xff", 3) == 0){
+        strcpy(view_buffer->formatGuess, "jpeg");
+    }
+    else{
+        strcpy(view_buffer->formatGuess, "avif");
+    }
+}
+
 static inline CMemoryViewBuffer *CMemoryViewBuffer_New(PyObject *pyMemoryView, char *buffer, unsigned long bufferSize)
 {
     CMemoryViewBuffer *cMemoryBuffer = (CMemoryViewBuffer *)PyObject_New(CMemoryViewBuffer, &CMemoryViewBuffer_Type);
     cMemoryBuffer->view = pyMemoryView;
     cMemoryBuffer->buffer = buffer;
     cMemoryBuffer->bufferSize = bufferSize;
+    _magic_number_guess(cMemoryBuffer);
 
     return cMemoryBuffer;
 }

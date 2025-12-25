@@ -5,9 +5,10 @@ class CMemoryViewBuffer:
 
     Contains a memoryview object to malloc'ed C data."""
 
-    __slots__ = ("byte_size", "view")
+    __slots__ = ("byte_size", "format_guess", "view")
 
     byte_size: int
+    format_guess: str
     view: memoryview
 
 class CMemoryViewBufferJpeg(CMemoryViewBuffer):
