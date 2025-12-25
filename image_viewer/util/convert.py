@@ -13,12 +13,13 @@ from image_viewer.util.PIL import image_is_animated, save_image
 def try_convert_file_and_save_new(
     old_path: str, new_path: str, target_format: str
 ) -> bool:
-    """Tries to convert image at old_path to a target format saved at new_path
+    """Tries to convert image at old_path to a target format at new_path.
 
-    Returns True if conversion performed,
-    False if converting to the same type or an invalid format
-
-    Raises ValueError if converting animated file to non-animated format"""
+    :param old_path: Existing path to an image.
+    :apram new_path: Path to save the new image to.
+    :param target_format: Format to convert to.
+    :returns: bool if conversion performed successfully.
+    :raises ValueError: If converting animated file to non-animated format."""
 
     target_format = target_format.lower()
 
@@ -42,9 +43,13 @@ def try_convert_file_and_save_new(
                 target_format = "jpeg"
                 if temp_img.mode not in VALID_JPEG_MODES:
                     temp_img = temp_img.convert("RGB")
-            elif target_format == "gif":
+            elif (
+                target_format == "gif"
+                and original_ext == "webp"
+                and "background" in temp_img.info
+            ):
                 # This pop fixes missing bitmap error during webp -> gif conversion
-                temp_img.info.pop("background", None)
+                del temp_img.info["background"]
 
             save_image(
                 temp_img,
