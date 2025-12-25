@@ -16,7 +16,7 @@ static PyMemberDef CMemoryViewBuffer_members[] = {
 static void CMemoryViewBuffer_dealloc(CMemoryViewBuffer *self)
 {
     free(self->buffer);
-    Py_XDECREF(self->view);
+    Py_DECREF(self->view);
     Py_TYPE(self)->tp_free((PyObject *)self);
 }
 
@@ -48,7 +48,7 @@ static PyMemberDef CMemoryViewBufferJpeg_members[] = {
 static void CMemoryViewBufferJpeg_dealloc(CMemoryViewBufferJpeg *self)
 {
     Py_XDECREF(self->dimensions);
-    Py_TYPE(self)->tp_free((PyObject *)self);
+    CMemoryViewBuffer_dealloc((CMemoryViewBuffer *)self);
 }
 
 static PyTypeObject CMemoryViewBufferJpeg_Type = {
