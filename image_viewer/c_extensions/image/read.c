@@ -33,22 +33,22 @@ static PyTypeObject CMemoryViewBuffer_Type = {
 static inline void _magic_number_guess(CMemoryViewBuffer *view_buffer)
 {
     if (strncmp(view_buffer->buffer, "\x89PNG", 4) == 0){
-        strcpy(view_buffer->formatGuess, "png");
+        strcpy(view_buffer->formatGuess, "PNG");
     }
     else if (strncmp(view_buffer->buffer, "RIFF", 4) == 0){
-        strcpy(view_buffer->formatGuess, "webp");
+        strcpy(view_buffer->formatGuess, "WebP");
     }
     else if (strncmp(view_buffer->buffer, "GIF8", 4) == 0){
-        strcpy(view_buffer->formatGuess, "gif");
+        strcpy(view_buffer->formatGuess, "GIF");
     }
     else if (strncmp(view_buffer->buffer, "DDS ", 4) == 0){
-        strcpy(view_buffer->formatGuess, "dds");
+        strcpy(view_buffer->formatGuess, "DDS");
     }
     else if (strncmp(view_buffer->buffer, "\xff\xd8\xff", 3) == 0){
-        strcpy(view_buffer->formatGuess, "jpeg");
+        strcpy(view_buffer->formatGuess, "JPEG");
     }
     else{
-        strcpy(view_buffer->formatGuess, "avif");
+        strcpy(view_buffer->formatGuess, "AVIF");
     }
 }
 
