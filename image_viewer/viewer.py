@@ -550,7 +550,7 @@ class ViewerApp:
     def rename_or_convert(self, _: Event) -> None:
         """Tries to rename or convert current image based on input.
         Makes window flash red if operation failed"""
-        user_input: str = self.rename_entry.get()
+        user_input: str = self.rename_entry.get().strip()
         if user_input == "":
             return
         try:

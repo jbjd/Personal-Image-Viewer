@@ -5,14 +5,22 @@ import re
 import sys
 from collections import defaultdict
 
+from personal_python_ast_optimizer.parser.config import ConstantValue
 from personal_python_ast_optimizer.regex.classes import RegexReplacement
 from PIL.AvifImagePlugin import DECODE_CODEC_CHOICE
+from PIL.DdsImagePlugin import DDS_MAGIC
+from PIL.GimpGradientFile import EPSILON
 
 from compile_utils.constants import IMAGE_VIEWER_NAME
 from image_viewer.animation.frame import DEFAULT_ANIMATION_SPEED_MS
-from image_viewer.config import DEFAULT_BACKGROUND_COLOR, DEFAULT_MAX_ITEMS_IN_CACHE
+from image_viewer.config import (
+    DEFAULT_BACKGROUND_COLOR,
+    DEFAULT_FONT,
+    DEFAULT_MAX_ITEMS_IN_CACHE,
+)
 from image_viewer.constants import TEXT_RGB
 from image_viewer.image.resizer import JPEG_MAX_DIMENSION
+from image_viewer.ui.rename_entry import _ERROR_COLOR
 
 # Increment when edits to this file or module_dependencies are merged into main
 SKIP_ITERATION: int = 0
@@ -178,20 +186,24 @@ decorators_to_skip: dict[str, set[str]] = {}
 module_imports_to_skip: dict[str, set[str]] = {}
 
 
-vars_to_fold: defaultdict[str, dict[str, int | str]] = defaultdict(
+vars_to_fold: defaultdict[str, dict[str, ConstantValue]] = defaultdict(
     dict,
     {
         IMAGE_VIEWER_NAME: {
             "__debug__": False,
             "__name__": "__main__",
+            "_ERROR_COLOR": _ERROR_COLOR,
             "DEFAULT_ANIMATION_SPEED_MS": DEFAULT_ANIMATION_SPEED_MS,
             "DEFAULT_BACKGROUND_COLOR": DEFAULT_BACKGROUND_COLOR,
+            "DEFAULT_FONT": DEFAULT_FONT,
             "DEFAULT_MAX_ITEMS_IN_CACHE": DEFAULT_MAX_ITEMS_IN_CACHE,
             "JPEG_MAX_DIMENSION": JPEG_MAX_DIMENSION,
             "TEXT_RGB": TEXT_RGB,
         },
         "PIL": {
             "DECODE_CODEC_CHOICE": DECODE_CODEC_CHOICE,
+            "DDS_MAGIC": DDS_MAGIC,
+            "EPSILON": EPSILON,
             "SUPPORTED": True,
             "TYPE_CHECKING": False,
         },
