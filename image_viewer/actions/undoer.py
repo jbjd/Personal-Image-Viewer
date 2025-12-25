@@ -30,7 +30,7 @@ class ActionUndoer(deque[FileAction]):
 
     def undo(self) -> UndoResponse:
         """Undoes most recent action. Files will be renamed, trashed, and or restored
-        from trash to match the expected file state before the action occured.
+        from trash to match the expected file state before the action occurred.
 
         :returns: An UndoResponse with the restored/removed file paths if any."""
         # pylint: disable=unidiomatic-typecheck
@@ -62,7 +62,7 @@ class ActionUndoer(deque[FileAction]):
         :returns: A friendly message or None if self is empty."""
         # pylint: disable=unidiomatic-typecheck
 
-        if len(self) == 0:
+        if not self:
             return None
 
         action: FileAction = self[-1]

@@ -147,3 +147,22 @@ def test_update_details_dropdown(
             viewer.dropdown.id, state="hidden"
         )
         assert viewer.dropdown.need_refresh == dropdown_needs_refresh  # Didn't change
+
+
+@pytest.mark.parametrize("input", (" ", "something.png"))
+def test_rename_or_convert(viewer: ViewerApp, input: str):
+
+    event = MagicMock()
+    with (
+        patch("image_viewer.viewer.RenameEntry.get", return_value=input),
+        patch(
+            "image_viewer.viewer.ImageFileManager.rename_or_convert_current_image"
+        ) as mock_rename_or_convert_current_image,
+    ):
+        viewer.rename_or_convert(event)
+
+        stripped_input: str = input.strip()
+        if stripped_input == "":
+            mock_rename_or_convert_current_image.assert_not_called()
+        else:
+            mock_rename_or_convert_current_image.assert_called_once_with(stripped_input)
