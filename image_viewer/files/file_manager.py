@@ -342,8 +342,8 @@ class ImageFileManager:
 
     @staticmethod
     def _should_preserve_index_on_rename(result: Rename) -> bool:
-        """Index must be perserved when a new image was added due to a conversion
-        occuring.
+        """Index must be preserved when a new image was added due to a conversion
+        occurring.
 
         :param result: A rename result which may have resulted in a conversion.
         :returns: If index must be preserved."""

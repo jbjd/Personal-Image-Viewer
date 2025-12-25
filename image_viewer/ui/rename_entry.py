@@ -4,13 +4,13 @@ from typing import Literal
 from image_viewer.constants import TEXT_RGB
 from image_viewer.ui.base import UIElementBase
 
+_ERROR_COLOR: str = "#E6505F"
+
 
 class RenameEntry(Entry, UIElementBase):
     """Entry for use in a rename window"""
 
-    ERROR_COLOR: str = "#E6505F"
-
-    __slots__ = ("being_resized", "cursor", "min_width", "text")
+    __slots__ = ("being_resized", "min_width", "text")
 
     def __init__(
         self, master: Tk, canvas: Canvas, id: int, min_width: int, font: str
@@ -30,7 +30,6 @@ class RenameEntry(Entry, UIElementBase):
         canvas.itemconfigure(self.id, state="hidden", window=self)
 
         self.being_resized: bool = False
-        self.cursor: str = ""
         self.min_width: int = min_width
 
         # ensure ctrl+c is processed outside of this program
@@ -52,30 +51,24 @@ class RenameEntry(Entry, UIElementBase):
 
     def _stop_resize(self, _: Event) -> None:
         """Re-allows input when resize event ends"""
-        self.config(state="normal")
+        self.configure(state="normal")
         self.being_resized = False
 
     def _resize(self, canvas: Canvas, new_width: int) -> None:
         """Handles dragging to resize rename window"""
         if self.being_resized:
-            self.config(state="disabled")
+            self.configure(state="disabled")
             max_width: int = self.min_width << 1
             if self.min_width <= new_width <= max_width:
-                self.config(width=new_width)
+                self.configure(width=new_width)
                 canvas.itemconfig(self.id, width=new_width)
         else:
             cursor: Literal["sb_h_double_arrow", ""] = (
                 "sb_h_double_arrow" if self.mouse_can_resize(new_width) else ""
             )
-            if cursor != self.cursor:
-                self.config(cursor=cursor)
-                self.cursor = cursor
-
-    def get(self) -> str:
-        """Gets stripped text from Entry"""
-        return super().get().strip()
+            self.configure(cursor=cursor)
 
     def error_flash(self) -> None:
         """Makes Entry flash red"""
-        self.config(bg=self.ERROR_COLOR)
-        self.master.after(400, lambda: self.config(bg=TEXT_RGB))
+        self.configure(bg=_ERROR_COLOR)
+        self.master.after(400, lambda: self.configure(bg=TEXT_RGB))

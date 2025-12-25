@@ -99,7 +99,7 @@ else:  # assume linux for now
         return _split_str_at_index(file_name, suffix_start)
 
     def get_files_in_folder(folder_path: str) -> Iterator[str]:
-        """Yields each file in a folder. Edited version of OS module implementaiton.
+        """Yields each file in a folder. Edited version of OS module implementation.
 
         :params folder_path: A path to a folder.
         :returns: The iterator over that folder."""
@@ -163,7 +163,7 @@ def restore_file(path: str) -> None:
 
 
 def get_normalized_folder_name(path: str) -> str:
-    """Nomalizes a folders name.
+    """Normalizes a folders name.
 
     :param path: A path.
     :returns: Normalized version of the path."""

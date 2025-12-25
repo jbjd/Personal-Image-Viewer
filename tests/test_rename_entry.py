@@ -2,13 +2,8 @@ from unittest.mock import patch
 
 from image_viewer.constants import TEXT_RGB
 from image_viewer.ui.canvas import CustomCanvas
-from image_viewer.ui.rename_entry import RenameEntry
+from image_viewer.ui.rename_entry import _ERROR_COLOR, RenameEntry
 from tests.test_util.mocks import MockEvent
-
-
-def test_get(rename_entry: RenameEntry):
-    rename_entry.insert(0, "  Test   ")
-    assert rename_entry.get() == "Test"
 
 
 def test_error_flash(rename_entry: RenameEntry):
@@ -19,7 +14,7 @@ def test_error_flash(rename_entry: RenameEntry):
     rename_entry.master.after = lambda *_: None  # type: ignore
     rename_entry.error_flash()
     current_background: str = rename_entry.config()["background"][4]  # type: ignore
-    assert current_background == rename_entry.ERROR_COLOR
+    assert current_background == _ERROR_COLOR
 
     # If we force no delay for testing, it should go back to white immediately
     rename_entry.master.after = lambda _, callback: callback()  # type: ignore
