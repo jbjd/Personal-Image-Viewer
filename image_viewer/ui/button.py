@@ -59,6 +59,7 @@ class HoverableButtonUIElement(ButtonUIElementBase):
     @override
     def on_click(self, event: Event | None = None) -> None:
         """Calls the on-click function."""
+
         self.on_click_function()
 
     @override
