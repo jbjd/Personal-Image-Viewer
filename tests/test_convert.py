@@ -1,4 +1,4 @@
-from unittest.mock import mock_open, patch
+from unittest.mock import patch
 
 import pytest
 
@@ -14,31 +14,23 @@ def mock_open_image(_: str) -> MockImage:
 
 
 def mock_open_animated_image(_: str) -> MockImage:
-    image = MockImage(8)
+    image = MockImage(n_frames=8)
     return image
 
 
 def test_animated_to_not_animated():
+    """Should raise ValueError when converted animated image to a unsupported format."""
     with (
         patch(f"{_MODULE_PATH}.open_image", mock_open_animated_image),
-        patch(f"{_MODULE_PATH}.magic_number_guess", lambda _: "GIF"),
-        patch("builtins.open", mock_open()),
         pytest.raises(ValueError),
     ):
-        try_convert_file_and_save_new("asdf.gif", "hjkl.jpg", "jpg")
+        try_convert_file_and_save_new("asdf.gif", "hjkl.jpg", "GIF", "jpg")
 
 
-def test_convert_jpeg():
-    with (
-        patch(f"{_MODULE_PATH}.open_image", mock_open_image),
-        patch("builtins.open", mock_open()),
-    ):
-        # will not convert if jpeg variant
-        with patch(f"{_MODULE_PATH}.magic_number_guess", lambda _: ImageFormats.JPEG):
-            assert not try_convert_file_and_save_new("old.jpg", "new.jpe", "jpe")
-        # otherwise will succeed
-        with patch(f"{_MODULE_PATH}.magic_number_guess", lambda _: ImageFormats.PNG):
-            assert try_convert_file_and_save_new("old.png", "new.jpg", "jpg")
+def test_jpeg_to_jpeg_variant():
+    """Should return False when converting between jpeg variants like jpg and jpe."""
+    with patch(f"{_MODULE_PATH}.open_image", mock_open_image):
+        assert not try_convert_file_and_save_new("old.jpg", "new.jpe", "jpg", "jpe")
 
 
 @pytest.mark.parametrize(
@@ -56,25 +48,14 @@ def test_convert_jpeg():
 def test_convert_between_types(true_file_extension: str, target_format: str):
     """Should attempt conversion unless image is already target format, ignoring
     the file format in the path and using the format in the files magic bytes"""
-    with (
-        patch(f"{_MODULE_PATH}.open_image", mock_open_image),
-        patch("builtins.open", mock_open()),
-        patch(f"{_MODULE_PATH}.magic_number_guess", return_value=true_file_extension),
-    ):
+    with patch(f"{_MODULE_PATH}.open_image", mock_open_image):
         converted: bool = try_convert_file_and_save_new(
-            "old.png", f"new.{target_format}", target_format
+            "old.png", "new.jpg", true_file_extension, target_format
         )
-        if true_file_extension == target_format:
-            assert not converted
-        else:
-            assert converted
+        assert converted is (true_file_extension != target_format)
 
 
 def test_convert_to_bad_type():
-    """Should return False if an invalid image extension is passed"""
-    with (
-        patch(f"{_MODULE_PATH}.open_image", mock_open_image),
-        patch("image_viewer.image.file.magic_number_guess", lambda _: "JPEG"),
-        patch("builtins.open", mock_open()),
-    ):
-        assert not try_convert_file_and_save_new("old.jpg", "new.txt", "txt")
+    """Should return False if an invalid image extension is passed."""
+    with patch(f"{_MODULE_PATH}.open_image", mock_open_image):
+        assert not try_convert_file_and_save_new("old.jpg", "new.txt", "PNG", "txt")

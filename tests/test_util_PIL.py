@@ -3,7 +3,6 @@ from unittest.mock import MagicMock, patch
 from PIL.Image import Image, new
 
 from image_viewer.config import DEFAULT_FONT
-from image_viewer.constants import ImageFormats
 from image_viewer.image.file import ImageName
 from image_viewer.util.PIL import (
     _preinit,
@@ -82,9 +81,9 @@ def test_preinit():
         "PIL.DdsImagePlugin",
     }
 
-    assert len(supported_formats) == len(
-        ImageFormats
-    ), "Test not accounting for all supported formats"
+    assert (
+        len(supported_formats) == 6
+    ), "_preinit not accounting for all supported formats"
 
     mock_import = MagicMock()
     mock_register_open = MagicMock()

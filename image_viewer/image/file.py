@@ -4,7 +4,7 @@ Deals with storing known image file paths and determining their true file extens
 
 from typing import Iterable
 
-from image_viewer.constants import ImageFormats, Movement
+from image_viewer.constants import Movement
 from image_viewer.util.os import os_name_compare
 
 
@@ -130,26 +130,3 @@ class ImageNameList(list[ImageName]):
                 low = mid + 1
 
         return ImageSearchResult(index=low, found=False)
-
-
-def magic_number_guess(magic: bytes) -> str:
-    """Given a 4 byte long sequence representing an image's magic bytes,
-    guess what image it represents. Defaults to AVIF since its the
-    only supported image format where the magic is not the first 4 bytes.
-
-    :param magic: The 4 byte long magic number at the start of an image file.
-    :returns: The format this magic most likely represents."""
-
-    match magic:
-        case b"\x89PNG":
-            return ImageFormats.PNG
-        case b"RIFF":
-            return ImageFormats.WEBP
-        case b"GIF8":
-            return ImageFormats.GIF
-        case b"DDS ":
-            return ImageFormats.DDS
-        case _:
-            return (
-                ImageFormats.JPEG if magic[:3] == b"\xff\xd8\xff" else ImageFormats.AVIF
-            )

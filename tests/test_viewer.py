@@ -153,6 +153,10 @@ def test_update_details_dropdown(
 def test_rename_or_convert(viewer: ViewerApp, input: str):
 
     event = MagicMock()
+    image_loader = MagicMock()
+    image_loader.image_buffer = MagicMock()
+    image_loader.image_buffer.format_guess = "png"
+    viewer.image_loader = image_loader
     with (
         patch("image_viewer.viewer.RenameEntry.get", return_value=input),
         patch(
@@ -165,4 +169,6 @@ def test_rename_or_convert(viewer: ViewerApp, input: str):
         if stripped_input == "":
             mock_rename_or_convert_current_image.assert_not_called()
         else:
-            mock_rename_or_convert_current_image.assert_called_once_with(stripped_input)
+            mock_rename_or_convert_current_image.assert_called_once_with(
+                stripped_input, image_loader.image_buffer.format_guess
+            )

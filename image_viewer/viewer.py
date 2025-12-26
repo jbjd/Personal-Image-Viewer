@@ -554,7 +554,9 @@ class ViewerApp:
         if user_input == "":
             return
         try:
-            self.file_manager.rename_or_convert_current_image(user_input)
+            self.file_manager.rename_or_convert_current_image(
+                user_input, self.image_loader.image_buffer.format_guess
+            )
         except (OSError, FileExistsError, ValueError):
             self.rename_entry.error_flash()
             return
