@@ -49,6 +49,9 @@ endif
 build-util-generic:
 	gcc $(C_SOURCE)/util/generic.c $(C_FLAGS_SHARED) -o image_viewer/util/_generic.$(COMPILED_EXT) -Wl,-Bstatic,-Bsymbolic -ltre -Wl,-Bdynamic
 
+build-util-abstact-classes:
+	gcc $(C_SOURCE)/util/abstract_classes.c $(C_FLAGS_SHARED) -o image_viewer/util/_abstract_classes.$(COMPILED_EXT)
+
 
 ifeq ($(OS),Windows_NT)
     C_JPEG_FLAGS = -static-libgcc -Wl,-Bstatic,--whole-archive -lwinpthread -Wl,--no-whole-archive -lturbojpeg -Wl,-Bdynamic

@@ -9,8 +9,8 @@
 
 // CMemoryViewBuffer Start
 static PyMemberDef CMemoryViewBuffer_members[] = {
-    {"byte_size", Py_T_ULONG, offsetof(CMemoryViewBuffer, bufferSize), Py_READONLY, 0},
-    {"view", Py_T_OBJECT_EX, offsetof(CMemoryViewBuffer, view), Py_READONLY, 0},
+    {"byte_size", Py_T_ULONG, offsetof(CMemoryViewBuffer, bufferSize), Py_READONLY, NULL},
+    {"view", Py_T_OBJECT_EX, offsetof(CMemoryViewBuffer, view), Py_READONLY, NULL},
     {NULL}};
 
 static void CMemoryViewBuffer_dealloc(CMemoryViewBuffer *self)
@@ -42,7 +42,7 @@ static inline CMemoryViewBuffer *CMemoryViewBuffer_New(PyObject *pyMemoryView, c
 
 // CMemoryViewBufferJpeg End
 static PyMemberDef CMemoryViewBufferJpeg_members[] = {
-    {"dimensions", Py_T_OBJECT_EX, offsetof(CMemoryViewBufferJpeg, dimensions), Py_READONLY, 0},
+    {"dimensions", Py_T_OBJECT_EX, offsetof(CMemoryViewBufferJpeg, dimensions), Py_READONLY, NULL},
     {NULL}};
 
 static void CMemoryViewBufferJpeg_dealloc(CMemoryViewBufferJpeg *self)
