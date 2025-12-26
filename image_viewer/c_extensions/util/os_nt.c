@@ -423,7 +423,7 @@ static PyMethodDef os_methods[] = {
 static struct PyModuleDef os_module = {
     PyModuleDef_HEAD_INIT,
     "_os_nt",
-    "Python interface for functions interacting with the Windows API written in C",
+    NULL,
     -1,
     os_methods};
 
