@@ -24,7 +24,7 @@ static int UIElementBase_init(UIElementBase *self, PyObject *args, PyObject *kwd
 
     if (id == NULL)
     {
-        return -1;
+        id = PyLong_FromLong(-1);
     }
 
     Py_XDECREF(self->id);
@@ -34,8 +34,14 @@ static int UIElementBase_init(UIElementBase *self, PyObject *args, PyObject *kwd
     return 0;
 }
 
+static PyTypeObject UIElementBase_Type;
 static PyObject *UIElementBase_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
 {
+    if (type == &UIElementBase_Type) {
+        PyErr_SetString(PyExc_TypeError, "Cannot instantiate abstract class UIElementBase");
+        return NULL;
+    }
+
     UIElementBase *self;
 
     self = (UIElementBase *)type->tp_alloc(type, 0);
