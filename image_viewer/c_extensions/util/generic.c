@@ -61,7 +61,7 @@ static PyMethodDef generic_methods[] = {
 static struct PyModuleDef generic_module = {
     PyModuleDef_HEAD_INIT,
     "_generic",
-    "Python interface for generic utility functions written in C",
+    NULL,
     -1,
     generic_methods};
 
