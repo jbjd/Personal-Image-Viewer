@@ -44,30 +44,24 @@ from compile_utils.validation import (
     validate_python_version,
 )
 
-WORKING_FOLDER: str = os.path.normpath(os.path.dirname(__file__))
-TARGET_MODULE: str = "main"
-TARGET_FILE: str = f"{TARGET_MODULE}.py"
-TMP_FOLDER: str = os.path.join(WORKING_FOLDER, "tmp")
-CUSTOM_NUITKA_FOLDER: str = os.path.join(WORKING_FOLDER, "nuitka")
-CODE_FOLDER: str = os.path.join(WORKING_FOLDER, IMAGE_VIEWER_NAME)
-COMPILE_FOLDER: str = os.path.join(WORKING_FOLDER, f"{TARGET_MODULE}.dist")
-BUILD_FOLDER: str = os.path.join(WORKING_FOLDER, f"{TARGET_MODULE}.build")
-
+DEFAULT_PYTHON: str
 EXECUTABLE_EXT: str
 DEFAULT_INSTALL_PATH: str
 ICON_RELATIVE_PATH: str
 
 if os.name == "nt":
+    DEFAULT_PYTHON = "python"
     EXECUTABLE_EXT = ".exe"
     DEFAULT_INSTALL_PATH = "C:/Program Files/Personal Image Viewer/"
     ICON_RELATIVE_PATH = "icon/icon.ico"
 else:
+    DEFAULT_PYTHON = "bin/python3"
     EXECUTABLE_EXT = ".bin"
     DEFAULT_INSTALL_PATH = "/usr/local/personal-image-viewer/"
     ICON_RELATIVE_PATH = "icon/icon.png"
 
 EXECUTABLE_NAME: str = "viewer" + EXECUTABLE_EXT
-FILES_TO_INCLUDE: list[str] = [ICON_RELATIVE_PATH, "image_viewer/config.ini"]
+files_to_include: list[str] = [ICON_RELATIVE_PATH, "image_viewer/config.ini"]
 
 parser = CompileArgumentParser(DEFAULT_INSTALL_PATH)
 
@@ -78,30 +72,41 @@ args, nuitka_args = parser.parse_known_args(modules_to_skip)
 if not args.debug and not args.skip_nuitka:
     raise_if_not_root("Need root privileges to compile and install")
 
+TARGET_MODULE: str = "main"
+TARGET_FILE: str = f"{TARGET_MODULE}.py"
+
+working_folder: str = os.path.normpath(os.path.dirname(__file__))
+tmp_folder: str = os.path.join(working_folder, "tmp")
+target_file_path: str = os.path.join(tmp_folder, TARGET_FILE)
+custom_nuitka_folder_path: str = os.path.join(working_folder, "nuitka")
+code_folder_path: str = os.path.join(working_folder, IMAGE_VIEWER_NAME)
+compile_folder_path: str = os.path.join(working_folder, f"{TARGET_MODULE}.dist")
+build_folder_path: str = os.path.join(working_folder, f"{TARGET_MODULE}.build")
+
 if os.name == "nt":
     nuitka_args += [
         NuitkaArgs.MINGW64,
         NuitkaArgs.WINDOWS_ICON_FROM_ICO.with_value(
-            os.path.join(WORKING_FOLDER, ICON_RELATIVE_PATH)
+            os.path.join(working_folder, ICON_RELATIVE_PATH)
         ),
     ]
 
-setup_custom_nuitka_install(CUSTOM_NUITKA_FOLDER)
+setup_custom_nuitka_install(custom_nuitka_folder_path)
 validate_python_version()
 validate_module_requirements()
 validate_PIL()
 
 _logger = setup_logging()
 
-os.makedirs(TMP_FOLDER, exist_ok=True)
+os.makedirs(tmp_folder, exist_ok=True)
 try:
     clean_file_and_copy(
-        f"{WORKING_FOLDER}/{TARGET_FILE}",
-        f"{TMP_FOLDER}/{TARGET_FILE}",
+        f"{working_folder}/{TARGET_FILE}",
+        target_file_path,
         IMAGE_VIEWER_NAME,
         f"{IMAGE_VIEWER_NAME}.{TARGET_MODULE}",
     )
-    move_files_to_tmp_and_clean(CODE_FOLDER, TMP_FOLDER, IMAGE_VIEWER_NAME)
+    move_files_to_tmp_and_clean(code_folder_path, tmp_folder, IMAGE_VIEWER_NAME)
 
     warn_unused_skips: bool = True
 
@@ -114,7 +119,7 @@ try:
             + "-"
             + str(SKIP_ITERATION)
         )
-        cached_iteration_path: str = os.path.join(TMP_FOLDER, module.name) + ".txt"
+        cached_iteration_path: str = os.path.join(tmp_folder, module.name) + ".txt"
 
         try:
             cached_iteration: str = read_file_utf8(cached_iteration_path)
@@ -140,21 +145,21 @@ try:
         if module_import_name == "PIL" and os.name != "nt":
             site_packages_path = os.path.dirname(module_folder_path)
             old_lib_path: str = os.path.join(site_packages_path, "pillow.libs")
-            new_lib_path: str = os.path.join(TMP_FOLDER, "pillow.libs")
+            new_lib_path: str = os.path.join(tmp_folder, "pillow.libs")
             delete_folder(new_lib_path)
             copy_folder(old_lib_path, new_lib_path)
 
         if module_folder_path.endswith("site-packages"):  # Its one file
             clean_file_and_copy(
                 module_file_path,
-                os.path.join(TMP_FOLDER, module_file),
+                os.path.join(tmp_folder, module_file),
                 module_import_name,
                 module_import_name,
             )
         else:  # Its a folder
-            delete_folder(os.path.join(TMP_FOLDER, module_import_name))
+            delete_folder(os.path.join(tmp_folder, module_import_name))
             move_files_to_tmp_and_clean(
-                module_folder_path, TMP_FOLDER, module_import_name, sub_modules_to_skip
+                module_folder_path, tmp_folder, module_import_name, sub_modules_to_skip
             )
 
         write_file_utf8(cached_iteration_path, cleaned_module_iteration)
@@ -165,30 +170,29 @@ try:
     if args.skip_nuitka:
         sys.exit(0)
 
-    delete_folder(COMPILE_FOLDER)
-    target_file_path: str = f"{TMP_FOLDER}/{TARGET_FILE}"
-    default_python: str = "python" if os.name == "nt" else "bin/python3"
-    python_path: str = os.path.join(sys.exec_prefix, default_python)
+    delete_folder(compile_folder_path)
+
+    python_path: str = os.path.join(sys.exec_prefix, DEFAULT_PYTHON)
     process: Popen = start_nuitka_compilation(
-        python_path, target_file_path, nuitka_args, WORKING_FOLDER
+        python_path, target_file_path, nuitka_args, working_folder
     )
 
     _logger.info("Waiting for nuitka compilation...")
 
-    install_path: str = args.install_path if not args.debug else COMPILE_FOLDER
+    install_path: str = args.install_path if not args.debug else compile_folder_path
 
     if process.wait():
         sys.exit(1)
 
-    for data_file_path in FILES_TO_INCLUDE:
-        old_path = os.path.join(WORKING_FOLDER, data_file_path)
-        new_path = os.path.join(COMPILE_FOLDER, data_file_path)
+    for data_file_path in files_to_include:
+        old_path = os.path.join(working_folder, data_file_path)
+        new_path = os.path.join(compile_folder_path, data_file_path)
         os.makedirs(os.path.dirname(new_path), exist_ok=True)
         copy_file(old_path, new_path)
 
     if args.build_info_file:
         with open(
-            os.path.join(COMPILE_FOLDER, BUILD_INFO_FILE), "w", encoding="utf-8"
+            os.path.join(compile_folder_path, BUILD_INFO_FILE), "w", encoding="utf-8"
         ) as fp:
             fp.write(f"OS: {os.name}\n")
             fp.write(f"Python: {sys.version}\n")
@@ -198,17 +202,17 @@ try:
                 fp.write(f"\t{name}: {get_module_version(name)}\n")
             fp.write(f"Arguments: {args}\n")
 
-    clean_tk_files(COMPILE_FOLDER)
+    clean_tk_files(compile_folder_path)
     if args.strip:
-        strip_files(COMPILE_FOLDER)
+        strip_files(compile_folder_path)
 
     if not args.debug:
         delete_folder(install_path)
-        os.rename(COMPILE_FOLDER, install_path)
+        os.rename(compile_folder_path, install_path)
 finally:
     if not args.debug and not args.no_cleanup:
-        delete_folders([BUILD_FOLDER, COMPILE_FOLDER, TMP_FOLDER])
-        delete_file(os.path.join(WORKING_FOLDER, f"{TARGET_MODULE}.cmd"))
+        delete_folders([build_folder_path, compile_folder_path, tmp_folder])
+        delete_file(os.path.join(working_folder, f"{TARGET_MODULE}.cmd"))
 
 _logger.info("\nFinished")
 _logger.info("Installed to %s", install_path)
