@@ -1,7 +1,7 @@
 [MAIN]
 
-ignore = tmp
-ignore-paths = .+build/.*.py,.*.pyi
+ignore = nuitka
+ignore-paths = tmp.*,.+build/.*.py,.*.pyi
 
 [MESSAGES CONTROL]
 
@@ -12,7 +12,9 @@ disable = import-error,  # Lots of false flags here
           no-name-in-module,  # Getting these due to compiled modules
           line-too-long,      # Checked by flake
           unused-import,      # Checked by flake
-          ungrouped-imports   # Checked by isort
+          ungrouped-imports,  # Checked by isort
+          wrong-import-order, # Checked by isort
+          no-member,          # Checked by mypy
 
 [DESIGN]
 max-args = 7

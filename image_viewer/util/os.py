@@ -62,8 +62,8 @@ else:  # assume linux for now
                     os.rename(path_to_trashed_file, original_path)
                     os.remove(info_path)
                     break  # TODO: restore oldest first?
-                else:
-                    os.remove(info_path)
+
+                os.remove(info_path)
 
     def _get_trashinfo_regex(path: str) -> re.Pattern:
         """Returns a regex to detect if trashinfo files could contain
