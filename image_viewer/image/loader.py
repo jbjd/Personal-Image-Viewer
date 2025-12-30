@@ -23,14 +23,14 @@ from image_viewer.util.PIL import get_placeholder_for_errored_image, rotate_imag
 class ReadImageResponse:
     """Response when reading an image from disk"""
 
-    __slots__ = ("image_buffer", "image", "format")
+    __slots__ = ("image_buffer", "image", "expected_format")
 
     def __init__(
-        self, image_buffer: CMemoryViewBuffer, image: Image, format: str
+        self, image_buffer: CMemoryViewBuffer, image: Image, expected_format: str
     ) -> None:
         self.image_buffer: CMemoryViewBuffer = image_buffer
         self.image: Image = image
-        self.format: str = format
+        self.expected_format: str = expected_format
 
 
 class ImageLoader:
@@ -155,7 +155,7 @@ class ImageLoader:
                 size_display,
                 byte_size,
                 original_mode,
-                read_image_response.format,
+                read_image_response.expected_format,
             )
 
         frame_count: int = getattr(original_image, "n_frames", 1)

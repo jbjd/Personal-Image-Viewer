@@ -40,7 +40,7 @@ from compile_utils.code_to_skip import (
     vars_to_fold,
     vars_to_skip,
 )
-from compile_utils.constants import LOGGER_NAME
+from compile_utils.log import LOGGER_NAME
 from compile_utils.validation import get_required_python_version
 
 if os.name == "nt":
