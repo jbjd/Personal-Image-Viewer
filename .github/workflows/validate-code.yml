@@ -33,7 +33,7 @@ jobs:
         run: |
           pip install -r requirements_dev.txt
           sudo apt-get install libtre-dev libturbojpeg0-dev -y
-          make build-all
+          make DEV_CHECKS=true build-all
 
       - name: Validate Config.ini Schema
         run: python ./config_schema_validator.py

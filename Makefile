@@ -39,6 +39,11 @@ OPTIMIZATION_FLAG=-O3
 C_SOURCE=image_viewer/c_extensions
 C_FLAGS_SHARED=-L$(PYTHON_LIBS) -I$(PYTHON_INCLUDES) -l$(PYTHON_DLL) $(OPTIMIZATION_FLAG) -march=native -mtune=native -ffinite-math-only -fgcse-las -fgcse-sm -fisolate-erroneous-paths-attribute -fno-signed-zeros -frename-registers -fsched-pressure -s -shared -Wall -Werror $(OS_FLAGS)
 
+DEV_CHECKS ?= false
+ifeq ($(DEV_CHECKS), true)
+    C_FLAGS_SHARED += -DDEV_CHECKS
+endif
+
 build-util-os-nt:
 ifeq ($(OS),Windows_NT)
 	gcc $(C_SOURCE)/util/os_nt.c $(C_SOURCE)/b64/cencode.c -I$(C_SOURCE) -lshlwapi -loleaut32 -lole32 $(C_FLAGS_SHARED) -o image_viewer/util/_os_nt.$(COMPILED_EXT)
@@ -51,7 +56,7 @@ build-util-generic:
 	gcc $(C_SOURCE)/util/generic.c $(C_FLAGS_SHARED) -o image_viewer/util/_generic.$(COMPILED_EXT) -Wl,-Bstatic,-Bsymbolic -ltre -Wl,-Bdynamic
 
 build-util-abstact-classes:
-	gcc $(C_SOURCE)/util/abstract_classes.c $(C_FLAGS_SHARED) -o image_viewer/util/_abstract_classes.$(COMPILED_EXT)
+	gcc $(C_SOURCE)/abstract_classes.c $(C_FLAGS_SHARED) -o image_viewer/_abstract_classes.$(COMPILED_EXT)
 
 
 ifeq ($(OS),Windows_NT)
