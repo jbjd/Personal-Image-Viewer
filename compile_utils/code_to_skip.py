@@ -479,8 +479,8 @@ _skippable_std_modules = [
     "xdrlib",
 ]
 
-if not sys.version_info < (3, 13):
-    raise Exception(
+if sys.version_info >= (3, 13):
+    raise NotImplementedError(
         "cgi, cgitb, mailcap, and pipes need to be removed from _skippable_std_modules"
     )
 
