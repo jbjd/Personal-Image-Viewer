@@ -202,7 +202,7 @@ static PyMethodDef jpeg_methods[] = {
 static struct PyModuleDef jpeg_module = {
     PyModuleDef_HEAD_INIT,
     "_read",
-    "Python interface for jpeg helper functions written in C",
+    NULL,
     -1,
     jpeg_methods};
 

@@ -35,8 +35,9 @@ else
 	PYTHON_INCLUDES := $(PYTHON_BASE_PREFIX)/include/python3.12/
 endif
 
-C_SOURCE = image_viewer/c_extensions
-C_FLAGS_SHARED = -L$(PYTHON_LIBS) -I$(PYTHON_INCLUDES) -l$(PYTHON_DLL) -march=native -mtune=native -O3 -ffinite-math-only -fgcse-las -fgcse-sm -fisolate-erroneous-paths-attribute -fno-signed-zeros -frename-registers -fsched-pressure -s -shared -Wall -Werror $(OS_FLAGS)
+OPTIMIZATION_FLAG=-O3
+C_SOURCE=image_viewer/c_extensions
+C_FLAGS_SHARED=-L$(PYTHON_LIBS) -I$(PYTHON_INCLUDES) -l$(PYTHON_DLL) $(OPTIMIZATION_FLAG) -march=native -mtune=native -ffinite-math-only -fgcse-las -fgcse-sm -fisolate-erroneous-paths-attribute -fno-signed-zeros -frename-registers -fsched-pressure -s -shared -Wall -Werror $(OS_FLAGS)
 
 build-util-os-nt:
 ifeq ($(OS),Windows_NT)

@@ -1,5 +1,4 @@
-"""A simple script to valid the config.ini file
-to ensure it presents accurate examples"""
+"""Validates the config.ini file to ensure it presents accurate examples."""
 
 from configparser import ConfigParser
 
@@ -56,10 +55,12 @@ schema = Schema(
 config_parser = ConfigParser()
 config_parser.read("image_viewer/config.ini")
 
-config: dict = {}
-for section in config_parser.sections():
-    config[section] = {}
-    for option in config_parser.options(section):
-        config[section][option] = config_parser.get(section, option)
+config: dict = {
+    section: {
+        option: config_parser.get(section, option)
+        for option in config_parser.options(section)
+    }
+    for section in config_parser.sections()
+}
 
 schema.validate(config)
