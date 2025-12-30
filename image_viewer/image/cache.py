@@ -26,7 +26,7 @@ class ImageCacheEntry:
         size_display: str,
         byte_size: int,
         mode: str,
-        format: str,
+        file_format: str,
     ) -> None:
         self.width: int
         self.height: int
@@ -36,7 +36,7 @@ class ImageCacheEntry:
         self.byte_size: int = byte_size
         # Store original mode since resizing some images converts to RGB
         self.mode: str = mode
-        self.format: str = format
+        self.format: str = file_format
 
 
 class ImageCache(OrderedDict[str, ImageCacheEntry]):
