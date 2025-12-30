@@ -1,4 +1,4 @@
-"""Valids the config.ini file to ensure it presents accurate examples."""
+"""Validates the config.ini file to ensure it presents accurate examples."""
 
 from configparser import ConfigParser
 

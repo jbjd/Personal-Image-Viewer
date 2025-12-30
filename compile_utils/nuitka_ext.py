@@ -120,9 +120,9 @@ _CUSTOM_NUITKA_VERSION: int = 0
 
 def setup_custom_nuitka_install(custom_nuitka_path: str) -> None:
     """Copies the current nuitka installation into a local folder
-    and applies some regex edits to improve compliation of this program.
+    and applies some regex edits to improve compilation of this program.
     Does nothing if custom folder has been setup previously on this
-    version of nuitka/version of this implemenation.
+    version of nuitka/version of this implementation.
 
     :param custom_nuitka_path: Path to the folder to use."""
 
