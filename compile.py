@@ -44,18 +44,15 @@ from compile_utils.validation import (
     validate_python_version,
 )
 
-DEFAULT_PYTHON: str
 EXECUTABLE_EXT: str
 DEFAULT_INSTALL_PATH: str
 ICON_RELATIVE_PATH: str
 
 if os.name == "nt":
-    DEFAULT_PYTHON = "python"
     EXECUTABLE_EXT = ".exe"
     DEFAULT_INSTALL_PATH = "C:/Program Files/Personal Image Viewer/"
     ICON_RELATIVE_PATH = "icon/icon.ico"
 else:
-    DEFAULT_PYTHON = "bin/python3"
     EXECUTABLE_EXT = ".bin"
     DEFAULT_INSTALL_PATH = "/usr/local/personal-image-viewer/"
     ICON_RELATIVE_PATH = "icon/icon.png"
@@ -172,9 +169,8 @@ try:
 
     delete_folder(compile_folder_path)
 
-    python_path: str = os.path.join(sys.exec_prefix, DEFAULT_PYTHON)
     process: Popen = start_nuitka_compilation(
-        python_path, target_file_path, nuitka_args, working_folder
+        target_file_path, nuitka_args, working_folder
     )
 
     _logger.info("Waiting for nuitka compilation...")

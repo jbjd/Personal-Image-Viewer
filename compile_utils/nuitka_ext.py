@@ -1,4 +1,4 @@
-"""Functions to help with calling nuitka"""
+"""Utilities to help with calling nuitka."""
 
 import os
 import sys
@@ -16,30 +16,43 @@ from personal_compile_tools.file_operations import (
 from personal_python_ast_optimizer.regex.apply import apply_regex
 
 from compile_utils.code_to_skip import custom_nuitka_regex
-from compile_utils.constants import LOGGER_NAME
+from compile_utils.log import LOGGER_NAME
 
 _logger = getLogger(LOGGER_NAME)
 
 
 def start_nuitka_compilation(
-    python_path: str, input_file: str, nuitka_args: list[str], working_dir: str
+    input_file: str, nuitka_args: list[str], working_dir: str
 ) -> Popen:
-    """Begins nuitka compilation in another process"""
+    """Begins nuitka compilation in a new process.
+
+    :param: input_file: Input file to pass to nuitka.
+    :param nuitka_args: Nuitka arguments to use.
+    :working_dir: The working directory for the new process.
+    :returns: The new process."""
+
+    default_python: str = "python" if os.name == "nt" else "bin/python3"
+    python_path: str = os.path.join(sys.exec_prefix, default_python)
 
     _logger.info("Using python install %s for nuitka", python_path)
 
-    compile_env = get_nuitka_env()
+    compile_env: dict[str, str] = _get_nuitka_env()
     command: list[str] = get_nuitka_command(python_path, input_file, nuitka_args)
 
     return Popen(command, cwd=working_dir, env=compile_env)
 
 
 def get_nuitka_command(
-    python_path: str, input_file: str, nuitka_args: list[str]
+    python: str, input_file: str, nuitka_args: list[str]
 ) -> list[str]:
-    """Returns the command that this package uses to compile"""
-    command: list[str] = [
-        python_path,
+    """Returns the command to compile with nuitka.
+
+    :param python: The name or path of python to use.
+    :param input_file: Input file to pass to nuitka.
+    :param nuita_args: Nuitka arguments to use."""
+
+    return [
+        python,
         "-X",
         "frozen_modules=off",
         "-OO",
@@ -51,10 +64,14 @@ def get_nuitka_command(
         "--output-filename=viewer",
     ] + nuitka_args
 
-    return command
 
+def _get_nuitka_env() -> dict[str, str]:
+    """Modified version of nuitka's reExecuteNuitka function.
+    Sets all the same values plus some additional so nuitka does not need to
+    redundantly spin itself up again, breaking the custom implementation done here.
 
-def get_nuitka_env() -> dict[str, str]:
+    :returns: The environment variables to use when starting nuitka."""
+
     compile_env = os.environ.copy()
 
     compile_env["PYTHONHASHSEED"] = "0"
@@ -101,7 +118,14 @@ _CUSTOM_NUITKA_VERSION_FILE: str = "version.txt"
 _CUSTOM_NUITKA_VERSION: int = 0
 
 
-def setup_custom_nuitka_install(custom_nuitka_path: str):
+def setup_custom_nuitka_install(custom_nuitka_path: str) -> None:
+    """Copies the current nuitka installation into a local folder
+    and applies some regex edits to improve compliation of this program.
+    Does nothing if custom folder has been setup previously on this
+    version of nuitka/version of this implemenation.
+
+    :param custom_nuitka_path: Path to the folder to use."""
+
     version_file_path: str = os.path.join(
         custom_nuitka_path, _CUSTOM_NUITKA_VERSION_FILE
     )
