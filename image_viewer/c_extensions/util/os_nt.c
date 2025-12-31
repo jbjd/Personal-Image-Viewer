@@ -181,11 +181,12 @@ static PyObject *restore_file(PyObject *self, PyObject *arg)
             continue;
         }
 
-        UINT bufferLength = SysStringLen(variant.bstrVal) + strlen(displayNameBuffer) + 2;
+        const UINT variantLength = SysStringLen(variant.bstrVal);
+        const UINT bufferLength = variantLength + strlen(displayNameBuffer) + 2;
         char deletedFileOriginalPath[bufferLength];
         SHUnicodeToTChar(variant.bstrVal, deletedFileOriginalPath, ARRAYSIZE(deletedFileOriginalPath));
-        strcat(deletedFileOriginalPath, "\\");
-        strcat(deletedFileOriginalPath, displayNameBuffer);
+        deletedFileOriginalPath[variantLength] = '\\';
+        strcpy(deletedFileOriginalPath + variantLength + 1, displayNameBuffer);
         deletedFileOriginalPath[0] = tolower(deletedFileOriginalPath[0]);
 
         if (strcmp(originalPath, deletedFileOriginalPath))
