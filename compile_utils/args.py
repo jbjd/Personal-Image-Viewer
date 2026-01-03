@@ -3,9 +3,14 @@
 from argparse import ArgumentParser, Namespace
 from enum import StrEnum
 
-from compile_utils.code_to_skip import data_files_to_exclude, dlls_to_exclude
+from compile_utils.code_to_skip import (
+    data_files_to_exclude,
+    dlls_to_exclude,
+    dlls_to_include,
+)
 from compile_utils.constants import BUILD_INFO_FILE, REPORT_FILE
 from compile_utils.module_dependencies import modules_to_include
+from compile_utils.validation import get_full_path_to_dll
 
 
 class ConsoleMode(StrEnum):
@@ -26,6 +31,7 @@ class NuitkaArgs(StrEnum):
     INCLUDE_DATA_FILES = "--include-data-files"
     NO_INCLUDE_DATA_FILES = "--noinclude-data-files"
     INCLUDE_MODULE = "--include-module"
+    INCLUDE_DLLS = "--include-data-files"
     NO_INCLUDE_DLLS = "--noinclude-dlls"
     WINDOWS_ICON_FROM_ICO = "--windows-icon-from-ico"
     WINDOWS_CONSOLE_MODE = "--windows-console-mode"
@@ -201,6 +207,11 @@ class CompileArgumentParser(ArgumentParser):
         nuitka_args += [
             NuitkaArgs.INCLUDE_MODULE.with_value(module)
             for module in modules_to_include
+        ]
+        nuitka_args += [
+            NuitkaArgs.INCLUDE_DATA_FILES.with_value(get_full_path_to_dll(file))
+            + f"={file}"
+            for file in (dlls_to_include)
         ]
         nuitka_args += [
             NuitkaArgs.NO_INCLUDE_DLLS.with_value(glob) for glob in dlls_to_exclude

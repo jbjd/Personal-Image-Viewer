@@ -50,15 +50,9 @@ endif
 build-util-generic:
 	gcc $(C_SOURCE)/util/generic.c $(C_FLAGS_SHARED) -o image_viewer/util/_generic.$(COMPILED_EXT) -Wl,-Bstatic,-Bsymbolic -ltre -Wl,-Bdynamic
 
-
-ifeq ($(OS),Windows_NT)
-    C_JPEG_FLAGS = -static-libgcc -Wl,-Bstatic,--whole-archive -lwinpthread -Wl,--no-whole-archive -lturbojpeg -Wl,-Bdynamic
-else
-    C_JPEG_FLAGS = -lturbojpeg
-endif
-
+# TODO: Need to now also copy the turbojpeg dll to root in windows
 build-image-read:
-	gcc $(C_SOURCE)/image/read.c $(C_FLAGS_SHARED) -o image_viewer/image/_read.$(COMPILED_EXT) $(C_JPEG_FLAGS)
+	gcc $(C_SOURCE)/image/read.c $(C_FLAGS_SHARED) -o image_viewer/image/_read.$(COMPILED_EXT) -lturbojpeg
 
 build-all: build-util-os-nt build-util-generic build-image-read
 
