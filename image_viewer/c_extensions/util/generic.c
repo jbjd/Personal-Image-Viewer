@@ -46,6 +46,13 @@ static PyObject *is_valid_keybind(PyObject *self, PyObject *arg)
         }
     }
 
+    Py_ssize_t size = PyUnicode_GET_LENGTH(arg);
+    const Py_ssize_t MAX_POSSIBLE_SIZE = 11;
+
+    if(size > MAX_POSSIBLE_SIZE){
+        return Py_False;
+    }
+
     const char *keybind = PyUnicode_AsUTF8(arg);
 
     const int search_result = tre_regexec(&valid_keybind_regex, keybind, 0, NULL, 0);
