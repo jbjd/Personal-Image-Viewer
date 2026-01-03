@@ -43,8 +43,6 @@ static inline bool is_valid_f_key(const char *keybind, Py_ssize_t len)
     default:
         return false;
     }
-
-    return false;
 }
 
 static inline bool is_valid_ctrl_key(const char *keybind, Py_ssize_t len)
