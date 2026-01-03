@@ -22,7 +22,7 @@ _logger = getLogger(LOGGER_NAME)
 
 
 def start_nuitka_compilation(
-    input_file: str, nuitka_args: list[str], working_dir: str
+    input_file: str, nuitka_args: list[str], working_dir: str, assume_this_machine: bool
 ) -> Popen:
     """Begins nuitka compilation in a new process.
 
@@ -36,7 +36,7 @@ def start_nuitka_compilation(
 
     _logger.info("Using python install %s for nuitka", python_path)
 
-    compile_env: dict[str, str] = _get_nuitka_env()
+    compile_env: dict[str, str] = _get_nuitka_env(assume_this_machine)
     command: list[str] = get_nuitka_command(python_path, input_file, nuitka_args)
 
     return Popen(command, cwd=working_dir, env=compile_env)
@@ -65,7 +65,7 @@ def get_nuitka_command(
     ] + nuitka_args
 
 
-def _get_nuitka_env() -> dict[str, str]:
+def _get_nuitka_env(assume_this_machine: bool) -> dict[str, str]:
     """Modified version of nuitka's reExecuteNuitka function.
     Sets all the same values plus some additional so nuitka does not need to
     redundantly spin itself up again, breaking the custom implementation done here.
@@ -79,10 +79,12 @@ def _get_nuitka_env() -> dict[str, str]:
     # -march=native had a race condition that segfault'ed on startup.
     # Segfaults stop when avx instructions are turned off
     compile_env["CFLAGS"] = (
-        "-march=native -mtune=native -mno-avx -O3 "
-        "-ffinite-math-only -fgcse-las -fgcse-sm -fisolate-erroneous-paths-attribute "
-        "-fno-signed-zeros -frename-registers -fsched-pressure"
+        "-mno-avx -O3 -fgcse-las -fisolate-erroneous-paths-attribute -fgcse-sm "
+        "-ffinite-math-only  -fno-signed-zeros -frename-registers -fsched-pressure"
     )
+
+    if assume_this_machine:
+        compile_env["CFLAGS"] += " -march=native -mtune=native"
 
     # Setup like nuitka would to avoid re-execute
     os.environ["NUITKA_SYS_PREFIX"] = sys.prefix

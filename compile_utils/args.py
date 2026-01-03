@@ -49,6 +49,7 @@ class CompileNamespace(Namespace):
     install_path: str
     report: bool
     debug: bool
+    assume_this_machine: bool
     strip: bool
     skip_nuitka: bool
     no_cleanup: bool
@@ -86,6 +87,14 @@ class CompileArgumentParser(ArgumentParser):
         )
         self.add_argument_ext(
             "--build-info-file", f"Includes {BUILD_INFO_FILE} with distribution."
+        )
+        self.add_argument_ext(
+            "--assume-this-machine",
+            (
+                "Allows optimizations for this specific machine. "
+                "Enables CFLAGS -march=native and -mtune=native and "
+                " removal of some code that will be unused on this machine."
+            ),
         )
         self.add_argument_ext(
             "--strip",
