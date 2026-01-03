@@ -1,7 +1,9 @@
 """Argument definition and parsing for compilation"""
 
+import os
 from argparse import ArgumentParser, Namespace
 from enum import StrEnum
+from typing import Literal
 
 from compile_utils.code_to_skip import (
     data_files_to_exclude,
@@ -62,6 +64,9 @@ class CompileNamespace(Namespace):
     build_info_file: bool
     user_nuitka_args: list[str]
 
+    if os.name == "nt":
+        include_dlls: bool
+
 
 class CompileArgumentParser(ArgumentParser):
     """Argument Parser for compilation flags"""
@@ -92,7 +97,7 @@ class CompileArgumentParser(ArgumentParser):
             f"Adds {NuitkaArgs.REPORT.with_value(REPORT_FILE)} flag to nuitka.",
         )
         self.add_argument_ext(
-            "--build-info-file", f"Includes {BUILD_INFO_FILE} with distribution."
+            "--build-info-file", f"Includes {BUILD_INFO_FILE} in the build."
         )
         self.add_argument_ext(
             "--assume-this-machine",
@@ -135,6 +140,12 @@ class CompileArgumentParser(ArgumentParser):
             "Does not delete temporary files used for compilation/installation.",
             is_debug=True,
         )
+        if os.name == "nt":
+            self.add_argument_ext(
+                "--include-dlls",
+                "Finds used DLLs on system and include them in the build.",
+                affected_os="Windows",
+            )
 
     def add_argument_ext(
         self,
@@ -142,6 +153,7 @@ class CompileArgumentParser(ArgumentParser):
         help_text: str,
         default: str | bool = False,
         is_debug: bool = False,
+        affected_os: Literal["Windows"] | None = None,
     ) -> None:
         """Extension of add_argument to simplify repeated patterns.
 
@@ -152,6 +164,8 @@ class CompileArgumentParser(ArgumentParser):
 
         if is_debug:
             help_text += " This option is exposed for debugging."
+        if affected_os is not None:
+            help_text = f"({affected_os} only) " + help_text
 
         action: str = "store_true" if isinstance(default, bool) else "store"
 
@@ -218,13 +232,15 @@ class CompileArgumentParser(ArgumentParser):
             for module in modules_to_include
         ]
         nuitka_args += [
-            NuitkaArgs.INCLUDE_DATA_FILES.with_value(get_full_path_to_dll(file))
-            + f"={file}"
-            for file in (dlls_to_include)
-        ]
-        nuitka_args += [
             NuitkaArgs.NO_INCLUDE_DLLS.with_value(glob) for glob in dlls_to_exclude
         ]
+
+        if os.name == "nt" and args.include_dlls:
+            nuitka_args += [
+                NuitkaArgs.INCLUDE_DATA_FILES.with_value(get_full_path_to_dll(file))
+                + f"={file}"
+                for file in (dlls_to_include)
+            ]
 
         if not any(
             arg.startswith(NuitkaArgs.WINDOWS_CONSOLE_MODE) for arg in nuitka_args
