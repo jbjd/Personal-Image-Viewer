@@ -1,22 +1,29 @@
-"""Argument definition and parsing for compilation"""
+"""Argument definitions and parsing."""
 
+import os
+import shutil
 from argparse import ArgumentParser, Namespace
 from enum import StrEnum
+from typing import Literal
 
-from compile_utils.code_to_skip import data_files_to_exclude, dlls_to_exclude
+from compile_utils.code_to_skip import (
+    data_files_to_exclude,
+    dlls_to_exclude,
+    dlls_to_include,
+)
 from compile_utils.constants import BUILD_INFO_FILE, REPORT_FILE
 from compile_utils.module_dependencies import modules_to_include
 
 
 class ConsoleMode(StrEnum):
-    """Options for console mode in nuitka"""
+    """Options for console mode in nuitka."""
 
     FORCE = "force"
     DISABLE = "disable"
 
 
 class NuitkaArgs(StrEnum):
-    """Nuitka arguments that are used as part of compilation"""
+    """Nuitka arguments that are used as part of compilation."""
 
     DEPLOYMENT = "--deployment"
     STANDALONE = "--standalone"
@@ -26,6 +33,7 @@ class NuitkaArgs(StrEnum):
     INCLUDE_DATA_FILES = "--include-data-files"
     NO_INCLUDE_DATA_FILES = "--noinclude-data-files"
     INCLUDE_MODULE = "--include-module"
+    INCLUDE_DLLS = "--include-data-files"
     NO_INCLUDE_DLLS = "--noinclude-dlls"
     WINDOWS_ICON_FROM_ICO = "--windows-icon-from-ico"
     WINDOWS_CONSOLE_MODE = "--windows-console-mode"
@@ -44,7 +52,7 @@ class NuitkaArgs(StrEnum):
 
 
 class CompileNamespace(Namespace):
-    """Namespace for compilation flags"""
+    """Namespace for compilation flags."""
 
     install_path: str
     report: bool
@@ -56,9 +64,12 @@ class CompileNamespace(Namespace):
     build_info_file: bool
     user_nuitka_args: list[str]
 
+    if os.name == "nt":
+        include_dlls: bool
+
 
 class CompileArgumentParser(ArgumentParser):
-    """Argument Parser for compilation flags"""
+    """Argument Parser for compilation flags."""
 
     __slots__ = ()
 
@@ -86,7 +97,7 @@ class CompileArgumentParser(ArgumentParser):
             f"Adds {NuitkaArgs.REPORT.with_value(REPORT_FILE)} flag to nuitka.",
         )
         self.add_argument_ext(
-            "--build-info-file", f"Includes {BUILD_INFO_FILE} with distribution."
+            "--build-info-file", f"Includes {BUILD_INFO_FILE} in the build."
         )
         self.add_argument_ext(
             "--assume-this-machine",
@@ -129,6 +140,12 @@ class CompileArgumentParser(ArgumentParser):
             "Does not delete temporary files used for compilation/installation.",
             is_debug=True,
         )
+        if os.name == "nt":
+            self.add_argument_ext(
+                "--include-dlls",
+                "Finds used DLLs on system and include them in the build.",
+                affected_os="Windows",
+            )
 
     def add_argument_ext(
         self,
@@ -136,6 +153,7 @@ class CompileArgumentParser(ArgumentParser):
         help_text: str,
         default: str | bool = False,
         is_debug: bool = False,
+        affected_os: Literal["Windows"] | None = None,
     ) -> None:
         """Extension of add_argument to simplify repeated patterns.
 
@@ -146,6 +164,8 @@ class CompileArgumentParser(ArgumentParser):
 
         if is_debug:
             help_text += " This option is exposed for debugging."
+        if affected_os is not None:
+            help_text = f"({affected_os} only) " + help_text
 
         action: str = "store_true" if isinstance(default, bool) else "store"
 
@@ -215,6 +235,13 @@ class CompileArgumentParser(ArgumentParser):
             NuitkaArgs.NO_INCLUDE_DLLS.with_value(glob) for glob in dlls_to_exclude
         ]
 
+        if os.name == "nt" and args.include_dlls:
+            nuitka_args += [
+                NuitkaArgs.INCLUDE_DATA_FILES.with_value(get_full_path_to_dll(file))
+                + f"={file}"
+                for file in (dlls_to_include)
+            ]
+
         if not any(
             arg.startswith(NuitkaArgs.WINDOWS_CONSOLE_MODE) for arg in nuitka_args
         ):
@@ -223,3 +250,27 @@ class CompileArgumentParser(ArgumentParser):
                     ConsoleMode.FORCE if args.debug else ConsoleMode.DISABLE
                 )
             )
+
+
+def get_full_path_to_dll(dll_file: str) -> str:
+    """Finds required dll on $PATH.
+
+    :param dll_file: File name to search for.
+    :returns: Full path to dll file."""
+
+    # Stupid hack since shutil uses this os env to filter its results
+    old_path_ext: str | None = os.environ.get("PATHEXT")
+    os.environ["PATHEXT"] = ".dll"
+
+    try:
+        which: str | None = shutil.which(dll_file)
+        if which is None:
+            raise RuntimeError(f"Can't find {dll_file} on $PATH")
+
+    finally:
+        if old_path_ext is not None:
+            os.environ["PATHEXT"] = old_path_ext
+        else:
+            del os.environ["PATHEXT"]
+
+    return which
