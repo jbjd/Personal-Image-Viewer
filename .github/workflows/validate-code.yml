@@ -39,13 +39,10 @@ jobs:
         run: python ./config_schema_validator.py
 
       - name: Validate
-        run: |
-          chmod +x ./validate.sh
-          ./validate.sh
+        run: make validate
 
       - name: Install Dependencies
-        run: |
-          pip install -r requirements.txt
+        run: pip install -r requirements.txt
 
         # xvfb enables tkinter in these tests
       - name: Unit Tests
