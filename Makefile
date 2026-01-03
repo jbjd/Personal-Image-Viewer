@@ -46,19 +46,11 @@ else
 	@echo "Nothing to do for build-util-os-nt:"
 endif
 
-# To call tre_regerror, need to add -lintl -liconv
 build-util-generic:
-	gcc $(C_SOURCE)/util/generic.c $(C_FLAGS_SHARED) -o image_viewer/util/_generic.$(COMPILED_EXT) -Wl,-Bstatic,-Bsymbolic -ltre -Wl,-Bdynamic
-
-
-ifeq ($(OS),Windows_NT)
-    C_JPEG_FLAGS = -static-libgcc -Wl,-Bstatic,--whole-archive -lwinpthread -Wl,--no-whole-archive -lturbojpeg -Wl,-Bdynamic
-else
-    C_JPEG_FLAGS = -lturbojpeg
-endif
+	gcc $(C_SOURCE)/util/generic.c $(C_FLAGS_SHARED) -o image_viewer/util/_generic.$(COMPILED_EXT)
 
 build-image-read:
-	gcc $(C_SOURCE)/image/read.c $(C_FLAGS_SHARED) -o image_viewer/image/_read.$(COMPILED_EXT) $(C_JPEG_FLAGS)
+	gcc $(C_SOURCE)/image/read.c $(C_FLAGS_SHARED) -o image_viewer/image/_read.$(COMPILED_EXT) -lturbojpeg
 
 build-all: build-util-os-nt build-util-generic build-image-read
 
@@ -67,6 +59,13 @@ install:
 
 clean:
 	rm --preserve-root -Irf */__pycache__/ *.dist/ *.build/ build/ tmp*/ *.egg-info/ .mypy_cache/ .pytest_cache/ */ERROR.log *.exe .coverage compilation-report.xml nuitka-crash-report.xml
+
+validate:
+	isort . -m 3 --tc --check
+	flake8 .
+	black . --check
+	mypy . --check-untyped-defs
+	codespell image_viewer tests compile_utils compile.py README.md
 
 test:
 	$(PYTHON_FOR_INSTALL_STEP) -m pytest --cov=image_viewer --cov-report term-missing
