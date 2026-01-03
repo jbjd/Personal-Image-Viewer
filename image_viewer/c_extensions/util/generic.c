@@ -34,10 +34,7 @@ static inline bool is_valid_f_key(const char *keybind, Py_ssize_t len)
     switch (len)
     {
     case 3:
-        if (keybind[1] != '1' || keybind[2] < '0' || keybind[2] > '2')
-        {
-            return false;
-        }
+        return tolower(keybind[0]) == 'f' && keybind[1] == '1' && (keybind[2] >= '0' && keybind[2] <= '2');
     case 2:
         return tolower(keybind[0]) == 'f' && (keybind[1] > '0' && keybind[1] <= '9');
     default:
