@@ -55,7 +55,11 @@ _logger = getLogger(LOGGER_NAME)
 
 
 def clean_file_and_copy(
-    path: str, new_path: str, module_name: str, module_import_path: str
+    path: str,
+    new_path: str,
+    module_name: str,
+    module_import_path: str,
+    assume_this_machine: bool,
 ) -> None:
     """Given a python file path,
     applies regexes/skips/minification and writes results to new_path"""
@@ -82,7 +86,7 @@ def clean_file_and_copy(
                 optimizations_config=OptimizationsConfig(
                     vars_to_fold=vars_to_fold[module_name],
                     fold_constants=False,  # Nuitka does this internally
-                    assume_this_machine=True,
+                    assume_this_machine=assume_this_machine,
                 ),
             ),
         )
@@ -102,6 +106,7 @@ def move_files_to_tmp_and_clean(
     source_dir: str,
     tmp_dir: str,
     module_name: str,
+    assume_this_machine: bool,
     modules_to_skip: set[str] | None = None,
 ) -> None:
     """Moves python files from source_dir to temp_dir
@@ -138,7 +143,13 @@ def move_files_to_tmp_and_clean(
 
         os.makedirs(os.path.dirname(new_path), exist_ok=True)
         if python_file.endswith(".py"):
-            clean_file_and_copy(python_file, new_path, module_name, module_import_path)
+            clean_file_and_copy(
+                python_file,
+                new_path,
+                module_name,
+                module_import_path,
+                assume_this_machine,
+            )
         else:
             copy_file(python_file, new_path)
 
