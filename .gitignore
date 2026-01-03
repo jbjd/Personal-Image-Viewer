@@ -32,5 +32,7 @@ nuitka-crash-report.xml
 *.pyd
 *.so
 
+libturbojpeg.*
+
 *.ipynb
 test.py
