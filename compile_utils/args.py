@@ -1,4 +1,4 @@
-"""Argument definition and parsing for compilation"""
+"""Argument definitions and parsing."""
 
 import os
 import shutil
@@ -16,14 +16,14 @@ from compile_utils.module_dependencies import modules_to_include
 
 
 class ConsoleMode(StrEnum):
-    """Options for console mode in nuitka"""
+    """Options for console mode in nuitka."""
 
     FORCE = "force"
     DISABLE = "disable"
 
 
 class NuitkaArgs(StrEnum):
-    """Nuitka arguments that are used as part of compilation"""
+    """Nuitka arguments that are used as part of compilation."""
 
     DEPLOYMENT = "--deployment"
     STANDALONE = "--standalone"
@@ -52,7 +52,7 @@ class NuitkaArgs(StrEnum):
 
 
 class CompileNamespace(Namespace):
-    """Namespace for compilation flags"""
+    """Namespace for compilation flags."""
 
     install_path: str
     report: bool
@@ -69,7 +69,7 @@ class CompileNamespace(Namespace):
 
 
 class CompileArgumentParser(ArgumentParser):
-    """Argument Parser for compilation flags"""
+    """Argument Parser for compilation flags."""
 
     __slots__ = ()
 
