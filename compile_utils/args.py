@@ -1,6 +1,7 @@
 """Argument definition and parsing for compilation"""
 
 import os
+import shutil
 from argparse import ArgumentParser, Namespace
 from enum import StrEnum
 from typing import Literal
@@ -12,7 +13,6 @@ from compile_utils.code_to_skip import (
 )
 from compile_utils.constants import BUILD_INFO_FILE, REPORT_FILE
 from compile_utils.module_dependencies import modules_to_include
-from compile_utils.validation import get_full_path_to_dll
 
 
 class ConsoleMode(StrEnum):
@@ -250,3 +250,27 @@ class CompileArgumentParser(ArgumentParser):
                     ConsoleMode.FORCE if args.debug else ConsoleMode.DISABLE
                 )
             )
+
+
+def get_full_path_to_dll(dll_file: str) -> str:
+    """Finds required dll on $PATH.
+
+    :param dll_file: File name to search for.
+    :returns: Full path to dll file."""
+
+    # Stupid hack since shutil uses this os env to filter its results
+    old_path_ext: str | None = os.environ.get("PATHEXT")
+    os.environ["PATHEXT"] = ".dll"
+
+    try:
+        which: str | None = shutil.which(dll_file)
+        if which is None:
+            raise RuntimeError(f"Can't find {dll_file} on $PATH")
+
+    finally:
+        if old_path_ext is not None:
+            os.environ["PATHEXT"] = old_path_ext
+        else:
+            del os.environ["PATHEXT"]
+
+    return which

@@ -1,7 +1,5 @@
 """Validation functions for compilation requirements"""
 
-import os
-import shutil
 import tomllib
 from importlib.metadata import PackageNotFoundError
 from importlib.metadata import version as get_module_version
@@ -40,34 +38,6 @@ def get_required_python_version() -> tuple[int, int]:
         project["requires-python"][2:]  # type: ignore
     )
     return _required_python_version  # type: ignore
-
-
-def get_full_path_to_dll(dll_file: str) -> str:
-    """Finds required dll on $PATH.
-
-    :param dll_file: File name to search for.
-    :returns: Full path to dll file."""
-
-    # Stupid hack since shutil uses this os env to filter its results
-    old_path_ext: str | None = os.environ.get("PATHEXT")
-    os.environ["PATHEXT"] = ".dll"
-
-    try:
-        which: str | None = shutil.which(dll_file)
-        if which is None:
-            _logger.error("Can't find dll %s on $PATH", dll_file)
-            raise RuntimeError(
-                "Can't find necessary dlls on $PATH. Ensure you "
-                "have them on path and have build the compiled python modules"
-            )
-
-    finally:
-        if old_path_ext is not None:
-            os.environ["PATHEXT"] = old_path_ext
-        else:
-            del os.environ["PATHEXT"]
-
-    return which
 
 
 def validate_module_requirements() -> None:
