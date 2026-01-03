@@ -1,8 +1,4 @@
 #include <Python.h>
-#include <tre/tre.h>
-
-static regex_t valid_keybind_regex;
-static int compile_valid_keybind_regex = 1;
 
 static PyObject *is_valid_hex_color(PyObject *self, PyObject *arg)
 {
@@ -31,33 +27,51 @@ static PyObject *is_valid_hex_color(PyObject *self, PyObject *arg)
     return Py_True;
 }
 
-static PyObject *is_valid_keybind(PyObject *self, PyObject *arg)
+static inline bool is_valid_f_key(const char *keybind, Py_ssize_t len)
 {
-    if (compile_valid_keybind_regex)
+    switch (len)
     {
-        compile_valid_keybind_regex = tre_regcomp(&valid_keybind_regex, "^<(F([1-9]|1[0-2])|Control-[a-zA-Z0-9])>$", REG_EXTENDED);
-        if (compile_valid_keybind_regex)
+    case 3:
+        if (keybind[1] != '1' || keybind[2] < '0' || keybind[2] > '2')
         {
-            // Can uncomment below for debugging
-            // char regError[256];
-            // tre_regerror(compile_valid_keybind_regex, &valid_keybind_regex, regError, 256);
-            // PyErr_SetString(PyExc_ValueError, regError);
-            return NULL;
+            return false;
         }
+    case 2:
+        return tolower(keybind[0]) == 'f' && (keybind[1] > '0' && keybind[1] <= '9');
+        break;
+    default:
+        return false;
     }
 
-    Py_ssize_t size = PyUnicode_GET_LENGTH(arg);
+    return false;
+}
+
+static inline bool is_valid_ctrl_key(const char *keybind, Py_ssize_t len)
+{
+    return len == 9 && 0 == strncmp(keybind, "Control-", 8) && (isalnum(keybind[8]));
+}
+
+static PyObject *is_valid_keybind(PyObject *self, PyObject *arg)
+{
+    Py_ssize_t size = PyUnicode_GetLength(arg);
     const Py_ssize_t MAX_POSSIBLE_SIZE = 11;
 
-    if(size > MAX_POSSIBLE_SIZE){
+    if (size < 3 || size > MAX_POSSIBLE_SIZE)
+    {
         return Py_False;
     }
 
     const char *keybind = PyUnicode_AsUTF8(arg);
 
-    const int search_result = tre_regexec(&valid_keybind_regex, keybind, 0, NULL, 0);
+    if (keybind[0] != '<' || keybind[size - 1] != '>')
+    {
+        return Py_False;
+    }
 
-    return search_result == 0 ? Py_True : Py_False;
+    keybind += 1;
+    size -= 2;
+
+    return is_valid_f_key(keybind, size) || is_valid_ctrl_key(keybind, size) ? Py_True : Py_False;
 }
 
 static PyMethodDef generic_methods[] = {
