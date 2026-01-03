@@ -1,3 +1,5 @@
+#include <stdbool.h>
+
 #include <Python.h>
 
 static PyObject *is_valid_hex_color(PyObject *self, PyObject *arg)
@@ -38,7 +40,6 @@ static inline bool is_valid_f_key(const char *keybind, Py_ssize_t len)
         }
     case 2:
         return tolower(keybind[0]) == 'f' && (keybind[1] > '0' && keybind[1] <= '9');
-        break;
     default:
         return false;
     }
