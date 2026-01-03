@@ -49,7 +49,7 @@ def get_full_path_to_dll(dll_file: str) -> str:
     :returns: Full path to dll file."""
 
     # Stupid hack since shutil uses this os env to filter its results
-    old_path_ext: str | None = os.environ["PATHEXT"]
+    old_path_ext: str | None = os.environ.get("PATHEXT")
     os.environ["PATHEXT"] = ".dll"
 
     try:
@@ -62,7 +62,10 @@ def get_full_path_to_dll(dll_file: str) -> str:
             )
 
     finally:
-        os.environ["PATHEXT"] = old_path_ext
+        if old_path_ext is not None:
+            os.environ["PATHEXT"] = old_path_ext
+        else:
+            del os.environ["PATHEXT"]
 
     return which
 

@@ -60,5 +60,12 @@ install:
 clean:
 	rm --preserve-root -Irf */__pycache__/ *.dist/ *.build/ build/ tmp*/ *.egg-info/ .mypy_cache/ .pytest_cache/ */ERROR.log *.exe .coverage compilation-report.xml nuitka-crash-report.xml
 
+validate:
+	isort . -m 3 --tc --check   || exit 1
+	flake8 .                    || exit 1
+	black . --check             || exit 1
+	mypy . --check-untyped-defs || exit 1
+	codespell image_viewer tests compile_utils compile.py README.md || exit 1
+
 test:
 	$(PYTHON_FOR_INSTALL_STEP) -m pytest --cov=image_viewer --cov-report term-missing

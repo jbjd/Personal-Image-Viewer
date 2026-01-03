@@ -1,5 +1,6 @@
 import re
 from time import perf_counter
+
 from image_viewer.util._generic import is_valid_keybind
 
 tests = [
