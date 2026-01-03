@@ -102,8 +102,14 @@ try:
         target_file_path,
         IMAGE_VIEWER_NAME,
         f"{IMAGE_VIEWER_NAME}.{TARGET_MODULE}",
+        args.assume_this_machine,
     )
-    move_files_to_tmp_and_clean(code_folder_path, tmp_folder, IMAGE_VIEWER_NAME)
+    move_files_to_tmp_and_clean(
+        code_folder_path,
+        tmp_folder,
+        IMAGE_VIEWER_NAME,
+        args.assume_this_machine,
+    )
 
     warn_unused_skips: bool = True
 
@@ -113,8 +119,8 @@ try:
             get_module_version(module.name)
             + "-"
             + minifier_version
-            + "-"
-            + str(SKIP_ITERATION)
+            + f"-{SKIP_ITERATION}"
+            + f"-AssumeThisMachine:{args.assume_this_machine}"
         )
         cached_iteration_path: str = os.path.join(tmp_folder, module.name) + ".txt"
 
@@ -152,11 +158,16 @@ try:
                 os.path.join(tmp_folder, module_file),
                 module_import_name,
                 module_import_name,
+                args.assume_this_machine,
             )
         else:  # Its a folder
             delete_folder(os.path.join(tmp_folder, module_import_name))
             move_files_to_tmp_and_clean(
-                module_folder_path, tmp_folder, module_import_name, sub_modules_to_skip
+                module_folder_path,
+                tmp_folder,
+                module_import_name,
+                args.assume_this_machine,
+                sub_modules_to_skip,
             )
 
         write_file_utf8(cached_iteration_path, cleaned_module_iteration)
@@ -170,7 +181,7 @@ try:
     delete_folder(compile_folder_path)
 
     process: Popen = start_nuitka_compilation(
-        target_file_path, nuitka_args, working_folder
+        target_file_path, nuitka_args, working_folder, args.assume_this_machine
     )
 
     _logger.info("Waiting for nuitka compilation...")

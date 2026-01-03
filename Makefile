@@ -57,7 +57,7 @@ build-image-read:
 build-all: build-util-os-nt build-util-generic build-image-read
 
 install:
-	$(PYTHON_FOR_INSTALL_STEP) compile.py --strip --no-cleanup
+	$(PYTHON_FOR_INSTALL_STEP) compile.py --assume-this-machine --strip --no-cleanup
 
 clean:
 	rm --preserve-root -Irf */__pycache__/ *.dist/ *.build/ build/ tmp*/ *.egg-info/ .mypy_cache/ .pytest_cache/ */ERROR.log *.exe .coverage compilation-report.xml nuitka-crash-report.xml
