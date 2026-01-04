@@ -14,6 +14,39 @@ from PIL.JpegImagePlugin import JpegImageFile
 from image_viewer.constants import TEXT_RGB
 
 
+def get_mode_info(mode: str) -> tuple[str, int]:
+    """Given a PIL image's mode, return additional info on it.
+
+    :param mode: Mode of a PIL image.
+    :returns: A readable name and the bits per pixels"""
+
+    bpp: int
+    match mode:
+        case "I" | "F":
+            bpp = 32
+        case "YCbCr":
+            bpp = 24
+        case "P":
+            mode = "Palette"
+            bpp = 8
+        case "PA":
+            mode = "Palette with alpha"
+            bpp = 16
+        case "L":
+            mode = "Grayscale"
+            bpp = 8
+        case "LA" | "La":
+            mode = "Grayscale with alpha"
+            bpp = 16
+        case "1":
+            mode = "Black And White"
+            bpp = 1
+        case _:
+            bpp: int = len(mode) * 8
+
+    return mode, bpp
+
+
 def save_image(
     image: Image,
     fp: str | IO[bytes],
