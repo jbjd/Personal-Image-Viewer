@@ -56,6 +56,7 @@ def try_convert_file_and_save_new(
                 new_path,
                 target_format,
                 is_animated=is_animated,
+                icc_profile=temp_img.info.get("icc_profile"),
             )
 
     return True
