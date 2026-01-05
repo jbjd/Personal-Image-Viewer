@@ -176,12 +176,6 @@ class ImageLoader:
                 current_image = self.image_resizer.get_jpeg_fit_to_screen(
                     self.PIL_image, self.image_buffer
                 )
-
-                # Loading might use turbojpeg which just reads the pixels, so
-                # need to take the icc profile from the original PIL image
-                current_image.info["icc_profile"] = self.PIL_image.info.get(
-                    "icc_profile"
-                )
             else:
                 current_image = self.image_resizer.get_image_fit_to_screen(
                     self.PIL_image
