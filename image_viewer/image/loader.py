@@ -116,8 +116,9 @@ class ImageLoader:
             if image_buffer is None:
                 return None
 
-            image_bytes_io = BytesIO(image_buffer.view)
             expected_format: str = magic_number_guess(image_buffer.view[:4].tobytes())
+
+            image_bytes_io = BytesIO(image_buffer.view)
             image: Image = open_image(image_bytes_io, "r", (expected_format,))
 
             return ReadImageResponse(image_buffer, image, expected_format)
@@ -174,6 +175,12 @@ class ImageLoader:
             if self.PIL_image.format == "JPEG":
                 current_image = self.image_resizer.get_jpeg_fit_to_screen(
                     self.PIL_image, self.image_buffer
+                )
+
+                # Loading might use turbojpeg which just reads the pixels, so
+                # need to take the icc profile from the original PIL image
+                current_image.info["icc_profile"] = self.PIL_image.info.get(
+                    "icc_profile"
                 )
             else:
                 current_image = self.image_resizer.get_image_fit_to_screen(
