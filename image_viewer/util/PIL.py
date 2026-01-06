@@ -47,7 +47,7 @@ def save_image(
     image: Image,
     fp: str | IO[bytes],
     extension: str,
-    quality: int = 90,
+    quality: int,
     is_animated: bool | None = None,
     icc_profile: bytes | None = None,
 ) -> None:
@@ -61,8 +61,6 @@ def save_image(
         "save_all": save_all,
         "icc_profile": icc_profile,
     }
-    if extension == "jpeg":
-        kwargs["subsampling"] = "keep"
 
     image.save(fp, extension, **kwargs)
 
