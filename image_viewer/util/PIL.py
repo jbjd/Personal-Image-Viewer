@@ -13,7 +13,7 @@ from PIL.JpegImagePlugin import JpegImageFile
 
 from image_viewer.constants import TEXT_RGB
 
-# Modes that need more descriptive names or whos bpp
+# Modes that need more descriptive names or who's bpp
 # does not follow len(mode) * 8
 _mode_info_special_cases: dict[str, tuple[str, int]] = {
     "I": ("Signed Integer Pixels", 32),
@@ -29,7 +29,7 @@ def get_mode_info(mode: str) -> tuple[str, int]:
     """Given a PIL image's mode, return additional info on it.
 
     Certain modes aren't supported by this program and will not be handled.
-    YCbCr: Only used for JPEG 2000, which is unsuported.
+    YCbCr: Only used for JPEG 2000, which is unsupported.
     HSV: No docs indicate that this can be used for opening or saving.
     F: Only used for TIFF format, which is unsupported.
 
