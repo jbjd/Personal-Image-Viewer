@@ -1,7 +1,7 @@
 from unittest.mock import MagicMock, patch
 
-from PIL.Image import Image, new
 import pytest
+from PIL.Image import Image, new
 
 from image_viewer.config import DEFAULT_FONT
 from image_viewer.constants import ImageFormats
