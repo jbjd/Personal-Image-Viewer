@@ -18,6 +18,7 @@ from image_viewer.util.os import (
     get_normalized_folder_name,
     trash_file,
 )
+from image_viewer.util.PIL import get_mode_info
 
 
 class _ShouldPreserveIndex(Enum):
@@ -141,18 +142,9 @@ class ImageFileManager:
         if not get_all_details:
             return short_details
 
-        mode: str = image_info.mode
-        bpp: int = len(mode) * 8 if mode != "1" else 1
         readable_mode: str
-        match mode:
-            case "P":
-                readable_mode = "Palette"
-            case "L":
-                readable_mode = "Grayscale"
-            case "1":
-                readable_mode = "Black And White"
-            case _:
-                readable_mode = mode
+        bpp: int
+        readable_mode, bpp = get_mode_info(image_info.mode)
 
         details: str = (
             f"{short_details}\n"

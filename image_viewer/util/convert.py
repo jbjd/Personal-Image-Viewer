@@ -1,6 +1,7 @@
 """Conversion between image file types and representations."""
 
 import binascii
+from typing import IO
 
 from PIL.Image import open as open_image
 from PIL.JpegImagePlugin import RAWMODE as VALID_JPEG_MODES
@@ -11,7 +12,7 @@ from image_viewer.util.PIL import image_is_animated, save_image
 
 
 def try_convert_file_and_save_new(
-    old_path: str, new_path: str, target_format: str
+    old_path: str, new_path: str | IO[bytes], target_format: str, quality: int = 90
 ) -> bool:
     """Tries to convert image at old_path to a target format at new_path.
 
@@ -55,6 +56,7 @@ def try_convert_file_and_save_new(
                 temp_img,
                 new_path,
                 target_format,
+                quality,
                 is_animated=is_animated,
                 icc_profile=temp_img.info.get("icc_profile"),
             )
