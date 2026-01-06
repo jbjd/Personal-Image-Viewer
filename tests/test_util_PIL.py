@@ -1,6 +1,7 @@
 from unittest.mock import MagicMock, patch
 
 from PIL.Image import Image, new
+import pytest
 
 from image_viewer.config import DEFAULT_FONT
 from image_viewer.constants import ImageFormats
@@ -8,6 +9,7 @@ from image_viewer.image.file import ImageName
 from image_viewer.util.PIL import (
     _preinit,
     create_dropdown_image,
+    get_mode_info,
     get_placeholder_for_errored_image,
     init_PIL,
     resize,
@@ -68,6 +70,26 @@ def test_resize():
     new_image = resize(new_image.convert("RGBA"), (15, 15))
 
     assert new_image.size == (15, 15)
+
+
+@pytest.mark.parametrize(
+    "mode,expected_readable_mode,expected_bpp",
+    [
+        ("RGB", "RGB", 24),
+        ("RGBA", "RGBA", 32),
+        ("I", "Signed Integer Pixels", 32),
+        ("L", "Grayscale", 8),
+        ("LA", "Grayscale With Alpha", 16),
+        ("P", "Palette", 8),
+        ("PA", "Palette With Alpha", 16),
+        ("1", "Black And White", 1),
+    ],
+)
+def test_get_mode_info(mode: str, expected_readable_mode: str, expected_bpp: int):
+    readable_mode, bpp = get_mode_info(mode)
+
+    assert readable_mode == expected_readable_mode
+    assert bpp == expected_bpp
 
 
 def test_preinit():

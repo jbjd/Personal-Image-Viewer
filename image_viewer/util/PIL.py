@@ -13,61 +13,58 @@ from PIL.JpegImagePlugin import JpegImageFile
 
 from image_viewer.constants import TEXT_RGB
 
+# Modes that need more descriptive names or whos bpp
+# does not follow len(mode) * 8
+_mode_info_special_cases: dict[str, tuple[str, int]] = {
+    "I": ("Signed Integer Pixels", 32),
+    "L": ("Grayscale", 8),
+    "LA": ("Grayscale With Alpha", 16),
+    "P": ("Palette", 8),
+    "PA": ("Palette With Alpha", 16),
+    "1": ("Black And White", 1),
+}
+
 
 def get_mode_info(mode: str) -> tuple[str, int]:
     """Given a PIL image's mode, return additional info on it.
 
+    Certain modes aren't supported by this program and will not be handled.
+    YCbCr: Only used for JPEG 2000, which is unsuported.
+    HSV: No docs indicate that this can be used for opening or saving.
+    F: Only used for TIFF format, which is unsupported.
+
     :param mode: Mode of a PIL image.
     :returns: A readable name and the bits per pixels"""
 
-    bpp: int
-    match mode:
-        case "I" | "F":
-            bpp = 32
-        case "YCbCr":
-            bpp = 24
-        case "P":
-            mode = "Palette"
-            bpp = 8
-        case "PA":
-            mode = "Palette with alpha"
-            bpp = 16
-        case "L":
-            mode = "Grayscale"
-            bpp = 8
-        case "LA" | "La":
-            mode = "Grayscale with alpha"
-            bpp = 16
-        case "1":
-            mode = "Black And White"
-            bpp = 1
-        case _:
-            bpp: int = len(mode) * 8
-
-    return mode, bpp
+    return (
+        _mode_info_special_cases[mode]
+        if mode in _mode_info_special_cases
+        else (mode, len(mode) * 8)
+    )
 
 
 def save_image(
     image: Image,
     fp: str | IO[bytes],
-    extension: str | None = None,
+    extension: str,
     quality: int = 90,
     is_animated: bool | None = None,
     icc_profile: bytes | None = None,
 ) -> None:
     """Saves a PIL image to disk"""
     save_all: bool = image_is_animated(image) if is_animated is None else is_animated
-    image.save(
-        fp,
-        extension,
-        optimize=True,
-        speed=0,
-        method=6,
-        subsampling="keep",
-        quality=quality,
-        save_all=save_all,
-        icc_profile=icc_profile,
-    )
+
+    kwargs: dict = {
+        "optimize": True,
+        "speed": 0,
+        "quality": quality,
+        "save_all": save_all,
+        "icc_profile": icc_profile,
+    }
+    if extension == "jpeg":
+        kwargs["subsampling"] = "keep"
+
+    image.save(fp, extension, **kwargs)
 
 
 def rotate_image(image: Image, angle: int) -> Image:
