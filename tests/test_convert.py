@@ -1,4 +1,3 @@
-import os
 import tempfile
 from unittest.mock import mock_open, patch
 
@@ -6,7 +5,7 @@ import pytest
 
 from image_viewer.constants import ImageFormats
 from image_viewer.util.convert import try_convert_file_and_save_new
-from tests.conftest import IMG_DIR
+from tests.conftest import EXAMPLE_JPEG_PATH, EXAMPLE_PNG_PATH
 from tests.test_util.mocks import MockImage
 
 _MODULE_PATH: str = "image_viewer.util.convert"
@@ -55,27 +54,26 @@ def test_convert_to_bad_type():
 
 
 @pytest.mark.parametrize(
-    "image_file_name,target_format",
+    "image_file_path,target_format",
     [
-        ("a.png", ImageFormats.JPEG),
-        ("a.png", ImageFormats.WEBP),
-        ("a.png", ImageFormats.GIF),
-        ("a.png", ImageFormats.DDS),
-        ("a.png", ImageFormats.PNG),
-        ("a.png", ImageFormats.JPEG),
-        ("d.jpg", ImageFormats.PNG),
+        (EXAMPLE_PNG_PATH, ImageFormats.JPEG),
+        (EXAMPLE_PNG_PATH, ImageFormats.WEBP),
+        (EXAMPLE_PNG_PATH, ImageFormats.GIF),
+        (EXAMPLE_PNG_PATH, ImageFormats.DDS),
+        (EXAMPLE_PNG_PATH, ImageFormats.PNG),
+        (EXAMPLE_PNG_PATH, ImageFormats.JPEG),
+        (EXAMPLE_JPEG_PATH, ImageFormats.PNG),
     ],
 )
-def test_convert_between_types(image_file_name: str, target_format: str):
+def test_convert_between_types(image_file_path: str, target_format: str):
     """Should attempt conversion unless image is already target format, ignoring
     the file format in the path and using the format in the files magic bytes"""
-    old_path: str = os.path.join(IMG_DIR, image_file_name)
 
     with tempfile.TemporaryFile() as temp_file:
         converted: bool = try_convert_file_and_save_new(
-            old_path, temp_file, target_format, quality=50
+            image_file_path, temp_file, target_format, quality=50
         )
-        if image_file_name.endswith(target_format.lower()):
+        if image_file_path.endswith(target_format.lower()):
             assert not converted
         else:
             assert converted

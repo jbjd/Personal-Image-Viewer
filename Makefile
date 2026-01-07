@@ -70,9 +70,7 @@ validate:
 	codespell image_viewer tests compile_utils compile.py README.md
 
 test:
-	$(PYTHON_FOR_INSTALL_STEP) -m pytest --cov=image_viewer --cov-report term-missing
+	$(PYTHON_FOR_INSTALL_STEP) -m pytest -m "not memory_leak" --cov=image_viewer --cov-report term-missing
 
 test-memory-leak:
-	$(SET_ENV) PYTHONMALLOC=malloc
-	$(SET_ENV) PYTHONUNBUFFERED=1
-	$(PYTHON_FOR_INSTALL_STEP) -m pytest tests/memory_leaks/find.py
+	$(PYTHON_FOR_INSTALL_STEP) -m pytest -m "memory_leak"
