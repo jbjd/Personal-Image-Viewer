@@ -25,7 +25,8 @@ from tests.test_util.mocks import MockEvent, MockImage
 
 WORKING_DIR: str = os.path.dirname(__file__)
 IMG_DIR: str = os.path.join(WORKING_DIR, "example_images")
-EXAMPLE_IMG_PATH: str = os.path.join(IMG_DIR, "a.png")
+EXAMPLE_PNG_PATH: str = os.path.join(IMG_DIR, "a.png")
+EXAMPLE_JPEG_PATH: str = os.path.join(IMG_DIR, "d.jpg")
 MAIN_DIR: str = os.path.dirname(WORKING_DIR)
 
 
@@ -56,12 +57,12 @@ def image_cache_fixture() -> ImageCache:
 
 @pytest.fixture(name="file_manager")
 def file_manager_fixture(image_cache: ImageCache) -> ImageFileManager:
-    return ImageFileManager(EXAMPLE_IMG_PATH, image_cache)
+    return ImageFileManager(EXAMPLE_PNG_PATH, image_cache)
 
 
 @pytest.fixture(name="file_manager_with_3_images")
 def file_manager_with_3_images_fixture(image_cache: ImageCache) -> ImageFileManager:
-    manager = ImageFileManager(EXAMPLE_IMG_PATH, image_cache)
+    manager = ImageFileManager(EXAMPLE_PNG_PATH, image_cache)
     manager._files = ImageNameList([*map(ImageName, ("a.png", "c.jpg", "e.webp"))])
     return manager
 
@@ -107,7 +108,7 @@ def viewer_fixture() -> ViewerApp:
         patch("image_viewer.viewer.CustomCanvas"),
         patch("image_viewer.viewer.ButtonIconFactory", mock_icon_factory),
     ):
-        return ViewerApp(EXAMPLE_IMG_PATH, MAIN_DIR)
+        return ViewerApp(EXAMPLE_PNG_PATH, MAIN_DIR)
 
 
 @pytest.fixture(name="focused_event")

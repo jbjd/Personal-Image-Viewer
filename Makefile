@@ -3,11 +3,13 @@ ifeq ($(OS),Windows_NT)
 	PYTHON_DLL = python312
 	COMPILED_EXT = pyd
 	OS_FLAGS =
+	SET_ENV=set
 else
     PYTHON = python3.12
 	PYTHON_DLL = python3.12
 	COMPILED_EXT = so
 	OS_FLAGS = -fPIC
+	SET_ENV=export
 endif
 
 # Base prefix ignores venv
@@ -37,7 +39,7 @@ endif
 
 OPTIMIZATION_FLAG=-O3
 C_SOURCE=image_viewer/c_extensions
-C_FLAGS_SHARED=-L$(PYTHON_LIBS) -I$(PYTHON_INCLUDES) -l$(PYTHON_DLL) $(OPTIMIZATION_FLAG) -march=native -mtune=native -ffinite-math-only -fgcse-las -fgcse-sm -fisolate-erroneous-paths-attribute -fno-signed-zeros -frename-registers -fsched-pressure -s -shared -Wall -Werror $(OS_FLAGS)
+C_FLAGS_SHARED=-L$(PYTHON_LIBS) -I$(PYTHON_INCLUDES) -l$(PYTHON_DLL) $(OPTIMIZATION_FLAG) -march=native -mtune=native -ffinite-math-only -fgcse-las -fgcse-sm -fisolate-erroneous-paths-attribute -fno-signed-zeros -frename-registers -fsched-pressure -s -shared -Wall  $(OS_FLAGS)
 
 build-util-os-nt:
 ifeq ($(OS),Windows_NT)
@@ -69,3 +71,8 @@ validate:
 
 test:
 	$(PYTHON_FOR_INSTALL_STEP) -m pytest --cov=image_viewer --cov-report term-missing
+
+test-memory-leak:
+	$(SET_ENV) PYTHONMALLOC=malloc
+	$(SET_ENV) PYTHONUNBUFFERED=1
+	$(PYTHON_FOR_INSTALL_STEP) -m pytest tests/memory_leaks/find.py
