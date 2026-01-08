@@ -50,3 +50,4 @@ jobs:
           export DISPLAY=:99
           Xvfb :99 &
           make test
+          make test-memory-leak
