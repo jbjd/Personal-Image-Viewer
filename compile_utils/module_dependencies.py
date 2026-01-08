@@ -111,11 +111,7 @@ if os.name == "nt":
     modules_to_skip += ["PIL._tkinter_finder", "selectors", "tempfile"]
 else:
     # TODO: Skip everything but plat other?
-    modules_to_skip += [
-        "send2trash.mac",
-        "send2trash.plat_gio",
-        "send2trash.win",
-    ]
+    modules_to_skip += ["send2trash.mac", "send2trash.plat_gio", "send2trash.win"]
 
 
 def get_normalized_module_name(module: Requirement) -> str:

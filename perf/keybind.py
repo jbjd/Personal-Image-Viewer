@@ -19,14 +19,12 @@ is_valid_keybind_re = re.compile("^<(F([1-9]|1[0-2])|Control-[a-zA-Z0-9])>$")
 
 
 def validate_keybind_or_default_python(keybind, default):
-
     match = is_valid_keybind_re.match(keybind)
 
     return default if match is None else keybind
 
 
 def validate_keybind_or_default_c(keybind, default):
-
     return keybind if is_valid_keybind(keybind) else default
 
 
