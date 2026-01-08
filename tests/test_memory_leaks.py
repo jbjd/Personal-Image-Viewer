@@ -2,8 +2,8 @@
 
 import os
 
-from psleak import MemoryLeakTestCase
 import pytest
+from psleak import MemoryLeakTestCase
 
 from image_viewer.image._read import decode_scaled_jpeg, read_image_into_buffer
 from tests.conftest import EXAMPLE_JPEG_PATH
