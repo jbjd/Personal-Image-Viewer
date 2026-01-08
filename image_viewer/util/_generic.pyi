@@ -7,7 +7,7 @@ def is_valid_hex_color(hex_color: str, /) -> bool:
     :returns: True if hex_color is a valid color."""
 
 def is_valid_keybind(keybind: str, /) -> bool:
-    """Checks if a keybind is a valid subset of tkinter keybinds allowed in this program.
+    """Checks if a keybind is an allowed and valid subset of tkinter keybinds.
 
     :param keybind: A possible keybind.
     :returns: True if keybind follows one of the following regex:

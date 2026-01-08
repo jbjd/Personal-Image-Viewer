@@ -35,7 +35,6 @@ else:  # assume linux for now
 
     # TODO: Port this to C and see if its faster
     def _restore_file_linux(original_path: str) -> None:
-
         name_re: re.Pattern = _get_trashinfo_regex(original_path)
 
         for file in get_files_in_folder(TRASH_INFO):
@@ -139,7 +138,7 @@ def get_byte_display(size_in_bytes: int) -> str:
     :returns: The formatted representation of the byte value."""
     kb_size: int = 1024 if os.name == "nt" else 1000
     size_in_kb: int = size_in_bytes // kb_size
-    return f"{size_in_kb/kb_size:.2f}mb" if size_in_kb > 999 else f"{size_in_kb}kb"
+    return f"{size_in_kb / kb_size:.2f}mb" if size_in_kb > 999 else f"{size_in_kb}kb"
 
 
 def trash_file(path: str) -> None:

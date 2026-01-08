@@ -104,9 +104,9 @@ def test_preinit():
         "PIL.DdsImagePlugin",
     }
 
-    assert len(supported_formats) == len(
-        ImageFormats
-    ), "Test not accounting for all supported formats"
+    assert len(supported_formats) == len(ImageFormats), (
+        "Test not accounting for all supported formats"
+    )
 
     mock_import = MagicMock()
     mock_register_open = MagicMock()

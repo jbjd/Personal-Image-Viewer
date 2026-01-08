@@ -94,10 +94,7 @@ class ViewerApp:
         )
 
         self.image_loader: ImageLoader = ImageLoader(
-            screen_width,
-            screen_height,
-            image_cache,
-            self.animation_loop,
+            screen_width, screen_height, image_cache, self.animation_loop
         )
 
         init_PIL(config.font_file, self._scale_pixels_to_height(23))
@@ -179,8 +176,7 @@ class ViewerApp:
 
         if os.name == "nt":
             app.bind(
-                "<Control-b>",
-                lambda _: open_with(self.file_manager.path_to_image),
+                "<Control-b>", lambda _: open_with(self.file_manager.path_to_image)
             )
             app.bind(
                 "<Control-c>",
@@ -219,9 +215,7 @@ class ViewerApp:
 
         button_x_offset: int = screen_width - icon_size
         exit_button = HoverableButtonUIElement(
-            canvas,
-            button_icon_factory.make_exit_icons(),
-            self.exit,
+            canvas, button_icon_factory.make_exit_icons(), self.exit
         )
         exit_button.create(ButtonName.EXIT, button_x_offset)
 
@@ -236,10 +230,7 @@ class ViewerApp:
             button_icon_factory.make_dropdown_icons()
         )
         dropdown_button = ToggleableButtonUIElement(
-            canvas,
-            dropdown_icons_down,
-            dropdown_icons_up,
-            self.toggle_show_dropdown,
+            canvas, dropdown_icons_down, dropdown_icons_up, self.toggle_show_dropdown
         )
         dropdown_button.create(ButtonName.DROPDOWN, button_x_offset)
 
@@ -262,11 +253,7 @@ class ViewerApp:
 
         rename_window_width: int = self._scale_pixels_to_width(250)
         rename_id: int = canvas.create_window(
-            0,
-            0,
-            width=rename_window_width,
-            height=int(icon_size * 0.8),
-            anchor="nw",
+            0, 0, width=rename_window_width, height=int(icon_size * 0.8), anchor="nw"
         )
         self.rename_entry: RenameEntry = RenameEntry(
             self.app, canvas, rename_id, rename_window_width, font=font

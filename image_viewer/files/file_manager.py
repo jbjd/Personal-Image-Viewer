@@ -154,7 +154,8 @@ class ImageFileManager:
         return details
 
     def get_image_details(
-        self, PIL_image: Image  # pylint: disable=invalid-name
+        self,
+        PIL_image: Image,  # pylint: disable=invalid-name
     ) -> str | None:
         """Returns a formatted string of data from cache/OS call/PIL object
         or None if failed to read from cache."""
@@ -300,10 +301,7 @@ class ImageFileManager:
         if os.path.exists(new_full_path):
             raise FileExistsError
 
-        if will_move_dirs and not askyesno(
-            "Confirm move",
-            f"Move file to {new_dir} ?",
-        ):
+        if will_move_dirs and not askyesno("Confirm move", f"Move file to {new_dir} ?"):
             raise OSError
 
         return new_full_path
@@ -313,8 +311,7 @@ class ImageFileManager:
     ) -> Convert:
         """Asks user to delete old file and returns Convert result"""
         delete: bool = askyesno(
-            "Confirm deletion",
-            f"Converted file to {new_format}, delete old file?",
+            "Confirm deletion", f"Converted file to {new_format}, delete old file?"
         )
 
         if delete:

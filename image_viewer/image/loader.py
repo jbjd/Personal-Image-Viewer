@@ -182,9 +182,7 @@ class ImageLoader:
                 )
         except OSError as e:
             current_image = get_placeholder_for_errored_image(
-                e,
-                self.image_resizer.screen_width,
-                self.image_resizer.screen_height,
+                e, self.image_resizer.screen_width, self.image_resizer.screen_height
             )
 
         return current_image

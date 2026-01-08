@@ -61,9 +61,8 @@ clean:
 	rm --preserve-root -Irf */__pycache__/ *.dist/ *.build/ build/ tmp*/ *.egg-info/ .mypy_cache/ .pytest_cache/ */ERROR.log *.exe .coverage compilation-report.xml nuitka-crash-report.xml
 
 validate:
-	isort . -m 3 --tc --check
-	flake8 .
-	black . --check
+	ruff check .
+	ruff format --check
 	mypy . --check-untyped-defs
 	codespell image_viewer tests compile_utils compile.py README.md
 
