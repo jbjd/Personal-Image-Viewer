@@ -111,12 +111,7 @@ def test_minimize(viewer: ViewerApp):
 
 @pytest.mark.parametrize(
     "dropdown_show,dropdown_needs_refresh",
-    [
-        (False, False),
-        (False, True),
-        (True, False),
-        (True, True),
-    ],
+    [(False, False), (False, True), (True, False), (True, True)],
 )
 def test_update_details_dropdown(
     viewer: ViewerApp, dropdown_show: bool, dropdown_needs_refresh: bool
@@ -151,7 +146,6 @@ def test_update_details_dropdown(
 
 @pytest.mark.parametrize("user_input", (" ", "something.png"))
 def test_rename_or_convert(viewer: ViewerApp, user_input: str):
-
     event = MagicMock()
     with (
         patch("image_viewer.viewer.RenameEntry.get", return_value=user_input),

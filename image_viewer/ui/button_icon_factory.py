@@ -64,8 +64,7 @@ class ButtonIconFactory:
         exit_hover_rgb: tuple[int, int, int] = (180, 25, 20)
         draw, draw_hovered = self._make_icon_base(exit_rgb, exit_hover_rgb)
         return IconImages(
-            self.make_icon_from_draw(draw),
-            self._draw_x_symbol(draw_hovered),
+            self.make_icon_from_draw(draw), self._draw_x_symbol(draw_hovered)
         )
 
     def _draw_minify_symbol(self, draw: ImageDraw) -> PhotoImage:

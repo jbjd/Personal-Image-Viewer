@@ -11,7 +11,6 @@ from tests.conftest import EXAMPLE_JPEG_PATH
 
 @pytest.mark.memory_leak
 class TestLeaks(MemoryLeakTestCase):
-
     warmup_times = 1
 
     times = 10
