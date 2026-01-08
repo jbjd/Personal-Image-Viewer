@@ -3,6 +3,7 @@
 import binascii
 from typing import IO
 
+from PIL.Image import Image
 from PIL.Image import open as open_image
 from PIL.JpegImagePlugin import RAWMODE as VALID_JPEG_MODES
 
@@ -35,6 +36,7 @@ def try_convert_file_and_save_new(
         if target_format[0] == original_ext[0].lower():
             return False
 
+        temp_img: Image
         with open_image(fp) as temp_img:
             is_animated: bool = image_is_animated(temp_img)
             if is_animated and target_format not in ("webp", "gif", "png"):
