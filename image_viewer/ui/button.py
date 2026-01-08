@@ -45,11 +45,7 @@ class HoverableButtonUIElement(ButtonUIElementBase):
         :param y_offset: The on-screen Y offset."""
 
         self.id = self.canvas.create_button(
-            self,
-            name,
-            x_offset,
-            y_offset,
-            image=self.icon,
+            self, name, x_offset, y_offset, image=self.icon
         )
 
         self.canvas.tag_bind(self.id, "<Enter>", self.on_enter)

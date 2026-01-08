@@ -5,7 +5,6 @@ from types import ModuleType
 perf_tests: list[str] = ["keybind"]
 
 if len(sys.argv) < 2 or sys.argv[1] not in perf_tests:
-
     exit_code: int
     if len(sys.argv) < 2:
         exit_code = 0

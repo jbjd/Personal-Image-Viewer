@@ -1,0 +1,14 @@
+line-length = 88
+indent-width = 4
+
+target-version = "py312"
+
+[lint]
+extend-select = ["E", "F", "I", "W"]
+
+[lint.isort]
+known-third-party = ["nuitka"]
+
+[format]
+quote-style = "double"
+indent-style = "space"
