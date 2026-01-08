@@ -1,8 +1,6 @@
 """Tests for memory leaks in C extension modules."""
 
-from io import BufferedIOBase
 import os
-import sys
 
 from psleak import MemoryLeakTestCase
 import pytest
@@ -13,6 +11,12 @@ from tests.conftest import EXAMPLE_JPEG_PATH
 
 @pytest.mark.memory_leak
 class TestLeaks(MemoryLeakTestCase):
+
+    warmup_times = 1
+
+    times = 10
+
+    retries = 4
 
     def setUp(self) -> None:
         self.malloc_env: str | None = os.getenv("PYTHONMALLOC")
