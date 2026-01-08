@@ -10,7 +10,7 @@ from image_viewer.files.file_dialog_asker import FileDialogAsker
 from image_viewer.files.file_manager import ImageFileManager, _ShouldPreserveIndex
 from image_viewer.image.cache import ImageCache, ImageCacheEntry
 from image_viewer.image.file import ImageSearchResult
-from tests.conftest import EXAMPLE_IMG_PATH, IMG_DIR
+from tests.conftest import EXAMPLE_PNG_PATH, IMG_DIR
 from tests.test_util.exception import safe_wrapper
 from tests.test_util.mocks import MockImage, MockStatResult
 
@@ -80,7 +80,7 @@ def test_bad_path_for_rename(file_manager: ImageFileManager):
         )
     # If path exists, error when user cancels (mocked in askyesno)
     with pytest.raises(OSError):
-        file_manager.rename_or_convert_current_image(EXAMPLE_IMG_PATH)
+        file_manager.rename_or_convert_current_image(EXAMPLE_PNG_PATH)
 
 
 def test_move_index(file_manager: ImageFileManager):
