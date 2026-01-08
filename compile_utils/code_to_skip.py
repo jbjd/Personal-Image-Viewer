@@ -159,12 +159,7 @@ classes_to_skip: dict[str, set[str]] = {
         "SupportsArrowArrayInterface",
         "SupportsGetData",
     },
-    "PIL.ImageFile": {
-        "Parser",
-        "PyEncoder",
-        "StubHandler",
-        "StubImageFile",
-    },
+    "PIL.ImageFile": {"Parser", "PyEncoder", "StubHandler", "StubImageFile"},
     "PIL.ImageFont": {"TransposedFont"},
     "PIL.ImageOps": {"SupportsGetMesh"},
     "PIL.ImageTk": {"BitmapImage"},
@@ -175,9 +170,7 @@ classes_to_skip: dict[str, set[str]] = {
 }
 
 
-from_imports_to_skip: dict[str, set[str]] = {
-    "PIL.Image": {"deprecate"},
-}
+from_imports_to_skip: dict[str, set[str]] = {"PIL.Image": {"deprecate"}}
 
 dict_keys_to_skip: dict[str, set[str]] = {}
 
@@ -252,7 +245,7 @@ regex_to_apply_py: defaultdict[str, list[RegexReplacement]] = defaultdict(
                 pattern="""try:
     from defusedxml import ElementTree
 except ImportError:
-    ElementTree = None""",
+    ElementTree = None"""
             ),
             RegexReplacement(
                 pattern=r"try:\n    #.*?from \. import _imaging as core.*?except.*?raise",  # noqa: E501
@@ -367,7 +360,7 @@ environb = os.environb"""
             ),
             flags=re.DOTALL,
             count=1,
-        ),
+        )
     ]
     regex_to_apply_py["send2trash.exceptions"] = [
         RegexReplacement(
@@ -397,7 +390,7 @@ regex_to_apply_tk: defaultdict[str, list[RegexReplacement]] = defaultdict(
                 pattern="proc ttk::LoadThemes.*?\n}",
                 replacement="proc ttk::LoadThemes {} {}",
                 flags=re.DOTALL,
-            ),
+            )
         ],
         "tcl8/*/platform-*.tm": [
             # Discontinued OS
@@ -491,7 +484,7 @@ custom_nuitka_regex: dict[str, list[RegexReplacement]] = {
             """if sys.flags.no_site == 0:
         needs_re_execution = True""",
             count=1,
-        ),
+        )
     ],
     "importing/Recursion.py": [
         RegexReplacement(

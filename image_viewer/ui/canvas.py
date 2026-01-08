@@ -106,12 +106,7 @@ class CustomCanvas(Canvas):
     def create_name_text(self, x: int, y: int, font: str) -> None:
         """Creates text object used to display file name"""
         self.file_name_text_id = self.create_text(
-            x,
-            y,
-            fill=TEXT_RGB,
-            anchor="w",
-            font=font,
-            tags=TkTags.TOPBAR,
+            x, y, fill=TEXT_RGB, anchor="w", font=font, tags=TkTags.TOPBAR
         )
 
     def update_image_display(self, new_image: PhotoImage) -> None:
