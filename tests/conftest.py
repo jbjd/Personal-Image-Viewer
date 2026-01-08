@@ -81,13 +81,7 @@ def image_loader_fixture(image_cache: ImageCache) -> ImageLoader:
 
 @pytest.fixture(name="rename_entry")
 def rename_entry_fixture(tk_app: Tk, canvas: CustomCanvas) -> RenameEntry:
-    rename_id: int = canvas.create_window(
-        0,
-        0,
-        width=250,
-        height=20,
-        anchor="nw",
-    )
+    rename_id: int = canvas.create_window(0, 0, width=250, height=20, anchor="nw")
     return RenameEntry(tk_app, canvas, rename_id, 250, DEFAULT_FONT)
 
 

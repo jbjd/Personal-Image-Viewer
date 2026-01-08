@@ -204,9 +204,7 @@ def _preinit() -> None:
         return JpegImageFile(fp, filename)
 
     register_open(
-        "JPEG",
-        new_jpeg_factory,
-        lambda prefix: prefix[:3] == b"\xff\xd8\xff",
+        "JPEG", new_jpeg_factory, lambda prefix: prefix[:3] == b"\xff\xd8\xff"
     )
 
     _Image._initialized = 2
