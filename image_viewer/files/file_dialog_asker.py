@@ -20,7 +20,5 @@ class FileDialogAsker:
         """Ask user to choose an image file and returns its path"""
 
         return askopenfilename(
-            title="Open Image",
-            initialdir=directory,
-            filetypes=self._dialog_file_types,
+            title="Open Image", initialdir=directory, filetypes=self._dialog_file_types
         )

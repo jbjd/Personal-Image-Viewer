@@ -41,10 +41,7 @@ def test_image_file_manager(file_manager: ImageFileManager):
                 "_ask_to_delete_old_image_after_convert",
                 lambda *_: None,
             ),
-            patch(
-                "image_viewer.files.file_manager.askyesno",
-                lambda *_: True,
-            ),
+            patch("image_viewer.files.file_manager.askyesno", lambda *_: True),
         ):
             file_manager.rename_or_convert_current_image("example.test")
 
@@ -135,11 +132,7 @@ def test_add_new_image_adjusts_index(
 
 def test_undo(file_manager: ImageFileManager):
     """Test correct behavior adding/removing with undo"""
-    with patch.object(
-        ImageFileManager,
-        "_confirm_undo",
-        return_value=False,
-    ):
+    with patch.object(ImageFileManager, "_confirm_undo", return_value=False):
         assert not file_manager.undo_most_recent_action()
 
     file_restored = "b.png"

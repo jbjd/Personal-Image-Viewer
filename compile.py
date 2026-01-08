@@ -105,10 +105,7 @@ try:
         args.assume_this_machine,
     )
     move_files_to_tmp_and_clean(
-        code_folder_path,
-        tmp_folder,
-        IMAGE_VIEWER_NAME,
-        args.assume_this_machine,
+        code_folder_path, tmp_folder, IMAGE_VIEWER_NAME, args.assume_this_machine
     )
 
     warn_unused_skips: bool = True
