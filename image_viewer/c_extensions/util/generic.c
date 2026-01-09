@@ -2,6 +2,13 @@
 
 #include <Python.h>
 
+/**
+ * Checks if input is a valid hex string in format #123ABC.
+ *
+ * @param self Instance of this module.
+ * @param arg A PyUnicode string to check.
+ * @return PyBool if valid.
+ */
 static PyObject *is_valid_hex_color(PyObject *self, PyObject *arg)
 {
     const ssize_t hexLen = PyUnicode_GetLength(arg);
@@ -29,28 +36,45 @@ static PyObject *is_valid_hex_color(PyObject *self, PyObject *arg)
     return Py_True;
 }
 
-static inline bool is_valid_f_key(const char *keybind, Py_ssize_t len)
+/**
+ * Checks if a key contains a valid key for tkinter that this program also supports.
+ * Uppercase, F keys (any case, e.x. f12 or F12) are valid and may be prefixed.
+ * Lowercase/numeric are valid only if prefixed.
+ *
+ * @param key A string to check.
+ * @param len Length of @p key.
+ * @return bool if valid.
+ */
+static inline bool is_valid_key(const char *key, Py_ssize_t len, bool prefixed)
 {
     switch (len)
     {
     case 3:
-        return tolower(keybind[0]) == 'f' && keybind[1] == '1' && (keybind[2] >= '0' && keybind[2] <= '2');
+        return tolower(key[0]) == 'f' && key[1] == '1' && (key[2] >= '0' && key[2] <= '2');
     case 2:
-        return tolower(keybind[0]) == 'f' && (keybind[1] > '0' && keybind[1] <= '9');
+        return tolower(key[0]) == 'f' && (key[1] > '0' && key[1] <= '9');
+    case 1:
+        return (isalnum(key[0]) && prefixed) || isupper(key[0]);
     default:
         return false;
     }
 }
 
-static inline bool is_valid_ctrl_key(const char *keybind, Py_ssize_t len)
-{
-    return len == 9 && 0 == strncmp(keybind, "Control-", 8) && (isalnum(keybind[8]));
-}
-
+/**
+ * Checks if a keybind contains a valid keybind for tkinter that this program also supports.
+ * Uppercase, F keys (any case, e.x. f12 or F12) are valid and may be prefixed.
+ * Lowercase/numeric are valid only if prefixed.
+ * Valid prefixes are "Control-".
+ * Keybind must start and end with "<" and ">" respectively.
+ *
+ * @param self Instance of this module.
+ * @param arg A PyUnicode string to check.
+ * @return PyBool if valid.
+ */
 static PyObject *is_valid_keybind(PyObject *self, PyObject *arg)
 {
     Py_ssize_t size = PyUnicode_GetLength(arg);
-    const Py_ssize_t MAX_POSSIBLE_SIZE = 11;
+    const Py_ssize_t MAX_POSSIBLE_SIZE = 13;
 
     if (size < 3 || size > MAX_POSSIBLE_SIZE)
     {
@@ -67,7 +91,15 @@ static PyObject *is_valid_keybind(PyObject *self, PyObject *arg)
     keybind += 1;
     size -= 2;
 
-    return is_valid_f_key(keybind, size) || is_valid_ctrl_key(keybind, size) ? Py_True : Py_False;
+    bool prefixed = strncmp(keybind, "Control-", 8) == 0;
+
+    if (prefixed)
+    {
+        keybind += 8;
+        size -= 8;
+    }
+
+    return is_valid_key(keybind, size, prefixed) ? Py_True : Py_False;
 }
 
 static PyMethodDef generic_methods[] = {

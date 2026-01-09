@@ -6,16 +6,24 @@ from image_viewer.util._generic import is_valid_keybind
 tests = [
     "asdvbiu34uiyaiwyt47ybtv18nc98177841ync8397cn1789crt12978xrnwegfg",
     "<Control-d>",
+    "<Control-F0>",
+    "<Control-F6>",
     "<Control->",
     "<F0>",
     "<F1>",
     "<F12>",
     "<F13>",
     "<F91>",
-] * 99999
+    "<A>",
+]
+unique_count: int = len(tests)
+
+tests *= 99999
 
 
-is_valid_keybind_re = re.compile("^<(F([1-9]|1[0-2])|Control-[a-zA-Z0-9])>$")
+is_valid_keybind_re = re.compile(
+    "^<((Control-)?([A-Z]|F[1-9]|F1[0-2])|Control-[a-z0-9])>$"
+)
 
 
 def validate_keybind_or_default_python(keybind, default):
@@ -43,4 +51,6 @@ def run():
 
     print("C time:", perf_counter() - a)
 
-    assert python_results == c_results
+    assert python_results == c_results, (
+        f"{python_results[:unique_count]} != {c_results[:unique_count]}"
+    )
