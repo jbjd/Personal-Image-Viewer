@@ -68,6 +68,7 @@ def test_config_reader_int_fallback():
     [
         ("asdvbiu34uiyg", _DEFAULT),
         ("<Control-d>", "<Control-d>"),
+        ("<Control-F12>", "<Control-F12>"),
         ("<Control->", _DEFAULT),
         ("<F0>", _DEFAULT),
         ("<F1>", "<F1>"),
@@ -75,6 +76,7 @@ def test_config_reader_int_fallback():
         ("<F13>", _DEFAULT),
         ("<F91>", _DEFAULT),
         ("<k>", _DEFAULT),
+        ("<K>", "<K>"),
     ],
 )
 def test_validate_keybind_or_default(keybind: str, expected_keybind: str):
