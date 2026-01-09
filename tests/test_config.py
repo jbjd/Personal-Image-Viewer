@@ -68,6 +68,7 @@ def test_config_reader_int_fallback():
     [
         ("asdvbiu34uiyg", _DEFAULT),
         ("<Control-d>", "<Control-d>"),
+        ("<Control-F12>", "<Control-F12>"),
         ("<Control->", _DEFAULT),
         ("<F0>", _DEFAULT),
         ("<F1>", "<F1>"),
