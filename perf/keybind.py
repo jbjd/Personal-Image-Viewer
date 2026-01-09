@@ -6,6 +6,8 @@ from image_viewer.util._generic import is_valid_keybind
 tests = [
     "asdvbiu34uiyaiwyt47ybtv18nc98177841ync8397cn1789crt12978xrnwegfg",
     "<Control-d>",
+    "<Control-F0>",
+    "<Control-F6>",
     "<Control->",
     "<F0>",
     "<F1>",
@@ -15,7 +17,7 @@ tests = [
 ] * 99999
 
 
-is_valid_keybind_re = re.compile("^<(F([1-9]|1[0-2])|Control-[a-zA-Z0-9])>$")
+is_valid_keybind_re = re.compile("^<(Control-)?([a-zA-Z0-9]|F[1-9]|F1[0-2])>$")
 
 
 def validate_keybind_or_default_python(keybind, default):
