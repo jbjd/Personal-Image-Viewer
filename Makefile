@@ -42,8 +42,6 @@ C_FLAGS_SHARED=-L$(PYTHON_LIBS) -I$(PYTHON_INCLUDES) -l$(PYTHON_DLL) $(OPTIMIZAT
 build-util-os-nt:
 ifeq ($(OS),Windows_NT)
 	gcc $(C_SOURCE)/util/os_nt.c $(C_SOURCE)/b64/cencode.c -I$(C_SOURCE) -lshlwapi -loleaut32 -lole32 $(C_FLAGS_SHARED) -o image_viewer/util/_os_nt.$(COMPILED_EXT)
-else
-	@echo "Nothing to do for build-util-os-nt:"
 endif
 
 build-util-generic:
