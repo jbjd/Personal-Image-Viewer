@@ -2,6 +2,13 @@
 
 #include <Python.h>
 
+/**
+ * Checks if input is a valid hex string in format #123ABC.
+ *
+ * @param self Instance of this module.
+ * @param arg A PyUnicode string to check.
+ * @return PyBool if valid.
+ */
 static PyObject *is_valid_hex_color(PyObject *self, PyObject *arg)
 {
     const ssize_t hexLen = PyUnicode_GetLength(arg);
@@ -30,11 +37,13 @@ static PyObject *is_valid_hex_color(PyObject *self, PyObject *arg)
 }
 
 /**
- * Checks if a key contains a valid key for tkinter.
- * prefixed is if the key is proceeded by "Control-"
- * Alphanumeric keys and F keys (any case, e.x. f12 or F12) are valid.
+ * Checks if a key contains a valid key for tkinter that this program also supports.
+ * Uppercase, F keys (any case, e.x. f12 or F12) are valid and may be prefixed.
+ * Lowercase/numeric are valid only if prefixed.
  *
- * Returns true if key is valid.
+ * @param key A string to check.
+ * @param len Length of @p key.
+ * @return bool if valid.
  */
 static inline bool is_valid_key(const char *key, Py_ssize_t len, bool prefixed)
 {
@@ -51,6 +60,17 @@ static inline bool is_valid_key(const char *key, Py_ssize_t len, bool prefixed)
     }
 }
 
+/**
+ * Checks if a keybind contains a valid keybind for tkinter that this program also supports.
+ * Uppercase, F keys (any case, e.x. f12 or F12) are valid and may be prefixed.
+ * Lowercase/numeric are valid only if prefixed.
+ * Valid prefixes are "Control-".
+ * Keybind must start and end with "<" and ">" respectively.
+ *
+ * @param self Instance of this module.
+ * @param arg A PyUnicode string to check.
+ * @return PyBool if valid.
+ */
 static PyObject *is_valid_keybind(PyObject *self, PyObject *arg)
 {
     Py_ssize_t size = PyUnicode_GetLength(arg);
@@ -71,14 +91,15 @@ static PyObject *is_valid_keybind(PyObject *self, PyObject *arg)
     keybind += 1;
     size -= 2;
 
-    bool prefixed = strncmp(keybind, "Control-", 8) == 0
+    bool prefixed = strncmp(keybind, "Control-", 8) == 0;
+
     if (prefixed)
     {
         keybind += 8;
         size -= 8;
     }
 
-    return is_valid_key(keybind, size) ? Py_True : Py_False;
+    return is_valid_key(keybind, size, prefixed) ? Py_True : Py_False;
 }
 
 static PyMethodDef generic_methods[] = {
