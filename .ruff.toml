@@ -4,7 +4,7 @@ indent-width = 4
 target-version = "py312"
 
 [lint]
-select = ["E", "F", "I", "W", "B"]
+select = ["B", "E", "F", "I", "Q", "W"]
 
 [lint.isort]
 known-third-party = ["nuitka"]
