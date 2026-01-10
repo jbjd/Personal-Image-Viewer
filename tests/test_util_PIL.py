@@ -126,11 +126,11 @@ def test_preinit():
     assert mock_image_module._initialized == 2
 
     # Throw out irrelevant imports since some others happen during the call
-    imported_formats: set[str] = set(
+    imported_formats: set[str] = {
         imported_format
         for inputs in mock_import.call_args_list
         if (imported_format := inputs[0][0]) in supported_formats
-    )
+    }
 
     assert supported_formats == imported_formats
 

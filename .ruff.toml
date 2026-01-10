@@ -4,7 +4,7 @@ indent-width = 4
 target-version = "py312"
 
 [lint]
-select = ["ANN", "B", "E", "F", "I", "Q", "W", "YTT"]
+select = ["ANN", "B", "C4", "E", "F", "I", "Q", "W", "YTT"]
 
 [lint.per-file-ignores]
 "tests/*" = ["ANN"]
