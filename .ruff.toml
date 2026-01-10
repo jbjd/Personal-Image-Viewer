@@ -4,7 +4,10 @@ indent-width = 4
 target-version = "py312"
 
 [lint]
-select = ["B", "E", "F", "I", "Q", "W"]
+select = ["ANN", "B", "E", "F", "I", "Q", "W", "YTT"]
+
+[lint.per-file-ignores]
+"tests/*" = ["ANN"]
 
 [lint.isort]
 known-third-party = ["nuitka"]

@@ -200,7 +200,9 @@ def _preinit() -> None:
     __import__("PIL.WebPImagePlugin", globals(), {}, ())
     __import__("PIL.DdsImagePlugin", globals(), {}, ())
 
-    def new_jpeg_factory(fp: IO[bytes], filename=None) -> JpegImageFile:
+    def new_jpeg_factory(
+        fp: IO[bytes], filename: str | bytes | None = None
+    ) -> JpegImageFile:
         return JpegImageFile(fp, filename)
 
     register_open(
