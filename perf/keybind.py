@@ -14,10 +14,16 @@ tests = [
     "<F12>",
     "<F13>",
     "<F91>",
-] * 99999
+    "<A>",
+]
+unique_count: int = len(tests)
+
+tests *= 99999
 
 
-is_valid_keybind_re = re.compile("^<(Control-)?([a-zA-Z0-9]|F[1-9]|F1[0-2])>$")
+is_valid_keybind_re = re.compile(
+    "^<((Control-)?([A-Z]|F[1-9]|F1[0-2])|Control-[a-z0-9])>$"
+)
 
 
 def validate_keybind_or_default_python(keybind, default):
@@ -45,4 +51,6 @@ def run():
 
     print("C time:", perf_counter() - a)
 
-    assert python_results == c_results
+    assert python_results == c_results, (
+        f"{python_results[:unique_count]} != {c_results[:unique_count]}"
+    )

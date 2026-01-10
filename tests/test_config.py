@@ -76,6 +76,7 @@ def test_config_reader_int_fallback():
         ("<F13>", _DEFAULT),
         ("<F91>", _DEFAULT),
         ("<k>", _DEFAULT),
+        ("<K>", "<K>"),
     ],
 )
 def test_validate_keybind_or_default(keybind: str, expected_keybind: str):
