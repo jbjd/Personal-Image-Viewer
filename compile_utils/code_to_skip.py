@@ -23,7 +23,7 @@ from image_viewer.image.resizer import JPEG_MAX_DIMENSION
 from image_viewer.ui.rename_entry import _ERROR_COLOR
 
 # Increment when edits to this file or module_dependencies are merged into main
-SKIP_ITERATION: int = 0
+SKIP_ITERATION: int = 1
 
 # Module independent skips
 
@@ -137,6 +137,7 @@ functions_to_skip: dict[str, set[str]] = {
     "PIL.PngImagePlugin": {"debug", "deprecate", "getLogger", "register_mime"},
     "PIL.WebPImagePlugin": {"register_mime"},
     "PIL.TiffTags": {"_populate"},
+    f"{IMAGE_VIEWER_NAME}.actions.undoer": {"assert_never"},
 }
 
 

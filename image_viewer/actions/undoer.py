@@ -4,6 +4,7 @@ Classes that handle undoing things a user did
 
 import os
 from collections import deque
+from typing import assert_never
 
 from image_viewer.actions.types import Convert, Delete, FileAction, Rename
 from image_viewer.util.os import restore_file, trash_file
@@ -54,7 +55,9 @@ class ActionUndoer(deque[FileAction]):
             restore_file(action.original_path)
             return UndoResponse(action.original_path, "")
 
-        assert False  # pragma: no cover (unreachable)
+        assert_never(  # pragma: no cover
+            action.__class__.__name__  # type: ignore
+        )
 
     def get_undo_message(self) -> str | None:
         """Returns a friendly message about what the undo action will do.
@@ -79,4 +82,6 @@ class ActionUndoer(deque[FileAction]):
         if type(action) is Delete:
             return f"Restore {action.original_path} from trash?"
 
-        assert False  # pragma: no cover (unreachable)
+        assert_never(  # pragma: no cover
+            action.__class__.__name__  # type: ignore
+        )
