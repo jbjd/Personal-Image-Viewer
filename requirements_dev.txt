@@ -1,7 +1,7 @@
 codespell==2.4.1
 mypy==1.19.1
-psleak==0.1.4
+psleak==0.1.5
 pytest==9.0.2
 pytest-cov==7.0.0
-ruff==0.14.10
+ruff==0.14.11
 schema==0.7.8
