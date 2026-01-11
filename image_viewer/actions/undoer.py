@@ -34,7 +34,6 @@ class ActionUndoer(deque[FileAction]):
         from trash to match the expected file state before the action occurred.
 
         :returns: An UndoResponse with the restored/removed file paths if any."""
-        # pylint: disable=unidiomatic-typecheck
 
         action: FileAction = self.pop()
 
@@ -63,7 +62,6 @@ class ActionUndoer(deque[FileAction]):
         """Returns a friendly message about what the undo action will do.
 
         :returns: A friendly message or None if self is empty."""
-        # pylint: disable=unidiomatic-typecheck
 
         if not self:
             return None

@@ -28,7 +28,7 @@ def test_image_path():
     assert example_image_path.suffix == ""
 
 
-def test_init_PIL():  # pylint: disable=invalid-name
+def test_init_PIL():
     """Should remove all values from _plugins and set default font"""
     from PIL import Image as _Image  # noqa: PLC0415
     from PIL.ImageDraw import ImageDraw  # noqa: PLC0415

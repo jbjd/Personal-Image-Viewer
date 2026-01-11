@@ -14,7 +14,7 @@ def safe_wrapper(function: Callable[_P, None]):  # noqa: UP047
     def wrapper(*args: _P.args, **kwargs: _P.kwargs) -> None:
         try:
             function(*args, **kwargs)
-        except Exception:  # pylint: disable=broad-exception-caught  # noqa: BLE001, S110
+        except Exception:
             pass
 
     return wrapper

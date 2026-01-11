@@ -35,7 +35,8 @@ def test_image_file_manager(file_manager: ImageFileManager):
 
     # Try to rename a.png mocking the os call away should pass
     with (
-        patch("os.rename", lambda *_: None), patch.object(
+        patch("os.rename", lambda *_: None),
+        patch.object(
             ImageFileManager,
             "_ask_to_delete_old_image_after_convert",
             lambda *_: None,

@@ -155,7 +155,7 @@ class ImageFileManager:
 
     def get_image_details(
         self,
-        PIL_image: Image,  # pylint: disable=invalid-name
+        PIL_image: Image,
     ) -> str | None:
         """Returns a formatted string of data from cache/OS call/PIL object
         or None if failed to read from cache."""

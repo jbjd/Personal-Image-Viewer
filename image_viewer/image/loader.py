@@ -64,7 +64,7 @@ class ImageLoader:
 
         self.animation_callback: Callable[[int, int], None] = animation_callback
 
-        self.PIL_image = Image()  # pylint: disable=invalid-name
+        self.PIL_image = Image()
         self.image_buffer: CMemoryViewBuffer
         self.current_load_id: int = 0
 

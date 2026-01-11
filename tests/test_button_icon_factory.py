@@ -17,7 +17,7 @@ def _assert_icons_type(icons: IconImages):
 
 def test_create_icons(
     # unused tk_app needed to create photo images
-    tk_app: Tk,  # pylint: disable=unused-argument
+    tk_app: Tk,
     button_icon_factory: ButtonIconFactory,
 ):
     """Should successfully create all icons as PhotoImages."""

@@ -54,7 +54,7 @@ class MockImage(Image):
         if n_frames > 1:  # Like PIL, only set for animations
             self.is_animated: bool = True
 
-    def convert(  # type: ignore # pylint: disable=arguments-differ
+    def convert(  # type: ignore
         self, new_mode: str
     ) -> Self:
         self.mode = new_mode
@@ -89,4 +89,4 @@ class _MockUser32:
     __slots__ = ("MessageBoxW",)
 
     def __init__(self) -> None:
-        self.MessageBoxW = MagicMock()  # pylint: disable=invalid-name
+        self.MessageBoxW = MagicMock()
