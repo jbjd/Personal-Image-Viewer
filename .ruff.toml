@@ -4,7 +4,7 @@ indent-width = 4
 target-version = "py312"
 
 [lint]
-select = ["ANN", "BLE", "B", "C4", "E", "FLY", "F", "I", "PERF", "PLC", "PLR", "PLW", "PT", "Q", "RSE", "SIM", "TC", "UP", "W", "YTT"]
+select = ["ANN", "BLE", "B", "C4", "E", "FLY", "F", "I", "PERF", "PLC", "PLR", "PLW", "PT", "PYI", "Q", "RSE", "SIM", "TC", "UP", "W", "YTT"]
 
 # D202: Newline after doc string (Less readable)
 # C416: Unnecessary Comprehension (Slower)
@@ -25,6 +25,7 @@ select = ["ANN", "BLE", "B", "C4", "E", "FLY", "F", "I", "PERF", "PLC", "PLR", "
 # PLR0913: Too many arguments
 # PLR2004: Magic value used in comparison
 # PTH: Use Pathlib (Wants slower API used)
+# PYI021: Docstrings should not be included in stubs (Needed for c extensions)
 # SIM105: Slower exception suppression (Wants slower check used)
 # SLF001: Private member access
 # S110: Try-Catch-Pass
@@ -32,7 +33,7 @@ select = ["ANN", "BLE", "B", "C4", "E", "FLY", "F", "I", "PERF", "PLC", "PLR", "
 # TD002: Missing author in TODO
 # TD003: Missing issue link in TODO
 # TRY003: Avoid specifying long messages outside the exception class (Slower and less clear)
-ignore = ["D202", "C416", "COM812", "D", "D102", "D105", "D107", "D203", "D205", "D213", "D401", "D415", "EM", "FBT", "FIX", "PLC0415", "PLR0913", "PLR2004", "PTH", "SIM105", "SLF001", "S110", "TC001", "TD002", "TD003", "TRY003"]
+ignore = ["D202", "C416", "COM812", "D", "D102", "D105", "D107", "D203", "D205", "D213", "D401", "D415", "EM", "FBT", "FIX", "PLC0415", "PLR0913", "PLR2004", "PTH", "PYI021", "SIM105", "SLF001", "S110", "TC001", "TD002", "TD003", "TRY003"]
 
 [lint.extend-per-file-ignores]
 
