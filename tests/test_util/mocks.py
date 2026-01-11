@@ -48,7 +48,7 @@ class MockImage(Image):
 
         self.format: str = format
         self.n_frames: int = n_frames
-        self.mode: str = mode
+        self._mode: str = mode
         self.closed: bool = False
 
         if n_frames > 1:  # Like PIL, only set for animations
