@@ -4,7 +4,7 @@ indent-width = 4
 target-version = "py312"
 
 [lint]
-select = ["B", "C4", "E", "F", "I", "Q", "RSE", "SIM", "UP", "W", "YTT"]
+select = ["B", "C4", "E", "FLY", "F", "I", "PERF", "PLR", "Q", "RSE", "SIM", "UP", "W", "YTT"]
 
 # D202: Newline after doc string (Less readable)
 # C416: Unnecessary Comprehension (Slower)
@@ -20,13 +20,14 @@ select = ["B", "C4", "E", "F", "I", "Q", "RSE", "SIM", "UP", "W", "YTT"]
 # EM: Error messages
 # FBT: Boolean Trap (Slower)
 # FIX: Fix me
+# PLR0913: Too many arguments
 # PLR2004: Magic value used in comparison
 # PTH: Use Pathlib (Wants slower API used)
 # SIM105: Slower exception suppression (Wants slower check used)
 # TD002: Missing author in TODO
 # TD003: Missing issue link in TODO
 # TRY003: Avoid specifying long messages outside the exception class (Slower and less clear)
-ignore = ["D202", "C416", "COM812", "D102", "D105", "D107", "D203", "D205", "D213", "D401", "D415", "EM", "FBT", "FIX", "PLR2004", "PTH", "SIM105", "TD002", "TD003", "TRY003"]
+ignore = ["D202", "C416", "COM812", "D102", "D105", "D107", "D203", "D205", "D213", "D401", "D415", "EM", "FBT", "FIX", "PLR0913", "PLR2004", "PTH", "SIM105", "TD002", "TD003", "TRY003"]
 
 [lint.extend-per-file-ignores]
 
