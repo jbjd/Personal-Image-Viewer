@@ -6,7 +6,7 @@ These are an alternative to MagicMock when certain ones are used often
 from __future__ import annotations
 
 from tkinter import Event, Misc
-from typing import Self
+from typing import Any, Self
 from unittest.mock import MagicMock
 
 from PIL.Image import Image
@@ -60,16 +60,16 @@ class MockImage(Image):
         self.mode = new_mode
         return self
 
-    def save(self, *_, **kwargs) -> None:
+    def save(self, *_: list[Any], **kwargs: dict[str, Any]) -> None:
         pass
 
-    def close(self, *_) -> None:
+    def close(self) -> None:
         self.closed = True
 
     def __enter__(self) -> Self:
         return self
 
-    def __exit__(self, *_) -> None:
+    def __exit__(self, *args: object) -> None:
         self.close()
 
 
