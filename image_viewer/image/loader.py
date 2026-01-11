@@ -23,7 +23,7 @@ from image_viewer.util.PIL import get_placeholder_for_errored_image, rotate_imag
 class ReadImageResponse:
     """Response when reading an image from disk"""
 
-    __slots__ = ("image_buffer", "image", "expected_format")
+    __slots__ = ("expected_format", "image", "image_buffer")
 
     def __init__(
         self, image_buffer: CMemoryViewBuffer, image: Image, expected_format: str
@@ -39,16 +39,16 @@ class ImageLoader:
     DEFAULT_ANIMATION_SPEED: int = 100  # in milliseconds
 
     __slots__ = (
+        "PIL_image",
         "_rotation_state",
         "_zoom_state",
-        "animation_frames",
         "animation_callback",
+        "animation_frames",
         "current_load_id",
         "frame_index",
         "image_buffer",
         "image_cache",
         "image_resizer",
-        "PIL_image",
         "zoomed_image_cache",
     )
 
@@ -64,7 +64,7 @@ class ImageLoader:
 
         self.animation_callback: Callable[[int, int], None] = animation_callback
 
-        self.PIL_image = Image()  # pylint: disable=invalid-name
+        self.PIL_image = Image()
         self.image_buffer: CMemoryViewBuffer
         self.current_load_id: int = 0
 
@@ -233,17 +233,17 @@ class ImageLoader:
                 )
 
                 self.animation_frames[i] = Frame(frame_image)
-            except Exception:
-                # moving to new image during this function causes a variety of errors
-                # just break to kill thread
+            except (IndexError, ValueError):
+                # Might index into animation_frames incorrectly
+                # Or perform action on closed image
                 break
 
     def reset_and_setup(self) -> None:
         """Resets zoom, animation frames, and closes previous image
         to setup for next image load"""
-        self.animation_frames = []
+        self.animation_frames.clear()
         self.frame_index = 0
         self.PIL_image.close()
         self._rotation_state.reset()
         self._zoom_state.reset()
-        self.zoomed_image_cache = []
+        self.zoomed_image_cache.clear()
