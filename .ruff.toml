@@ -4,7 +4,7 @@ indent-width = 4
 target-version = "py312"
 
 [lint]
-select = ["ANN", "BLE", "B", "C4", "E", "FLY", "F", "I", "PERF", "PLC", "PLR", "PLW", "PT", "PYI", "Q", "RSE", "SIM", "TC", "UP", "W", "YTT"]
+select = ["ANN", "BLE", "B", "C4", "E", "FLY", "F", "I", "PERF", "PLC", "PLR", "PLW", "PT", "PYI", "Q", "RSE", "SIM", "S", "TC", "T", "UP", "W", "YTT"]
 
 # D202: Newline after doc string (Less readable)
 # C416: Unnecessary Comprehension (Slower)
@@ -29,20 +29,22 @@ select = ["ANN", "BLE", "B", "C4", "E", "FLY", "F", "I", "PERF", "PLC", "PLR", "
 # SIM105: Slower exception suppression (Wants slower check used)
 # SLF001: Private member access
 # S110: Try-Catch-Pass
+# S603: Subprocess call: check for untrusted input
 # TC001: Move import into a type-checking block (Irrelavent due to compilation)
 # TD002: Missing author in TODO
 # TD003: Missing issue link in TODO
 # TRY003: Avoid specifying long messages outside the exception class (Slower and less clear)
-ignore = ["D202", "C416", "COM812", "D", "D102", "D105", "D107", "D203", "D205", "D213", "D401", "D415", "EM", "FBT", "FIX", "PLC0415", "PLR0913", "PLR2004", "PTH", "PYI021", "SIM105", "SLF001", "S110", "TC001", "TD002", "TD003", "TRY003"]
+ignore = ["D202", "C416", "COM812", "D", "D102", "D105", "D107", "D203", "D205", "D213", "D401", "D415", "EM", "FBT", "FIX", "PLC0415", "PLR0913", "PLR2004", "PTH", "PYI021", "SIM105", "SLF001", "S110", "S603", "TC001", "TD002", "TD003", "TRY003"]
 
 [lint.extend-per-file-ignores]
 
-# D100: Missing docstring in public module
-"setup.py" = ["D100"]
+# S101: Assert
+# T201: Print
+"perf/*" = ["S101", "T201"]
+"run_perf_test.py" = ["S101", "T201"]
 
 # ANN201: Missing return type
 # PT011: Pytest raises
-# S101: Assert
 "tests/*" = ["ANN201", "PT011", "S101"]
 
 # D104: Missing docstring in public package
