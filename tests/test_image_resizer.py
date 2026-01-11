@@ -94,12 +94,14 @@ def test_get_zoomed_image_cap(image_resizer: ImageResizer):
     image: Image = new_image("RGB", (1920, 1080))
 
     # Mock zoom factor above min zoom when image is already the size of the screen
-    with patch(f"{_MODULE_PATH}.resize", return_value=image):
-        with patch.object(ImageResizer, "_calculate_zoom_factor", return_value=2.25):
-            zoomed_result = image_resizer.get_zoomed_image(image, 2)
-            assert zoomed_result.hit_max_zoom
+    with (
+        patch(f"{_MODULE_PATH}.resize", return_value=image),
+        patch.object(ImageResizer, "_calculate_zoom_factor", return_value=2.25),
+    ):
+        zoomed_result = image_resizer.get_zoomed_image(image, 2)
+        assert zoomed_result.hit_max_zoom
 
-            # With a smaller image, the same zoom factor should not hit cap
-            image = new_image("RGB", (800, 1080))
-            zoomed_result = image_resizer.get_zoomed_image(image, 2)
-            assert not zoomed_result.hit_max_zoom
+        # With a smaller image, the same zoom factor should not hit cap
+        image = new_image("RGB", (800, 1080))
+        zoomed_result = image_resizer.get_zoomed_image(image, 2)
+        assert not zoomed_result.hit_max_zoom

@@ -48,9 +48,11 @@ def test_load_image_error_on_open(image_loader: ImageLoader):
     with patch("builtins.open", side_effect=FileNotFoundError):
         assert image_loader.load_image("") is None
 
-    with patch("builtins.open", mock_open(read_data=b"abcd")):
-        with patch(f"{_MODULE_PATH}.open_image", side_effect=UnidentifiedImageError()):
-            assert image_loader.load_image("") is None
+    with (
+        patch("builtins.open", mock_open(read_data=b"abcd")),
+        patch(f"{_MODULE_PATH}.open_image", side_effect=UnidentifiedImageError()),
+    ):
+        assert image_loader.load_image("") is None
 
 
 def test_load_image_in_cache(image_loader: ImageLoader):
@@ -80,11 +82,13 @@ def test_load_image_in_cache(image_loader: ImageLoader):
 
 def test_load_image_resize_error(image_loader: ImageLoader):
     """Should get placeholder image when resize errors"""
-    with patch(
-        f"{_MODULE_PATH}.ImageResizer.get_image_fit_to_screen", side_effect=OSError
-    ):
-        with patch(
+    with (
+        patch(
+            f"{_MODULE_PATH}.ImageResizer.get_image_fit_to_screen", side_effect=OSError
+        ),
+        patch(
             f"{_MODULE_PATH}.get_placeholder_for_errored_image"
-        ) as mock_get_placeholder:
-            image_loader._resize_or_get_placeholder()
-            mock_get_placeholder.assert_called_once()
+        ) as mock_get_placeholder,
+    ):
+        image_loader._resize_or_get_placeholder()
+        mock_get_placeholder.assert_called_once()

@@ -34,16 +34,15 @@ def test_image_file_manager(file_manager: ImageFileManager):
         file_manager.rename_or_convert_current_image("c.webp")
 
     # Try to rename a.png mocking the os call away should pass
-    with patch("os.rename", lambda *_: None):
-        with (
-            patch.object(
-                ImageFileManager,
-                "_ask_to_delete_old_image_after_convert",
-                lambda *_: None,
-            ),
-            patch("image_viewer.files.file_manager.askyesno", lambda *_: True),
-        ):
-            file_manager.rename_or_convert_current_image("example.test")
+    with (
+        patch("os.rename", lambda *_: None), patch.object(
+            ImageFileManager,
+            "_ask_to_delete_old_image_after_convert",
+            lambda *_: None,
+        ),
+        patch("image_viewer.files.file_manager.askyesno", lambda *_: True),
+    ):
+        file_manager.rename_or_convert_current_image("example.test")
 
     # test remove_current_image functionality
     for _ in range(4):

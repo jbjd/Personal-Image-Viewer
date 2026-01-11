@@ -4,7 +4,7 @@ indent-width = 4
 target-version = "py312"
 
 [lint]
-select = ["B", "C4", "E", "F", "I", "Q", "UP", "W", "YTT"]
+select = ["B", "C4", "E", "F", "I", "Q", "RSE", "SIM", "UP", "W", "YTT"]
 
 # D202: Newline after doc string (Less readable)
 # C416: Unnecessary Comprehension (Slower)

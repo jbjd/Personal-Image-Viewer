@@ -43,10 +43,7 @@ from compile_utils.code_to_skip import (
 from compile_utils.log import LOGGER_NAME
 from compile_utils.validation import get_required_python_version
 
-if os.name == "nt":
-    SEPARATORS = r"[\\/]"
-else:
-    SEPARATORS = r"[/]"
+SEPARATORS = r"[\\/]" if os.name == "nt" else r"[/]"
 
 # Ensure this file is git ignored
 MINIFIER_FAILED_FILE_NAME: str = "minifier_failure.py.example"
@@ -116,13 +113,10 @@ def move_files_to_tmp_and_clean(
     else:
         modules_to_skip_re = ""
 
-    for python_file in _get_files_in_folder_with_filter(
+    for relative_file_path in _get_files_in_folder_with_filter(
         source_dir, (".py", ".pyd", ".so")
     ):
-        if os.path.basename(python_file) == "main.py":
-            continue
-
-        python_file = os.path.abspath(python_file)
+        python_file = os.path.join(source_dir, relative_file_path)
         relative_path: str = python_file.replace(source_dir, "").strip("/\\")
         module_import_path: str = sub(SEPARATORS, ".", f"{module_name}.{relative_path}")
         module_import_path = module_import_path[:-3]  # chops .py
