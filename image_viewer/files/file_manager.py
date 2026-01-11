@@ -153,10 +153,7 @@ class ImageFileManager:
         )
         return details
 
-    def get_image_details(
-        self,
-        PIL_image: Image,
-    ) -> str | None:
+    def get_image_details(self, PIL_image: Image) -> str | None:  # noqa: N803
         """Returns a formatted string of data from cache/OS call/PIL object
         or None if failed to read from cache."""
         try:

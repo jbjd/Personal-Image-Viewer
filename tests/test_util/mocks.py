@@ -43,7 +43,7 @@ class MockImage(Image):
     info: dict = {}  # noqa: RUF012
     _size: tuple[int, int] = (0, 0)
 
-    def __init__(self, n_frames: int = 1, format: str = "", mode: str = "P") -> None:
+    def __init__(self, n_frames: int = 1, format: str = "", mode: str = "P") -> None:  # noqa: A002
         super().__init__()
 
         self.format: str = format
@@ -55,7 +55,7 @@ class MockImage(Image):
             self.is_animated: bool = True
 
     def convert(self, mode: str | None) -> Image:  # type: ignore[override]
-        return MockImage(self.n_frames, self.format, self.mode)
+        return MockImage(self.n_frames, self.format, mode)
 
     def save(self, *_: list[Any], **kwargs: dict[str, Any]) -> None:  # type: ignore[override]
         pass

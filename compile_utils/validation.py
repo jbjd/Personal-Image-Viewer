@@ -98,7 +98,7 @@ def validate_python_version() -> None:
         raise NotImplementedError(f"{version} not supported by Nuitka yet")
 
 
-def validate_PIL() -> None:
+def validate_PIL() -> None:  # noqa: N802
     """Ensures installed version of PIL has expected optional modules installed.
     Normal PIL installations will have these, but PIL can be built from source with
     these turned off.

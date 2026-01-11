@@ -160,7 +160,7 @@ def test_get_and_show_details(file_manager: ImageFileManager):
     """Should return a string containing details on current cached image and show it"""
 
     # Will exit if no details in cache
-    PIL_image = MockImage()
+    PIL_image = MockImage()  # noqa: N806
     PIL_image.info["comment"] = b"test"
 
     details = file_manager.get_image_details(PIL_image)

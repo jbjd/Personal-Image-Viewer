@@ -1,6 +1,5 @@
-"""
-Functions for manipulating PIL and PIL's image objects
-"""
+# noqa: N999
+"""Functions for manipulating PIL and PIL's image objects"""
 
 from textwrap import wrap
 from typing import IO
@@ -208,7 +207,7 @@ def _preinit() -> None:
     _Image._initialized = 2
 
 
-def _stop_unwanted_PIL_imports() -> None:
+def _stop_unwanted_PIL_imports() -> None:  # noqa: N802
     """Edits parts of PIL module to prevent excessive imports"""
     from PIL.JpegImagePlugin import MARKER, Skip
 
@@ -228,7 +227,7 @@ def _stop_unwanted_PIL_imports() -> None:
     _Image.preinit = _preinit
 
 
-def init_PIL(font_file: str, font_size: int) -> None:
+def init_PIL(font_file: str, font_size: int) -> None:  # noqa: N802
     """Sets up font and edit PIL's internal list of plugins to load"""
 
     ImageDraw.font = truetype(font_file, font_size)
