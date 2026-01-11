@@ -7,7 +7,7 @@ from collections.abc import Iterator
 FILE_NAME_MAX_LEN: int = 40
 
 if os.name == "nt":
-    from ctypes import windll  # type: ignore
+    from ctypes import windll  # type: ignore[attr-defined]
 
     from image_viewer.util._os_nt import get_files_in_folder as _get_files_in_folder_nt
     from image_viewer.util._os_nt import restore_file as _restore_file_nt

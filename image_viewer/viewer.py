@@ -2,7 +2,7 @@ import os
 from collections.abc import Callable
 from time import perf_counter
 from tkinter import Event, Tk
-from typing import NoReturn
+from typing import Never, TypeVarTuple
 
 from PIL.Image import Image
 from PIL.ImageTk import PhotoImage
@@ -39,6 +39,8 @@ if os.name == "nt":
 else:
     from tkinter import PhotoImage as tkPhotoImage
 
+_Ts = TypeVarTuple("_Ts")
+
 
 class ViewerApp:
     """Main UI class handling IO and on screen widgets"""
@@ -51,8 +53,8 @@ class ViewerApp:
         "dropdown",
         "file_manager",
         "height_ratio",
-        "image_loader",
         "image_load_id",
+        "image_loader",
         "move_id",
         "rename_entry",
         "width_ratio",
@@ -312,7 +314,7 @@ class ViewerApp:
             self.show_topbar()
 
     def _only_for_this_window(
-        self, event: Event, function_to_call: Callable[..., None], *args
+        self, event: Event, function_to_call: Callable[[*_Ts], None], *args: *_Ts
     ) -> None:
         """Given a callable that accepts a tkinter Event,
         only call it if self.app is the target"""
@@ -353,14 +355,14 @@ class ViewerApp:
             return
         self.exit()
 
-    def handle_up_arrow(self, _: Event):
+    def handle_up_arrow(self, _: Event) -> None:
         """Hides either dropdown or topbar in that order if either visible"""
         if self.canvas.is_widget_visible(self.dropdown.id):
             self.canvas.mock_button_click(ButtonName.DROPDOWN)
         else:
             self.hide_topbar()
 
-    def handle_down_arrow(self, _: Event):
+    def handle_down_arrow(self, _: Event) -> None:
         """Shows either topbar or dropdown in that order if either not visible"""
         if self.canvas.is_widget_visible(TkTags.TOPBAR):
             if not self.canvas.is_widget_visible(self.dropdown.id):
@@ -429,7 +431,7 @@ class ViewerApp:
         if self.file_manager.move_to_new_file():
             self.load_image()
 
-    def exit(self, exit_code: int = 0) -> NoReturn:
+    def exit(self, exit_code: int = 0) -> Never:
         """Safely exits the program"""
         try:
             self.canvas.delete(self.canvas.file_name_text_id)
@@ -697,7 +699,7 @@ class ViewerApp:
             self.canvas.itemconfigure(dropdown.id, state="hidden")
 
     def _start_image_load(
-        self, image_load_function: Callable[..., None], *args
+        self, image_load_function: Callable[[*_Ts], None], *args: *_Ts
     ) -> None:
         """Cancels any previous image load tkinter thread and starts a new one.
 

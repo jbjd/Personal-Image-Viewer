@@ -2,8 +2,8 @@
 Logic for interacting with native file dialogs
 """
 
+from collections.abc import Iterable
 from tkinter.filedialog import askopenfilename
-from typing import Iterable
 
 
 class FileDialogAsker:

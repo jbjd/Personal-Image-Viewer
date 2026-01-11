@@ -134,9 +134,9 @@ try:
         _logger.info("Setting up module: %s", module.name)
 
         module_import_name: str = get_normalized_module_name(module)
-        sub_modules_to_skip: set[str] = set(
+        sub_modules_to_skip: set[str] = {
             i for i in modules_to_skip if i.startswith(module_import_name)
-        )
+        }
 
         module_file_path: str = get_module_file_path(module_import_name)
         module_file: str = os.path.basename(module_file_path)

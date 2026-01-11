@@ -23,7 +23,7 @@ from image_viewer.image.resizer import JPEG_MAX_DIMENSION
 from image_viewer.ui.rename_entry import _ERROR_COLOR
 
 # Increment when edits to this file or module_dependencies are merged into main
-SKIP_ITERATION: int = 0
+SKIP_ITERATION: int = 1
 
 # Module independent skips
 
@@ -137,6 +137,7 @@ functions_to_skip: dict[str, set[str]] = {
     "PIL.PngImagePlugin": {"debug", "deprecate", "getLogger", "register_mime"},
     "PIL.WebPImagePlugin": {"register_mime"},
     "PIL.TiffTags": {"_populate"},
+    f"{IMAGE_VIEWER_NAME}.actions.undoer": {"assert_never"},
 }
 
 
@@ -147,6 +148,7 @@ vars_to_skip: dict[str, set[str]] = {
     "PIL.JpegImagePlugin": {"format_description"},
     "PIL.PngImagePlugin": {"format_description"},
     "PIL.WebPImagePlugin": {"format_description"},
+    f"{IMAGE_VIEWER_NAME}.viewer": {"_Ts"},
 }
 
 if os.name == "nt":
@@ -231,12 +233,12 @@ regex_to_apply_py: defaultdict[str, list[RegexReplacement]] = defaultdict(
         "PIL.GifImagePlugin": [
             RegexReplacement(
                 pattern="from typing import .*",
-                replacement="from typing import cast;from collections import namedtuple",  # noqa E501
+                replacement="from typing import cast;from collections import namedtuple",  # noqa: E501
                 count=1,
             ),
             RegexReplacement(
                 pattern=r"_Frame\(NamedTuple\)",
-                replacement="_Frame(namedtuple('_Frame',['im','bbox','encoderinfo']))",  # noqa E501
+                replacement="_Frame(namedtuple('_Frame',['im','bbox','encoderinfo']))",
                 count=1,
             ),
         ],
@@ -275,7 +277,7 @@ from collections import namedtuple""",
             ),
             RegexReplacement(
                 pattern=r"_Tile\(NamedTuple\):",
-                replacement="_Tile(namedtuple('_Tile', ['codec_name', 'extents', 'offset', 'args'])):",  # noqa E501
+                replacement="_Tile(namedtuple('_Tile', ['codec_name', 'extents', 'offset', 'args'])):",  # noqa: E501
                 count=1,
             ),
         ],
@@ -295,7 +297,7 @@ from collections import namedtuple""",
             ),
             RegexReplacement(
                 pattern=r"\(NamedTuple\):",
-                replacement=r"(namedtuple('ModeDescriptor', ['mode', 'bands', 'basemode', 'basetype', 'typestr'])):",  # noqa E501
+                replacement=r"(namedtuple('ModeDescriptor', ['mode', 'bands', 'basemode', 'basetype', 'typestr'])):",  # noqa: E501
                 count=1,
             ),
         ],
@@ -313,16 +315,16 @@ from collections import namedtuple""",
             ),
             RegexReplacement(
                 pattern="from typing import .*",
-                replacement="from typing import IO, cast\nfrom collections import namedtuple",  # noqa E501
+                replacement="from typing import IO, cast\nfrom collections import namedtuple",  # noqa: E501
                 count=1,
             ),
             RegexReplacement(
                 pattern=r"_RewindState\(NamedTuple\)",
-                replacement="_RewindState(namedtuple('_RewindState', ['info', 'tile', 'seq_num']))",  # noqa E501
+                replacement="_RewindState(namedtuple('_RewindState', ['info', 'tile', 'seq_num']))",  # noqa: E501
             ),
             RegexReplacement(
                 pattern=r"_Frame\(NamedTuple\)",
-                replacement="_Frame(namedtuple('_Frame', ['im', 'bbox', 'encoderinfo']))",  # noqa E501
+                replacement="_Frame(namedtuple('_Frame', ['im', 'bbox', 'encoderinfo']))",  # noqa: E501
             ),
         ],
         "PIL.WebPImagePlugin": [
