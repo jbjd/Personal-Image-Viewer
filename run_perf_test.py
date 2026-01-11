@@ -1,3 +1,5 @@
+"""Script to help run one of the performance tests."""
+
 import importlib
 import sys
 from types import ModuleType

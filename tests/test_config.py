@@ -64,7 +64,7 @@ def test_config_reader_int_fallback():
 
 
 @pytest.mark.parametrize(
-    "keybind,expected_keybind",
+    ("keybind", "expected_keybind"),
     [
         ("asdvbiu34uiyg", _DEFAULT),
         ("<Control-d>", "<Control-d>"),
@@ -90,7 +90,7 @@ def test_default_keybinds_are_valid():
 
 
 @pytest.mark.parametrize(
-    "hex_color,expected",
+    ("hex_color", "expected"),
     [
         ("asdvbiu34uiyg", _DEFAULT),
         ("#010101", "#010101"),

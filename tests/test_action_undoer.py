@@ -82,7 +82,9 @@ def test_undo_action(action: FileAction):
             mock_rename.assert_not_called()
 
 
-def _assert_correct_undo_response(action: FileAction, undo_response: UndoResponse):
+def _assert_correct_undo_response(
+    action: FileAction, undo_response: UndoResponse
+) -> None:
     """Assert that given a specific file actions,
     response has correct values populated."""
 
