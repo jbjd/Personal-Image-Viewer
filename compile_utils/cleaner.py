@@ -3,10 +3,10 @@
 import os
 import re
 import subprocess
+from collections.abc import Iterator
 from glob import glob
 from logging import getLogger
 from re import sub
-from typing import Iterator
 
 from personal_compile_tools.file_operations import (
     copy_file,
@@ -43,10 +43,7 @@ from compile_utils.code_to_skip import (
 from compile_utils.log import LOGGER_NAME
 from compile_utils.validation import get_required_python_version
 
-if os.name == "nt":
-    SEPARATORS = r"[\\/]"
-else:
-    SEPARATORS = r"[/]"
+SEPARATORS = r"[\\/]" if os.name == "nt" else r"[/]"
 
 # Ensure this file is git ignored
 MINIFIER_FAILED_FILE_NAME: str = "minifier_failure.py.example"
@@ -91,7 +88,7 @@ def clean_file_and_copy(
             ),
         )
     except Exception:
-        _logger.error(
+        _logger.exception(
             "Error when running minifier on file %s, writing source to %s",
             module_import_path,
             MINIFIER_FAILED_FILE_NAME,
@@ -116,13 +113,10 @@ def move_files_to_tmp_and_clean(
     else:
         modules_to_skip_re = ""
 
-    for python_file in _get_files_in_folder_with_filter(
+    for relative_file_path in _get_files_in_folder_with_filter(
         source_dir, (".py", ".pyd", ".so")
     ):
-        if os.path.basename(python_file) == "main.py":
-            continue
-
-        python_file = os.path.abspath(python_file)
+        python_file = os.path.join(source_dir, relative_file_path)
         relative_path: str = python_file.replace(source_dir, "").strip("/\\")
         module_import_path: str = sub(SEPARATORS, ".", f"{module_name}.{relative_path}")
         module_import_path = module_import_path[:-3]  # chops .py
@@ -228,11 +222,11 @@ def clean_tk_files(compile_dir: str) -> None:
 def strip_files(compile_dir: str) -> None:
     """Runs strip on all exe/dll files in provided dir"""
 
-    # Had issues adding .so here on linux. Should be revisited here at some point
+    # TODO: Had issues adding .so here on linux. Should be revisited here at some point
     for strippable_file in _get_files_in_folder_with_filter(
         compile_dir, (".exe", ".dll", ".pyd")
     ):
-        result = subprocess.run(["strip", "--strip-all", strippable_file], check=False)
+        result = subprocess.run(["strip", "--strip-all", strippable_file], check=False)  # noqa: S607
 
         if result.returncode != 0:
             _logger.warning("Failed to strip file %s", strippable_file)

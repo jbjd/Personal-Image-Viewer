@@ -58,7 +58,7 @@ def test_widget_visible(canvas: CustomCanvas):
 
 
 @pytest.mark.parametrize(
-    "start_coords,end_coords,expected_move_amount",
+    ("start_coords", "end_coords", "expected_move_amount"),
     [
         ((0, 0), (10, 10), (10, 10)),
         ((0, 0), (9999, 9999), (1920, 1080)),

@@ -1,3 +1,4 @@
+# noqa: N999
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -28,7 +29,7 @@ def test_image_path():
     assert example_image_path.suffix == ""
 
 
-def test_init_PIL():  # pylint: disable=invalid-name
+def test_init_PIL():  # noqa: N802
     """Should remove all values from _plugins and set default font"""
     from PIL import Image as _Image
     from PIL.ImageDraw import ImageDraw
@@ -73,7 +74,7 @@ def test_resize():
 
 
 @pytest.mark.parametrize(
-    "mode,expected_readable_mode,expected_bpp",
+    ("mode", "expected_readable_mode", "expected_bpp"),
     [
         ("RGB", "RGB", 24),
         ("RGBA", "RGBA", 32),
@@ -126,11 +127,11 @@ def test_preinit():
     assert mock_image_module._initialized == 2
 
     # Throw out irrelevant imports since some others happen during the call
-    imported_formats: set[str] = set(
+    imported_formats: set[str] = {
         imported_format
         for inputs in mock_import.call_args_list
         if (imported_format := inputs[0][0]) in supported_formats
-    )
+    }
 
     assert supported_formats == imported_formats
 

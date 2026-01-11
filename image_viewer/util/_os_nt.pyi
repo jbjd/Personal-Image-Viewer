@@ -4,7 +4,7 @@ import os
 
 from image_viewer.image._read import CMemoryViewBuffer
 
-if os.name == "nt":
+if os.name == "nt":  # noqa: PYI002
     def set_hwnd(hwnd: int, /) -> None:
         """Sets the hwnd value for all functions called in this module.
 

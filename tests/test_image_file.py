@@ -5,7 +5,7 @@ from image_viewer.image.file import ImageName, ImageNameList, magic_number_guess
 
 
 @pytest.mark.parametrize(
-    "magic_bytes,expected_format",
+    ("magic_bytes", "expected_format"),
     [
         (b"\x89PNG", ImageFormats.PNG),
         (b"RIFF", ImageFormats.WEBP),
@@ -22,7 +22,7 @@ def test_magic_number_guess(magic_bytes: bytes, expected_format: ImageFormats):
 
 
 @pytest.mark.parametrize(
-    "index_movement,starting_index,expected_index",
+    ("index_movement", "starting_index", "expected_index"),
     [
         (Movement.BACKWARD, 0, 3),
         (Movement.NONE, 0, 0),

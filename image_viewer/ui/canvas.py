@@ -20,8 +20,8 @@ class CustomCanvas(Canvas):
         "drag_start_y",
         "file_name_text_id",
         "image_display",
-        "screen_width",
         "screen_height",
+        "screen_width",
     )
 
     def __init__(self, master: Tk, background_color: str) -> None:
@@ -83,7 +83,7 @@ class CustomCanvas(Canvas):
         y_offset: int,
         image: PhotoImage,
     ) -> int:
-        id: int = self.create_image(
+        image_id: int = self.create_image(
             x_offset,
             y_offset,
             image=image,
@@ -94,7 +94,7 @@ class CustomCanvas(Canvas):
 
         self.button_name_to_object[name] = button_object
 
-        return id
+        return image_id
 
     def create_topbar(self, topbar_img: PhotoImage) -> None:
         """Creates the topbar and stores it"""

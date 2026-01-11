@@ -26,10 +26,10 @@ def start_nuitka_compilation(
 ) -> Popen:
     """Begins nuitka compilation in a new process.
 
-    :param: input_file: Input file to pass to nuitka.
-    :param nuitka_args: Nuitka arguments to use.
-    :working_dir: The working directory for the new process.
-    :returns: The new process."""
+    :param: input_file: Input file to pass to nuitka
+    :param nuitka_args: Nuitka arguments to use
+    :working_dir: The working directory for the new process
+    :returns: The new process"""
 
     default_python: str = "python" if os.name == "nt" else "bin/python3"
     python_path: str = os.path.join(sys.exec_prefix, default_python)
@@ -47,9 +47,9 @@ def get_nuitka_command(
 ) -> list[str]:
     """Returns the command to compile with nuitka.
 
-    :param python: The name or path of python to use.
-    :param input_file: Input file to pass to nuitka.
-    :param nuita_args: Nuitka arguments to use."""
+    :param python: The name or path of python executable to use
+    :param input_file: Input file to pass to nuitka
+    :param nuita_args: Nuitka arguments to use"""
 
     return [
         python,
@@ -62,7 +62,8 @@ def get_nuitka_command(
         "--must-not-re-execute",
         "--python-flag=-OO,no_annotations,no_warnings,static_hashes",
         "--output-filename=viewer",
-    ] + nuitka_args
+        *nuitka_args,
+    ]
 
 
 def _get_nuitka_env(assume_this_machine: bool) -> dict[str, str]:
@@ -70,7 +71,7 @@ def _get_nuitka_env(assume_this_machine: bool) -> dict[str, str]:
     Sets all the same values plus some additional so nuitka does not need to
     redundantly spin itself up again, breaking the custom implementation done here.
 
-    :returns: The environment variables to use when starting nuitka."""
+    :returns: The environment variables to use when starting nuitka"""
 
     compile_env = os.environ.copy()
 
@@ -89,7 +90,7 @@ def _get_nuitka_env(assume_this_machine: bool) -> dict[str, str]:
     # Setup like nuitka would to avoid re-execute
     os.environ["NUITKA_SYS_PREFIX"] = sys.prefix
 
-    from nuitka.importing.PreloadedPackages import (  # type: ignore
+    from nuitka.importing.PreloadedPackages import (
         detectPreLoadedPackagePaths,
         detectPthImportedPackages,
     )
@@ -126,7 +127,7 @@ def setup_custom_nuitka_install(custom_nuitka_path: str) -> None:
     Does nothing if custom folder has been setup previously on this
     version of nuitka/version of this implementation.
 
-    :param custom_nuitka_path: Path to the folder to use."""
+    :param custom_nuitka_path: Folder path to use"""
 
     version_file_path: str = os.path.join(
         custom_nuitka_path, _CUSTOM_NUITKA_VERSION_FILE

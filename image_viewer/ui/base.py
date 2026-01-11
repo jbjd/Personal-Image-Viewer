@@ -10,8 +10,8 @@ class UIElementBase:
     __slots__ = ("id",)
 
     @abstractmethod
-    def __init__(self, id: int = -1) -> None:
-        self.id: int = id
+    def __init__(self, canvas_id: int = -1) -> None:
+        self.id: int = canvas_id
 
 
 class ButtonUIElementBase(UIElementBase):

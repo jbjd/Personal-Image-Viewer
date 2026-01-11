@@ -50,7 +50,6 @@ def test_get_message_when_empty():
 )
 def test_undo_action(action: FileAction):
     """Should call correct functions based on action to undo"""
-    # pylint: disable=unidiomatic-typecheck
 
     action_undoer = ActionUndoer()
 
@@ -83,10 +82,11 @@ def test_undo_action(action: FileAction):
             mock_rename.assert_not_called()
 
 
-def _assert_correct_undo_response(action: FileAction, undo_response: UndoResponse):
+def _assert_correct_undo_response(
+    action: FileAction, undo_response: UndoResponse
+) -> None:
     """Assert that given a specific file actions,
     response has correct values populated."""
-    # pylint: disable=unidiomatic-typecheck
 
     if type(action) is Delete:
         assert not undo_response.path_removed

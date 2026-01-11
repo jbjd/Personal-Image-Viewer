@@ -1,7 +1,8 @@
 """Classes representing button UI elements"""
 
+from collections.abc import Callable
 from tkinter import Event
-from typing import Callable, override
+from typing import override
 
 from PIL.ImageTk import PhotoImage
 

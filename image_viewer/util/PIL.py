@@ -1,6 +1,5 @@
-"""
-Functions for manipulating PIL and PIL's image objects
-"""
+# noqa: N999
+"""Functions for manipulating PIL and PIL's image objects"""
 
 from textwrap import wrap
 from typing import IO
@@ -97,7 +96,7 @@ def resize(
     if image.size == size:
         return image.copy()
 
-    box: tuple[int, int, int, int] = (0, 0) + image.size
+    box: tuple[int, int, int, int] = (0, 0, *image.size)
     original_mode: str = image.mode
     modes_to_convert: dict[str, str] = {
         "RGBA": "RGBa",
@@ -123,9 +122,7 @@ def _get_longest_line_dimensions(text: str) -> tuple[int, int]:
     """Returns width and height of longest string in a string with multiple lines"""
     longest_line: str = max(text.split("\n"), key=len)
 
-    width_offset, height_offset, width, height = ImageDraw.font.getbbox(  # type: ignore
-        longest_line
-    )
+    width_offset, height_offset, width, height = ImageDraw.font.getbbox(longest_line)  # type: ignore[union-attr]
 
     return int(width + width_offset), int(height + height_offset)
 
@@ -172,11 +169,9 @@ def get_placeholder_for_errored_image(
     draw.line((0, 0, screen_width, screen_height), line_rgb, width=100)
 
     # Write title
-    w: int
-    h: int
-    *_, w, h = ImageDraw.font.getbbox(error_title)  # type: ignore
-    y_offset: int = screen_height - (h * (5 + formatted_error.count("\n"))) >> 1
-    x_offset: int = (screen_width - w) >> 1
+    *_, w, h = ImageDraw.font.getbbox(error_title)  # type: ignore[union-attr]
+    y_offset: int = screen_height - int(h * (5 + formatted_error.count("\n"))) >> 1
+    x_offset: int = int(screen_width - w) >> 1
     draw.text((x_offset, y_offset), error_title, TEXT_RGB)
 
     # Write error body 2 lines of height below title
@@ -200,7 +195,9 @@ def _preinit() -> None:
     __import__("PIL.WebPImagePlugin", globals(), {}, ())
     __import__("PIL.DdsImagePlugin", globals(), {}, ())
 
-    def new_jpeg_factory(fp: IO[bytes], filename=None) -> JpegImageFile:
+    def new_jpeg_factory(
+        fp: IO[bytes], filename: str | bytes | None = None
+    ) -> JpegImageFile:
         return JpegImageFile(fp, filename)
 
     register_open(
@@ -210,7 +207,7 @@ def _preinit() -> None:
     _Image._initialized = 2
 
 
-def _stop_unwanted_PIL_imports() -> None:  # pylint: disable=invalid-name
+def _stop_unwanted_PIL_imports() -> None:  # noqa: N802
     """Edits parts of PIL module to prevent excessive imports"""
     from PIL.JpegImagePlugin import MARKER, Skip
 
@@ -230,7 +227,7 @@ def _stop_unwanted_PIL_imports() -> None:  # pylint: disable=invalid-name
     _Image.preinit = _preinit
 
 
-def init_PIL(font_file: str, font_size: int) -> None:  # pylint: disable=invalid-name
+def init_PIL(font_file: str, font_size: int) -> None:  # noqa: N802
     """Sets up font and edit PIL's internal list of plugins to load"""
 
     ImageDraw.font = truetype(font_file, font_size)
