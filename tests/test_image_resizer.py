@@ -19,7 +19,7 @@ def test_jpeg_scale_factor(image_resizer: ImageResizer):
 
 
 @pytest.mark.parametrize(
-    "dimensions,expected_dimensions,expected_interpolation",
+    ("dimensions", "expected_dimensions", "expected_interpolation"),
     [
         ((600, 800), (810, 1080), Resampling.LANCZOS),
         ((2000, 800), (1920, 768), Resampling.BICUBIC),

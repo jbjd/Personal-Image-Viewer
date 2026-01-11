@@ -30,8 +30,8 @@ def test_image_path():
 
 def test_init_PIL():  # pylint: disable=invalid-name
     """Should remove all values from _plugins and set default font"""
-    from PIL import Image as _Image
-    from PIL.ImageDraw import ImageDraw
+    from PIL import Image as _Image  # noqa: PLC0415
+    from PIL.ImageDraw import ImageDraw  # noqa: PLC0415
 
     init_PIL(DEFAULT_FONT, 20)
     assert len(_Image._plugins) == 0
@@ -73,7 +73,7 @@ def test_resize():
 
 
 @pytest.mark.parametrize(
-    "mode,expected_readable_mode,expected_bpp",
+    ("mode", "expected_readable_mode", "expected_bpp"),
     [
         ("RGB", "RGB", 24),
         ("RGBA", "RGBA", 32),

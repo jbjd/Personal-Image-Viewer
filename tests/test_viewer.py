@@ -110,7 +110,7 @@ def test_minimize(viewer: ViewerApp):
 
 
 @pytest.mark.parametrize(
-    "dropdown_show,dropdown_needs_refresh",
+    ("dropdown_show", "dropdown_needs_refresh"),
     [(False, False), (False, True), (True, False), (True, True)],
 )
 def test_update_details_dropdown(

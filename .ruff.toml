@@ -24,10 +24,11 @@ select = ["B", "C4", "E", "FLY", "F", "I", "PERF", "PLR", "Q", "RSE", "SIM", "UP
 # PLR2004: Magic value used in comparison
 # PTH: Use Pathlib (Wants slower API used)
 # SIM105: Slower exception suppression (Wants slower check used)
+# SLF001: Private member access
 # TD002: Missing author in TODO
 # TD003: Missing issue link in TODO
 # TRY003: Avoid specifying long messages outside the exception class (Slower and less clear)
-ignore = ["D202", "C416", "COM812", "D102", "D105", "D107", "D203", "D205", "D213", "D401", "D415", "EM", "FBT", "FIX", "PLR0913", "PLR2004", "PTH", "SIM105", "TD002", "TD003", "TRY003"]
+ignore = ["D202", "C416", "COM812", "D102", "D105", "D107", "D203", "D205", "D213", "D401", "D415", "EM", "FBT", "FIX", "PLR0913", "PLR2004", "PTH", "SIM105", "SLF001", "TD002", "TD003", "TRY003"]
 
 [lint.extend-per-file-ignores]
 
