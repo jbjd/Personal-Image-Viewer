@@ -54,7 +54,7 @@ class MockImage(Image):
         if n_frames > 1:  # Like PIL, only set for animations
             self.is_animated: bool = True
 
-    def convert(self, mode: str | None) -> Image:  # type: ignore[override]
+    def convert(self, mode: str) -> Image:  # type: ignore[override]
         return MockImage(self.n_frames, self.format, mode)
 
     def save(self, *_: list[Any], **kwargs: dict[str, Any]) -> None:  # type: ignore[override]

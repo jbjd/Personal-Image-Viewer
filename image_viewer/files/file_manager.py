@@ -164,7 +164,7 @@ class ImageFileManager:
         try:
             image_metadata: stat_result = os.stat(self.path_to_image)
             created_time_epoch: float = (
-                image_metadata.st_birthtime
+                image_metadata.st_birthtime  # type: ignore[attr-defined]
                 if os.name == "nt"
                 else image_metadata.st_ctime
             )
