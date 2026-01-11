@@ -10,8 +10,8 @@ class ImageUIElement(UIElementBase):
 
     __slots__ = ("image",)
 
-    def __init__(self, image: PhotoImage | None, id: int) -> None:
-        super().__init__(id)
+    def __init__(self, image: PhotoImage | None, canvas_id: int) -> None:
+        super().__init__(canvas_id)
         self.image: PhotoImage | None = image
 
 
@@ -20,8 +20,8 @@ class DropdownImageUIElement(ImageUIElement):
 
     __slots__ = ("need_refresh", "show")
 
-    def __init__(self, id: int) -> None:
-        super().__init__(None, id)
+    def __init__(self, canvas_id: int) -> None:
+        super().__init__(None, canvas_id)
         self.need_refresh: bool = True
         self.show: bool = False
 

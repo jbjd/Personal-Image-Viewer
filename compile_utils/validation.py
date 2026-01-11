@@ -13,7 +13,7 @@ from personal_compile_tools.requirement_operators import Operators
 from personal_compile_tools.requirements import Requirement, parse_requirements_file
 
 from compile_utils.constants import PROJECT_FILE
-from compile_utils.exceptions import InvalidEnvironment
+from compile_utils.exceptions import InvalidEnvironmentError
 from compile_utils.log import LOGGER_NAME
 from compile_utils.module_dependencies import module_dependencies
 
@@ -26,7 +26,7 @@ def get_required_python_version() -> tuple[int, int]:
     """Returns required python version by parsing it out of the pyproject.toml file.
 
     :returns: Tuple of the required version."""
-    global _required_python_version
+    global _required_python_version  # noqa: PLW0603
 
     if _required_python_version is not None:
         return _required_python_version
@@ -34,10 +34,8 @@ def get_required_python_version() -> tuple[int, int]:
     with open(PROJECT_FILE, "rb") as fp:
         project: dict[str, Any] = tomllib.load(fp)["project"]
 
-    _required_python_version = version_str_to_tuple(
-        project["requires-python"][2:]  # type: ignore
-    )
-    return _required_python_version  # type: ignore
+    _required_python_version = version_str_to_tuple(project["requires-python"][2:])
+    return _required_python_version
 
 
 def validate_module_requirements() -> None:
@@ -74,7 +72,7 @@ def validate_module_requirements() -> None:
             missing_modules.append(requirement.name)
 
     if missing_modules:
-        raise InvalidEnvironment(
+        raise InvalidEnvironmentError(
             f"Missing module dependencies {missing_modules}\n"
             "Please install them to compile"
         )
@@ -91,7 +89,7 @@ def validate_python_version() -> None:
     used_python: tuple[int, int] = version_info[:2]
 
     if used_python != required_python:
-        raise InvalidEnvironment(
+        raise InvalidEnvironmentError(
             f"Expecting python version {required_python} but found {used_python}"
         )
 
@@ -100,7 +98,7 @@ def validate_python_version() -> None:
         raise NotImplementedError(f"{version} not supported by Nuitka yet")
 
 
-def validate_PIL() -> None:
+def validate_PIL() -> None:  # noqa: N802
     """Ensures installed version of PIL has expected optional modules installed.
     Normal PIL installations will have these, but PIL can be built from source with
     these turned off.
@@ -124,7 +122,7 @@ def validate_PIL() -> None:
         del _webp
 
     if missing_modules:
-        raise InvalidEnvironment(
+        raise InvalidEnvironmentError(
             "Current PIL installation missing necessary modules: "
             + ",".join(missing_modules)
         )

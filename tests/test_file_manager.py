@@ -11,7 +11,6 @@ from image_viewer.files.file_manager import ImageFileManager, _ShouldPreserveInd
 from image_viewer.image.cache import ImageCache, ImageCacheEntry
 from image_viewer.image.file import ImageSearchResult
 from tests.conftest import EXAMPLE_PNG_PATH, IMG_DIR
-from tests.test_util.exception import safe_wrapper
 from tests.test_util.mocks import MockImage, MockStatResult
 
 
@@ -34,16 +33,16 @@ def test_image_file_manager(file_manager: ImageFileManager):
         file_manager.rename_or_convert_current_image("c.webp")
 
     # Try to rename a.png mocking the os call away should pass
-    with patch("os.rename", lambda *_: None):
-        with (
-            patch.object(
-                ImageFileManager,
-                "_ask_to_delete_old_image_after_convert",
-                lambda *_: None,
-            ),
-            patch("image_viewer.files.file_manager.askyesno", lambda *_: True),
-        ):
-            file_manager.rename_or_convert_current_image("example.test")
+    with (
+        patch("os.rename", lambda *_: None),
+        patch.object(
+            ImageFileManager,
+            "_ask_to_delete_old_image_after_convert",
+            lambda *_: None,
+        ),
+        patch("image_viewer.files.file_manager.askyesno", lambda *_: True),
+    ):
+        file_manager.rename_or_convert_current_image("example.test")
 
     # test remove_current_image functionality
     for _ in range(4):
@@ -56,15 +55,18 @@ def test_image_file_manager(file_manager: ImageFileManager):
 
 
 def test_bad_path(image_cache: ImageCache):
+    """Should raise ValueError when bad path provided."""
+
     # doesn't exist
+    file_manager = ImageFileManager("bad/path", image_cache)
     with pytest.raises(ValueError):
-        file_manager = ImageFileManager("bad/path", image_cache)
         file_manager.validate_current_path()
+
     # wrong file type
+    file_manager = ImageFileManager(
+        os.path.join(IMG_DIR, "not_an_image.txt"), image_cache
+    )
     with pytest.raises(ValueError):
-        file_manager = ImageFileManager(
-            os.path.join(IMG_DIR, "not_an_image.txt"), image_cache
-        )
         file_manager.validate_current_path()
 
 
@@ -92,10 +94,6 @@ def test_delete_file(file_manager: ImageFileManager):
     # add one extra image so it doesn't error after removing the only file
     file_manager.add_new_image("Some_image.png", _ShouldPreserveIndex.NO)
 
-    tempfile._TemporaryFileWrapper.close = safe_wrapper(  # type: ignore
-        tempfile._TemporaryFileWrapper.close
-    )
-
     with tempfile.NamedTemporaryFile() as tmp:
         file_manager.path_to_image = tmp.name
         file_manager.trash_current_image()
@@ -103,7 +101,12 @@ def test_delete_file(file_manager: ImageFileManager):
 
 
 @pytest.mark.parametrize(
-    "starting_display_index,preserve_index,insertion_index,expected_display_index",
+    (
+        "starting_display_index",
+        "preserve_index",
+        "insertion_index",
+        "expected_display_index",
+    ),
     [
         (1, _ShouldPreserveIndex.NO, 1, 1),
         (1, _ShouldPreserveIndex.IF_INSERTED_AT_OR_BEFORE, 1, 2),
@@ -157,7 +160,7 @@ def test_get_and_show_details(file_manager: ImageFileManager):
     """Should return a string containing details on current cached image and show it"""
 
     # Will exit if no details in cache
-    PIL_image = MockImage()
+    PIL_image = MockImage()  # noqa: N806
     PIL_image.info["comment"] = b"test"
 
     details = file_manager.get_image_details(PIL_image)
