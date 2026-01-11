@@ -30,8 +30,8 @@ def test_image_path():
 
 def test_init_PIL():
     """Should remove all values from _plugins and set default font"""
-    from PIL import Image as _Image  # noqa: PLC0415
-    from PIL.ImageDraw import ImageDraw  # noqa: PLC0415
+    from PIL import Image as _Image
+    from PIL.ImageDraw import ImageDraw
 
     init_PIL(DEFAULT_FONT, 20)
     assert len(_Image._plugins) == 0

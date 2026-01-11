@@ -26,7 +26,7 @@ def get_required_python_version() -> tuple[int, int]:
     """Returns required python version by parsing it out of the pyproject.toml file.
 
     :returns: Tuple of the required version."""
-    global _required_python_version
+    global _required_python_version  # noqa: PLW0603
 
     if _required_python_version is not None:
         return _required_python_version

@@ -97,7 +97,7 @@ def resize(
     if image.size == size:
         return image.copy()
 
-    box: tuple[int, int, int, int] = (0, 0) + image.size
+    box: tuple[int, int, int, int] = (0, 0, *image.size)
     original_mode: str = image.mode
     modes_to_convert: dict[str, str] = {
         "RGBA": "RGBa",

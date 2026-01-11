@@ -68,23 +68,24 @@ class CompileNamespace(Namespace):
         include_dlls: bool
 
 
+_VALID_NUITKA_ARGS: list[str] = [
+    NuitkaArgs.QUIET.value,
+    NuitkaArgs.VERBOSE.value,
+    NuitkaArgs.SHOW_SCONS.value,
+    NuitkaArgs.SHOW_MEMORY.value,
+    NuitkaArgs.WINDOWS_CONSOLE_MODE.value,
+]
+
+
 class CompileArgumentParser(ArgumentParser):
     """Argument Parser for compilation flags."""
 
     __slots__ = ()
 
-    VALID_NUITKA_ARGS: list[str] = [
-        NuitkaArgs.QUIET.value,
-        NuitkaArgs.VERBOSE.value,
-        NuitkaArgs.SHOW_SCONS.value,
-        NuitkaArgs.SHOW_MEMORY.value,
-        NuitkaArgs.WINDOWS_CONSOLE_MODE.value,
-    ]
-
     def __init__(self, install_path: str) -> None:
         super().__init__(
             description="Compiles Personal Image Viewer to an executable",
-            epilog=f"Some nuitka arguments are also accepted: {self.VALID_NUITKA_ARGS}",
+            epilog=f"Some nuitka arguments are also accepted: {_VALID_NUITKA_ARGS}",
         )
 
         self.add_argument_ext(
@@ -193,7 +194,7 @@ class CompileArgumentParser(ArgumentParser):
         :raises ValueError: If any argument isn't part of that subset."""
 
         for extra_arg in nuitka_args:
-            if extra_arg.split("=")[0] not in self.VALID_NUITKA_ARGS:
+            if extra_arg.split("=")[0] not in _VALID_NUITKA_ARGS:
                 raise ValueError(f"Unknown argument {extra_arg}")
 
     @staticmethod

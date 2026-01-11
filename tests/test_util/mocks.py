@@ -41,7 +41,7 @@ class MockImage(Image):
     """Mocks PIL Image for testing"""
 
     mode: str = "P"
-    info: dict = {}
+    info: dict = {}  # noqa: RUF012
     _size: tuple[int, int] = (0, 0)
 
     def __init__(self, n_frames: int = 1, format: str = "") -> None:

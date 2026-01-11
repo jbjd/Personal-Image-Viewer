@@ -238,7 +238,7 @@ regex_to_apply_py: defaultdict[str, list[RegexReplacement]] = defaultdict(
             ),
             RegexReplacement(
                 pattern=r"_Frame\(NamedTuple\)",
-                replacement="_Frame(namedtuple('_Frame',['im','bbox','encoderinfo']))",  # noqa E501
+                replacement="_Frame(namedtuple('_Frame',['im','bbox','encoderinfo']))",
                 count=1,
             ),
         ],
