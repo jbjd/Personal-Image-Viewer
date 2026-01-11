@@ -56,15 +56,18 @@ def test_image_file_manager(file_manager: ImageFileManager):
 
 
 def test_bad_path(image_cache: ImageCache):
+    """Should raise ValueError when bad path provided."""
+
     # doesn't exist
+    file_manager = ImageFileManager("bad/path", image_cache)
     with pytest.raises(ValueError):
-        file_manager = ImageFileManager("bad/path", image_cache)
         file_manager.validate_current_path()
+
     # wrong file type
+    file_manager = ImageFileManager(
+        os.path.join(IMG_DIR, "not_an_image.txt"), image_cache
+    )
     with pytest.raises(ValueError):
-        file_manager = ImageFileManager(
-            os.path.join(IMG_DIR, "not_an_image.txt"), image_cache
-        )
         file_manager.validate_current_path()
 
 
@@ -103,7 +106,12 @@ def test_delete_file(file_manager: ImageFileManager):
 
 
 @pytest.mark.parametrize(
-    "starting_display_index,preserve_index,insertion_index,expected_display_index",
+    (
+        "starting_display_index",
+        "preserve_index",
+        "insertion_index",
+        "expected_display_index",
+    ),
     [
         (1, _ShouldPreserveIndex.NO, 1, 1),
         (1, _ShouldPreserveIndex.IF_INSERTED_AT_OR_BEFORE, 1, 2),
