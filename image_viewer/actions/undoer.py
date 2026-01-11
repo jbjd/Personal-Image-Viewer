@@ -55,7 +55,7 @@ class ActionUndoer(deque[FileAction]):
             return UndoResponse(action.original_path, "")
 
         assert_never(  # pragma: no cover
-            action.__class__.__name__  # type: ignore
+            action.__class__.__name__  # type: ignore[arg-type]
         )
 
     def get_undo_message(self) -> str | None:
@@ -81,5 +81,5 @@ class ActionUndoer(deque[FileAction]):
             return f"Restore {action.original_path} from trash?"
 
         assert_never(  # pragma: no cover
-            action.__class__.__name__  # type: ignore
+            action.__class__.__name__  # type: ignore[arg-type]
         )

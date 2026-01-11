@@ -7,27 +7,30 @@ from tests.test_util.mocks import MockEvent
 
 
 def test_error_flash(rename_entry: RenameEntry):
-    """Ensure error flash called correctly"""
+    """Should change color when error_flash called."""
 
-    # If we disable the callback that error_flash normally calls after a delay
-    # It should be an error red color
-    rename_entry.master.after = lambda *_: None  # type: ignore
-    rename_entry.error_flash()
-    current_background: str = rename_entry.config()["background"][4]  # type: ignore
-    assert current_background == _ERROR_COLOR
-
+    current_background: str
     # If we force no delay for testing, it should go back to white immediately
-    rename_entry.master.after = lambda _, callback: callback()  # type: ignore
-    rename_entry.error_flash()
-    current_background = rename_entry.config()["background"][4]  # type: ignore
-    assert current_background == TEXT_RGB
+    with patch.object(rename_entry.master, "after", lambda _, callback: callback()):
+        rename_entry.error_flash()
+        current_background = rename_entry.config()["background"][4]  # type: ignore[index]
+        assert current_background == TEXT_RGB
+
+    # If we disable the callback that error_flash normally calls after a delay,
+    # it should be error color
+    with patch.object(rename_entry.master, "after"):
+        rename_entry.error_flash()
+        current_background = rename_entry.config()["background"][4]  # type: ignore[index]
+        assert current_background == _ERROR_COLOR
 
 
 def test_resize(rename_entry: RenameEntry, canvas: CustomCanvas):
     """Ensure correct behavior when user resizes the entry"""
 
+    mock_event = MockEvent(x=250)
+
     with patch.object(RenameEntry, "cget", lambda *_: 250):
-        rename_entry._start_resize(MockEvent(x=250))
+        rename_entry._start_resize(mock_event)
         assert rename_entry.being_resized
 
         rename_entry._resize(canvas, 251)
@@ -37,7 +40,7 @@ def test_resize(rename_entry: RenameEntry, canvas: CustomCanvas):
         assert config["state"][4] == "disabled"
         assert config["width"][4] == 251
 
-        rename_entry._stop_resize(None)  # type: ignore
+        rename_entry._stop_resize(mock_event)
         assert not rename_entry.being_resized
 
         config = rename_entry.config()
@@ -52,12 +55,12 @@ def test_resize_hover(rename_entry: RenameEntry, canvas: CustomCanvas):
         with patch.object(RenameEntry, "cget", lambda *_: 250):
             # If able to resize, change cursor
             rename_entry._resize(canvas, 251)
-            cursor = rename_entry.config()["cursor"][4]  # type: ignore
+            cursor = rename_entry.config()["cursor"][4]  # type: ignore[index]
             assert cursor == "sb_h_double_arrow"
 
             # When the cursor is now far away, go back to normal
             rename_entry._resize(canvas, 1)
-            cursor = rename_entry.config()["cursor"][4]  # type: ignore
+            cursor = rename_entry.config()["cursor"][4]  # type: ignore[index]
             assert cursor == ""
 
         mock_itemconfig.assert_not_called()

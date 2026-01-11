@@ -11,7 +11,6 @@ from image_viewer.files.file_manager import ImageFileManager, _ShouldPreserveInd
 from image_viewer.image.cache import ImageCache, ImageCacheEntry
 from image_viewer.image.file import ImageSearchResult
 from tests.conftest import EXAMPLE_PNG_PATH, IMG_DIR
-from tests.test_util.exception import safe_wrapper
 from tests.test_util.mocks import MockImage, MockStatResult
 
 
@@ -94,10 +93,6 @@ def test_delete_file(file_manager: ImageFileManager):
 
     # add one extra image so it doesn't error after removing the only file
     file_manager.add_new_image("Some_image.png", _ShouldPreserveIndex.NO)
-
-    tempfile._TemporaryFileWrapper.close = safe_wrapper(  # type: ignore
-        tempfile._TemporaryFileWrapper.close
-    )
 
     with tempfile.NamedTemporaryFile() as tmp:
         file_manager.path_to_image = tmp.name

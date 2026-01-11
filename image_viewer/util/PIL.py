@@ -123,9 +123,7 @@ def _get_longest_line_dimensions(text: str) -> tuple[int, int]:
     """Returns width and height of longest string in a string with multiple lines"""
     longest_line: str = max(text.split("\n"), key=len)
 
-    width_offset, height_offset, width, height = ImageDraw.font.getbbox(  # type: ignore
-        longest_line
-    )
+    width_offset, height_offset, width, height = ImageDraw.font.getbbox(longest_line)  # type: ignore[union-attr]
 
     return int(width + width_offset), int(height + height_offset)
 
@@ -172,11 +170,9 @@ def get_placeholder_for_errored_image(
     draw.line((0, 0, screen_width, screen_height), line_rgb, width=100)
 
     # Write title
-    w: int
-    h: int
-    *_, w, h = ImageDraw.font.getbbox(error_title)  # type: ignore
-    y_offset: int = screen_height - (h * (5 + formatted_error.count("\n"))) >> 1
-    x_offset: int = (screen_width - w) >> 1
+    *_, w, h = ImageDraw.font.getbbox(error_title)  # type: ignore[union-attr]
+    y_offset: int = screen_height - int(h * (5 + formatted_error.count("\n"))) >> 1
+    x_offset: int = int(screen_width - w) >> 1
     draw.text((x_offset, y_offset), error_title, TEXT_RGB)
 
     # Write error body 2 lines of height below title

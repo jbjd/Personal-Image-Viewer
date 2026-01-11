@@ -34,10 +34,8 @@ def get_required_python_version() -> tuple[int, int]:
     with open(PROJECT_FILE, "rb") as fp:
         project: dict[str, Any] = tomllib.load(fp)["project"]
 
-    _required_python_version = version_str_to_tuple(
-        project["requires-python"][2:]  # type: ignore
-    )
-    return _required_python_version  # type: ignore
+    _required_python_version = version_str_to_tuple(project["requires-python"][2:])
+    return _required_python_version
 
 
 def validate_module_requirements() -> None:

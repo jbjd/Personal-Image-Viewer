@@ -40,27 +40,24 @@ class MockEvent(Event):
 class MockImage(Image):
     """Mocks PIL Image for testing"""
 
-    mode: str = "P"
     info: dict = {}  # noqa: RUF012
     _size: tuple[int, int] = (0, 0)
 
-    def __init__(self, n_frames: int = 1, format: str = "") -> None:
+    def __init__(self, n_frames: int = 1, format: str = "", mode: str = "P") -> None:
         super().__init__()
 
         self.format: str = format
         self.n_frames: int = n_frames
+        self.mode: str = mode
         self.closed: bool = False
 
         if n_frames > 1:  # Like PIL, only set for animations
             self.is_animated: bool = True
 
-    def convert(  # type: ignore
-        self, new_mode: str
-    ) -> Self:
-        self.mode = new_mode
-        return self
+    def convert(self, mode: str | None) -> Image:  # type: ignore[override]
+        return MockImage(self.n_frames, self.format, self.mode)
 
-    def save(self, *_: list[Any], **kwargs: dict[str, Any]) -> None:
+    def save(self, *_: list[Any], **kwargs: dict[str, Any]) -> None:  # type: ignore[override]
         pass
 
     def close(self) -> None:

@@ -88,7 +88,7 @@ def clean_file_and_copy(
             ),
         )
     except Exception:
-        _logger.error(
+        _logger.exception(
             "Error when running minifier on file %s, writing source to %s",
             module_import_path,
             MINIFIER_FAILED_FILE_NAME,

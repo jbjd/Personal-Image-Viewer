@@ -90,7 +90,7 @@ def _get_nuitka_env(assume_this_machine: bool) -> dict[str, str]:
     # Setup like nuitka would to avoid re-execute
     os.environ["NUITKA_SYS_PREFIX"] = sys.prefix
 
-    from nuitka.importing.PreloadedPackages import (  # type: ignore
+    from nuitka.importing.PreloadedPackages import (
         detectPreLoadedPackagePaths,
         detectPthImportedPackages,
     )

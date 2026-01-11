@@ -233,7 +233,7 @@ regex_to_apply_py: defaultdict[str, list[RegexReplacement]] = defaultdict(
         "PIL.GifImagePlugin": [
             RegexReplacement(
                 pattern="from typing import .*",
-                replacement="from typing import cast;from collections import namedtuple",  # noqa E501
+                replacement="from typing import cast;from collections import namedtuple",  # noqa: E501
                 count=1,
             ),
             RegexReplacement(
@@ -277,7 +277,7 @@ from collections import namedtuple""",
             ),
             RegexReplacement(
                 pattern=r"_Tile\(NamedTuple\):",
-                replacement="_Tile(namedtuple('_Tile', ['codec_name', 'extents', 'offset', 'args'])):",  # noqa E501
+                replacement="_Tile(namedtuple('_Tile', ['codec_name', 'extents', 'offset', 'args'])):",  # noqa: E501
                 count=1,
             ),
         ],
@@ -297,7 +297,7 @@ from collections import namedtuple""",
             ),
             RegexReplacement(
                 pattern=r"\(NamedTuple\):",
-                replacement=r"(namedtuple('ModeDescriptor', ['mode', 'bands', 'basemode', 'basetype', 'typestr'])):",  # noqa E501
+                replacement=r"(namedtuple('ModeDescriptor', ['mode', 'bands', 'basemode', 'basetype', 'typestr'])):",  # noqa: E501
                 count=1,
             ),
         ],
@@ -315,16 +315,16 @@ from collections import namedtuple""",
             ),
             RegexReplacement(
                 pattern="from typing import .*",
-                replacement="from typing import IO, cast\nfrom collections import namedtuple",  # noqa E501
+                replacement="from typing import IO, cast\nfrom collections import namedtuple",  # noqa: E501
                 count=1,
             ),
             RegexReplacement(
                 pattern=r"_RewindState\(NamedTuple\)",
-                replacement="_RewindState(namedtuple('_RewindState', ['info', 'tile', 'seq_num']))",  # noqa E501
+                replacement="_RewindState(namedtuple('_RewindState', ['info', 'tile', 'seq_num']))",  # noqa: E501
             ),
             RegexReplacement(
                 pattern=r"_Frame\(NamedTuple\)",
-                replacement="_Frame(namedtuple('_Frame', ['im', 'bbox', 'encoderinfo']))",  # noqa E501
+                replacement="_Frame(namedtuple('_Frame', ['im', 'bbox', 'encoderinfo']))",  # noqa: E501
             ),
         ],
         "PIL.WebPImagePlugin": [
