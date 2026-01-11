@@ -110,13 +110,13 @@ def resize(
     return resized_image
 
 
-def optimize(image: Image) -> bool:
+def optimize(image: Image) -> Image:
     """Optimizes a PIL Image by detecting useless color channels.
 
     :param image: PIL Image to optimize
     :returns: New PIL Image with optimized mode or original if already optimial"""
 
-    if image.mode in _modes_with_alpha and _has_useless_alpha_channel(image):
+    if _has_useless_alpha_channel(image):
         image = image.convert(image.mode[:-1])
 
     if _should_be_grayscale(image):
@@ -130,7 +130,10 @@ def _has_useless_alpha_channel(image: Image) -> bool:
 
     :param image: PIL Image to check
     :returns: If alpha channel is useless"""
-    alpha_colors = image.split()[-1].getcolors()
+    if image.mode not in _modes_with_alpha:
+        return False
+
+    alpha_colors: list[tuple[int, tuple[int, ...]]] = image.split()[-1].getcolors()  # type: ignore[assignment]
     return len(alpha_colors) == 1 and alpha_colors[0][1] == 255
 
 
@@ -139,9 +142,11 @@ def _should_be_grayscale(image: Image) -> bool:
 
     :param image: PIL Image to check
     :returns: If PIL Image should be grayscale"""
-    return image.mode == "RGB" and all(
-        rgb[0] == rgb[1] == rgb[2] for _, rgb in image.getcolors()
-    )
+    if image.mode != "RGB":
+        return False
+
+    colors: list[tuple[int, tuple[int, ...]]] = image.getcolors()  # type: ignore[assignment]
+    return all(rgb[0] == rgb[1] == rgb[2] for _, rgb in colors)
 
 
 def _get_longest_line_dimensions(text: str) -> tuple[int, int]:

@@ -5,7 +5,6 @@ import re
 import sys
 from collections import defaultdict
 
-from personal_python_ast_optimizer.parser.config import ConstantValue
 from personal_python_ast_optimizer.regex.classes import RegexReplacement
 from PIL.AvifImagePlugin import DECODE_CODEC_CHOICE
 from PIL.DdsImagePlugin import DDS_MAGIC
@@ -21,7 +20,6 @@ from image_viewer.config import (
 from image_viewer.constants import TEXT_RGB
 from image_viewer.image.resizer import JPEG_MAX_DIMENSION
 from image_viewer.ui.rename_entry import _ERROR_COLOR
-from image_viewer.util.PIL import _modes_with_alpha
 
 # Increment when edits to this file or module_dependencies are merged into main
 SKIP_ITERATION: int = 1
@@ -181,8 +179,10 @@ decorators_to_skip: dict[str, set[str]] = {}
 
 module_imports_to_skip: dict[str, set[str]] = {}
 
-
-module_vars_to_fold: defaultdict[str, dict[str, ConstantValue]] = defaultdict(
+module_vars_to_fold: defaultdict[
+    str,
+    dict[str, str | bytes | bool | int | float | complex | None],
+] = defaultdict(
     dict,
     {
         IMAGE_VIEWER_NAME: {
@@ -205,9 +205,6 @@ module_vars_to_fold: defaultdict[str, dict[str, ConstantValue]] = defaultdict(
         },
     },
 )
-vars_to_fold: dict[str, dict[str, ConstantValue]] = {
-    f"{IMAGE_VIEWER_NAME}.util.PIL": {"_modes_with_alpha": _modes_with_alpha}
-}
 
 remove_all_re = RegexReplacement(pattern="^.*$", flags=re.DOTALL)
 regex_to_apply_py: defaultdict[str, list[RegexReplacement]] = defaultdict(
