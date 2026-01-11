@@ -23,7 +23,7 @@ from image_viewer.util.PIL import get_placeholder_for_errored_image, rotate_imag
 class ReadImageResponse:
     """Response when reading an image from disk"""
 
-    __slots__ = ("image_buffer", "image", "expected_format")
+    __slots__ = ("expected_format", "image", "image_buffer")
 
     def __init__(
         self, image_buffer: CMemoryViewBuffer, image: Image, expected_format: str
@@ -39,16 +39,16 @@ class ImageLoader:
     DEFAULT_ANIMATION_SPEED: int = 100  # in milliseconds
 
     __slots__ = (
+        "PIL_image",
         "_rotation_state",
         "_zoom_state",
-        "animation_frames",
         "animation_callback",
+        "animation_frames",
         "current_load_id",
         "frame_index",
         "image_buffer",
         "image_cache",
         "image_resizer",
-        "PIL_image",
         "zoomed_image_cache",
     )
 

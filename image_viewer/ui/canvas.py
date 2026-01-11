@@ -20,8 +20,8 @@ class CustomCanvas(Canvas):
         "drag_start_y",
         "file_name_text_id",
         "image_display",
-        "screen_width",
         "screen_height",
+        "screen_width",
     )
 
     def __init__(self, master: Tk, background_color: str) -> None:

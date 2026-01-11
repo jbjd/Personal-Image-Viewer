@@ -14,7 +14,7 @@ class UndoResponse:
     """Contains what paths where restored or removed, if any,
     when an action was undone."""
 
-    __slots__ = ("path_restored", "path_removed")
+    __slots__ = ("path_removed", "path_restored")
 
     def __init__(self, path_restored: str, path_removed: str) -> None:
         self.path_restored: str = path_restored

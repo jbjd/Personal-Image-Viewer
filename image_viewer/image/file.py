@@ -27,7 +27,7 @@ class ImageSearchResult:
     """Represents a search such that index is where the image is or would be inserted
     depending on if found is True or False respectively."""
 
-    __slots__ = ("index", "found")
+    __slots__ = ("found", "index")
 
     def __init__(self, index: int, found: bool) -> None:
         self.index: int = index
