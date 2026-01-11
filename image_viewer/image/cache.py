@@ -10,12 +10,12 @@ class ImageCacheEntry:
     """Cached image data to skip resizing/system calls on repeated opening."""
 
     __slots__ = (
+        "byte_size",
         "format",
         "height",
         "image",
         "mode",
         "size_display",
-        "byte_size",
         "width",
     )
 

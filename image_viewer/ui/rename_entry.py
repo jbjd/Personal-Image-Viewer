@@ -13,9 +13,9 @@ class RenameEntry(Entry, UIElementBase):
     __slots__ = ("being_resized", "min_width", "text")
 
     def __init__(
-        self, master: Tk, canvas: Canvas, id: int, min_width: int, font: str
+        self, master: Tk, canvas: Canvas, canvas_id: int, min_width: int, font: str
     ) -> None:
-        UIElementBase.__init__(self, id)
+        UIElementBase.__init__(self, canvas_id)
         Entry.__init__(
             self,
             master,

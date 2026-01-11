@@ -45,7 +45,7 @@ def try_convert_file_and_save_new(
             if target_format in ("jpg", "jpeg", "jif", "jfif", "jpe"):
                 target_format = "jpeg"
                 if temp_img.mode not in VALID_JPEG_MODES:
-                    temp_img = temp_img.convert("RGB")
+                    temp_img = temp_img.convert("RGB")  # noqa: PLW2901
             elif (
                 target_format == "gif"
                 and original_ext == "webp"

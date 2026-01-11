@@ -19,7 +19,7 @@ class ZoomedImageResult:
     """Represents the result of zoom into an image where
     hit_max_zoom is True when this is the max zoom that is allowed"""
 
-    __slots__ = ("image", "hit_max_zoom")
+    __slots__ = ("hit_max_zoom", "image")
 
     def __init__(self, image: Image, hit_max_zoom: bool) -> None:
         self.image: Image = image
