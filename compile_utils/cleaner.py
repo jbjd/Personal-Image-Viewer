@@ -3,10 +3,10 @@
 import os
 import re
 import subprocess
+from collections.abc import Iterator
 from glob import glob
 from logging import getLogger
 from re import sub
-from typing import Iterator
 
 from personal_compile_tools.file_operations import (
     copy_file,

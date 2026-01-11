@@ -1,7 +1,7 @@
 """Utilities for exception handling in tests"""
 
+from collections.abc import Callable
 from functools import wraps
-from typing import Callable
 
 
 def safe_wrapper(function: Callable[..., None]):

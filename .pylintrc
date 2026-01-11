@@ -10,10 +10,10 @@ disable = import-error,  # Lots of false flags here
           protected-access,  # Needed to access image draws
           too-few-public-methods,  # Classes used as response types
           no-name-in-module,  # Getting these due to compiled modules
-          line-too-long,      # Checked by flake
-          unused-import,      # Checked by flake
-          ungrouped-imports,  # Checked by isort
-          wrong-import-order, # Checked by isort
+          line-too-long,      # Checked by ruff
+          unused-import,      # Checked by ruff
+          ungrouped-imports,  # Checked by ruff
+          wrong-import-order, # Checked by ruff
           no-member,          # Checked by mypy
 
 [DESIGN]

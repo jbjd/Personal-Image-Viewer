@@ -2,7 +2,7 @@
 Deals with storing known image file paths and determining their true file extension.
 """
 
-from typing import Iterable
+from collections.abc import Iterable
 
 from image_viewer.constants import ImageFormats, Movement
 from image_viewer.util.os import os_name_compare

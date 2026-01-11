@@ -22,7 +22,7 @@ class TestLeaks(MemoryLeakTestCase):
         os.environ["PYTHONMALLOC"] = "malloc"
 
         if os.environ.get("PYTHONUNBUFFERED") != "1":
-            raise EnvironmentError("Need to set env variable PYTHONUNBUFFERED=1")
+            raise RuntimeError("Need to set env variable PYTHONUNBUFFERED=1")
 
     def tearDown(self) -> None:
         if self.malloc_env is not None:
