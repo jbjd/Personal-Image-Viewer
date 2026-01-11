@@ -12,6 +12,7 @@ from compile_utils.code_to_skip import (
     dlls_to_include,
 )
 from compile_utils.constants import BUILD_INFO_FILE, REPORT_FILE
+from compile_utils.exceptions import InvalidEnvironmentError
 from compile_utils.module_dependencies import modules_to_include
 
 
@@ -266,7 +267,7 @@ def get_full_path_to_dll(dll_file: str) -> str:
     try:
         which: str | None = shutil.which(dll_file)
         if which is None:
-            raise RuntimeError(f"Can't find {dll_file} on $PATH")
+            raise InvalidEnvironmentError(f"Can't find {dll_file} on $PATH")
 
     finally:
         if old_path_ext is not None:

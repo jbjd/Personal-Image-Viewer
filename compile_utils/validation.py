@@ -13,7 +13,7 @@ from personal_compile_tools.requirement_operators import Operators
 from personal_compile_tools.requirements import Requirement, parse_requirements_file
 
 from compile_utils.constants import PROJECT_FILE
-from compile_utils.exceptions import InvalidEnvironment
+from compile_utils.exceptions import InvalidEnvironmentError
 from compile_utils.log import LOGGER_NAME
 from compile_utils.module_dependencies import module_dependencies
 
@@ -72,7 +72,7 @@ def validate_module_requirements() -> None:
             missing_modules.append(requirement.name)
 
     if missing_modules:
-        raise InvalidEnvironment(
+        raise InvalidEnvironmentError(
             f"Missing module dependencies {missing_modules}\n"
             "Please install them to compile"
         )
@@ -89,7 +89,7 @@ def validate_python_version() -> None:
     used_python: tuple[int, int] = version_info[:2]
 
     if used_python != required_python:
-        raise InvalidEnvironment(
+        raise InvalidEnvironmentError(
             f"Expecting python version {required_python} but found {used_python}"
         )
 
@@ -122,7 +122,7 @@ def validate_PIL() -> None:
         del _webp
 
     if missing_modules:
-        raise InvalidEnvironment(
+        raise InvalidEnvironmentError(
             "Current PIL installation missing necessary modules: "
             + ",".join(missing_modules)
         )
