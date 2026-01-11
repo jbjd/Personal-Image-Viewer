@@ -233,17 +233,17 @@ class ImageLoader:
                 )
 
                 self.animation_frames[i] = Frame(frame_image)
-            except Exception:
-                # moving to new image during this function causes a variety of errors
-                # just break to kill thread
+            except (IndexError, ValueError):
+                # Might index into animation_frames incorrectly
+                # Or perform action on closed image
                 break
 
     def reset_and_setup(self) -> None:
         """Resets zoom, animation frames, and closes previous image
         to setup for next image load"""
-        self.animation_frames = []
+        self.animation_frames.clear()
         self.frame_index = 0
         self.PIL_image.close()
         self._rotation_state.reset()
         self._zoom_state.reset()
-        self.zoomed_image_cache = []
+        self.zoomed_image_cache.clear()

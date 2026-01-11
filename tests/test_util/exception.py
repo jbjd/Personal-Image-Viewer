@@ -14,7 +14,7 @@ def safe_wrapper(function: Callable[_P, None]):  # noqa: UP047
     def wrapper(*args: _P.args, **kwargs: _P.kwargs) -> None:
         try:
             function(*args, **kwargs)
-        except Exception:
+        except Exception:  # noqa: BLE001
             pass
 
     return wrapper
