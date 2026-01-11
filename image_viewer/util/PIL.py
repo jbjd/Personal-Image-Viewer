@@ -23,6 +23,8 @@ _mode_info_special_cases: dict[str, tuple[str, int]] = {
     "1": ("Black And White", 1),
 }
 
+_modes_with_alpha: tuple[str, str] = ("RGBA", "LA")
+
 
 def get_mode_info(mode: str) -> tuple[str, int]:
     """Given a PIL image's mode, return additional info on it.
@@ -78,16 +80,6 @@ def image_is_animated(image: Image) -> bool:
     return getattr(image, "is_animated", False)
 
 
-def _resize_new(
-    image: Image,
-    size: tuple[int, int],
-    resample: Resampling,
-    box: tuple[int, int, int, int],
-) -> Image:
-    """Performs image resize and returns the new image"""
-    return image._new(image.im.resize(size, resample, box))
-
-
 def resize(
     image: Image, size: tuple[int, int], resample: Resampling = Resampling.LANCZOS
 ) -> Image:
@@ -109,13 +101,47 @@ def resize(
         new_mode: str = modes_to_convert[original_mode]
         image = image.convert(new_mode)
 
-    resized_image: Image = _resize_new(image, size, resample, box)
+    resized_image: Image = image._new(image.im.resize(size, resample, box))
 
     # These mode were temporarily converted to pre-compute alpha and should be reverted
-    if original_mode in ("RGBA", "LA"):
+    if original_mode in _modes_with_alpha:
         resized_image = resized_image.convert(original_mode)
 
     return resized_image
+
+
+def optimize(image: Image) -> bool:
+    """Optimizes a PIL Image by detecting useless color channels.
+
+    :param image: PIL Image to optimize
+    :returns: New PIL Image with optimized mode or original if already optimial"""
+
+    if image.mode in _modes_with_alpha and _has_useless_alpha_channel(image):
+        image = image.convert(image.mode[:-1])
+
+    if _should_be_grayscale(image):
+        image = image.convert("L")
+
+    return image
+
+
+def _has_useless_alpha_channel(image: Image) -> bool:
+    """Checks if a PIL Image's alpha channel is all value 255.
+
+    :param image: PIL Image to check
+    :returns: If alpha channel is useless"""
+    alpha_colors = image.split()[-1].getcolors()
+    return len(alpha_colors) == 1 and alpha_colors[0][1] == 255
+
+
+def _should_be_grayscale(image: Image) -> bool:
+    """Checks if a PIL Image only uses grayscale.
+
+    :param image: PIL Image to check
+    :returns: If PIL Image should be grayscale"""
+    return image.mode == "RGB" and all(
+        rgb[0] == rgb[1] == rgb[2] for _, rgb in image.getcolors()
+    )
 
 
 def _get_longest_line_dimensions(text: str) -> tuple[int, int]:

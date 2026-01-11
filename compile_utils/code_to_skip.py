@@ -21,6 +21,7 @@ from image_viewer.config import (
 from image_viewer.constants import TEXT_RGB
 from image_viewer.image.resizer import JPEG_MAX_DIMENSION
 from image_viewer.ui.rename_entry import _ERROR_COLOR
+from image_viewer.util.PIL import _modes_with_alpha
 
 # Increment when edits to this file or module_dependencies are merged into main
 SKIP_ITERATION: int = 1
@@ -181,7 +182,7 @@ decorators_to_skip: dict[str, set[str]] = {}
 module_imports_to_skip: dict[str, set[str]] = {}
 
 
-vars_to_fold: defaultdict[str, dict[str, ConstantValue]] = defaultdict(
+module_vars_to_fold: defaultdict[str, dict[str, ConstantValue]] = defaultdict(
     dict,
     {
         IMAGE_VIEWER_NAME: {
@@ -204,6 +205,9 @@ vars_to_fold: defaultdict[str, dict[str, ConstantValue]] = defaultdict(
         },
     },
 )
+vars_to_fold: dict[str, dict[str, ConstantValue]] = {
+    f"{IMAGE_VIEWER_NAME}.util.PIL": {"_modes_with_alpha": _modes_with_alpha}
+}
 
 remove_all_re = RegexReplacement(pattern="^.*$", flags=re.DOTALL)
 regex_to_apply_py: defaultdict[str, list[RegexReplacement]] = defaultdict(
