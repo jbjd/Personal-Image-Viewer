@@ -62,7 +62,7 @@ validate:
 	ruff check .
 	ruff format --check
 	mypy . --check-untyped-defs
-	codespell image_viewer tests compile_utils compile.py README.md
+	codespell image_viewer tests compile_utils compile.py .ruff.toml README.md
 
 test:
 	$(PYTHON_FOR_INSTALL_STEP) -m pytest -m "not memory_leak" --cov=image_viewer --cov-report term-missing

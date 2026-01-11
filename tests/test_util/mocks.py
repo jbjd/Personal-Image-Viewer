@@ -6,7 +6,7 @@ These are an alternative to MagicMock when certain ones are used often
 from __future__ import annotations
 
 from tkinter import Event, Misc
-from typing import Self
+from typing import Any, Self
 from unittest.mock import MagicMock
 
 from PIL.Image import Image
@@ -40,36 +40,33 @@ class MockEvent(Event):
 class MockImage(Image):
     """Mocks PIL Image for testing"""
 
-    mode: str = "P"
-    info: dict = {}
+    info: dict = {}  # noqa: RUF012
     _size: tuple[int, int] = (0, 0)
 
-    def __init__(self, n_frames: int = 1, format: str = "") -> None:
+    def __init__(self, n_frames: int = 1, format: str = "", mode: str = "P") -> None:  # noqa: A002
         super().__init__()
 
         self.format: str = format
         self.n_frames: int = n_frames
+        self._mode: str = mode
         self.closed: bool = False
 
         if n_frames > 1:  # Like PIL, only set for animations
             self.is_animated: bool = True
 
-    def convert(  # type: ignore # pylint: disable=arguments-differ
-        self, new_mode: str
-    ) -> Self:
-        self.mode = new_mode
-        return self
+    def convert(self, mode: str) -> Image:  # type: ignore[override]
+        return MockImage(self.n_frames, self.format, mode)
 
-    def save(self, *_, **kwargs) -> None:
+    def save(self, *_: list[Any], **kwargs: dict[str, Any]) -> None:  # type: ignore[override]
         pass
 
-    def close(self, *_) -> None:
+    def close(self) -> None:
         self.closed = True
 
     def __enter__(self) -> Self:
         return self
 
-    def __exit__(self, *_) -> None:
+    def __exit__(self, *args: object) -> None:
         self.close()
 
 
@@ -89,4 +86,4 @@ class _MockUser32:
     __slots__ = ("MessageBoxW",)
 
     def __init__(self) -> None:
-        self.MessageBoxW = MagicMock()  # pylint: disable=invalid-name
+        self.MessageBoxW = MagicMock()

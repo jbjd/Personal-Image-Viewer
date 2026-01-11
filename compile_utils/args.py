@@ -12,6 +12,7 @@ from compile_utils.code_to_skip import (
     dlls_to_include,
 )
 from compile_utils.constants import BUILD_INFO_FILE, REPORT_FILE
+from compile_utils.exceptions import InvalidEnvironmentError
 from compile_utils.module_dependencies import modules_to_include
 
 
@@ -68,23 +69,24 @@ class CompileNamespace(Namespace):
         include_dlls: bool
 
 
+_VALID_NUITKA_ARGS: list[str] = [
+    NuitkaArgs.QUIET.value,
+    NuitkaArgs.VERBOSE.value,
+    NuitkaArgs.SHOW_SCONS.value,
+    NuitkaArgs.SHOW_MEMORY.value,
+    NuitkaArgs.WINDOWS_CONSOLE_MODE.value,
+]
+
+
 class CompileArgumentParser(ArgumentParser):
     """Argument Parser for compilation flags."""
 
     __slots__ = ()
 
-    VALID_NUITKA_ARGS: list[str] = [
-        NuitkaArgs.QUIET.value,
-        NuitkaArgs.VERBOSE.value,
-        NuitkaArgs.SHOW_SCONS.value,
-        NuitkaArgs.SHOW_MEMORY.value,
-        NuitkaArgs.WINDOWS_CONSOLE_MODE.value,
-    ]
-
     def __init__(self, install_path: str) -> None:
         super().__init__(
             description="Compiles Personal Image Viewer to an executable",
-            epilog=f"Some nuitka arguments are also accepted: {self.VALID_NUITKA_ARGS}",
+            epilog=f"Some nuitka arguments are also accepted: {_VALID_NUITKA_ARGS}",
         )
 
         self.add_argument_ext(
@@ -172,7 +174,7 @@ class CompileArgumentParser(ArgumentParser):
         super().add_argument(name, help=help_text, action=action, default=default)
 
     # Override the args of the super class
-    def parse_known_args(  # type: ignore # pylint: disable=arguments-differ
+    def parse_known_args(  # type: ignore[override]
         self, modules_to_skip: list[str]
     ) -> tuple[CompileNamespace, list[str]]:
         """Returns CompileNamespace of user args and list of args to pass to nuitka"""
@@ -193,7 +195,7 @@ class CompileArgumentParser(ArgumentParser):
         :raises ValueError: If any argument isn't part of that subset."""
 
         for extra_arg in nuitka_args:
-            if extra_arg.split("=")[0] not in self.VALID_NUITKA_ARGS:
+            if extra_arg.split("=")[0] not in _VALID_NUITKA_ARGS:
                 raise ValueError(f"Unknown argument {extra_arg}")
 
     @staticmethod
@@ -265,7 +267,7 @@ def get_full_path_to_dll(dll_file: str) -> str:
     try:
         which: str | None = shutil.which(dll_file)
         if which is None:
-            raise RuntimeError(f"Can't find {dll_file} on $PATH")
+            raise InvalidEnvironmentError(f"Can't find {dll_file} on $PATH")
 
     finally:
         if old_path_ext is not None:

@@ -3,7 +3,7 @@ from time import perf_counter
 
 from image_viewer.util._generic import is_valid_keybind
 
-tests = [
+_tests: list[str] = [
     "asdvbiu34uiyaiwyt47ybtv18nc98177841ync8397cn1789crt12978xrnwegfg",
     "<Control-d>",
     "<Control-F0>",
@@ -16,9 +16,9 @@ tests = [
     "<F91>",
     "<A>",
 ]
-unique_count: int = len(tests)
+_unique_count: int = len(_tests)
 
-tests *= 99999
+_tests *= 99999
 
 
 is_valid_keybind_re = re.compile(
@@ -26,31 +26,32 @@ is_valid_keybind_re = re.compile(
 )
 
 
-def validate_keybind_or_default_python(keybind, default):
+def _validate_keybind_or_default_python(keybind: str, default: str) -> str:
     match = is_valid_keybind_re.match(keybind)
 
     return default if match is None else keybind
 
 
-def validate_keybind_or_default_c(keybind, default):
+def _validate_keybind_or_default_c(keybind: str, default: str) -> str:
     return keybind if is_valid_keybind(keybind) else default
 
 
-def run():
+# TODO: Make class
+def run() -> None:
     a = perf_counter()
 
     python_results: list[str] = [
-        validate_keybind_or_default_python(t, "") for t in tests
+        _validate_keybind_or_default_python(t, "") for t in _tests
     ]
 
     print("Python time:", perf_counter() - a)
 
     a = perf_counter()
 
-    c_results: list[str] = [validate_keybind_or_default_c(t, "") for t in tests]
+    c_results: list[str] = [_validate_keybind_or_default_c(t, "") for t in _tests]
 
     print("C time:", perf_counter() - a)
 
     assert python_results == c_results, (
-        f"{python_results[:unique_count]} != {c_results[:unique_count]}"
+        f"{python_results[:_unique_count]} != {c_results[:_unique_count]}"
     )

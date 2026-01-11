@@ -11,18 +11,17 @@ from tests.test_util.mocks import MockImage
 _MODULE_PATH: str = "image_viewer.util.convert"
 
 
-def mock_open_image(_: str) -> MockImage:
+def _mock_open_image(_: str) -> MockImage:
     return MockImage()
 
 
-def mock_open_animated_image(_: str) -> MockImage:
-    image = MockImage(8)
-    return image
+def _mock_open_animated_image(_: str) -> MockImage:
+    return MockImage(8)
 
 
 def test_animated_to_not_animated():
     with (
-        patch(f"{_MODULE_PATH}.open_image", mock_open_animated_image),
+        patch(f"{_MODULE_PATH}.open_image", _mock_open_animated_image),
         patch(f"{_MODULE_PATH}.magic_number_guess", lambda _: "GIF"),
         patch("builtins.open", mock_open()),
         pytest.raises(ValueError),
@@ -32,7 +31,7 @@ def test_animated_to_not_animated():
 
 def test_convert_jpeg():
     with (
-        patch(f"{_MODULE_PATH}.open_image", mock_open_image),
+        patch(f"{_MODULE_PATH}.open_image", _mock_open_image),
         patch("builtins.open", mock_open()),
     ):
         # will not convert if jpeg variant
@@ -46,7 +45,7 @@ def test_convert_jpeg():
 def test_convert_to_bad_type():
     """Should return False if an invalid image extension is passed"""
     with (
-        patch(f"{_MODULE_PATH}.open_image", mock_open_image),
+        patch(f"{_MODULE_PATH}.open_image", _mock_open_image),
         patch("image_viewer.image.file.magic_number_guess", lambda _: "JPEG"),
         patch("builtins.open", mock_open()),
     ):
@@ -54,14 +53,13 @@ def test_convert_to_bad_type():
 
 
 @pytest.mark.parametrize(
-    "image_file_path,target_format",
+    ("image_file_path", "target_format"),
     [
         (EXAMPLE_PNG_PATH, ImageFormats.JPEG),
         (EXAMPLE_PNG_PATH, ImageFormats.WEBP),
         (EXAMPLE_PNG_PATH, ImageFormats.GIF),
         (EXAMPLE_PNG_PATH, ImageFormats.DDS),
         (EXAMPLE_PNG_PATH, ImageFormats.PNG),
-        (EXAMPLE_PNG_PATH, ImageFormats.JPEG),
         (EXAMPLE_JPEG_PATH, ImageFormats.PNG),
     ],
 )

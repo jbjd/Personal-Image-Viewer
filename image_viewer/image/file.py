@@ -2,7 +2,7 @@
 Deals with storing known image file paths and determining their true file extension.
 """
 
-from typing import Iterable
+from collections.abc import Iterable
 
 from image_viewer.constants import ImageFormats, Movement
 from image_viewer.util.os import os_name_compare
@@ -27,7 +27,7 @@ class ImageSearchResult:
     """Represents a search such that index is where the image is or would be inserted
     depending on if found is True or False respectively."""
 
-    __slots__ = ("index", "found")
+    __slots__ = ("found", "index")
 
     def __init__(self, index: int, found: bool) -> None:
         self.index: int = index

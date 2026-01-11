@@ -4,6 +4,7 @@ Classes that handle undoing things a user did
 
 import os
 from collections import deque
+from typing import assert_never
 
 from image_viewer.actions.types import Convert, Delete, FileAction, Rename
 from image_viewer.util.os import restore_file, trash_file
@@ -13,7 +14,7 @@ class UndoResponse:
     """Contains what paths where restored or removed, if any,
     when an action was undone."""
 
-    __slots__ = ("path_restored", "path_removed")
+    __slots__ = ("path_removed", "path_restored")
 
     def __init__(self, path_restored: str, path_removed: str) -> None:
         self.path_restored: str = path_restored
@@ -33,7 +34,6 @@ class ActionUndoer(deque[FileAction]):
         from trash to match the expected file state before the action occurred.
 
         :returns: An UndoResponse with the restored/removed file paths if any."""
-        # pylint: disable=unidiomatic-typecheck
 
         action: FileAction = self.pop()
 
@@ -54,13 +54,14 @@ class ActionUndoer(deque[FileAction]):
             restore_file(action.original_path)
             return UndoResponse(action.original_path, "")
 
-        assert False  # pragma: no cover (unreachable)
+        assert_never(  # pragma: no cover
+            action.__class__.__name__  # type: ignore[arg-type]
+        )
 
     def get_undo_message(self) -> str | None:
         """Returns a friendly message about what the undo action will do.
 
         :returns: A friendly message or None if self is empty."""
-        # pylint: disable=unidiomatic-typecheck
 
         if not self:
             return None
@@ -79,4 +80,6 @@ class ActionUndoer(deque[FileAction]):
         if type(action) is Delete:
             return f"Restore {action.original_path} from trash?"
 
-        assert False  # pragma: no cover (unreachable)
+        assert_never(  # pragma: no cover
+            action.__class__.__name__  # type: ignore[arg-type]
+        )

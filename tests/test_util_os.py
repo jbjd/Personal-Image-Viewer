@@ -52,7 +52,7 @@ def test_show_info_popup(os_name: str):
 
 
 @pytest.mark.parametrize(
-    "name,expected_name",
+    ("name", "expected_name"),
     [
         ("short.png", "short.png"),
         ("0123456789" * 10 + ".png", "0123456789" * 4 + "(…).png"),
@@ -64,7 +64,7 @@ def test_truncate_long_name(name: str, expected_name: str):
 
 
 @pytest.mark.parametrize(
-    "name_and_suffix,expected_name,expected_suffix",
+    ("name_and_suffix", "expected_name", "expected_suffix"),
     [("test.png", "test", ".png"), ("test", "test", "")],
 )
 def test_split_name_and_suffix(
