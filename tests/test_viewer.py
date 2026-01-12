@@ -122,7 +122,8 @@ def test_update_details_dropdown(
     viewer.dropdown.show = dropdown_show
     viewer.dropdown.need_refresh = dropdown_needs_refresh
     with patch(
-        "image_viewer.viewer.ImageFileManager.get_cached_metadata", return_value=""
+        "image_viewer.viewer.ImageFileManager.get_current_cached_metadata",
+        return_value="",
     ):
         viewer.update_details_dropdown()
 

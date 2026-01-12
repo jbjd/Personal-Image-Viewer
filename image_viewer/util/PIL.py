@@ -50,7 +50,6 @@ def save_image(
     extension: str,
     quality: int,
     is_animated: bool | None = None,
-    icc_profile: bytes | None = None,
 ) -> None:
     """Saves a PIL image to disk"""
     save_all: bool = image_is_animated(image) if is_animated is None else is_animated
@@ -60,7 +59,7 @@ def save_image(
         "speed": 0,
         "quality": quality,
         "save_all": save_all,
-        "icc_profile": icc_profile,
+        "icc_profile": image.info.get("icc_profile"),
     }
 
     image.save(fp, extension, **kwargs)

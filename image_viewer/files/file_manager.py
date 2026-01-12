@@ -130,7 +130,7 @@ class ImageFileManager:
         self.image_cache.clear()
         self.update_files_with_known_starting_image(image_name_to_start_at)
 
-    def get_cached_metadata(self, get_all_details: bool = True) -> str:
+    def get_current_cached_metadata(self, get_all_details: bool = True) -> str:
         """Returns formatted string of cached metadata on current image.
         Can raise KeyError on failure to get data."""
         image_info: ImageCacheEntry = self.image_cache[self.path_to_image]
@@ -153,11 +153,11 @@ class ImageFileManager:
         )
         return details
 
-    def get_image_details(self, PIL_image: Image) -> str | None:  # noqa: N803
+    def get_current_image_details(self, PIL_image: Image) -> str | None:  # noqa: N803
         """Returns a formatted string of data from cache/OS call/PIL object
         or None if failed to read from cache."""
         try:
-            details: str = self.get_cached_metadata()
+            details: str = self.get_current_cached_metadata()
         except KeyError:
             return None  # don't fail trying to read, if not in cache just exit
 

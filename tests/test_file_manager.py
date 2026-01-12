@@ -163,34 +163,34 @@ def test_get_and_show_details(file_manager: ImageFileManager):
     PIL_image = MockImage()  # noqa: N806
     PIL_image.info["comment"] = b"test"
 
-    details = file_manager.get_image_details(PIL_image)
+    details = file_manager.get_current_image_details(PIL_image)
     assert details is None
 
     for mode in ("P", "L", "1", "ANYTHING_ELSE"):
         file_manager.image_cache[file_manager.path_to_image] = ImageCacheEntry(
-            PIL_image, (100, 100), "100kb", 9999, mode, ImageFormats.PNG
+            PIL_image, (100, 100), 9999, mode, ImageFormats.PNG
         )
         readable_mode = {"P": "Palette", "L": "Grayscale", "1": "Black And White"}.get(
             mode, mode
         )
-        metadata: str = file_manager.get_cached_metadata()
+        metadata: str = file_manager.get_current_cached_metadata()
         assert " bpp " + readable_mode in metadata
         assert ImageFormats.PNG in metadata
 
-        metadata = file_manager.get_cached_metadata(get_all_details=False)
+        metadata = file_manager.get_current_cached_metadata(get_all_details=False)
         assert metadata.count("\n") == 1
         assert " bpp " + readable_mode not in metadata
         assert ImageFormats.PNG not in metadata
 
     with patch.object(os, "stat", return_value=MockStatResult(0)):
-        details = file_manager.get_image_details(PIL_image)
+        details = file_manager.get_current_image_details(PIL_image)
         assert details is not None
         assert "Created" in details
         assert "Comment" in details
 
     # Will not fail getting file metadata
     with patch.object(os, "stat", side_effect=OSError):
-        details = file_manager.get_image_details(PIL_image)
+        details = file_manager.get_current_image_details(PIL_image)
         assert details is not None
         assert "Created" not in details
 

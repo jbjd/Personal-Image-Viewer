@@ -55,12 +55,7 @@ def try_convert_file_and_save_new(
                 del temp_img.info["background"]
 
             save_image(
-                temp_img,
-                new_path,
-                target_format,
-                quality,
-                is_animated=is_animated,
-                icc_profile=temp_img.info.get("icc_profile"),
+                temp_img, new_path, target_format, quality, is_animated=is_animated
             )
 
     return True

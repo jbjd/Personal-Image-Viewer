@@ -685,7 +685,7 @@ class ViewerApp:
         if dropdown.show:
             if dropdown.need_refresh:
                 try:
-                    details: str = self.file_manager.get_cached_metadata(
+                    details: str = self.file_manager.get_current_cached_metadata(
                         get_all_details=False
                     )
                 except KeyError:

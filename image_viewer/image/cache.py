@@ -5,6 +5,8 @@ from os import stat
 
 from PIL.Image import Image
 
+from image_viewer.util.os import get_byte_display
+
 
 class ImageCacheEntry:
     """Cached image data to skip resizing/system calls on repeated opening."""
@@ -23,7 +25,6 @@ class ImageCacheEntry:
         self,
         image: Image,
         dimensions: tuple[int, int],
-        size_display: str,
         byte_size: int,
         mode: str,
         file_format: str,
@@ -32,11 +33,19 @@ class ImageCacheEntry:
         self.height: int
         self.width, self.height = dimensions
         self.image: Image = image
-        self.size_display: str = size_display
-        self.byte_size: int = byte_size
+        self.size_display: str
+        self.byte_size: int
+        self.set_byte_size(byte_size)
         # Store original mode since resizing some images converts to RGB
         self.mode: str = mode
         self.format: str = file_format
+
+    def set_byte_size(self, byte_size: int) -> None:
+        """Update byte_size and size_display based on the former's value.
+
+        :param new_byte_size: The byte_size to set"""
+        self.byte_size = byte_size
+        self.size_display = get_byte_display(byte_size)
 
 
 class ImageCache(OrderedDict[str, ImageCacheEntry]):
@@ -85,6 +94,14 @@ class ImageCache(OrderedDict[str, ImageCacheEntry]):
 
         if target is not None:
             self[new_image_path] = target
+
+    def update_size(self, image_path: str, new_byte_size: int) -> None:
+        """Update byte_size and size_display of given path key.
+        Does nothing if key does not exist.
+
+        :param image_path: The key to be updated"""
+        if image_path in self:
+            self[image_path].set_byte_size(new_byte_size)
 
     def __setitem__(self, key: str, value: ImageCacheEntry) -> None:
         """Adds check for size of the cache and purges
