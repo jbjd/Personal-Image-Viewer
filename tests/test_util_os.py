@@ -13,9 +13,6 @@ from image_viewer.util.os import (
 from tests.conftest import IMG_DIR
 from tests.test_util.mocks import MockWindll
 
-if os.name == "nt":
-    from image_viewer.util.os import set_hwnd
-
 
 @pytest.mark.parametrize("os_name", ["nt", "linux"])
 def test_get_byte_display(os_name: str):
@@ -40,10 +37,15 @@ def test_show_info_popup(os_name: str):
         if os_name == "nt":
             mock_windll = MockWindll()
             expected_flags = 0
-            set_hwnd(hwnd)
+
+            import image_viewer.util.os as internal_os
+
+            internal_os.hwnd = hwnd
 
             with patch("image_viewer.util.os.windll", create=True, new=mock_windll):
                 show_info(title, body)
+
+            del internal_os
 
             mock_windll.user32.MessageBoxW.assert_called_once_with(
                 hwnd, body, title, expected_flags
