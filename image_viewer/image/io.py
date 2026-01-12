@@ -180,7 +180,7 @@ class ImageIO:
         :param image_path: Path to the current image
         :returns: If optimization was performed"""
 
-        image_format: str = self.PIL_image.format
+        image_format: str | None = self.PIL_image.format
         if self._image_optimized or image_format != "PNG":
             return False
 

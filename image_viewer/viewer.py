@@ -277,12 +277,12 @@ class ViewerApp:
         self.app.mainloop()
 
     def unresponsive_long_running_process(
-        self, function: Callable[_P, _R], *args: _P.args
+        self, function: Callable[_P, _R], *args: _P.args, **kwargs: _P.kwargs
     ) -> _R:
         self.app.config(cursor="watch")
         self.app.update()
         try:
-            return function(*args)
+            return function(*args, **kwargs)
         finally:
             self.app.config(cursor="")
 

@@ -39,7 +39,7 @@ class ImageCacheEntry:
         self.format: str = file_format
 
     @property
-    def byte_size(self) -> str:
+    def byte_size(self) -> int:
         return self._byte_size
 
     @byte_size.setter
