@@ -174,7 +174,7 @@ class ImageIO:
         return resized_image
 
     def optimize_png_image(self, image_path: str) -> bool:
-        """Attemps to optimize the current image's size without affecting quality.
+        """Attempts to optimize the current image's size without affecting quality.
         Only works on PNGs.
 
         :param image_path: Path to the current image

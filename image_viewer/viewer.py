@@ -289,7 +289,7 @@ class ViewerApp:
     # Functions handling specific user input
 
     def optimize_current_image(self, _: Event) -> None:
-        """Attemps to optimize the current image's size without affecting quality.
+        """Attempts to optimize the current image's size without affecting quality.
 
         :param _: Unused tkinter event"""
 
