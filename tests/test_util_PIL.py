@@ -13,6 +13,7 @@ from image_viewer.util.PIL import (
     get_mode_info,
     get_placeholder_for_errored_image,
     init_PIL,
+    optimize_image_mode,
     resize,
 )
 
@@ -71,6 +72,31 @@ def test_resize():
     new_image = resize(new_image.convert("RGBA"), (15, 15))
 
     assert new_image.size == (15, 15)
+
+
+@pytest.mark.parametrize(
+    ("mode", "pixel_data", "expected_mode"),
+    [
+        ("RGBA", [(i, i + 1, i, 255) for i in range(100)], "RGB"),
+        ("RGBA", [(i, i, i, 255) for i in range(100)], "L"),
+        ("RGB", [(i, i + 1, i) for i in range(100)], "RGB"),
+        ("LA", [(i, i) for i in range(100)], "LA"),
+        ("LA", [(i, 255) for i in range(100)], "L"),
+        ("RGB", [(i, i, i) for i in range(100)], "L"),
+    ],
+)
+def test_optimize_image_mode(mode: str, pixel_data: list[tuple], expected_mode: str):
+    """Should reduce pixel depth if visually equivalent"""
+
+    image = new(mode, (10, 10))
+    image.putdata(pixel_data)
+
+    new_image = optimize_image_mode(image)
+
+    assert new_image.mode == expected_mode
+
+    if mode == expected_mode:
+        assert new_image is image
 
 
 @pytest.mark.parametrize(

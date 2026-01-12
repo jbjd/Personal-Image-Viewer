@@ -5,17 +5,19 @@ from os import stat
 
 from PIL.Image import Image
 
+from image_viewer.util.os import get_byte_display
+
 
 class ImageCacheEntry:
     """Cached image data to skip resizing/system calls on repeated opening."""
 
     __slots__ = (
-        "byte_size",
+        "_byte_size",
+        "_size_display",
         "format",
         "height",
         "image",
         "mode",
-        "size_display",
         "width",
     )
 
@@ -23,7 +25,6 @@ class ImageCacheEntry:
         self,
         image: Image,
         dimensions: tuple[int, int],
-        size_display: str,
         byte_size: int,
         mode: str,
         file_format: str,
@@ -32,11 +33,23 @@ class ImageCacheEntry:
         self.height: int
         self.width, self.height = dimensions
         self.image: Image = image
-        self.size_display: str = size_display
         self.byte_size: int = byte_size
         # Store original mode since resizing some images converts to RGB
         self.mode: str = mode
         self.format: str = file_format
+
+    @property
+    def byte_size(self) -> int:
+        return self._byte_size
+
+    @byte_size.setter
+    def byte_size(self, byte_size: int) -> None:
+        self._byte_size = byte_size
+        self._size_display = get_byte_display(byte_size)
+
+    @property
+    def size_display(self) -> str:
+        return self._size_display
 
 
 class ImageCache(OrderedDict[str, ImageCacheEntry]):
@@ -85,6 +98,24 @@ class ImageCache(OrderedDict[str, ImageCacheEntry]):
 
         if target is not None:
             self[new_image_path] = target
+
+    def update_value(
+        self,
+        image_path: str,
+        new_byte_size: int | None = None,
+        new_mode: str | None = None,
+    ) -> None:
+        """Update newly provided values.
+        Does nothing if key does not exist.
+
+        :param image_path: The key to be updated
+        :param new_byte_size: New byte size
+        :param new_mode: New mode"""
+        if image_path in self:
+            if new_byte_size is not None:
+                self[image_path].byte_size = new_byte_size
+            if new_mode is not None:
+                self[image_path].mode = new_mode
 
     def __setitem__(self, key: str, value: ImageCacheEntry) -> None:
         """Adds check for size of the cache and purges

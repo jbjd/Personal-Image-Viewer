@@ -2,7 +2,7 @@ import os
 from collections.abc import Callable
 from time import perf_counter
 from tkinter import Event, Tk
-from typing import Never, TypeVarTuple
+from typing import Never, ParamSpec, TypeVar, TypeVarTuple
 
 from PIL.Image import Image
 from PIL.ImageTk import PhotoImage
@@ -19,14 +19,14 @@ from image_viewer.constants import (
 )
 from image_viewer.files.file_manager import ImageFileManager
 from image_viewer.image.cache import ImageCache
-from image_viewer.image.loader import ImageLoader
+from image_viewer.image.io import ImageIO
 from image_viewer.ui.button import HoverableButtonUIElement, ToggleableButtonUIElement
 from image_viewer.ui.button_icon_factory import ButtonIconFactory
 from image_viewer.ui.canvas import CustomCanvas
 from image_viewer.ui.image import DropdownImageUIElement
 from image_viewer.ui.rename_entry import RenameEntry
 from image_viewer.util.convert import read_memory_as_base64
-from image_viewer.util.os import show_info
+from image_viewer.util.os import ask_yes_no, show_info
 from image_viewer.util.PIL import create_dropdown_image, init_PIL
 
 if os.name == "nt":
@@ -34,12 +34,14 @@ if os.name == "nt":
         drop_file_to_clipboard,
         open_with,
         read_buffer_as_base64_and_copy_to_clipboard,
-        set_hwnd,
     )
+    from image_viewer.util.os import set_hwnd
 else:
     from tkinter import PhotoImage as tkPhotoImage
 
 _Ts = TypeVarTuple("_Ts")
+_P = ParamSpec("_P")
+_R = TypeVar("_R")
 
 
 class ViewerApp:
@@ -53,8 +55,8 @@ class ViewerApp:
         "dropdown",
         "file_manager",
         "height_ratio",
+        "image_io",
         "image_load_id",
-        "image_loader",
         "move_id",
         "rename_entry",
         "width_ratio",
@@ -95,7 +97,7 @@ class ViewerApp:
             self._scale_pixels_to_height(32),
         )
 
-        self.image_loader: ImageLoader = ImageLoader(
+        self.image_io: ImageIO = ImageIO(
             screen_width, screen_height, image_cache, self.animation_loop
         )
 
@@ -155,6 +157,7 @@ class ViewerApp:
         app.bind(config.keybinds.show_details, self.show_details)
         app.bind(config.keybinds.move_to_new_file, self.move_to_new_file)
         app.bind(config.keybinds.undo_most_recent_action, self.undo_most_recent_action)
+        app.bind(config.keybinds.optimize_image, self.optimize_current_image)
         app.bind(
             "<equal>",
             lambda e: self._only_for_this_window(
@@ -274,7 +277,38 @@ class ViewerApp:
         """Starts tkinter main loop"""
         self.app.mainloop()
 
+    def unresponsive_long_running_process(
+        self, function: Callable[_P, _R], *args: _P.args, **kwargs: _P.kwargs
+    ) -> _R:
+        self.app.config(cursor="watch")
+        self.app.update()
+        try:
+            return function(*args, **kwargs)
+        finally:
+            self.app.config(cursor="")
+
     # Functions handling specific user input
+
+    def optimize_current_image(self, _: Event) -> None:
+        """Attempts to optimize the current image's size without affecting quality.
+
+        :param _: Unused tkinter event"""
+
+        if self.image_io.PIL_image.format != "PNG":
+            return
+
+        if ask_yes_no(
+            "Optimize Image",
+            (
+                "Optimize current image size?\nQuality is not affected, "
+                "color depth might reduce if visually equivalent\n"
+                "Program may be unresponsive for a bit."
+            ),
+        ) and self.unresponsive_long_running_process(
+            self.image_io.optimize_png_image, self.file_manager.path_to_image
+        ):
+            self.dropdown.need_refresh = True
+            self.update_details_dropdown()
 
     def handle_mouse_wheel(self, event: Event) -> None:
         """On mouse wheel: either moves between images
@@ -380,25 +414,23 @@ class ViewerApp:
         it to the clipboard"""
 
         if os.name == "nt":
-            read_buffer_as_base64_and_copy_to_clipboard(self.image_loader.image_buffer)
+            read_buffer_as_base64_and_copy_to_clipboard(self.image_io.image_buffer)
         else:
             # TODO: See if I can use memoryview for clipboard_append
             # so conversion can be in C
-            image_base64: str = read_memory_as_base64(
-                self.image_loader.image_buffer.view
-            )
+            image_base64: str = read_memory_as_base64(self.image_io.image_buffer.view)
 
             self.app.clipboard_clear()
             self.app.clipboard_append(image_base64)
 
     def show_details(self, _: Event | None = None) -> None:
         """Gets details on image and shows it in a UI popup"""
-        details: str | None = self.file_manager.get_image_details(
-            self.image_loader.PIL_image
+        details: str | None = self.file_manager.get_current_image_details(
+            self.image_io.PIL_image
         )
 
         if details is not None:
-            show_info(self.app_id, "Image Details", details)
+            show_info("Image Details", details)
 
     def load_zoomed_or_rotated_image(
         self, direction: ZoomDirection | None, rotation: Rotation | None
@@ -407,7 +439,7 @@ class ViewerApp:
         if __debug__ and direction is None and rotation is None:
             raise ValueError
 
-        zoomed_image: Image | None = self.image_loader.get_zoomed_or_rotated_image(
+        zoomed_image: Image | None = self.image_io.get_zoomed_or_rotated_image(
             direction, rotation
         )
         if zoomed_image is not None:
@@ -437,7 +469,7 @@ class ViewerApp:
             self.canvas.delete(self.canvas.file_name_text_id)
             self.app.quit()
             self.app.destroy()
-            self.image_loader.reset_and_setup()
+            self.image_io.reset_and_setup()
         except AttributeError:
             pass
 
@@ -572,7 +604,7 @@ class ViewerApp:
 
     def _load_image_at_current_path(self) -> Image | None:
         """Wraps ImageLoader's load call with path from FileManager"""
-        return self.image_loader.load_image(self.file_manager.path_to_image)
+        return self.image_io.load_image(self.file_manager.path_to_image)
 
     def load_image(self, movement_on_failure: Movement = Movement.NONE) -> None:
         """Loads an image and updates the display. On load failure, bad images are
@@ -657,7 +689,7 @@ class ViewerApp:
 
         :param ms_backoff: Milliseconds until next frame should appear."""
         start: float = perf_counter()
-        frame: Frame | None = self.image_loader.get_next_frame()
+        frame: Frame | None = self.image_io.get_next_frame()
 
         ms_until_next_frame: int
         if frame is None:  # trying to display frame before it is loaded
@@ -677,7 +709,7 @@ class ViewerApp:
         if self.currently_animating():
             self.app.after_cancel(self.animation_id)
             self.animation_id = ""
-        self.image_loader.reset_and_setup()
+        self.image_io.reset_and_setup()
 
     def update_details_dropdown(self) -> None:
         """Updates the information and state of dropdown image."""
@@ -685,7 +717,7 @@ class ViewerApp:
         if dropdown.show:
             if dropdown.need_refresh:
                 try:
-                    details: str = self.file_manager.get_cached_metadata(
+                    details: str = self.file_manager.get_current_cached_metadata(
                         get_all_details=False
                     )
                 except KeyError:
