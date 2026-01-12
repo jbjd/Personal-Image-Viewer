@@ -288,7 +288,8 @@ class ViewerApp:
             "Optimize Image",
             (
                 "Optimize current image size?\nQuality is not affected, "
-                "color depth might reduce if visually equivalent"
+                "color depth might reduce if visually equivalent\n"
+                "Program may be unresponsive for a bit."
             ),
         ) and self.image_io.optimize_png_image(self.file_manager.path_to_image):
             self.dropdown.need_refresh = True

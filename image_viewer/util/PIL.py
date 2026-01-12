@@ -144,8 +144,8 @@ def _should_be_grayscale(image: Image) -> bool:
     if image.mode != "RGB":
         return False
 
-    colors: list[tuple[int, tuple[int, ...]]] = image.getcolors()  # type: ignore[assignment]
-    return all(rgb[0] == rgb[1] == rgb[2] for _, rgb in colors)
+    colors: list[tuple[int, tuple[int, ...]]] | None = image.getcolors()  # type: ignore[assignment]
+    return colors is not None and all(rgb[0] == rgb[1] == rgb[2] for _, rgb in colors)
 
 
 def _get_longest_line_dimensions(text: str) -> tuple[int, int]:
