@@ -5,7 +5,6 @@ import re
 import sys
 from collections import defaultdict
 
-from personal_python_ast_optimizer.parser.config import ConstantValue
 from personal_python_ast_optimizer.regex.classes import RegexReplacement
 from PIL.AvifImagePlugin import DECODE_CODEC_CHOICE
 from PIL.DdsImagePlugin import DDS_MAGIC
@@ -148,7 +147,7 @@ vars_to_skip: dict[str, set[str]] = {
     "PIL.JpegImagePlugin": {"format_description"},
     "PIL.PngImagePlugin": {"format_description"},
     "PIL.WebPImagePlugin": {"format_description"},
-    f"{IMAGE_VIEWER_NAME}.viewer": {"_Ts"},
+    f"{IMAGE_VIEWER_NAME}.viewer": {"_P", "_R", "_Ts"},
 }
 
 if os.name == "nt":
@@ -180,8 +179,10 @@ decorators_to_skip: dict[str, set[str]] = {}
 
 module_imports_to_skip: dict[str, set[str]] = {}
 
-
-vars_to_fold: defaultdict[str, dict[str, ConstantValue]] = defaultdict(
+module_vars_to_fold: defaultdict[
+    str,
+    dict[str, str | bytes | bool | int | float | complex | None],
+] = defaultdict(
     dict,
     {
         IMAGE_VIEWER_NAME: {
