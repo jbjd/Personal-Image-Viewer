@@ -2,6 +2,7 @@ import os
 from collections.abc import Callable
 from time import perf_counter
 from tkinter import Event, Tk
+from tkinter.messagebox import askyesno
 from typing import Never, TypeVarTuple
 
 from PIL.Image import Image
@@ -155,6 +156,7 @@ class ViewerApp:
         app.bind(config.keybinds.show_details, self.show_details)
         app.bind(config.keybinds.move_to_new_file, self.move_to_new_file)
         app.bind(config.keybinds.undo_most_recent_action, self.undo_most_recent_action)
+        app.bind("<Control-o>", self.optimize_current_image)
         app.bind(
             "<equal>",
             lambda e: self._only_for_this_window(
@@ -275,6 +277,21 @@ class ViewerApp:
         self.app.mainloop()
 
     # Functions handling specific user input
+
+    def optimize_current_image(self, _: Event) -> None:
+        """Attemps to optimize the current image's size without affecting quality.
+
+        :param _: Unused tkinter event"""
+
+        if askyesno(
+            "Image Optimize",
+            (
+                "Optimize current image size?\nQuality is not affected, "
+                "but color depth might reduce if visually equivalent"
+            ),
+        ) and self.image_loader.optimize_current_image(self.file_manager.path_to_image):
+            self.dropdown.need_refresh = True
+            self.update_details_dropdown()
 
     def handle_mouse_wheel(self, event: Event) -> None:
         """On mouse wheel: either moves between images

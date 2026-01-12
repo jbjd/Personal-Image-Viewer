@@ -133,10 +133,10 @@ class ImageLoader:
         except (FileNotFoundError, UnidentifiedImageError, OSError):
             return None
 
-    def load_image(self, path_to_image: str) -> Image | None:
+    def load_image(self, image_path: str) -> Image | None:
         """Loads an image, resizes it to screen, and caches it.
         Returns Image or None on failure"""
-        read_image_response: ReadImageResponse | None = self.read_image(path_to_image)
+        read_image_response: ReadImageResponse | None = self.read_image(image_path)
         if read_image_response is None:
             return None
 
@@ -149,14 +149,14 @@ class ImageLoader:
 
         # check if cached and not changed outside of program
         resized_image: Image
-        cached_image_data = self.image_cache.get(path_to_image)
+        cached_image_data = self.image_cache.get(image_path)
         if cached_image_data is not None and byte_size == cached_image_data.byte_size:
             resized_image = cached_image_data.image
         else:
             original_mode: str = original_image.mode
             resized_image = self._resize_or_get_placeholder()
 
-            self.image_cache[path_to_image] = ImageCacheEntry(
+            self.image_cache[image_path] = ImageCacheEntry(
                 resized_image,
                 original_image.size,
                 byte_size,
