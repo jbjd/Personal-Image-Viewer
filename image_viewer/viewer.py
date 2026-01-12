@@ -26,7 +26,7 @@ from image_viewer.ui.canvas import CustomCanvas
 from image_viewer.ui.image import DropdownImageUIElement
 from image_viewer.ui.rename_entry import RenameEntry
 from image_viewer.util.convert import read_memory_as_base64
-from image_viewer.util.os import ask_yes_no, set_hwnd, show_info
+from image_viewer.util.os import ask_yes_no, show_info
 from image_viewer.util.PIL import create_dropdown_image, init_PIL
 
 if os.name == "nt":
@@ -35,6 +35,7 @@ if os.name == "nt":
         open_with,
         read_buffer_as_base64_and_copy_to_clipboard,
     )
+    from image_viewer.util.os import set_hwnd
 else:
     from tkinter import PhotoImage as tkPhotoImage
 
