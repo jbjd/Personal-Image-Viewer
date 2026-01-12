@@ -147,9 +147,9 @@ def ask_yes_no(title: str, body: str) -> None:
     :param body: The body of the popup
     :returns: True if user said yes"""
     if os.name == "nt":
-        windll.user32.MessageBoxW(hwnd, body, title, 0x4)
-    else:
-        askyesno(title, body)
+        return windll.user32.MessageBoxW(hwnd, body, title, 0x1) == 6
+    else:  # noqa: RET505
+        return askyesno(title, body)
 
 
 def get_byte_display(size_in_bytes: int) -> str:

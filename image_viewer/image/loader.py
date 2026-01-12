@@ -187,7 +187,7 @@ class ImageIO:
         image = optimize_image_mode(self.PIL_image)
 
         delete_tmp_file: bool = True
-        tmp_file = tempfile.NamedTemporaryFile()  # noqa: SIM115
+        tmp_file = tempfile.NamedTemporaryFile(delete=False)  # noqa: SIM115
 
         try:
             with tmp_file:
@@ -199,7 +199,8 @@ class ImageIO:
             if new_size > 0 and new_size < original_size:
                 os.replace(tmp_file.name, image_path)
                 delete_tmp_file = False
-                self.image_cache.update_size(image_path, new_size)
+                self.PIL_image = image
+                self.image_cache.update_value(image_path, new_size, image.mode)
 
         finally:
             if delete_tmp_file:

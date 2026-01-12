@@ -414,7 +414,7 @@ class ViewerApp:
         )
 
         if details is not None:
-            show_info(self.app_id, "Image Details", details)
+            show_info("Image Details", details)
 
     def load_zoomed_or_rotated_image(
         self, direction: ZoomDirection | None, rotation: Rotation | None
