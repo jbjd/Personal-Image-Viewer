@@ -4,7 +4,7 @@ import pytest
 from PIL.Image import Image, Resampling
 from PIL.Image import new as new_image
 
-from image_viewer.image.loader import ImageLoader, ReadImageResponse
+from image_viewer.image.loader import ImageIO, ReadImageResponse
 from image_viewer.image.resizer import ImageResizer
 from tests.conftest import IMG_DIR
 
@@ -52,14 +52,12 @@ def test_jpeg_fit_to_screen_small_image(image_resizer: ImageResizer):
         mock_decode_scaled_jpeg.assert_not_called()
 
 
-def test_jpeg_fit_to_screen_large_image(
-    image_loader: ImageLoader, image_resizer: ImageResizer
-):
+def test_jpeg_fit_to_screen_large_image(image_io: ImageIO, image_resizer: ImageResizer):
     """When fitting a large jpeg, should call turbojpeg and scale it down"""
 
     image: Image = new_image("RGB", (1000, 4000))
 
-    read_image_response: ReadImageResponse | None = image_loader.read_image(
+    read_image_response: ReadImageResponse | None = image_io.read_image(
         IMG_DIR + "/sub_folder.png/large.jpg"
     )
 

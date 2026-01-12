@@ -20,7 +20,7 @@ from image_viewer.state.rotation_state import RotationState
 from image_viewer.state.zoom_state import ZoomState
 from image_viewer.util.PIL import (
     get_placeholder_for_errored_image,
-    optimize,
+    optimize_image_mode,
     rotate_image,
     save_image,
 )
@@ -39,8 +39,8 @@ class ReadImageResponse:
         self.expected_format: str = expected_format
 
 
-class ImageLoader:
-    """Handles loading images from disk"""
+class ImageIO:
+    """Handles image IO."""
 
     DEFAULT_ANIMATION_SPEED: int = 100  # in milliseconds
 
@@ -173,8 +173,9 @@ class ImageLoader:
 
         return resized_image
 
-    def optimize_current_image(self, image_path: str) -> bool:
+    def optimize_png_image(self, image_path: str) -> bool:
         """Attemps to optimize the current image's size without affecting quality.
+        Only works on PNGs.
 
         :param image_path: Path to the current image
         :returns: If optimization was performed"""
@@ -183,7 +184,7 @@ class ImageLoader:
         if self._image_optimized or image_format != "PNG":
             return False
 
-        image = optimize(self.PIL_image)
+        image = optimize_image_mode(self.PIL_image)
 
         delete_tmp_file: bool = True
         tmp_file = tempfile.NamedTemporaryFile()  # noqa: SIM115

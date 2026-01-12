@@ -109,8 +109,8 @@ def resize(
     return resized_image
 
 
-def optimize(image: Image) -> Image:
-    """Optimizes a PIL Image by detecting useless color channels.
+def optimize_image_mode(image: Image) -> Image:
+    """Optimizes a PIL Image by removing useless color channels.
 
     :param image: PIL Image to optimize
     :returns: New PIL Image with optimized mode or original if already optimial"""
