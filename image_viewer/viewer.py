@@ -2,7 +2,7 @@ import os
 from collections.abc import Callable
 from time import perf_counter
 from tkinter import Event, Tk
-from typing import Never, TypeVarTuple
+from typing import Never, ParamSpec, TypeVar, TypeVarTuple
 
 from PIL.Image import Image
 from PIL.ImageTk import PhotoImage
@@ -19,7 +19,7 @@ from image_viewer.constants import (
 )
 from image_viewer.files.file_manager import ImageFileManager
 from image_viewer.image.cache import ImageCache
-from image_viewer.image.loader import ImageIO
+from image_viewer.image.io import ImageIO
 from image_viewer.ui.button import HoverableButtonUIElement, ToggleableButtonUIElement
 from image_viewer.ui.button_icon_factory import ButtonIconFactory
 from image_viewer.ui.canvas import CustomCanvas
@@ -39,6 +39,8 @@ else:
     from tkinter import PhotoImage as tkPhotoImage
 
 _Ts = TypeVarTuple("_Ts")
+_P = ParamSpec("_P")
+_R = TypeVar("_R")
 
 
 class ViewerApp:
@@ -274,6 +276,16 @@ class ViewerApp:
         """Starts tkinter main loop"""
         self.app.mainloop()
 
+    def unresponsive_long_running_process(
+        self, function: Callable[_P, _R], *args: _P.args
+    ) -> _R:
+        self.app.config(cursor="watch")
+        self.app.update()
+        try:
+            return function(*args)
+        finally:
+            self.app.config(cursor="")
+
     # Functions handling specific user input
 
     def optimize_current_image(self, _: Event) -> None:
@@ -291,7 +303,9 @@ class ViewerApp:
                 "color depth might reduce if visually equivalent\n"
                 "Program may be unresponsive for a bit."
             ),
-        ) and self.image_io.optimize_png_image(self.file_manager.path_to_image):
+        ) and self.unresponsive_long_running_process(
+            self.image_io.optimize_png_image, self.file_manager.path_to_image
+        ):
             self.dropdown.need_refresh = True
             self.update_details_dropdown()
 

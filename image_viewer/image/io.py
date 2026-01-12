@@ -187,8 +187,9 @@ class ImageIO:
         image = optimize_image_mode(self.PIL_image)
 
         delete_tmp_file: bool = True
-        tmp_file = tempfile.NamedTemporaryFile(delete=False)  # noqa: SIM115
-
+        tmp_file = tempfile.NamedTemporaryFile(  # noqa: SIM115
+            dir=os.path.dirname(image_path), delete=False
+        )
         try:
             with tmp_file:
                 save_image(image, tmp_file, image_format, 100)

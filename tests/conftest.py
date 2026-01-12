@@ -14,7 +14,7 @@ from image_viewer.config import DEFAULT_FONT
 from image_viewer.files.file_manager import ImageFileManager
 from image_viewer.image.cache import ImageCache
 from image_viewer.image.file import ImageName, ImageNameList
-from image_viewer.image.loader import ImageIO
+from image_viewer.image.io import ImageIO
 from image_viewer.image.resizer import ImageResizer
 from image_viewer.ui.button import IconImages
 from image_viewer.ui.button_icon_factory import ButtonIconFactory

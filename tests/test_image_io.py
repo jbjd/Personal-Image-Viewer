@@ -1,15 +1,18 @@
 """Tests for the ImageLoader class."""
 
+import os
+import tempfile
 from unittest.mock import MagicMock, mock_open, patch
 
 from PIL import UnidentifiedImageError
-from PIL.Image import Image
+from PIL.Image import Image, new
 
 from image_viewer.animation.frame import Frame
 from image_viewer.image.cache import ImageCacheEntry
-from image_viewer.image.loader import ImageIO, ReadImageResponse
+from image_viewer.image.io import ImageIO, ReadImageResponse
+from tests.conftest import EXAMPLE_JPEG_PATH
 
-_MODULE_PATH: str = "image_viewer.image.loader"
+_MODULE_PATH: str = "image_viewer.image.io"
 
 
 def test_next_frame(image_io: ImageIO):
@@ -92,3 +95,49 @@ def test_load_image_resize_error(image_io: ImageIO):
     ):
         image_io._resize_or_get_placeholder()
         mock_get_placeholder.assert_called_once()
+
+
+def test_optimize_png_image_only_pngs(image_io: ImageIO):
+    """Should not run on non-PNGs."""
+
+    image_io.load_image(EXAMPLE_JPEG_PATH)
+
+    assert not image_io.optimize_png_image("")
+
+
+def test_optimize_png_image(image_io: ImageIO):
+    """Should saved optimized PNG."""
+
+    original_image = tempfile.NamedTemporaryFile(delete=False)  # noqa: SIM115
+    try:
+        # Setup uncompressed PNG file
+        with original_image:
+            image = new("RGBA", (10, 10))
+            image.putdata([(i, i + 1, i + 2, 255) for i in range(100)])
+            image.save(original_image, "PNG", optimize=False, compress_level=0)
+
+        starting_size: int = os.stat(original_image.name).st_size
+
+        image_io.load_image(original_image.name)
+        image_io.optimize_png_image(original_image.name)
+
+        ending_size: int = os.stat(original_image.name).st_size
+
+        assert ending_size > 0
+        assert ending_size < starting_size
+
+        # Doing it again does nothing
+        with patch(f"{_MODULE_PATH}.optimize_image_mode") as mock_optimize_image_mode:
+            assert not image_io.optimize_png_image(original_image.name)
+            mock_optimize_image_mode.assert_not_called()
+
+        # Optimizing again should result in nothing happening
+        # even if _image_optimized = False
+        with patch(f"{_MODULE_PATH}.os.replace") as mock_os_replace:
+            image_io._image_optimized = False
+            assert not image_io.optimize_png_image(original_image.name)
+            mock_os_replace.assert_not_called()
+    finally:
+        image_io.reset_and_setup()
+        original_image.close()
+        os.remove(original_image.name)

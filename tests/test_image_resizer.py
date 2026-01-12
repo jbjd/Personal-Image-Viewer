@@ -4,7 +4,7 @@ import pytest
 from PIL.Image import Image, Resampling
 from PIL.Image import new as new_image
 
-from image_viewer.image.loader import ImageIO, ReadImageResponse
+from image_viewer.image.io import ImageIO, ReadImageResponse
 from image_viewer.image.resizer import ImageResizer
 from tests.conftest import IMG_DIR
 
