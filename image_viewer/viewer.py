@@ -154,7 +154,7 @@ class ViewerApp:
         app.bind(config.keybinds.show_details, self.show_details)
         app.bind(config.keybinds.move_to_new_file, self.move_to_new_file)
         app.bind(config.keybinds.undo_most_recent_action, self.undo_most_recent_action)
-        app.bind("<Control-o>", self.optimize_current_image)
+        app.bind(config.keybinds.optimize_image, self.optimize_current_image)
         app.bind(
             "<equal>",
             lambda e: self._only_for_this_window(

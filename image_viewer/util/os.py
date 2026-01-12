@@ -147,7 +147,7 @@ def ask_yes_no(title: str, body: str) -> None:
     :param body: The body of the popup
     :returns: True if user said yes"""
     if os.name == "nt":
-        return windll.user32.MessageBoxW(hwnd, body, title, 0x1) == 6
+        return windll.user32.MessageBoxW(hwnd, body, title, 0x1) == 1
     else:  # noqa: RET505
         return askyesno(title, body)
 
