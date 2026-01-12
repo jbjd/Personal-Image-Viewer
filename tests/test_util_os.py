@@ -38,15 +38,21 @@ def test_show_info_popup(os_name: str):
             mock_windll = MockWindll()
             expected_flags = 0
 
+            import image_viewer.util.os as internal_os
+
+            internal_os.hwnd = hwnd
+
             with patch("image_viewer.util.os.windll", create=True, new=mock_windll):
-                show_info(hwnd, title, body)
+                show_info(title, body)
+
+            del internal_os
 
             mock_windll.user32.MessageBoxW.assert_called_once_with(
                 hwnd, body, title, expected_flags
             )
         else:
             with patch("image_viewer.util.os.showinfo", create=True) as mock_showinfo:
-                show_info(hwnd, title, body)
+                show_info(title, body)
 
                 mock_showinfo.assert_called_once_with(title, body)
 

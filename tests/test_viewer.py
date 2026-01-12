@@ -64,7 +64,7 @@ def test_clear_image(viewer: ViewerApp):
 
     viewer.animation_id = "123"
 
-    with patch(f"{_MODULE_PATH}.ImageLoader.reset_and_setup") as mock_reset:
+    with patch(f"{_MODULE_PATH}.ImageIO.reset_and_setup") as mock_reset:
         viewer.clear_current_image_data()
         mock_after_cancel.assert_called_once()
         mock_reset.assert_called_once()
@@ -122,7 +122,8 @@ def test_update_details_dropdown(
     viewer.dropdown.show = dropdown_show
     viewer.dropdown.need_refresh = dropdown_needs_refresh
     with patch(
-        "image_viewer.viewer.ImageFileManager.get_cached_metadata", return_value=""
+        "image_viewer.viewer.ImageFileManager.get_current_cached_metadata",
+        return_value="",
     ):
         viewer.update_details_dropdown()
 
