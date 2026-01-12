@@ -7,12 +7,14 @@ from image_viewer.util.os import (
     get_byte_display,
     get_files_in_folder,
     maybe_truncate_long_name,
-    set_hwnd,
     show_info,
     split_name_and_suffix,
 )
 from tests.conftest import IMG_DIR
 from tests.test_util.mocks import MockWindll
+
+if os.name == "nt":
+    from image_viewer.util.os import set_hwnd
 
 
 @pytest.mark.parametrize("os_name", ["nt", "linux"])
