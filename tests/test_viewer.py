@@ -64,7 +64,7 @@ def test_clear_image(viewer: ViewerApp):
 
     viewer.animation_id = "123"
 
-    with patch(f"{_MODULE_PATH}.ImageLoader.reset_and_setup") as mock_reset:
+    with patch(f"{_MODULE_PATH}.ImageIO.reset_and_setup") as mock_reset:
         viewer.clear_current_image_data()
         mock_after_cancel.assert_called_once()
         mock_reset.assert_called_once()
