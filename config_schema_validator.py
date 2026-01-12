@@ -41,6 +41,7 @@ schema = Schema(
         "KEYBINDS": {
             "copy_to_clipboard_as_base64": empty_or_valid_keybind,
             "move_to_new_file": empty_or_valid_keybind,
+            "optimize_image": empty_or_valid_keybind,
             "refresh": empty_or_valid_keybind,
             "reload_image": empty_or_valid_keybind,
             "rename": empty_or_valid_keybind,

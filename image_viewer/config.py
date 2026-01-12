@@ -36,6 +36,7 @@ class DefaultKeybinds(StrEnum):
 
     COPY_TO_CLIPBOARD_AS_BASE64 = "<Control-E>"
     MOVE_TO_NEW_FILE = "<Control-m>"
+    OPTIMIZE_IMAGE = "<Control-o>"
     REFRESH = "<Control-r>"
     RELOAD_IMAGE = "<F5>"
     RENAME = "<F2>"
@@ -64,6 +65,7 @@ class Config:
         self.keybinds = KeybindConfig(
             config_parser.get_string_safe("KEYBINDS", "COPY_TO_CLIPBOARD_AS_BASE64"),
             config_parser.get_string_safe("KEYBINDS", "MOVE_TO_NEW_FILE"),
+            config_parser.get_string_safe("KEYBINDS", "OPTIMIZE_IMAGE"),
             config_parser.get_string_safe("KEYBINDS", "REFRESH"),
             config_parser.get_string_safe("KEYBINDS", "RELOAD_IMAGE"),
             config_parser.get_string_safe("KEYBINDS", "RENAME"),
@@ -85,6 +87,7 @@ class KeybindConfig:
     __slots__ = (
         "copy_to_clipboard_as_base64",
         "move_to_new_file",
+        "optimize_image",
         "refresh",
         "reload_image",
         "rename",
@@ -96,6 +99,7 @@ class KeybindConfig:
         self,
         copy_to_clipboard_as_base64: str,
         move_to_new_file: str,
+        optimize_image: str,
         refresh: str,
         reload_image: str,
         rename: str,
@@ -107,6 +111,9 @@ class KeybindConfig:
         )
         self.move_to_new_file: str = _validate_keybind_or_default(
             move_to_new_file, DefaultKeybinds.MOVE_TO_NEW_FILE
+        )
+        self.optimize_image = _validate_keybind_or_default(
+            optimize_image, DefaultKeybinds.OPTIMIZE_IMAGE
         )
         self.refresh: str = _validate_keybind_or_default(
             refresh, DefaultKeybinds.REFRESH

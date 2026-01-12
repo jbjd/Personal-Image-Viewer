@@ -1,5 +1,7 @@
 """Classes for loading PIL images from disk"""
 
+import os
+import tempfile
 from collections.abc import Callable
 from io import BytesIO
 from threading import Thread
@@ -16,8 +18,12 @@ from image_viewer.image.file import magic_number_guess
 from image_viewer.image.resizer import ImageResizer, ZoomedImageResult
 from image_viewer.state.rotation_state import RotationState
 from image_viewer.state.zoom_state import ZoomState
-from image_viewer.util.os import get_byte_display
-from image_viewer.util.PIL import get_placeholder_for_errored_image, rotate_image
+from image_viewer.util.PIL import (
+    get_placeholder_for_errored_image,
+    optimize_image_mode,
+    rotate_image,
+    save_image,
+)
 
 
 class ReadImageResponse:
@@ -33,13 +39,14 @@ class ReadImageResponse:
         self.expected_format: str = expected_format
 
 
-class ImageLoader:
-    """Handles loading images from disk"""
+class ImageIO:
+    """Handles image IO."""
 
     DEFAULT_ANIMATION_SPEED: int = 100  # in milliseconds
 
     __slots__ = (
         "PIL_image",
+        "_image_optimized",
         "_rotation_state",
         "_zoom_state",
         "animation_callback",
@@ -65,6 +72,7 @@ class ImageLoader:
         self.animation_callback: Callable[[int, int], None] = animation_callback
 
         self.PIL_image = Image()
+        self._image_optimized: bool = False
         self.image_buffer: CMemoryViewBuffer
         self.current_load_id: int = 0
 
@@ -125,10 +133,10 @@ class ImageLoader:
         except (FileNotFoundError, UnidentifiedImageError, OSError):
             return None
 
-    def load_image(self, path_to_image: str) -> Image | None:
+    def load_image(self, image_path: str) -> Image | None:
         """Loads an image, resizes it to screen, and caches it.
         Returns Image or None on failure"""
-        read_image_response: ReadImageResponse | None = self.read_image(path_to_image)
+        read_image_response: ReadImageResponse | None = self.read_image(image_path)
         if read_image_response is None:
             return None
 
@@ -141,19 +149,16 @@ class ImageLoader:
 
         # check if cached and not changed outside of program
         resized_image: Image
-        cached_image_data = self.image_cache.get(path_to_image)
+        cached_image_data = self.image_cache.get(image_path)
         if cached_image_data is not None and byte_size == cached_image_data.byte_size:
             resized_image = cached_image_data.image
         else:
             original_mode: str = original_image.mode
             resized_image = self._resize_or_get_placeholder()
 
-            size_display: str = get_byte_display(byte_size)
-
-            self.image_cache[path_to_image] = ImageCacheEntry(
+            self.image_cache[image_path] = ImageCacheEntry(
                 resized_image,
                 original_image.size,
-                size_display,
                 byte_size,
                 original_mode,
                 read_image_response.expected_format,
@@ -167,6 +172,45 @@ class ImageLoader:
         self.zoomed_image_cache = [resized_image]
 
         return resized_image
+
+    def optimize_png_image(self, image_path: str) -> bool:
+        """Attempts to optimize the current image's size without affecting quality.
+        Only works on PNGs.
+
+        :param image_path: Path to the current image
+        :returns: If optimization was performed"""
+
+        image_format: str | None = self.PIL_image.format
+        if self._image_optimized or image_format != "PNG":
+            return False
+
+        image = optimize_image_mode(self.PIL_image)
+
+        delete_tmp_file: bool = True
+        tmp_file = tempfile.NamedTemporaryFile(  # noqa: SIM115
+            dir=os.path.dirname(image_path), delete=False
+        )
+        try:
+            with tmp_file:
+                save_image(image, tmp_file, image_format, 100)
+
+            original_size: int = self.image_buffer.byte_size
+            new_size: int = os.stat(tmp_file.name).st_size
+
+            if new_size > 0 and new_size < original_size:
+                os.replace(tmp_file.name, image_path)
+                delete_tmp_file = False
+                self.PIL_image = image
+                self.image_cache.update_value(image_path, new_size, image.mode)
+
+        finally:
+            if delete_tmp_file:
+                os.remove(tmp_file.name)
+
+        self._image_optimized = True
+
+        # If tmp not deleted, it means we updated original image
+        return not delete_tmp_file
 
     def _resize_or_get_placeholder(self) -> Image:
         """Resizes PIL image or returns placeholder if corrupted in some way"""
@@ -241,6 +285,7 @@ class ImageLoader:
     def reset_and_setup(self) -> None:
         """Resets zoom, animation frames, and closes previous image
         to setup for next image load"""
+        self._image_optimized = False
         self.animation_frames.clear()
         self.frame_index = 0
         self.PIL_image.close()
