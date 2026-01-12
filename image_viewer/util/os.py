@@ -11,7 +11,17 @@ if os.name == "nt":
 
     from image_viewer.util._os_nt import get_files_in_folder as _get_files_in_folder_nt
     from image_viewer.util._os_nt import restore_file as _restore_file_nt
+    from image_viewer.util._os_nt import set_hwnd as _set_hwnd
     from image_viewer.util._os_nt import trash_file as _trash_file_nt
+
+    hwnd: int = 0
+
+    # TODO: Move windows popups to C code
+    def set_hwnd(new_hwnd: int) -> None:
+        global hwnd  # noqa: PLW0603
+
+        _set_hwnd(new_hwnd)
+        hwnd = new_hwnd
 
     def os_name_compare(a: str, b: str) -> bool:
         return windll.shlwapi.StrCmpLogicalW(a, b) < 0
@@ -24,7 +34,7 @@ else:  # assume linux for now
     import re
     from configparser import ConfigParser
     from configparser import Error as ConfigParserError
-    from tkinter.messagebox import showinfo
+    from tkinter.messagebox import askyesno, showinfo
 
     from send2trash.plat_other import HOMETRASH, send2trash
 
@@ -119,16 +129,27 @@ else:  # assume linux for now
                     yield entry.name
 
 
-def show_info(hwnd: int, title: str, body: str) -> None:
+def show_info(title: str, body: str) -> None:
     """Shows popup with a message.
 
-    :param hwnd: The ID of the window making the call (Only used on Windows).
-    :param title: The title of the popup.
+    :param title: The title of the popup
     :param body: The body of the popup"""
     if os.name == "nt":
         windll.user32.MessageBoxW(hwnd, body, title, 0)
     else:
         showinfo(title, body)
+
+
+def ask_yes_no(title: str, body: str) -> None:
+    """Shows popup with a message and yes/no buttons.
+
+    :param title: The title of the popup
+    :param body: The body of the popup
+    :returns: True if user said yes"""
+    if os.name == "nt":
+        windll.user32.MessageBoxW(hwnd, body, title, 0x4)
+    else:
+        askyesno(title, body)
 
 
 def get_byte_display(size_in_bytes: int) -> str:

@@ -2,7 +2,6 @@ import os
 from collections.abc import Callable
 from time import perf_counter
 from tkinter import Event, Tk
-from tkinter.messagebox import askyesno
 from typing import Never, TypeVarTuple
 
 from PIL.Image import Image
@@ -27,7 +26,7 @@ from image_viewer.ui.canvas import CustomCanvas
 from image_viewer.ui.image import DropdownImageUIElement
 from image_viewer.ui.rename_entry import RenameEntry
 from image_viewer.util.convert import read_memory_as_base64
-from image_viewer.util.os import show_info
+from image_viewer.util.os import ask_yes_no, set_hwnd, show_info
 from image_viewer.util.PIL import create_dropdown_image, init_PIL
 
 if os.name == "nt":
@@ -35,7 +34,6 @@ if os.name == "nt":
         drop_file_to_clipboard,
         open_with,
         read_buffer_as_base64_and_copy_to_clipboard,
-        set_hwnd,
     )
 else:
     from tkinter import PhotoImage as tkPhotoImage
@@ -286,7 +284,7 @@ class ViewerApp:
         if self.image_io.PIL_image.format != "PNG":
             return
 
-        if askyesno(
+        if ask_yes_no(
             "Optimize Image",
             (
                 "Optimize current image size?\nQuality is not affected, "
@@ -411,7 +409,7 @@ class ViewerApp:
 
     def show_details(self, _: Event | None = None) -> None:
         """Gets details on image and shows it in a UI popup"""
-        details: str | None = self.file_manager.get_image_details(
+        details: str | None = self.file_manager.get_current_image_details(
             self.image_io.PIL_image
         )
 

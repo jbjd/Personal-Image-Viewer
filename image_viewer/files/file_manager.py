@@ -2,7 +2,6 @@ import os
 from enum import Enum
 from os import stat_result
 from time import ctime
-from tkinter.messagebox import askyesno
 
 from PIL.Image import Image
 
@@ -14,6 +13,7 @@ from image_viewer.image.cache import ImageCache, ImageCacheEntry
 from image_viewer.image.file import ImageName, ImageNameList, ImageSearchResult
 from image_viewer.util.convert import try_convert_file_and_save_new
 from image_viewer.util.os import (
+    ask_yes_no,
     get_files_in_folder,
     get_normalized_folder_name,
     trash_file,
@@ -298,7 +298,9 @@ class ImageFileManager:
         if os.path.exists(new_full_path):
             raise FileExistsError
 
-        if will_move_dirs and not askyesno("Confirm move", f"Move file to {new_dir} ?"):
+        if will_move_dirs and not ask_yes_no(
+            "Confirm move", f"Move file to {new_dir} ?"
+        ):
             raise OSError
 
         return new_full_path
@@ -307,7 +309,7 @@ class ImageFileManager:
         self, original_path: str, new_full_path: str, new_format: str
     ) -> Convert:
         """Asks user to delete old file and returns Convert result"""
-        delete: bool = askyesno(
+        delete: bool = ask_yes_no(
             "Confirm deletion", f"Converted file to {new_format}, delete old file?"
         )
 
@@ -396,7 +398,9 @@ class ImageFileManager:
 
         undo_message: str | None = self.action_undoer.get_undo_message()
 
-        return False if undo_message is None else askyesno("Undo Action", undo_message)
+        return (
+            False if undo_message is None else ask_yes_no("Undo Action", undo_message)
+        )
 
     def current_image_cache_still_fresh(self) -> bool:
         """Checks if cache for currently displayed image is still up to date.

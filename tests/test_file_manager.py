@@ -40,7 +40,7 @@ def test_image_file_manager(file_manager: ImageFileManager):
             "_ask_to_delete_old_image_after_convert",
             lambda *_: None,
         ),
-        patch("image_viewer.files.file_manager.askyesno", lambda *_: True),
+        patch("image_viewer.files.file_manager.ask_yes_no", lambda *_: True),
     ):
         file_manager.rename_or_convert_current_image("example.test")
 
@@ -70,14 +70,14 @@ def test_bad_path(image_cache: ImageCache):
         file_manager.validate_current_path()
 
 
-@patch("image_viewer.files.file_manager.askyesno", lambda *_: False)
+@patch("image_viewer.files.file_manager.ask_yes_no", lambda *_: False)
 def test_bad_path_for_rename(file_manager: ImageFileManager):
     """When calling rename, certain conditions should raise errors"""
     with pytest.raises(OSError):
         file_manager.rename_or_convert_current_image(
             os.path.join("this/does/not/exist", "asdf.png")
         )
-    # If path exists, error when user cancels (mocked in askyesno)
+    # If path exists, error when user cancels (mocked in ask_yes_no)
     with pytest.raises(OSError):
         file_manager.rename_or_convert_current_image(EXAMPLE_PNG_PATH)
 
