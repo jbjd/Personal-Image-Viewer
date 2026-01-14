@@ -329,7 +329,7 @@ if os.name == "nt":
     regex_to_apply_py["PIL.AvifImagePlugin"].append(
         RegexReplacement(
             r"def _get_default_max_threads\(\).*?or 1",
-            "def _get_default_max_threads():return os.cpu_count() or 1",
+            f"def _get_default_max_threads():return {os.cpu_count() or 1}",
             flags=re.DOTALL,
             count=1,
         )
