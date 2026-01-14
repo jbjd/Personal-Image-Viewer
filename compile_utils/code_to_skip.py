@@ -21,7 +21,7 @@ from image_viewer.image.resizer import JPEG_MAX_DIMENSION
 from image_viewer.ui.rename_entry import _ERROR_COLOR
 
 # Increment when edits to this file or module_dependencies are merged into main
-SKIP_ITERATION: int = 1
+SKIP_ITERATION: int = 2
 
 # Module independent skips
 
@@ -70,6 +70,7 @@ functions_to_skip: dict[str, set[str]] = {
         "show",
         "toqimage",
         "toqpixmap",
+        "verify",
     },
     "PIL.ImageChops": {
         "add",
@@ -93,7 +94,20 @@ functions_to_skip: dict[str, set[str]] = {
         "soft_light",
         "subtract",
     },
-    "PIL.ImageDraw": {"_color_diff", "getdraw", "floodfill"},
+    "PIL.ImageDraw": {
+        "_color_diff",
+        "_compute_regular_polygon_vertices",
+        "arc",
+        "bitmap",
+        "chord",
+        "circle",
+        "ellipse",
+        "floodfill",
+        "getdraw",
+        "regular_polygon",
+        "rounded_rectangle",
+        "shape",
+    },
     "PIL.ImageFile": {"get_format_mimetype", "verify"},
     "PIL.ImageFont": {
         "__getstate__",
@@ -132,7 +146,13 @@ functions_to_skip: dict[str, set[str]] = {
     "PIL.ImageTk": {"_get_image_from_kw", "getimage"},
     "PIL.GifImagePlugin": {"_save_netpbm", "getheader", "register_mime"},
     "PIL.JpegImagePlugin": {"_getexif", "load_djpeg", "register_mime"},
-    "PIL.PngImagePlugin": {"debug", "deprecate", "getLogger", "register_mime"},
+    "PIL.PngImagePlugin": {
+        "debug",
+        "deprecate",
+        "getLogger",
+        "register_mime",
+        "verify",
+    },
     "PIL.WebPImagePlugin": {"register_mime"},
     "PIL.TiffTags": {"_populate"},
     f"{IMAGE_VIEWER_NAME}.actions.undoer": {"assert_never"},
