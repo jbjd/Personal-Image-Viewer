@@ -33,11 +33,12 @@ from compile_utils.code_to_skip import (
     from_imports_to_skip,
     functions_to_always_skip,
     functions_to_skip,
-    module_imports_to_skip,
+    imports_to_skip,
     module_vars_to_fold,
     no_warn_tokens,
     regex_to_apply_py,
     regex_to_apply_tk,
+    vars_to_fold,
     vars_to_skip,
 )
 from compile_utils.log import LOGGER_NAME
@@ -71,6 +72,11 @@ def clean_file_and_copy(
 
     code_cleaner = MinifyUnparser()
 
+    all_vars_to_fold: dict[str, str | bytes | bool | int | float | complex | None] = (
+        module_vars_to_fold.get(module_name, {})
+        | vars_to_fold.pop(module_import_path, {})
+    )
+
     try:
         source = run_minify_parser(
             code_cleaner,
@@ -81,7 +87,7 @@ def clean_file_and_copy(
                 tokens_config=_get_tokens_to_skip_config(module_import_path),
                 token_types_config=TokenTypesConfig(skip_overload_functions=True),
                 optimizations_config=OptimizationsConfig(
-                    vars_to_fold=module_vars_to_fold[module_name],
+                    vars_to_fold=all_vars_to_fold,
                     fold_constants=False,  # Nuitka does this internally
                     assume_this_machine=assume_this_machine,
                 ),
@@ -162,8 +168,9 @@ def warn_unused_code_skips() -> None:
         (decorators_to_skip, "skip decorators"),
         (dict_keys_to_skip, "skip dictionary Keys"),
         (from_imports_to_skip, "skip from imports"),
-        (module_imports_to_skip, "skip module imports"),
+        (imports_to_skip, "skip module imports"),
         (functions_to_skip, "skip functions"),
+        (vars_to_fold, "fold variables"),
         (vars_to_skip, "skip variables"),
         (regex_to_apply_py, "apply regex"),
     ):
@@ -237,7 +244,7 @@ def _get_tokens_to_skip_config(module_import_path: str) -> TokensConfig:
     decorators: set[str] = decorators_to_skip.pop(module_import_path, set())
     dict_keys: set[str] = dict_keys_to_skip.pop(module_import_path, set())
     from_imports: set[str] = from_imports_to_skip.pop(module_import_path, set())
-    module_imports: set[str] = module_imports_to_skip.pop(module_import_path, set())
+    module_imports: set[str] = imports_to_skip.pop(module_import_path, set())
     functions: set[str] = functions_to_skip.pop(module_import_path, set())
     variables: set[str] = vars_to_skip.pop(module_import_path, set())
 

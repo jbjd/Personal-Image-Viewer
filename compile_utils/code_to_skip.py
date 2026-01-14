@@ -3,7 +3,6 @@
 import os
 import re
 import sys
-from collections import defaultdict
 
 from personal_python_ast_optimizer.regex.classes import RegexReplacement
 from PIL.AvifImagePlugin import DECODE_CODEC_CHOICE
@@ -143,6 +142,7 @@ functions_to_skip: dict[str, set[str]] = {
 vars_to_skip: dict[str, set[str]] = {
     "PIL.Image": {"MIME"},
     "PIL.ImageDraw": {"Outline"},
+    "PIL.ImagePalette": {"tostring"},
     "PIL.GifImagePlugin": {"_Palette", "format_description"},
     "PIL.JpegImagePlugin": {"format_description"},
     "PIL.PngImagePlugin": {"format_description"},
@@ -177,172 +177,159 @@ dict_keys_to_skip: dict[str, set[str]] = {}
 
 decorators_to_skip: dict[str, set[str]] = {}
 
-module_imports_to_skip: dict[str, set[str]] = {}
+imports_to_skip: dict[str, set[str]] = {"PIL.Image": {"defusedxml"}}
 
-module_vars_to_fold: defaultdict[
+module_vars_to_fold: dict[
     str,
     dict[str, str | bytes | bool | int | float | complex | None],
-] = defaultdict(
-    dict,
-    {
-        IMAGE_VIEWER_NAME: {
-            "__debug__": False,
-            "__name__": "__main__",
-            "_ERROR_COLOR": _ERROR_COLOR,
-            "DEFAULT_ANIMATION_SPEED_MS": DEFAULT_ANIMATION_SPEED_MS,
-            "DEFAULT_BACKGROUND_COLOR": DEFAULT_BACKGROUND_COLOR,
-            "DEFAULT_FONT": DEFAULT_FONT,
-            "DEFAULT_MAX_ITEMS_IN_CACHE": DEFAULT_MAX_ITEMS_IN_CACHE,
-            "JPEG_MAX_DIMENSION": JPEG_MAX_DIMENSION,
-            "TEXT_RGB": TEXT_RGB,
-        },
-        "PIL": {
-            "DECODE_CODEC_CHOICE": DECODE_CODEC_CHOICE,
-            "DDS_MAGIC": DDS_MAGIC,
-            "EPSILON": EPSILON,
-            "SUPPORTED": True,
-            "TYPE_CHECKING": False,
-        },
+] = {
+    IMAGE_VIEWER_NAME: {
+        "__debug__": False,
+        "__name__": "__main__",
+        "_ERROR_COLOR": _ERROR_COLOR,
+        "DEFAULT_ANIMATION_SPEED_MS": DEFAULT_ANIMATION_SPEED_MS,
+        "DEFAULT_BACKGROUND_COLOR": DEFAULT_BACKGROUND_COLOR,
+        "DEFAULT_FONT": DEFAULT_FONT,
+        "DEFAULT_MAX_ITEMS_IN_CACHE": DEFAULT_MAX_ITEMS_IN_CACHE,
+        "JPEG_MAX_DIMENSION": JPEG_MAX_DIMENSION,
+        "TEXT_RGB": TEXT_RGB,
     },
-)
+    "PIL": {"SUPPORTED": True, "TYPE_CHECKING": False},
+}
+
+vars_to_fold: dict[
+    str,
+    dict[str, str | bytes | bool | int | float | complex | None],
+] = {
+    "PIL.AvifImagePlugin": {"DECODE_CODEC_CHOICE": DECODE_CODEC_CHOICE},
+    "PIL.DdsImagePlugin": {"DDS_MAGIC": DDS_MAGIC},
+    "PIL.GimpGradientFile": {"EPSILON": EPSILON},
+}
 
 remove_all_re = RegexReplacement(pattern="^.*$", flags=re.DOTALL)
-regex_to_apply_py: defaultdict[str, list[RegexReplacement]] = defaultdict(
-    list,
-    {
-        f"{IMAGE_VIEWER_NAME}.util.PIL": [
-            RegexReplacement(pattern=r"_Image._plugins = \[\]")
-        ],
-        "PIL.__init__": [
-            RegexReplacement(
-                pattern=r"_plugins = \[.*?\]",
-                replacement="_plugins = []",
-                flags=re.DOTALL,
-            ),
-            RegexReplacement(
-                pattern=r"from \. import _version.*del _version", flags=re.DOTALL
-            ),
-        ],
-        "PIL.AvifImagePlugin": [
-            RegexReplacement(
-                pattern=r"try:\s+?from \. import _avif.*?SUPPORTED = False",
-                replacement="from . import _avif;SUPPORTED = True",
-                flags=re.DOTALL,
-                count=1,
-            )
-        ],
-        "PIL.GifImagePlugin": [
-            RegexReplacement(
-                pattern="from typing import .*",
-                replacement="from typing import cast;from collections import namedtuple",  # noqa: E501
-                count=1,
-            ),
-            RegexReplacement(
-                pattern=r"_Frame\(NamedTuple\)",
-                replacement="_Frame(namedtuple('_Frame',['im','bbox','encoderinfo']))",
-                count=1,
-            ),
-        ],
-        "PIL.Image": [
-            RegexReplacement(
-                pattern="""try:
-    from defusedxml import ElementTree
-except ImportError:
-    ElementTree = None"""
-            ),
-            RegexReplacement(
-                pattern=r"try:\n    #.*?from \. import _imaging as core.*?except.*?raise",  # noqa: E501
-                replacement="from . import _imaging as core",
-                flags=re.DOTALL,
-            ),
-            RegexReplacement(
-                pattern=r"def preinit\(\).*_initialized = 1", flags=re.DOTALL
-            ),
-        ],
-        "PIL.ImageDraw": [
-            RegexReplacement(
-                pattern=r"def Draw.*?return ImageDraw.*?\)",
-                replacement="""def Draw(im,mode=None):return ImageDraw(im,mode)""",
-                count=1,
-                flags=re.DOTALL,
-            ),
-            RegexReplacement(pattern="(L|l)ist, "),  # codespell:ignore ist
-            RegexReplacement(pattern="List", replacement="list"),
-        ],
-        "PIL.ImageFile": [
-            RegexReplacement(
-                pattern="from typing import .*",
-                replacement="""from typing import IO, cast
+regex_to_apply_py: dict[str, list[RegexReplacement]] = {
+    f"{IMAGE_VIEWER_NAME}.util.PIL": [
+        RegexReplacement(pattern=r"_Image._plugins = \[\]")
+    ],
+    "PIL.__init__": [
+        RegexReplacement(
+            pattern=r"_plugins = \[.*?\]",
+            replacement="_plugins = []",
+            flags=re.DOTALL,
+        ),
+        RegexReplacement(
+            pattern=r"from \. import _version.*del _version", flags=re.DOTALL
+        ),
+    ],
+    "PIL.AvifImagePlugin": [
+        RegexReplacement(
+            pattern=r"try:\s+?from \. import _avif.*?SUPPORTED = False",
+            replacement="from . import _avif;SUPPORTED = True",
+            flags=re.DOTALL,
+            count=1,
+        )
+    ],
+    "PIL.GifImagePlugin": [
+        RegexReplacement(
+            pattern="from typing import .*",
+            replacement="from typing import cast;from collections import namedtuple",
+            count=1,
+        ),
+        RegexReplacement(
+            pattern=r"_Frame\(NamedTuple\)",
+            replacement="_Frame(namedtuple('_Frame',['im','bbox','encoderinfo']))",
+            count=1,
+        ),
+    ],
+    "PIL.Image": [
+        RegexReplacement(
+            pattern=r"try:\n    #.*?from \. import _imaging as core.*?except.*?raise",
+            replacement="from . import _imaging as core",
+            flags=re.DOTALL,
+        ),
+        RegexReplacement(pattern=r"def preinit\(\).*_initialized = 1", flags=re.DOTALL),
+    ],
+    "PIL.ImageDraw": [
+        RegexReplacement(
+            pattern=r"def Draw.*?return ImageDraw.*?\)",
+            replacement="""def Draw(im,mode=None):return ImageDraw(im,mode)""",
+            count=1,
+            flags=re.DOTALL,
+        ),
+    ],
+    "PIL.ImageFile": [
+        RegexReplacement(
+            pattern="from typing import .*",
+            replacement="""from typing import IO, cast
 from collections import namedtuple""",
-                count=1,
-            ),
-            RegexReplacement(
-                pattern=r"_Tile\(NamedTuple\):",
-                replacement="_Tile(namedtuple('_Tile', ['codec_name', 'extents', 'offset', 'args'])):",  # noqa: E501
-                count=1,
-            ),
-        ],
-        "PIL.ImageFont": [
-            RegexReplacement(
-                pattern=r"try:.*DeferredError\.new\(ex\)",
-                replacement="from . import _imagingft as core",
-                flags=re.DOTALL,
-            ),
-            RegexReplacement(pattern=r"MAX_STRING_LENGTH is not None and"),
-        ],
-        "PIL.ImageMode": [
-            RegexReplacement(
-                pattern="from typing import NamedTuple",
-                replacement="from collections import namedtuple",
-                count=1,
-            ),
-            RegexReplacement(
-                pattern=r"\(NamedTuple\):",
-                replacement=r"(namedtuple('ModeDescriptor', ['mode', 'bands', 'basemode', 'basetype', 'typestr'])):",  # noqa: E501
-                count=1,
-            ),
-        ],
-        "PIL.ImagePalette": [RegexReplacement(pattern="tostring = tobytes")],
-        "PIL.JpegImagePlugin": [
-            RegexReplacement(  # Remove .mpo support for now
-                r"def jpeg_factory\(.*return im",
-                "def jpeg_factory(fp,filename=None):return JpegImageFile(fp,filename)",
-                flags=re.DOTALL,
-            )
-        ],
-        "PIL.PngImagePlugin": [
-            RegexReplacement(
-                pattern=r"raise EOFError\(.*?\)", replacement="raise EOFError"
-            ),
-            RegexReplacement(
-                pattern="from typing import .*",
-                replacement="from typing import IO, cast\nfrom collections import namedtuple",  # noqa: E501
-                count=1,
-            ),
-            RegexReplacement(
-                pattern=r"_RewindState\(NamedTuple\)",
-                replacement="_RewindState(namedtuple('_RewindState', ['info', 'tile', 'seq_num']))",  # noqa: E501
-            ),
-            RegexReplacement(
-                pattern=r"_Frame\(NamedTuple\)",
-                replacement="_Frame(namedtuple('_Frame', ['im', 'bbox', 'encoderinfo']))",  # noqa: E501
-            ),
-        ],
-        "PIL.WebPImagePlugin": [
-            RegexReplacement(
-                pattern=r"try:\s+?from \. import _webp.*?SUPPORTED = False",
-                replacement="from . import _webp;SUPPORTED = True",
-                flags=re.DOTALL,
-                count=1,
-            )
-        ],
-    },
-)
+            count=1,
+        ),
+        RegexReplacement(
+            pattern=r"_Tile\(NamedTuple\):",
+            replacement="_Tile(namedtuple('_Tile', ['codec_name', 'extents', 'offset', 'args'])):",  # noqa: E501
+            count=1,
+        ),
+    ],
+    "PIL.ImageFont": [
+        RegexReplacement(
+            pattern=r"try:.*DeferredError\.new\(ex\)",
+            replacement="from . import _imagingft as core",
+            flags=re.DOTALL,
+        ),
+        RegexReplacement(pattern=r"MAX_STRING_LENGTH is not None and"),
+    ],
+    "PIL.ImageMode": [
+        RegexReplacement(
+            pattern="from typing import NamedTuple",
+            replacement="from collections import namedtuple",
+            count=1,
+        ),
+        RegexReplacement(
+            pattern=r"\(NamedTuple\):",
+            replacement=r"(namedtuple('ModeDescriptor', ['mode', 'bands', 'basemode', 'basetype', 'typestr'])):",  # noqa: E501
+            count=1,
+        ),
+    ],
+    "PIL.JpegImagePlugin": [
+        RegexReplacement(  # Remove .mpo support for now
+            r"def jpeg_factory\(.*return im",
+            "def jpeg_factory(fp,filename=None):return JpegImageFile(fp,filename)",
+            flags=re.DOTALL,
+        )
+    ],
+    "PIL.PngImagePlugin": [
+        RegexReplacement(
+            pattern=r"raise EOFError\(.*?\)", replacement="raise EOFError"
+        ),
+        RegexReplacement(
+            pattern="from typing import .*",
+            replacement="from typing import IO, cast\nfrom collections import namedtuple",  # noqa: E501
+            count=1,
+        ),
+        RegexReplacement(
+            pattern=r"_RewindState\(NamedTuple\)",
+            replacement="_RewindState(namedtuple('_RewindState', ['info', 'tile', 'seq_num']))",  # noqa: E501
+        ),
+        RegexReplacement(
+            pattern=r"_Frame\(NamedTuple\)",
+            replacement="_Frame(namedtuple('_Frame', ['im', 'bbox', 'encoderinfo']))",
+        ),
+    ],
+    "PIL.WebPImagePlugin": [
+        RegexReplacement(
+            pattern=r"try:\s+?from \. import _webp.*?SUPPORTED = False",
+            replacement="from . import _webp;SUPPORTED = True",
+            flags=re.DOTALL,
+            count=1,
+        )
+    ],
+}
+
 if os.name == "nt":
     regex_to_apply_py["PIL.AvifImagePlugin"].append(
         RegexReplacement(
             r"def _get_default_max_threads\(\).*?or 1",
-            "def _get_default_max_threads():return os.cpu_count() or 1",
+            f"def _get_default_max_threads():return {os.cpu_count() or 1}",
             flags=re.DOTALL,
             count=1,
         )
@@ -384,26 +371,23 @@ class TrashPermissionError(PermissionError):
 
 
 # Keys are relative paths or globs. globs should target a single file
-regex_to_apply_tk: defaultdict[str, list[RegexReplacement]] = defaultdict(
-    list,
-    {
-        "tk/ttk/ttk.tcl": [
-            # Loads themes that are not used
-            RegexReplacement(
-                pattern="proc ttk::LoadThemes.*?\n}",
-                replacement="proc ttk::LoadThemes {} {}",
-                flags=re.DOTALL,
-            )
-        ],
-        "tcl8/*/platform-*.tm": [
-            # Discontinued OS
-            RegexReplacement(pattern=r"osf1 \{.*?\}", count=1, flags=re.DOTALL),
-            RegexReplacement(
-                pattern=r"solaris(\*-\*)? \{(.*?\{.*?\}.*?)*?\}", flags=re.DOTALL
-            ),
-        ],
-    },
-)
+regex_to_apply_tk: dict[str, list[RegexReplacement]] = {
+    "tk/ttk/ttk.tcl": [
+        # Loads themes that are not used
+        RegexReplacement(
+            pattern="proc ttk::LoadThemes.*?\n}",
+            replacement="proc ttk::LoadThemes {} {}",
+            flags=re.DOTALL,
+        )
+    ],
+    "tcl8/*/platform-*.tm": [
+        # Discontinued OS
+        RegexReplacement(pattern=r"osf1 \{.*?\}", count=1, flags=re.DOTALL),
+        RegexReplacement(
+            pattern=r"solaris(\*-\*)? \{(.*?\{.*?\}.*?)*?\}", flags=re.DOTALL
+        ),
+    ],
+}
 
 if sys.platform != "darwin":
     regex_to_apply_tk["tcl8/*/platform-*.tm"].append(
@@ -412,22 +396,22 @@ if sys.platform != "darwin":
         )
     )
 
-    regex_to_apply_tk["tcl/auto.tcl"].append(
+    regex_to_apply_tk["tcl/auto.tcl"] = [
         RegexReplacement(
             pattern=r'if \{\$tcl_platform\(platform\) eq "unix".*?\}.*?\}',
             flags=re.DOTALL,
             count=1,
         )
-    )
+    ]
 
-    regex_to_apply_tk["tcl/init.tcl"].append(
+    regex_to_apply_tk["tcl/init.tcl"] = [
         RegexReplacement(
             pattern=r'if \{\$tcl_platform\(os\) eq "Darwin".*?else.*?\}\s*?\}',
             replacement="package unknown {::tcl::tm::UnknownHandler ::tclPkgUnknown}",
             flags=re.DOTALL,
             count=1,
         )
-    )
+    ]
 
 data_files_to_exclude: list[str] = [
     "tcl/http1.0",
