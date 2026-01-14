@@ -176,7 +176,7 @@ dict_keys_to_skip: dict[str, set[str]] = {}
 
 decorators_to_skip: dict[str, set[str]] = {}
 
-module_imports_to_skip: dict[str, set[str]] = {}
+imports_to_skip: dict[str, set[str]] = {"PIL.Image": {"defusedxml"}}
 
 module_vars_to_fold: dict[
     str,
@@ -241,12 +241,6 @@ regex_to_apply_py: dict[str, list[RegexReplacement]] = {
         ),
     ],
     "PIL.Image": [
-        RegexReplacement(
-            pattern="""try:
-    from defusedxml import ElementTree
-except ImportError:
-    ElementTree = None"""
-        ),
         RegexReplacement(
             pattern=r"try:\n    #.*?from \. import _imaging as core.*?except.*?raise",
             replacement="from . import _imaging as core",
