@@ -193,12 +193,7 @@ module_vars_to_fold: dict[
         "JPEG_MAX_DIMENSION": JPEG_MAX_DIMENSION,
         "TEXT_RGB": TEXT_RGB,
     },
-    "PIL": {
-        "DDS_MAGIC": DDS_MAGIC,
-        "EPSILON": EPSILON,
-        "SUPPORTED": True,
-        "TYPE_CHECKING": False,
-    },
+    "PIL": {"SUPPORTED": True, "TYPE_CHECKING": False},
 }
 
 vars_to_fold: dict[
@@ -206,6 +201,8 @@ vars_to_fold: dict[
     dict[str, str | bytes | bool | int | float | complex | None],
 ] = {
     "PIL.AvifImagePlugin": {"DECODE_CODEC_CHOICE": DECODE_CODEC_CHOICE},
+    "PIL.DdsImagePlugin": {"DDS_MAGIC": DDS_MAGIC},
+    "PIL.GimpGradientFile": {"EPSILON": EPSILON},
 }
 
 remove_all_re = RegexReplacement(pattern="^.*$", flags=re.DOTALL)
