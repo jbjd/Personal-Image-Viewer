@@ -142,6 +142,7 @@ functions_to_skip: dict[str, set[str]] = {
 vars_to_skip: dict[str, set[str]] = {
     "PIL.Image": {"MIME"},
     "PIL.ImageDraw": {"Outline"},
+    "PIL.ImagePalette": {"tostring"},
     "PIL.GifImagePlugin": {"_Palette", "format_description"},
     "PIL.JpegImagePlugin": {"format_description"},
     "PIL.PngImagePlugin": {"format_description"},
@@ -255,8 +256,6 @@ regex_to_apply_py: dict[str, list[RegexReplacement]] = {
             count=1,
             flags=re.DOTALL,
         ),
-        RegexReplacement(pattern="(L|l)ist, "),  # codespell:ignore ist
-        RegexReplacement(pattern="List", replacement="list"),
     ],
     "PIL.ImageFile": [
         RegexReplacement(
@@ -291,7 +290,6 @@ from collections import namedtuple""",
             count=1,
         ),
     ],
-    "PIL.ImagePalette": [RegexReplacement(pattern="tostring = tobytes")],
     "PIL.JpegImagePlugin": [
         RegexReplacement(  # Remove .mpo support for now
             r"def jpeg_factory\(.*return im",

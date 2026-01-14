@@ -121,6 +121,13 @@ def validate_PIL() -> None:  # noqa: N802
     else:
         del _webp
 
+    try:
+        from PIL import _imagingft
+    except ImportError:
+        missing_modules.append("FreeType")
+    else:
+        del _imagingft
+
     if missing_modules:
         raise InvalidEnvironmentError(
             "Current PIL installation missing necessary modules: "
