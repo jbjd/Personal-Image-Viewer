@@ -62,8 +62,8 @@ class ViewerApp:
         "width_ratio",
     )
 
-    def __init__(self, first_image_path: str, path_to_exe_folder: str) -> None:
-        config = Config(path_to_exe_folder)
+    def __init__(self, first_image_path: str) -> None:
+        config = Config()
         image_cache: ImageCache = ImageCache(config.max_items_in_cache)
         self.file_manager: ImageFileManager = ImageFileManager(
             first_image_path, image_cache
@@ -77,7 +77,7 @@ class ViewerApp:
         self.image_load_id: str = ""
         self.animation_id: str = ""
 
-        self.app: Tk = self._setup_tk_app(path_to_exe_folder)
+        self.app: Tk = self._setup_tk_app()
         self.app_id: int = self.app.winfo_id()
 
         if os.name == "nt":
@@ -109,18 +109,18 @@ class ViewerApp:
         self._add_binds_to_tk(config)
 
     @staticmethod
-    def _setup_tk_app(path_to_exe_folder: str) -> Tk:
+    def _setup_tk_app() -> Tk:
         """Creates and setups Tk class"""
         app: Tk = Tk()
         app.attributes("-fullscreen", True)
 
         if os.name == "nt":
             app.state("zoomed")
-            app.wm_iconbitmap(default=os.path.join(path_to_exe_folder, "icon/icon.ico"))
+            app.wm_iconbitmap(default="icon/icon.ico")
         else:
             app.wm_iconphoto(
                 True,
-                tkPhotoImage(file=os.path.join(path_to_exe_folder, "icon/icon.png")),
+                tkPhotoImage(file="icon/icon.png"),
             )
 
         return app
