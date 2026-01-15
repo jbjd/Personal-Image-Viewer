@@ -27,7 +27,6 @@ WORKING_DIR: str = os.path.dirname(__file__)
 IMG_DIR: str = os.path.join(WORKING_DIR, "example_images")
 EXAMPLE_PNG_PATH: str = os.path.join(IMG_DIR, "a.png")
 EXAMPLE_JPEG_PATH: str = os.path.join(IMG_DIR, "d.jpg")
-MAIN_DIR: str = os.path.dirname(WORKING_DIR)
 
 
 @pytest.fixture(name="tk_app", scope="session")
@@ -102,7 +101,7 @@ def viewer_fixture() -> ViewerApp:
         patch("image_viewer.viewer.CustomCanvas"),
         patch("image_viewer.viewer.ButtonIconFactory", mock_icon_factory),
     ):
-        return ViewerApp(EXAMPLE_PNG_PATH, MAIN_DIR)
+        return ViewerApp(EXAMPLE_PNG_PATH)
 
 
 @pytest.fixture(name="focused_event")
