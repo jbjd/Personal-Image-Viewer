@@ -1,7 +1,6 @@
 """Utilities that are OS generic."""
 
 import os
-import sys
 from collections.abc import Iterator
 
 FILE_NAME_MAX_LEN: int = 40
@@ -224,10 +223,3 @@ def _split_str_at_index(to_split: str, index: int) -> tuple[str, str]:
     :param index: An index to split the string at.
     :returns: The string up to index and the string at and after index."""
     return (to_split, "") if index == -1 else (to_split[:index], to_split[index:])
-
-
-def get_path_to_exe_folder() -> str:
-    """Returns the folder path containing the file running the program.
-
-    :returns: The folder path."""
-    return os.path.dirname(sys.argv[0])
