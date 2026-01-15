@@ -21,7 +21,7 @@ from image_viewer.image.resizer import JPEG_MAX_DIMENSION
 from image_viewer.ui.rename_entry import _ERROR_COLOR
 
 # Increment when edits to this file or module_dependencies are merged into main
-SKIP_ITERATION: int = 2
+SKIP_ITERATION: int = 0
 
 # Module independent skips
 
@@ -63,7 +63,6 @@ functions_to_skip: dict[str, set[str]] = {
         "getmodebandnames",
         "getxmp",
         "linear_gradient",
-        "load_from_fp",
         "putalpha",
         "radial_gradient",
         "register_mime",
@@ -108,7 +107,7 @@ functions_to_skip: dict[str, set[str]] = {
         "rounded_rectangle",
         "shape",
     },
-    "PIL.ImageFile": {"get_format_mimetype", "verify"},
+    "PIL.ImageFile": {"get_child_images", "get_format_mimetype", "verify"},
     "PIL.ImageFont": {
         "__getstate__",
         "__setstate__",
@@ -145,7 +144,7 @@ functions_to_skip: dict[str, set[str]] = {
     },
     "PIL.ImageTk": {"_get_image_from_kw", "getimage"},
     "PIL.GifImagePlugin": {"_save_netpbm", "getheader", "register_mime"},
-    "PIL.JpegImagePlugin": {"_getexif", "load_djpeg", "register_mime"},
+    "PIL.JpegImagePlugin": {"_getexif", "_getmp", "load_djpeg", "register_mime"},
     "PIL.PngImagePlugin": {
         "debug",
         "deprecate",
@@ -176,6 +175,7 @@ if os.name == "nt":
 
 classes_to_skip: dict[str, set[str]] = {
     "PIL.Image": {
+        "Exif",
         "SupportsArrayInterface",
         "SupportsArrowArrayInterface",
         "SupportsGetData",
@@ -234,7 +234,7 @@ regex_to_apply_py: dict[str, list[RegexReplacement]] = {
     "PIL.__init__": [
         RegexReplacement(
             pattern=r"_plugins = \[.*?\]",
-            replacement="_plugins = []",
+            replacement="_plugins=[]",
             flags=re.DOTALL,
         ),
         RegexReplacement(
@@ -247,7 +247,17 @@ regex_to_apply_py: dict[str, list[RegexReplacement]] = {
             replacement="from . import _avif;SUPPORTED = True",
             flags=re.DOTALL,
             count=1,
-        )
+        ),
+        RegexReplacement(  # Remove Exif usage to remove Tiff dependency
+            pattern=r"if exif_orientation != 1 or exif:.*?self\.info\[\"exif\"\] = exif",  # noqa: E501
+            flags=re.DOTALL,
+            count=1,
+        ),
+        RegexReplacement(  # Remove Exif usage to remove Tiff dependency
+            pattern=r" *exif_orientation = 1.*?\n\n",
+            flags=re.DOTALL,
+            count=1,
+        ),
     ],
     "PIL.GifImagePlugin": [
         RegexReplacement(
@@ -286,7 +296,7 @@ from collections import namedtuple""",
         ),
         RegexReplacement(
             pattern=r"_Tile\(NamedTuple\):",
-            replacement="_Tile(namedtuple('_Tile', ['codec_name', 'extents', 'offset', 'args'])):",  # noqa: E501
+            replacement="_Tile(namedtuple('_Tile', ['codec_name','extents','offset','args'])):",  # noqa: E501
             count=1,
         ),
     ],
@@ -306,7 +316,7 @@ from collections import namedtuple""",
         ),
         RegexReplacement(
             pattern=r"\(NamedTuple\):",
-            replacement=r"(namedtuple('ModeDescriptor', ['mode', 'bands', 'basemode', 'basetype', 'typestr'])):",  # noqa: E501
+            replacement=r"(namedtuple('ModeDescriptor', ['mode','bands','basemode','basetype','typestr'])):",  # noqa: E501
             count=1,
         ),
     ],
@@ -323,17 +333,28 @@ from collections import namedtuple""",
         ),
         RegexReplacement(
             pattern="from typing import .*",
-            replacement="from typing import IO, cast\nfrom collections import namedtuple",  # noqa: E501
+            replacement="from typing import IO,cast\nfrom collections import namedtuple",  # noqa: E501
             count=1,
         ),
         RegexReplacement(
             pattern=r"_RewindState\(NamedTuple\)",
-            replacement="_RewindState(namedtuple('_RewindState', ['info', 'tile', 'seq_num']))",  # noqa: E501
+            replacement="_RewindState(namedtuple('_RewindState', ['info','tile','seq_num']))",  # noqa: E501
         ),
         RegexReplacement(
             pattern=r"_Frame\(NamedTuple\)",
-            replacement="_Frame(namedtuple('_Frame', ['im', 'bbox', 'encoderinfo']))",
+            replacement="_Frame(namedtuple('_Frame', ['im','bbox','encoderinfo']))",
         ),
+    ],
+    "PIL.TiffTags": [
+        RegexReplacement(
+            pattern=r"^.*?class TagInfo\(_TagInfo\)",
+            replacement=(
+                "from collections import namedtuple\n"
+                "class TagInfo(namedtuple('TagInfo',['value','name','type', 'length','enum']))"  # noqa: E501
+            ),
+            flags=re.DOTALL,
+            count=1,
+        )
     ],
     "PIL.WebPImagePlugin": [
         RegexReplacement(
