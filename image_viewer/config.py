@@ -49,11 +49,9 @@ class Config:
 
     __slots__ = ("background_color", "font_file", "keybinds", "max_items_in_cache")
 
-    def __init__(
-        self, working_directory: str, config_file_name: str = "config.ini"
-    ) -> None:
+    def __init__(self, config_file: str = "image_viewer/config.ini") -> None:
         config_parser: ConfigParserExt = ConfigParserExt()
-        config_parser.read(os.path.join(working_directory, config_file_name))
+        config_parser.read(config_file)
 
         self.font_file: str = config_parser.get_string_safe(
             "FONT", "DEFAULT", DEFAULT_FONT
