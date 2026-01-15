@@ -1,5 +1,6 @@
 """Tests for the ViewerApp class."""
 
+from tkinter import Tk
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -114,7 +115,10 @@ def test_minimize(viewer: ViewerApp):
     [(False, False), (False, True), (True, False), (True, True)],
 )
 def test_update_details_dropdown(
-    viewer: ViewerApp, dropdown_show: bool, dropdown_needs_refresh: bool
+    tk_app: Tk,  # noqa: ARG001
+    viewer: ViewerApp,
+    dropdown_show: bool,
+    dropdown_needs_refresh: bool,
 ):
     """Should correctly update dropdown given provided state."""
     viewer.canvas.itemconfigure = MagicMock()
