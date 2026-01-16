@@ -259,18 +259,6 @@ regex_to_apply_py: dict[str, list[RegexReplacement]] = {
             count=1,
         ),
     ],
-    "PIL.GifImagePlugin": [
-        RegexReplacement(
-            pattern="from typing import .*",
-            replacement="from typing import cast;from collections import namedtuple",
-            count=1,
-        ),
-        RegexReplacement(
-            pattern=r"_Frame\(NamedTuple\)",
-            replacement="_Frame(namedtuple('_Frame',['im','bbox','encoderinfo']))",
-            count=1,
-        ),
-    ],
     "PIL.Image": [
         RegexReplacement(
             pattern=r"try:\n    #.*?from \. import _imaging as core.*?except.*?raise",
@@ -315,8 +303,9 @@ from collections import namedtuple""",
             count=1,
         ),
         RegexReplacement(
-            pattern=r"\(NamedTuple\):",
-            replacement=r"(namedtuple('ModeDescriptor', ['mode','bands','basemode','basetype','typestr'])):",  # noqa: E501
+            pattern=r"\(NamedTuple\):.*return self\.mode",
+            replacement=r"(namedtuple('ModeDescriptor', ['mode','bands','basemode','basetype','typestr'])):\n\tdef __str__(self):return self.mode",  # noqa: E501
+            flags=re.DOTALL,
             count=1,
         ),
     ],
@@ -328,22 +317,7 @@ from collections import namedtuple""",
         )
     ],
     "PIL.PngImagePlugin": [
-        RegexReplacement(
-            pattern=r"raise EOFError\(.*?\)", replacement="raise EOFError"
-        ),
-        RegexReplacement(
-            pattern="from typing import .*",
-            replacement="from typing import IO,cast\nfrom collections import namedtuple",  # noqa: E501
-            count=1,
-        ),
-        RegexReplacement(
-            pattern=r"_RewindState\(NamedTuple\)",
-            replacement="_RewindState(namedtuple('_RewindState', ['info','tile','seq_num']))",  # noqa: E501
-        ),
-        RegexReplacement(
-            pattern=r"_Frame\(NamedTuple\)",
-            replacement="_Frame(namedtuple('_Frame', ['im','bbox','encoderinfo']))",
-        ),
+        RegexReplacement(pattern=r"raise EOFError\(.*?\)", replacement="raise EOFError")
     ],
     "PIL.TiffTags": [
         RegexReplacement(
