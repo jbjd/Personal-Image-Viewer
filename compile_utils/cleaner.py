@@ -20,7 +20,6 @@ from personal_python_ast_optimizer.parser.config import (
     TokensConfig,
     TokenTypesConfig,
 )
-from personal_python_ast_optimizer.parser.minifier import MinifyUnparser
 from personal_python_ast_optimizer.parser.run import run_minify_parser
 from personal_python_ast_optimizer.regex.apply import apply_regex, apply_regex_to_file
 from personal_python_ast_optimizer.regex.classes import RegexReplacement
@@ -70,8 +69,6 @@ def clean_file_and_copy(
         )
         source = apply_regex(source, regex_replacements, module_import_path)
 
-    code_cleaner = MinifyUnparser()
-
     all_vars_to_fold: dict[str, str | bytes | bool | int | float | complex | None] = (
         module_vars_to_fold.get(module_name, {})
         | vars_to_fold.pop(module_import_path, {})
@@ -79,13 +76,14 @@ def clean_file_and_copy(
 
     try:
         source = run_minify_parser(
-            code_cleaner,
             source,
-            SkipConfig(
+            skip_config=SkipConfig(
                 module_import_path,
                 target_python_version=get_required_python_version(),
                 tokens_config=_get_tokens_to_skip_config(module_import_path),
-                token_types_config=TokenTypesConfig(skip_overload_functions=True),
+                token_types_config=TokenTypesConfig(
+                    skip_overload_functions=True, simplify_named_tuples=True
+                ),
                 optimizations_config=OptimizationsConfig(
                     vars_to_fold=all_vars_to_fold,
                     fold_constants=False,  # Nuitka does this internally
