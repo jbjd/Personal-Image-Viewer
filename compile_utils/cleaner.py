@@ -20,7 +20,7 @@ from personal_python_ast_optimizer.parser.config import (
     TokensConfig,
     TokenTypesConfig,
 )
-from personal_python_ast_optimizer.parser.run import run_minify_parser
+from personal_python_ast_optimizer.parser.run import run_unparser
 from personal_python_ast_optimizer.regex.apply import apply_regex, apply_regex_to_file
 from personal_python_ast_optimizer.regex.classes import RegexReplacement
 
@@ -75,7 +75,7 @@ def clean_file_and_copy(
     )
 
     try:
-        source = run_minify_parser(
+        source = run_unparser(
             source,
             skip_config=SkipConfig(
                 module_import_path,

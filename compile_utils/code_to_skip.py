@@ -303,8 +303,9 @@ from collections import namedtuple""",
             count=1,
         ),
         RegexReplacement(
-            pattern=r"\(NamedTuple\):",
-            replacement=r"(namedtuple('ModeDescriptor', ['mode','bands','basemode','basetype','typestr'])):",  # noqa: E501
+            pattern=r"\(NamedTuple\):.*return self\.mode",
+            replacement=r"(namedtuple('ModeDescriptor', ['mode','bands','basemode','basetype','typestr'])):\n\tdef __str__(self):return self.mode",  # noqa: E501
+            flags=re.DOTALL,
             count=1,
         ),
     ],
