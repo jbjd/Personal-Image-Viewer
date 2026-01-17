@@ -275,19 +275,6 @@ regex_to_apply_py: dict[str, list[RegexReplacement]] = {
             flags=re.DOTALL,
         ),
     ],
-    "PIL.ImageFile": [
-        RegexReplacement(
-            pattern="from typing import .*",
-            replacement="""from typing import IO, cast
-from collections import namedtuple""",
-            count=1,
-        ),
-        RegexReplacement(
-            pattern=r"_Tile\(NamedTuple\):",
-            replacement="_Tile(namedtuple('_Tile', ['codec_name','extents','offset','args'])):",  # noqa: E501
-            count=1,
-        ),
-    ],
     "PIL.ImageFont": [
         RegexReplacement(
             pattern=r"try:.*DeferredError\.new\(ex\)",
