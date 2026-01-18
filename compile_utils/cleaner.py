@@ -91,6 +91,7 @@ def clean_file_and_copy(
                 optimizations_config=OptimizationsConfig(
                     vars_to_fold=all_vars_to_fold,
                     assume_this_machine=assume_this_machine,
+                    collection_concat_to_unpack=True,
                 ),
             ),
         )
