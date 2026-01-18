@@ -19,6 +19,7 @@ from personal_python_ast_optimizer.parser.config import (
     SkipConfig,
     TokensConfig,
     TokenTypesConfig,
+    TypeHintsToSkip,
 )
 from personal_python_ast_optimizer.parser.run import run_unparser
 from personal_python_ast_optimizer.regex.apply import apply_regex, apply_regex_to_file
@@ -82,6 +83,7 @@ def clean_file_and_copy(
                 target_python_version=get_required_python_version(),
                 tokens_config=_get_tokens_to_skip_config(module_import_path),
                 token_types_config=TokenTypesConfig(
+                    skip_type_hints=TypeHintsToSkip.ALL,
                     skip_asserts=True,
                     skip_overload_functions=True,
                     simplify_named_tuples=True,
