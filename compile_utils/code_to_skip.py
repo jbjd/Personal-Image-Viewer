@@ -9,6 +9,7 @@ from PIL.AvifImagePlugin import DECODE_CODEC_CHOICE
 from PIL.DdsImagePlugin import DDS_MAGIC
 from PIL.GimpGradientFile import EPSILON
 from PIL.ImageFile import MAXBLOCK
+from PIL.ImageFont import MAX_STRING_LENGTH
 
 from compile_utils.constants import IMAGE_VIEWER_NAME
 from image_viewer.animation.frame import DEFAULT_ANIMATION_SPEED_MS
@@ -22,7 +23,7 @@ from image_viewer.image.resizer import JPEG_MAX_DIMENSION
 from image_viewer.ui.rename_entry import _ERROR_COLOR
 
 # Increment when edits to this file or module_dependencies are merged into main
-SKIP_ITERATION: int = 1
+SKIP_ITERATION: int = 0
 
 # Module independent skips
 
@@ -226,7 +227,7 @@ vars_to_fold: dict[
     "PIL.DdsImagePlugin": {"DDS_MAGIC": DDS_MAGIC},
     "PIL.GimpGradientFile": {"EPSILON": EPSILON},
     "PIL.ImageFile": {"MAXBLOCK": MAXBLOCK},
-    "PIL.ImageFont": {"MAX_STRING_LENGTH": 1000},
+    "PIL.ImageFont": {"MAX_STRING_LENGTH": MAX_STRING_LENGTH // 1000},
 }
 
 remove_all_re = RegexReplacement(pattern="^.*$", flags=re.DOTALL)
