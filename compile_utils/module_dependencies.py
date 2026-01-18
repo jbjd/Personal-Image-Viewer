@@ -95,6 +95,7 @@ modules_to_skip: list[str] = [
     "PIL.ImageTransform",
     "PIL.ImageWin",
     "PIL.TarIO",
+    "PIL.TiffTags",
     "PIL.features",
     "PIL.report",
     "py_compile",
