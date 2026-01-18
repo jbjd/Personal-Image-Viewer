@@ -90,7 +90,6 @@ def clean_file_and_copy(
                 ),
                 optimizations_config=OptimizationsConfig(
                     vars_to_fold=all_vars_to_fold,
-                    fold_constants=False,  # Nuitka does this internally
                     assume_this_machine=assume_this_machine,
                 ),
             ),
