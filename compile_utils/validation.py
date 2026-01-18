@@ -8,6 +8,7 @@ from sys import version_info
 from typing import Any
 
 from nuitka import PythonVersions
+from packaging.version import parse as _parse_version
 from personal_compile_tools.converters import version_str_to_tuple, version_tuple_to_str
 from personal_compile_tools.requirement_operators import Operators
 from personal_compile_tools.requirements import Requirement, parse_requirements_file
@@ -58,7 +59,7 @@ def validate_module_requirements() -> None:
                 requirement.matches_installed_version()
                 if requirement.rules[0].operator != Operators.DIRECT_REFERENCE
                 else _personal_module_matches_installed_version(
-                    requirement.name, requirement.rules[0].version.raw_version
+                    requirement.name, requirement.rules[0].version
                 )
             )
             if not matches_installed:
@@ -135,14 +136,20 @@ def validate_PIL() -> None:  # noqa: N802
         )
 
 
-def _personal_module_matches_installed_version(name: str, source_url: str) -> bool:
+def _personal_module_matches_installed_version(name: str, url: str) -> bool:
     """Checks that the version of 'personal' module's are the correct by their url.
     They are tagged with their version, so the url's end can be used to check.
 
     :param name: The name of the 'personal' module.
-    :param source_url: Url to the module on github.
+    :param url: Url to the module on github.
     :returns: True if url's tag matches installed version."""
 
     installed_version: str = get_module_version(name)
 
-    return source_url.endswith(f"@v{installed_version}")
+    url_version_index: int = url.rfind("@v")
+    if url_version_index == -1:
+        raise RuntimeError(f"Can't parse url {url}")
+
+    url_version: str = url[url_version_index + 2 :]
+
+    return _parse_version(installed_version) == _parse_version(url_version)
