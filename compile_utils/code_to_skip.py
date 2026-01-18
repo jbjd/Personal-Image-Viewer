@@ -8,6 +8,7 @@ from personal_python_ast_optimizer.regex.classes import RegexReplacement
 from PIL.AvifImagePlugin import DECODE_CODEC_CHOICE
 from PIL.DdsImagePlugin import DDS_MAGIC
 from PIL.GimpGradientFile import EPSILON
+from PIL.ImageFile import MAXBLOCK
 
 from compile_utils.constants import IMAGE_VIEWER_NAME
 from image_viewer.animation.frame import DEFAULT_ANIMATION_SPEED_MS
@@ -224,6 +225,8 @@ vars_to_fold: dict[
     "PIL.AvifImagePlugin": {"DECODE_CODEC_CHOICE": DECODE_CODEC_CHOICE},
     "PIL.DdsImagePlugin": {"DDS_MAGIC": DDS_MAGIC},
     "PIL.GimpGradientFile": {"EPSILON": EPSILON},
+    "PIL.ImageFile": {"MAXBLOCK": MAXBLOCK},
+    "PIL.ImageFont": {"MAX_STRING_LENGTH": 1000},
 }
 
 remove_all_re = RegexReplacement(pattern="^.*$", flags=re.DOTALL)
@@ -254,9 +257,10 @@ regex_to_apply_py: dict[str, list[RegexReplacement]] = {
             count=1,
         ),
         RegexReplacement(  # Remove Exif usage to remove Tiff dependency
-            pattern=r" *exif_orientation = 1.*?\n\n",
-            flags=re.DOTALL,
-            count=1,
+            pattern=r" *if exif :=.*?\n\n", flags=re.DOTALL, count=1
+        ),
+        RegexReplacement(  # Remove Exif usage to remove Tiff dependency
+            pattern=r'exif or b""', replacement='b""', count=1
         ),
     ],
     "PIL.Image": [
