@@ -22,7 +22,7 @@ from image_viewer.image.resizer import JPEG_MAX_DIMENSION
 from image_viewer.ui.rename_entry import _ERROR_COLOR
 
 # Increment when edits to this file or module_dependencies are merged into main
-SKIP_ITERATION: int = 0
+SKIP_ITERATION: int = 1
 
 # Module independent skips
 
