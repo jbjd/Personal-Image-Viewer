@@ -13,7 +13,7 @@ from personal_compile_tools.file_operations import (
     walk_folder,
     write_file_utf8,
 )
-from personal_python_ast_optimizer.regex.apply import apply_regex
+from personal_python_ast_optimizer.regex.replace import re_replace
 
 from compile_utils.code_to_skip import custom_nuitka_regex
 from compile_utils.log import LOGGER_NAME
@@ -159,7 +159,7 @@ def setup_custom_nuitka_install(custom_nuitka_path: str) -> None:
 
         if rel_path in custom_nuitka_regex:
             for regex in custom_nuitka_regex[rel_path]:
-                source = apply_regex(source, regex, "custom_nuitka")
+                source = re_replace(source, regex, True)
 
         new_path: str = os.path.join(custom_nuitka_path, rel_path)
         write_file_utf8(new_path, source, make_folders=True)
