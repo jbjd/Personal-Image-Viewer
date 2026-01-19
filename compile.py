@@ -8,9 +8,7 @@ from subprocess import Popen
 from personal_compile_tools.file_operations import (
     copy_file,
     copy_folder,
-    delete_file,
     delete_folder,
-    delete_folders,
     get_folder_size,
     read_file_utf8,
     write_file_utf8,
@@ -74,8 +72,8 @@ TARGET_FILE: str = f"{TARGET_MODULE}.py"
 
 working_folder: str = os.path.normpath(os.path.dirname(__file__))
 build_folder_path: str = os.path.join(working_folder, "build")
-tmp_folder_path: str = os.path.join(build_folder_path, "tmp")
-target_file_path: str = os.path.join(tmp_folder_path, TARGET_FILE)
+src_folder_path: str = os.path.join(build_folder_path, "src")
+target_file_path: str = os.path.join(src_folder_path, TARGET_FILE)
 custom_nuitka_folder_path: str = os.path.join(build_folder_path, "nuitka")
 code_folder_path: str = os.path.join(working_folder, IMAGE_VIEWER_NAME)
 nuitka_dist_path: str = os.path.join(build_folder_path, f"{TARGET_MODULE}.dist")
@@ -96,7 +94,7 @@ validate_PIL()
 
 _logger = setup_logging()
 
-os.makedirs(tmp_folder_path, exist_ok=True)
+os.makedirs(src_folder_path, exist_ok=True)
 try:
     clean_file_and_copy(
         f"{working_folder}/{TARGET_FILE}",
@@ -105,9 +103,9 @@ try:
         f"{IMAGE_VIEWER_NAME}.{TARGET_MODULE}",
         args.assume_this_machine,
     )
-    delete_folder(os.path.join(tmp_folder_path, IMAGE_VIEWER_NAME))
+    delete_folder(os.path.join(src_folder_path, IMAGE_VIEWER_NAME))
     move_files_to_tmp_and_clean(
-        code_folder_path, tmp_folder_path, IMAGE_VIEWER_NAME, args.assume_this_machine
+        code_folder_path, src_folder_path, IMAGE_VIEWER_NAME, args.assume_this_machine
     )
 
     warn_unused_skips: bool = True
@@ -121,7 +119,7 @@ try:
             + f"-{SKIP_ITERATION}"
             + f"-AssumeThisMachine:{args.assume_this_machine}"
         )
-        cached_iteration_path: str = os.path.join(tmp_folder_path, module.name) + ".txt"
+        cached_iteration_path: str = os.path.join(src_folder_path, module.name) + ".txt"
 
         try:
             cached_iteration: str = read_file_utf8(cached_iteration_path)
@@ -147,23 +145,23 @@ try:
         if module_import_name == "PIL" and os.name != "nt":
             site_packages_path = os.path.dirname(module_folder_path)
             old_lib_path: str = os.path.join(site_packages_path, "pillow.libs")
-            new_lib_path: str = os.path.join(tmp_folder_path, "pillow.libs")
+            new_lib_path: str = os.path.join(src_folder_path, "pillow.libs")
             delete_folder(new_lib_path)
             copy_folder(old_lib_path, new_lib_path)
 
         if module_folder_path.endswith("site-packages"):  # Its one file
             clean_file_and_copy(
                 module_file_path,
-                os.path.join(tmp_folder_path, module_file),
+                os.path.join(src_folder_path, module_file),
                 module_import_name,
                 module_import_name,
                 args.assume_this_machine,
             )
         else:  # Its a folder
-            delete_folder(os.path.join(tmp_folder_path, module_import_name))
+            delete_folder(os.path.join(src_folder_path, module_import_name))
             move_files_to_tmp_and_clean(
                 module_folder_path,
-                tmp_folder_path,
+                src_folder_path,
                 module_import_name,
                 args.assume_this_machine,
                 sub_modules_to_skip,
@@ -217,8 +215,7 @@ try:
         os.rename(nuitka_dist_path, install_path)
 finally:
     if not args.debug and not args.no_cleanup:
-        delete_folders([nuitka_build_path, nuitka_dist_path, tmp_folder_path])
-        delete_file(os.path.join(working_folder, f"{TARGET_MODULE}.cmd"))
+        delete_folder(build_folder_path)
 
 _logger.info("\nFinished")
 _logger.info("Installed to %s", install_path)
