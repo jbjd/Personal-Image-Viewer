@@ -17,8 +17,7 @@ ERROR.log
 minifier_failure.py.example
 
 # Image Viewer Compilation
-tmp*/
-nuitka/
+build/
 
 # Nuitka
 *.bin
