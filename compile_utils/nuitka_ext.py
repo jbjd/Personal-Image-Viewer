@@ -150,7 +150,9 @@ def setup_custom_nuitka_install(custom_nuitka_path: str) -> None:
 
     base_nuitka_path: str = os.path.join(get_paths()["purelib"], "nuitka")
 
-    for path in walk_folder(base_nuitka_path, folders_to_ignore=["__pycache__"]):
+    for path in walk_folder(
+        base_nuitka_path, folders_to_ignore=["__pycache__", "testing"]
+    ):
         source: str = read_file_utf8(path)
 
         rel_path: str = path.removeprefix(base_nuitka_path)[1:]
