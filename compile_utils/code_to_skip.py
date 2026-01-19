@@ -4,7 +4,7 @@ import os
 import re
 import sys
 
-from personal_python_ast_optimizer.regex.classes import RegexReplacement
+from personal_python_ast_optimizer.regex.replace import RegexReplacement
 from PIL.AvifImagePlugin import DECODE_CODEC_CHOICE
 from PIL.DdsImagePlugin import DDS_MAGIC
 from PIL.GimpGradientFile import EPSILON

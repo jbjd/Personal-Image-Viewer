@@ -22,8 +22,11 @@ from personal_python_ast_optimizer.parser.config import (
     TypeHintsToSkip,
 )
 from personal_python_ast_optimizer.parser.run import run_unparser
-from personal_python_ast_optimizer.regex.apply import apply_regex, apply_regex_to_file
-from personal_python_ast_optimizer.regex.classes import RegexReplacement
+from personal_python_ast_optimizer.regex.replace import (
+    RegexReplacement,
+    re_replace,
+    re_replace_file,
+)
 
 from compile_utils.code_to_skip import (
     classes_to_skip,
@@ -68,7 +71,7 @@ def clean_file_and_copy(
         regex_replacements: list[RegexReplacement] = regex_to_apply_py.pop(
             module_import_path
         )
-        source = apply_regex(source, regex_replacements, module_import_path)
+        source = re_replace(source, regex_replacements, True)
 
     all_vars_to_fold: dict[str, str | bytes | bool | int | float | complex | None] = (
         module_vars_to_fold.get(module_name, {})
@@ -86,12 +89,12 @@ def clean_file_and_copy(
                     skip_type_hints=TypeHintsToSkip.ALL,
                     skip_asserts=True,
                     skip_overload_functions=True,
-                    simplify_named_tuples=True,
                 ),
                 optimizations_config=OptimizationsConfig(
                     vars_to_fold=all_vars_to_fold,
-                    assume_this_machine=assume_this_machine,
                     collection_concat_to_unpack=True,
+                    assume_this_machine=assume_this_machine,
+                    simplify_named_tuples=True,
                 ),
             ),
         )
@@ -196,7 +199,7 @@ def clean_tk_files(compile_dir: str) -> None:
         # globs are used since files may have versioning in name
         # They are intended to target a single file
         code_file: str = glob_result[0]
-        apply_regex_to_file(code_file, regexes, warning_id=path_or_glob)
+        re_replace_file(code_file, regexes, raise_if_not_applied=True)
 
     # strip various things in tcl files
     comments = RegexReplacement(pattern=r"^\s*#.*", flags=re.MULTILINE)
@@ -208,7 +211,7 @@ def clean_tk_files(compile_dir: str) -> None:
     whitespace_between_brackets = RegexReplacement(pattern="}\n}", replacement="}}")
 
     for code_file in _get_files_in_folder_with_filter(compile_dir, (".tcl", ".tm")):
-        apply_regex_to_file(
+        re_replace_file(
             code_file,
             [
                 comments,
@@ -221,10 +224,10 @@ def clean_tk_files(compile_dir: str) -> None:
             ],
         )
 
-    apply_regex_to_file(
+    re_replace_file(
         os.path.join(compile_dir, "tcl/tclIndex"),
         whitespace_around_newlines,
-        warning_id="tclIndex",
+        raise_if_not_applied=True,
     )
 
 
