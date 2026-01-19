@@ -202,13 +202,19 @@ def clean_tk_files(compile_dir: str) -> None:
         re_replace_file(code_file, regexes, raise_if_not_applied=True)
 
     # strip various things in tcl files
-    comments = RegexReplacement(pattern=r"^\s*#.*", flags=re.MULTILINE)
-    whitespace_around_newlines = RegexReplacement(pattern=r"\n\s+", replacement="\n")
-    consecutive_whitespace = RegexReplacement(pattern="[ \t][ \t]+", replacement=" ")
-    prints = RegexReplacement(pattern="^(puts|parray) .*", flags=re.MULTILINE)
-    extra_new_lines = RegexReplacement(pattern="\n\n+", replacement="\n")
+    comments = RegexReplacement(pattern=r"^\s*#.*", flags=re.MULTILINE, count=0)
+    whitespace_around_newlines = RegexReplacement(
+        pattern=r"\n\s+", replacement="\n", count=0
+    )
+    consecutive_whitespace = RegexReplacement(
+        pattern="[ \t][ \t]+", replacement=" ", count=0
+    )
+    prints = RegexReplacement(pattern="^(puts|parray) .*", flags=re.MULTILINE, count=0)
+    extra_new_lines = RegexReplacement(pattern="\n\n+", replacement="\n", count=0)
     starting_new_line = RegexReplacement(pattern="^\n", count=1)
-    whitespace_between_brackets = RegexReplacement(pattern="}\n}", replacement="}}")
+    whitespace_between_brackets = RegexReplacement(
+        pattern="}\n}", replacement="}}", count=0
+    )
 
     for code_file in _get_files_in_folder_with_filter(compile_dir, (".tcl", ".tm")):
         re_replace_file(
