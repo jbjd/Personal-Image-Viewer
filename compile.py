@@ -73,12 +73,13 @@ TARGET_MODULE: str = "main"
 TARGET_FILE: str = f"{TARGET_MODULE}.py"
 
 working_folder: str = os.path.normpath(os.path.dirname(__file__))
-tmp_folder: str = os.path.join(working_folder, "tmp")
-target_file_path: str = os.path.join(tmp_folder, TARGET_FILE)
-custom_nuitka_folder_path: str = os.path.join(working_folder, "nuitka")
+build_folder_path: str = os.path.join(working_folder, "build")
+tmp_folder_path: str = os.path.join(build_folder_path, "tmp")
+target_file_path: str = os.path.join(tmp_folder_path, TARGET_FILE)
+custom_nuitka_folder_path: str = os.path.join(build_folder_path, "nuitka")
 code_folder_path: str = os.path.join(working_folder, IMAGE_VIEWER_NAME)
-compile_folder_path: str = os.path.join(working_folder, f"{TARGET_MODULE}.dist")
-build_folder_path: str = os.path.join(working_folder, f"{TARGET_MODULE}.build")
+nuitka_dist_path: str = os.path.join(build_folder_path, f"{TARGET_MODULE}.dist")
+nuitka_build_path: str = os.path.join(build_folder_path, f"{TARGET_MODULE}.build")
 
 if os.name == "nt":
     nuitka_args += [
@@ -95,7 +96,7 @@ validate_PIL()
 
 _logger = setup_logging()
 
-os.makedirs(tmp_folder, exist_ok=True)
+os.makedirs(tmp_folder_path, exist_ok=True)
 try:
     clean_file_and_copy(
         f"{working_folder}/{TARGET_FILE}",
@@ -104,8 +105,9 @@ try:
         f"{IMAGE_VIEWER_NAME}.{TARGET_MODULE}",
         args.assume_this_machine,
     )
+    delete_folder(os.path.join(tmp_folder_path, IMAGE_VIEWER_NAME))
     move_files_to_tmp_and_clean(
-        code_folder_path, tmp_folder, IMAGE_VIEWER_NAME, args.assume_this_machine
+        code_folder_path, tmp_folder_path, IMAGE_VIEWER_NAME, args.assume_this_machine
     )
 
     warn_unused_skips: bool = True
@@ -119,7 +121,7 @@ try:
             + f"-{SKIP_ITERATION}"
             + f"-AssumeThisMachine:{args.assume_this_machine}"
         )
-        cached_iteration_path: str = os.path.join(tmp_folder, module.name) + ".txt"
+        cached_iteration_path: str = os.path.join(tmp_folder_path, module.name) + ".txt"
 
         try:
             cached_iteration: str = read_file_utf8(cached_iteration_path)
@@ -145,23 +147,23 @@ try:
         if module_import_name == "PIL" and os.name != "nt":
             site_packages_path = os.path.dirname(module_folder_path)
             old_lib_path: str = os.path.join(site_packages_path, "pillow.libs")
-            new_lib_path: str = os.path.join(tmp_folder, "pillow.libs")
+            new_lib_path: str = os.path.join(tmp_folder_path, "pillow.libs")
             delete_folder(new_lib_path)
             copy_folder(old_lib_path, new_lib_path)
 
         if module_folder_path.endswith("site-packages"):  # Its one file
             clean_file_and_copy(
                 module_file_path,
-                os.path.join(tmp_folder, module_file),
+                os.path.join(tmp_folder_path, module_file),
                 module_import_name,
                 module_import_name,
                 args.assume_this_machine,
             )
         else:  # Its a folder
-            delete_folder(os.path.join(tmp_folder, module_import_name))
+            delete_folder(os.path.join(tmp_folder_path, module_import_name))
             move_files_to_tmp_and_clean(
                 module_folder_path,
-                tmp_folder,
+                tmp_folder_path,
                 module_import_name,
                 args.assume_this_machine,
                 sub_modules_to_skip,
@@ -175,28 +177,28 @@ try:
     if args.skip_nuitka:
         sys.exit(0)
 
-    delete_folder(compile_folder_path)
+    delete_folder(nuitka_dist_path)
 
     process: Popen = start_nuitka_compilation(
-        target_file_path, nuitka_args, working_folder, args.assume_this_machine
+        target_file_path, nuitka_args, build_folder_path, args.assume_this_machine
     )
 
     _logger.info("Waiting for nuitka compilation...")
 
-    install_path: str = args.install_path if not args.debug else compile_folder_path
+    install_path: str = args.install_path if not args.debug else nuitka_dist_path
 
     if process.wait():
         sys.exit(1)
 
     for data_file_path in files_to_include:
         old_path = os.path.join(working_folder, data_file_path)
-        new_path = os.path.join(compile_folder_path, data_file_path)
+        new_path = os.path.join(nuitka_dist_path, data_file_path)
         os.makedirs(os.path.dirname(new_path), exist_ok=True)
         copy_file(old_path, new_path)
 
     if args.build_info_file:
         with open(
-            os.path.join(compile_folder_path, BUILD_INFO_FILE), "w", encoding="utf-8"
+            os.path.join(nuitka_dist_path, BUILD_INFO_FILE), "w", encoding="utf-8"
         ) as fp:
             fp.write(f"OS: {os.name}\n")
             fp.write(f"Python: {sys.version}\n")
@@ -206,16 +208,16 @@ try:
                 fp.write(f"\t{name}: {get_module_version(name)}\n")
             fp.write(f"Arguments: {args}\n")
 
-    clean_tk_files(compile_folder_path)
+    clean_tk_files(nuitka_dist_path)
     if args.strip:
-        strip_files(compile_folder_path)
+        strip_files(nuitka_dist_path)
 
     if not args.debug:
         delete_folder(install_path)
-        os.rename(compile_folder_path, install_path)
+        os.rename(nuitka_dist_path, install_path)
 finally:
     if not args.debug and not args.no_cleanup:
-        delete_folders([build_folder_path, compile_folder_path, tmp_folder])
+        delete_folders([nuitka_build_path, nuitka_dist_path, tmp_folder_path])
         delete_file(os.path.join(working_folder, f"{TARGET_MODULE}.cmd"))
 
 _logger.info("\nFinished")
