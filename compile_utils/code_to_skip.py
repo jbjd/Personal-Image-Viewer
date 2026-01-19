@@ -4,7 +4,7 @@ import os
 import re
 import sys
 
-from personal_python_ast_optimizer.regex.classes import RegexReplacement
+from personal_python_ast_optimizer.regex.replace import RegexReplacement
 from PIL.AvifImagePlugin import DECODE_CODEC_CHOICE
 from PIL.DdsImagePlugin import DDS_MAGIC
 from PIL.GimpGradientFile import EPSILON
@@ -249,18 +249,16 @@ regex_to_apply_py: dict[str, list[RegexReplacement]] = {
             pattern=r"try:\s+?from \. import _avif.*?SUPPORTED = False",
             replacement="from . import _avif;SUPPORTED = True",
             flags=re.DOTALL,
-            count=1,
         ),
         RegexReplacement(  # Remove Exif usage to remove Tiff dependency
             pattern=r"if exif_orientation != 1 or exif:.*?self\.info\[\"exif\"\] = exif",  # noqa: E501
             flags=re.DOTALL,
-            count=1,
         ),
         RegexReplacement(  # Remove Exif usage to remove Tiff dependency
-            pattern=r" *if exif :=.*?\n\n", flags=re.DOTALL, count=1
+            pattern=r" *if exif :=.*?\n\n", flags=re.DOTALL
         ),
         RegexReplacement(  # Remove Exif usage to remove Tiff dependency
-            pattern=r'exif or b""', replacement='b""', count=1
+            pattern=r'exif or b""', replacement='b""'
         ),
     ],
     "PIL.Image": [
@@ -275,7 +273,6 @@ regex_to_apply_py: dict[str, list[RegexReplacement]] = {
         RegexReplacement(
             pattern=r"def Draw.*?return ImageDraw.*?\)",
             replacement="""def Draw(im,mode=None):return ImageDraw(im,mode)""",
-            count=1,
             flags=re.DOTALL,
         ),
     ],
@@ -291,13 +288,11 @@ regex_to_apply_py: dict[str, list[RegexReplacement]] = {
         RegexReplacement(
             pattern="from typing import NamedTuple",
             replacement="from collections import namedtuple",
-            count=1,
         ),
         RegexReplacement(
             pattern=r"\(NamedTuple\):.*return self\.mode",
             replacement=r"(namedtuple('ModeDescriptor', ['mode','bands','basemode','basetype','typestr'])):\n\tdef __str__(self):return self.mode",  # noqa: E501
             flags=re.DOTALL,
-            count=1,
         ),
     ],
     "PIL.JpegImagePlugin": [
@@ -308,14 +303,15 @@ regex_to_apply_py: dict[str, list[RegexReplacement]] = {
         )
     ],
     "PIL.PngImagePlugin": [
-        RegexReplacement(pattern=r"raise EOFError\(.*?\)", replacement="raise EOFError")
+        RegexReplacement(
+            pattern=r"raise EOFError\(.*?\)", replacement="raise EOFError", count=0
+        )
     ],
     "PIL.WebPImagePlugin": [
         RegexReplacement(
             pattern=r"try:\s+?from \. import _webp.*?SUPPORTED = False",
             replacement="from . import _webp;SUPPORTED = True",
             flags=re.DOTALL,
-            count=1,
         )
     ],
 }
@@ -326,7 +322,6 @@ if os.name == "nt":
             r"def _get_default_max_threads\(\).*?or 1",
             f"def _get_default_max_threads():return {os.cpu_count() or 1}",
             flags=re.DOTALL,
-            count=1,
         )
     )
 else:
@@ -344,7 +339,6 @@ import os
 environb = os.environb"""
             ),
             flags=re.DOTALL,
-            count=1,
         )
     ]
     regex_to_apply_py["send2trash.exceptions"] = [
@@ -356,7 +350,6 @@ class TrashPermissionError(PermissionError):
     def __init__(self, filename):
         PermissionError.__init__(self, errno.EACCES, "Permission denied", filename)""",
             flags=re.DOTALL,
-            count=1,
         )
     ]
     # We don't use pathlib's Path, remove support for it
@@ -377,7 +370,7 @@ regex_to_apply_tk: dict[str, list[RegexReplacement]] = {
     ],
     "tcl8/*/platform-*.tm": [
         # Discontinued OS
-        RegexReplacement(pattern=r"osf1 \{.*?\}", count=1, flags=re.DOTALL),
+        RegexReplacement(pattern=r"osf1 \{.*?\}", flags=re.DOTALL),
         RegexReplacement(
             pattern=r"solaris(\*-\*)? \{(.*?\{.*?\}.*?)*?\}", flags=re.DOTALL
         ),
@@ -386,16 +379,13 @@ regex_to_apply_tk: dict[str, list[RegexReplacement]] = {
 
 if sys.platform != "darwin":
     regex_to_apply_tk["tcl8/*/platform-*.tm"].append(
-        RegexReplacement(
-            pattern=r"darwin \{.*?aix", replacement="aix", flags=re.DOTALL, count=1
-        )
+        RegexReplacement(pattern=r"darwin \{.*?aix", replacement="aix", flags=re.DOTALL)
     )
 
     regex_to_apply_tk["tcl/auto.tcl"] = [
         RegexReplacement(
             pattern=r'if \{\$tcl_platform\(platform\) eq "unix".*?\}.*?\}',
             flags=re.DOTALL,
-            count=1,
         )
     ]
 
@@ -404,7 +394,6 @@ if sys.platform != "darwin":
             pattern=r'if \{\$tcl_platform\(os\) eq "Darwin".*?else.*?\}\s*?\}',
             replacement="package unknown {::tcl::tm::UnknownHandler ::tclPkgUnknown}",
             flags=re.DOTALL,
-            count=1,
         )
     ]
 
@@ -465,7 +454,6 @@ custom_nuitka_regex: dict[str, list[RegexReplacement]] = {
         RegexReplacement(  # This is handled in nuitka_ext.py
             """if sys.flags.no_site == 0:
         needs_re_execution = True""",
-            count=1,
         )
     ],
     "importing/Recursion.py": [
@@ -474,7 +462,6 @@ custom_nuitka_regex: dict[str, list[RegexReplacement]] = {
             f"""if is_stdlib and module_name in detectStdlibAutoInclusionModules():
         if module_name in {_skippable_std_modules}:
             return False, 'Excluding unnecessary parts of standard library.'""",
-            count=1,
         )
     ],
 }
