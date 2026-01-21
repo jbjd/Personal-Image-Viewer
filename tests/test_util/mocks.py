@@ -68,22 +68,3 @@ class MockImage(Image):
 
     def __exit__(self, *args: object) -> None:
         self.close()
-
-
-class MockWindll:
-    """Mock windll import. Instead of patching the specific function call,
-    this allows windll itself to be patched which simplifies patching logic"""
-
-    __slots__ = ("user32",)
-
-    def __init__(self) -> None:
-        self.user32 = _MockUser32()
-
-
-class _MockUser32:
-    """Mocks user32 in the windll library"""
-
-    __slots__ = ("MessageBoxW",)
-
-    def __init__(self) -> None:
-        self.MessageBoxW = MagicMock()
