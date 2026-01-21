@@ -1,5 +1,5 @@
 import os
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 
@@ -11,7 +11,6 @@ from image_viewer.util.os import (
     split_name_and_suffix,
 )
 from tests.conftest import IMG_DIR
-from tests.test_util.mocks import MockWindll
 
 
 @pytest.mark.parametrize("os_name", ["nt", "linux"])
@@ -35,7 +34,9 @@ def test_show_info_popup(os_name: str):
 
     with patch.object(os, "name", os_name):
         if os_name == "nt":
-            mock_windll = MockWindll()
+            mock_windll = MagicMock()
+            mock_windll.user32 = MagicMock()
+            mock_windll.user32.MessageBoxW = MagicMock()
             expected_flags = 0
 
             import image_viewer.util.os as internal_os
