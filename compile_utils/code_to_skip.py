@@ -151,6 +151,7 @@ functions_to_skip: dict[str, set[str]] = {
         "debug",
         "deprecate",
         "getLogger",
+        "getchunks",
         "register_mime",
         "verify",
     },
