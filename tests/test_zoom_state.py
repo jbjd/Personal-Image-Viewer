@@ -22,18 +22,8 @@ def test_try_update_zoom_level():
     assert zoom_state.level == 0
     assert updated
 
-
-def test_set_current_zoom_level_as_max():
-    """Should set zoom cap correctly and reset should go to default values."""
-    zoom_state = ZoomState()
-
-    zoom_state.level = 5
-    zoom_state.set_current_zoom_level_as_max()
-
-    assert zoom_state._max_level == 5
-
     zoom_state.reset()
 
     default_zoom_state = ZoomState()
     assert zoom_state.level == default_zoom_state.level
-    assert zoom_state._max_level == default_zoom_state._max_level
+    assert zoom_state.max_level == default_zoom_state.max_level

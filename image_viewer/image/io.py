@@ -252,11 +252,11 @@ class ImageIO:
         except (FileNotFoundError, UnidentifiedImageError, ValueError) as e:
             if isinstance(e, ValueError):
                 self._zoom_state.level -= 1
-                self._zoom_state.set_current_zoom_level_as_max()
+                self._zoom_state.max_level = self._zoom_state.level
             return None
 
         if zoomed_image_result.hit_max_zoom:
-            self._zoom_state.set_current_zoom_level_as_max()
+            self._zoom_state.max_level = self._zoom_state.level
 
         self.zoomed_image_cache.append(zoomed_image_result.image)
         return rotate_image(zoomed_image_result.image, rotation_angle)
