@@ -19,7 +19,7 @@ from image_viewer.config import (
     DEFAULT_MAX_ITEMS_IN_CACHE,
 )
 from image_viewer.constants import TEXT_RGB
-from image_viewer.image.resizer import JPEG_MAX_DIMENSION
+from image_viewer.image.resizer import JPEG_MAX_DIMENSION, ZOOM_AMOUNT
 from image_viewer.ui.rename_entry import _ERROR_COLOR
 
 # Increment when edits to this file or module_dependencies are merged into main
@@ -215,6 +215,7 @@ module_vars_to_fold: dict[
         "DEFAULT_MAX_ITEMS_IN_CACHE": DEFAULT_MAX_ITEMS_IN_CACHE,
         "JPEG_MAX_DIMENSION": JPEG_MAX_DIMENSION,
         "TEXT_RGB": TEXT_RGB,
+        "ZOOM_AMOUNT": ZOOM_AMOUNT,
     },
     "PIL": {"SUPPORTED": True, "TYPE_CHECKING": False},
 }
