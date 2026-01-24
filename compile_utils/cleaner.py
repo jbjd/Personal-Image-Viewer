@@ -198,6 +198,9 @@ def clean_tk_files(compile_dir: str) -> None:
 
         # globs are used since files may have versioning in name
         # They are intended to target a single file
+        if len(glob_result) > 1:
+            _logger.warning("Glob %s found multiple files", path_or_glob)
+
         code_file: str = glob_result[0]
         re_replace_file(code_file, regexes, raise_if_not_applied=True)
 
