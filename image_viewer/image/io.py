@@ -42,8 +42,6 @@ class ReadImageResponse:
 class ImageIO:
     """Handles image IO."""
 
-    DEFAULT_ANIMATION_SPEED: int = 100  # in milliseconds
-
     __slots__ = (
         "PIL_image",
         "_image_optimized",
