@@ -1,7 +1,5 @@
 """Classes for resizing PIL images"""
 
-from typing import Final
-
 from PIL.Image import Image, Resampling, frombytes
 
 from image_viewer.image._read import (
@@ -11,7 +9,8 @@ from image_viewer.image._read import (
 )
 from image_viewer.util.PIL import resize
 
-JPEG_MAX_DIMENSION: Final[int] = 65_535
+JPEG_MAX_DIMENSION: int = 65_535
+ZOOM_AMOUNT: float = 2**0.5
 MIN_ZOOM_RATIO_TO_SCREEN: int = 2
 
 
@@ -32,8 +31,8 @@ class ImageResizer:
     __slots__ = ("jpeg_helper", "screen_height", "screen_width")
 
     def __init__(self, screen_width: int, screen_height: int) -> None:
-        self.screen_width: Final[int] = screen_width
-        self.screen_height: Final[int] = screen_height
+        self.screen_width: int = screen_width
+        self.screen_height: int = screen_height
 
     def get_zoomed_image(self, image: Image, zoom_level: int) -> ZoomedImageResult:
         """Resizes image using the provided zoom_level.
@@ -74,7 +73,7 @@ class ImageResizer:
         """Calculates zoom factor based on zoom level and w/h ratio"""
         # w/h ratio divide by magic 6 since seemed best after testing
         wh_ratio: int = 1 + max(width // height, height // width) // 6
-        return (1.4**zoom_level) * wh_ratio
+        return (ZOOM_AMOUNT**zoom_level) * wh_ratio
 
     def _too_zoomed_in(self, dimensions: tuple[int, int]) -> bool:
         """Returns bool if new image dimensions would zoom in too much"""
