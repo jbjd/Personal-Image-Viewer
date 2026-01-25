@@ -150,7 +150,6 @@ class ImageIO:
         cached_image_data = self.image_cache.get(image_path)
         if cached_image_data is not None and byte_size == cached_image_data.byte_size:
             resized_image = cached_image_data.image
-            self._zoom_state.max_level = cached_image_data.max_zoom_level
         else:
             original_mode: str = original_image.mode
             resized_image = self._resize_or_get_placeholder()
