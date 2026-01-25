@@ -157,7 +157,7 @@ class ImageResizer:
             return MIN_ZOOM_LEVEL
 
         largest_dimension: int = (
-            width_ratio if width_ratio > height_ratio else height_ratio
+            image_width if image_width > image_height else image_height
         )
         upper_limit: int = int(log(JPEG_MAX_DIMENSION / largest_dimension, ZOOM_AMOUNT))
 
