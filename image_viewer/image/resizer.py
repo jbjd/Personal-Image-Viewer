@@ -9,11 +9,11 @@ from image_viewer.image._read import (
     CMemoryViewBufferJpeg,
     decode_scaled_jpeg,
 )
+from image_viewer.state.zoom_state import MIN_ZOOM_LEVEL
 from image_viewer.util.PIL import resize
 
 JPEG_MAX_DIMENSION: int = 65_535
 ZOOM_AMOUNT: float = 2**0.5
-MIN_ZOOM_RATIO_TO_SCREEN: int = 2
 
 
 class ImageResizer:
@@ -154,7 +154,7 @@ class ImageResizer:
         biggest_ratio: int = width_ratio if width_ratio > height_ratio else height_ratio
 
         if biggest_ratio <= 0:
-            return 2
+            return MIN_ZOOM_LEVEL
 
         largest_dimension: int = (
             width_ratio if width_ratio > height_ratio else height_ratio
@@ -162,6 +162,9 @@ class ImageResizer:
         upper_limit: int = int(log(JPEG_MAX_DIMENSION / largest_dimension, ZOOM_AMOUNT))
 
         zoom_level: int = biggest_ratio << 1
+
+        if zoom_level < MIN_ZOOM_LEVEL:
+            zoom_level = MIN_ZOOM_LEVEL
 
         return zoom_level if zoom_level < upper_limit else upper_limit
 
