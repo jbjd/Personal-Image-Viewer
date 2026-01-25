@@ -155,18 +155,12 @@ class ImageIO:
             original_mode: str = original_image.mode
             resized_image = self._resize_or_get_placeholder()
 
-            width, height = original_image.size
-
-            self._zoom_state.max_level = self.image_resizer.get_max_zoom(width, height)
-
             self.image_cache[image_path] = ImageCacheEntry(
                 resized_image,
-                width,
-                height,
+                original_image.size,
                 byte_size,
                 original_mode,
                 read_image_response.expected_format,
-                self._zoom_state.max_level,
             )
 
         frame_count: int = getattr(original_image, "n_frames", 1)
@@ -240,6 +234,11 @@ class ImageIO:
         self, direction: ZoomDirection | None, rotation: Rotation | None = None
     ) -> Image | None:
         """Gets current image with orientation changes like zoom and rotation"""
+        if self._zoom_state.max_level == 0:
+            self._zoom_state.max_level = self.image_resizer.get_max_zoom(
+                *self.PIL_image.size
+            )
+
         if not self._zoom_state.try_update_zoom_level(
             direction
         ) and not self._rotation_state.try_update_state(rotation):

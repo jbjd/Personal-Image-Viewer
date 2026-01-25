@@ -168,7 +168,7 @@ def test_get_and_show_details(file_manager: ImageFileManager):
 
     for mode in ("P", "L", "1", "ANYTHING_ELSE"):
         file_manager.image_cache[file_manager.path_to_image] = ImageCacheEntry(
-            PIL_image, 100, 100, 9999, mode, ImageFormats.PNG, 0
+            PIL_image, (100, 100), 9999, mode, ImageFormats.PNG
         )
         readable_mode = {"P": "Palette", "L": "Grayscale", "1": "Black And White"}.get(
             mode, mode

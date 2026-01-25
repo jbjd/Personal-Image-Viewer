@@ -19,8 +19,7 @@ from image_viewer.config import (
     DEFAULT_MAX_ITEMS_IN_CACHE,
 )
 from image_viewer.constants import TEXT_RGB
-from image_viewer.image.resizer import JPEG_MAX_DIMENSION, ZOOM_AMOUNT
-from image_viewer.state.zoom_state import MIN_ZOOM_LEVEL
+from image_viewer.image.resizer import JPEG_MAX_DIMENSION, MIN_ZOOM_LEVEL, ZOOM_AMOUNT
 from image_viewer.ui.rename_entry import _ERROR_COLOR
 
 # Increment when edits to this file or module_dependencies are merged into main

@@ -9,11 +9,11 @@ from image_viewer.image._read import (
     CMemoryViewBufferJpeg,
     decode_scaled_jpeg,
 )
-from image_viewer.state.zoom_state import MIN_ZOOM_LEVEL
 from image_viewer.util.PIL import resize
 
 JPEG_MAX_DIMENSION: int = 65_535
 ZOOM_AMOUNT: float = 2**0.5
+MIN_ZOOM_LEVEL: int = 3
 
 
 class ImageResizer:
