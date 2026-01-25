@@ -66,7 +66,7 @@ def test_load_image_in_cache(image_io: ImageIO):
     image_byte_size: int = 10
     cached_image = Image()
     cached_data = ImageCacheEntry(
-        cached_image, (10, 10), image_byte_size, image_format, "PNG"
+        cached_image, 10, 10, image_byte_size, image_format, "PNG", 0
     )
     image_io.image_cache["some/path"] = cached_data
 

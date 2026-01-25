@@ -65,9 +65,10 @@ def save_image(
     image.save(fp, extension, **kwargs)
 
 
+# TODO: replace iamge.rotate with what PIL calls internally
 def rotate_image(image: Image, angle: int) -> Image:
     """Rotates an image with the highest quality"""
-    return image.rotate(angle, Resampling.LANCZOS, expand=True)
+    return image if angle == 0 else image.rotate(angle, Resampling.LANCZOS, expand=True)
 
 
 def image_is_animated(image: Image) -> bool:

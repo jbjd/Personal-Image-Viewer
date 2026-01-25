@@ -60,7 +60,7 @@ def test_image_cache_fresh(image_cache: ImageCache):
 
     image = Image()
     byte_size = 99
-    entry = ImageCacheEntry(image, (10, 10), byte_size, "", "")
+    entry = ImageCacheEntry(image, 10, 10, byte_size, "", "", 0)
 
     path = "some/path"
 
@@ -78,4 +78,4 @@ def test_image_cache_fresh(image_cache: ImageCache):
 
 def _get_empty_cache_entry() -> ImageCacheEntry:
     """Returns an ImageCacheEntry with placeholder values"""
-    return ImageCacheEntry(Image(), (0, 0), 0, "", "")
+    return ImageCacheEntry(Image(), 0, 0, 0, "", "", 0)

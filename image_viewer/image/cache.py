@@ -17,6 +17,7 @@ class ImageCacheEntry:
         "format",
         "height",
         "image",
+        "max_zoom_level",
         "mode",
         "width",
     )
@@ -24,19 +25,23 @@ class ImageCacheEntry:
     def __init__(
         self,
         image: Image,
-        dimensions: tuple[int, int],
+        width: int,
+        height: int,
         byte_size: int,
         mode: str,
         file_format: str,
+        max_zoom_level: int,
     ) -> None:
         self.width: int
         self.height: int
-        self.width, self.height = dimensions
+        self.width: int = width
+        self.height: int = height
         self.image: Image = image
         self.byte_size: int = byte_size
         # Store original mode since resizing some images converts to RGB
         self.mode: str = mode
         self.format: str = file_format
+        self.max_zoom_level: int = max_zoom_level
 
     @property
     def byte_size(self) -> int:

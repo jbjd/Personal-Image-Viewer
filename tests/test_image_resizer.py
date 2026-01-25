@@ -85,21 +85,3 @@ def test_get_image_fit_to_screen(image_resizer: ImageResizer):
 def test_scale_dimensions(image_resizer: ImageResizer):
     """Should scale a tuple of width height by provided ratio"""
     assert image_resizer._scale_dimensions((1920, 1080), 1.5) == (2880, 1620)
-
-
-def test_get_zoomed_image_cap(image_resizer: ImageResizer):
-    """Should determine when zoom cap hit"""
-    image: Image = new_image("RGB", (1920, 1080))
-
-    # Mock zoom factor above min zoom when image is already the size of the screen
-    with (
-        patch(f"{_MODULE_PATH}.resize", return_value=image),
-        patch.object(ImageResizer, "_calculate_zoom_factor", return_value=2.25),
-    ):
-        zoomed_result = image_resizer.get_zoomed_image(image, 2)
-        assert zoomed_result.hit_max_zoom
-
-        # With a smaller image, the same zoom factor should not hit cap
-        image = new_image("RGB", (800, 1080))
-        zoomed_result = image_resizer.get_zoomed_image(image, 2)
-        assert not zoomed_result.hit_max_zoom

@@ -15,7 +15,7 @@ from image_viewer.constants import Rotation, ZoomDirection
 from image_viewer.image._read import CMemoryViewBuffer, read_image_into_buffer
 from image_viewer.image.cache import ImageCache, ImageCacheEntry
 from image_viewer.image.file import magic_number_guess
-from image_viewer.image.resizer import ImageResizer, ZoomedImageResult
+from image_viewer.image.resizer import ImageResizer
 from image_viewer.state.rotation_state import RotationState
 from image_viewer.state.zoom_state import ZoomState
 from image_viewer.util.PIL import (
@@ -150,16 +150,23 @@ class ImageIO:
         cached_image_data = self.image_cache.get(image_path)
         if cached_image_data is not None and byte_size == cached_image_data.byte_size:
             resized_image = cached_image_data.image
+            self._zoom_state.max_level = cached_image_data.max_zoom_level
         else:
             original_mode: str = original_image.mode
             resized_image = self._resize_or_get_placeholder()
 
+            width, height = original_image.size
+
+            self._zoom_state.max_level = self.image_resizer.get_max_zoom(width, height)
+
             self.image_cache[image_path] = ImageCacheEntry(
                 resized_image,
-                original_image.size,
+                width,
+                height,
                 byte_size,
                 original_mode,
                 read_image_response.expected_format,
+                self._zoom_state.max_level,
             )
 
         frame_count: int = getattr(original_image, "n_frames", 1)
@@ -246,20 +253,16 @@ class ImageIO:
 
         # Not in cache, resize to new zoom
         try:
-            zoomed_image_result: ZoomedImageResult = (
-                self.image_resizer.get_zoomed_image(self.PIL_image, zoom_level)
+            zoomed_image: Image = self.image_resizer.get_zoomed_image(
+                self.PIL_image,
+                zoom_level,
+                self._zoom_state.level == self._zoom_state.max_level,
             )
-        except (FileNotFoundError, UnidentifiedImageError, ValueError) as e:
-            if isinstance(e, ValueError):
-                self._zoom_state.level -= 1
-                self._zoom_state.max_level = self._zoom_state.level
+        except (FileNotFoundError, UnidentifiedImageError):
             return None
 
-        if zoomed_image_result.hit_max_zoom:
-            self._zoom_state.max_level = self._zoom_state.level
-
-        self.zoomed_image_cache.append(zoomed_image_result.image)
-        return rotate_image(zoomed_image_result.image, rotation_angle)
+        self.zoomed_image_cache.append(zoomed_image)
+        return rotate_image(zoomed_image, rotation_angle)
 
     def load_remaining_frames(
         self, original_image: Image, last_frame: int, load_id: int
