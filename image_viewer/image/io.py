@@ -76,6 +76,10 @@ class ImageIO:
         self._state = ImageState()
         self.zoomed_image_cache: list[Image] = []
 
+    @property
+    def zoom_rotate_allowed(self) -> bool:
+        return self._state.zoom_rotate_allowed
+
     def get_next_frame(self) -> Frame | None:
         """Gets next frame of animated image or empty frame while its being loaded"""
         try:
@@ -160,6 +164,7 @@ class ImageIO:
 
         frame_count: int = getattr(original_image, "n_frames", 1)
         if frame_count > 1:
+            self._state.zoom_rotate_allowed = False
             self.begin_animation(original_image, resized_image, frame_count)
 
         # first zoom level is just the image as is
@@ -230,6 +235,9 @@ class ImageIO:
         self, direction: ZoomDirection | None, rotation: Rotation | None = None
     ) -> Image | None:
         """Gets current image with orientation changes like zoom and rotation"""
+        if __debug__ and not self._state.zoom_rotate_allowed:
+            return None
+
         if self._state.zoom_level_max == ZOOM_UNSET:
             self._state.zoom_level_max = self.image_resizer.get_max_zoom(
                 *self.PIL_image.size
