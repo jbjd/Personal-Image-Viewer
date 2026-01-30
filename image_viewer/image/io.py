@@ -6,7 +6,6 @@ from collections.abc import Callable
 from io import BytesIO
 from threading import Thread
 
-from PIL import UnidentifiedImageError
 from PIL.Image import Image
 from PIL.Image import open as open_image
 
@@ -128,7 +127,7 @@ class ImageIO:
             image: Image = open_image(image_bytes_io, "r", (expected_format,))
 
             return ReadImageResponse(image_buffer, image, expected_format)
-        except (FileNotFoundError, UnidentifiedImageError, OSError):
+        except OSError:
             return None
 
     def load_image(self, image_path: str) -> Image | None:
@@ -226,6 +225,8 @@ class ImageIO:
             current_image = get_placeholder_for_errored_image(
                 e, self.image_resizer.screen_width, self.image_resizer.screen_height
             )
+            # Disable zoom for placeholder
+            self._zoom_state.max_level = -1
 
         return current_image
 
@@ -243,7 +244,7 @@ class ImageIO:
         ) and not self._rotation_state.try_update_state(rotation):
             return None
 
-        rotation_angle: int = self._rotation_state.orientation
+        rotation_angle: Rotation = self._rotation_state.orientation
         zoom_level: int = self._zoom_state.level
 
         if zoom_level < len(self.zoomed_image_cache):
@@ -256,7 +257,7 @@ class ImageIO:
                 zoom_level,
                 self._zoom_state.level == self._zoom_state.max_level,
             )
-        except (FileNotFoundError, UnidentifiedImageError):
+        except OSError:
             return None
 
         self.zoomed_image_cache.append(zoomed_image)

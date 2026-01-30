@@ -7,6 +7,7 @@ import sys
 from personal_python_ast_optimizer.regex.replace import RegexReplacement
 from PIL.AvifImagePlugin import DECODE_CODEC_CHOICE
 from PIL.DdsImagePlugin import DDS_MAGIC
+from PIL.GifImagePlugin import _FORCE_OPTIMIZE
 from PIL.GimpGradientFile import EPSILON
 from PIL.ImageFile import MAXBLOCK
 from PIL.ImageFont import MAX_STRING_LENGTH
@@ -23,7 +24,7 @@ from image_viewer.image.resizer import JPEG_MAX_DIMENSION, MIN_ZOOM_LEVEL, ZOOM_
 from image_viewer.ui.rename_entry import _ERROR_COLOR
 
 # Increment when edits to this file or module_dependencies are merged into main
-SKIP_ITERATION: int = 0
+SKIP_ITERATION: int = 1
 
 # Module independent skips
 
@@ -109,7 +110,7 @@ functions_to_skip: dict[str, set[str]] = {
         "rounded_rectangle",
         "shape",
     },
-    "PIL.ImageFile": {"get_child_images", "get_format_mimetype", "verify"},
+    "PIL.ImageFile": {"debug", "get_child_images", "get_format_mimetype", "verify"},
     "PIL.ImageFont": {
         "__getstate__",
         "__setstate__",
@@ -163,6 +164,7 @@ functions_to_skip: dict[str, set[str]] = {
 vars_to_skip: dict[str, set[str]] = {
     "PIL.Image": {"MIME"},
     "PIL.ImageDraw": {"Outline"},
+    "PIL.ImageFile": {"logger"},
     "PIL.ImagePalette": {"tostring"},
     "PIL.GifImagePlugin": {"_Palette", "format_description"},
     "PIL.JpegImagePlugin": {"format_description"},
@@ -227,6 +229,7 @@ vars_to_fold: dict[
 ] = {
     "PIL.AvifImagePlugin": {"DECODE_CODEC_CHOICE": DECODE_CODEC_CHOICE},
     "PIL.DdsImagePlugin": {"DDS_MAGIC": DDS_MAGIC},
+    "PIL.GifImagePlugin": {"_FORCE_OPTIMIZE": _FORCE_OPTIMIZE},
     "PIL.GimpGradientFile": {"EPSILON": EPSILON},
     "PIL.ImageFile": {"MAXBLOCK": MAXBLOCK},
     "PIL.ImageFont": {"MAX_STRING_LENGTH": MAX_STRING_LENGTH // 1000},

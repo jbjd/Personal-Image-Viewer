@@ -144,10 +144,9 @@ class ImageResizer:
 
         return Resampling.LANCZOS
 
-    def get_max_zoom(self, image_width: int, image_height: int) -> Resampling:
+    def get_max_zoom(self, image_width: int, image_height: int) -> int:
         """Gets the max zoom level for given dimensions. Zoom level is calculated
-        as the number of times an image must be zoomed in until its twice its original
-        size from the size its shown on screen."""
+        as the number of times an image can be zoomed in."""
         width_ratio: int = ceil(log2(image_width / self.screen_width))
         height_ratio: int = ceil(log2(image_height / self.screen_height))
 
