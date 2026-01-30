@@ -13,8 +13,9 @@ def test_try_update_state():
     assert state.zoom_level == 0
     assert not updated
 
-    updated = state.try_update(ZoomDirection.IN, None)
+    updated = state.try_update(ZoomDirection.IN, Rotation.DOWN)
     assert state.zoom_level == 1
+    assert state.orientation == Rotation.DOWN
     assert updated
 
     updated = state.try_update(ZoomDirection.IN, None)
@@ -25,16 +26,11 @@ def test_try_update_state():
     assert state.zoom_level == 0
     assert updated
 
-    updated = state.try_update(ZoomDirection.IN, Rotation.DOWN)
-    assert state.zoom_level == 1
-    assert state.orientation == Rotation.DOWN
-    assert updated
-
     updated = state.try_update(None, Rotation.LEFT)
     assert state.orientation == Rotation.LEFT
     assert updated
 
-    updated = state.try_update(None, Rotation.LEFT)
+    updated = state.try_update(ZoomDirection.OUT, Rotation.LEFT)
     assert state.orientation == Rotation.LEFT
     assert not updated
 
