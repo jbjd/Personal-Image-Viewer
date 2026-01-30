@@ -5,7 +5,7 @@ from PIL.Image import Image, Resampling
 from PIL.Image import new as new_image
 
 from image_viewer.image.io import ImageIO, ReadImageResponse
-from image_viewer.image.resizer import ImageResizer
+from image_viewer.image.resizer import MIN_ZOOM_LEVEL, ImageResizer
 from tests.conftest import IMG_DIR
 
 _MODULE_PATH: str = "image_viewer.image.resizer"
@@ -85,3 +85,18 @@ def test_get_image_fit_to_screen(image_resizer: ImageResizer):
 def test_scale_dimensions(image_resizer: ImageResizer):
     """Should scale a tuple of width height by provided ratio"""
     assert image_resizer._scale_dimensions((1920, 1080), 1.5) == (2880, 1620)
+
+
+def test_get_max_zoom(image_resizer: ImageResizer):
+    """Should get correct max zoom value for 1920x1080 screen"""
+    assert image_resizer.get_max_zoom(400, 400) == MIN_ZOOM_LEVEL
+
+    assert image_resizer.get_max_zoom(2100, 2100) == MIN_ZOOM_LEVEL
+
+    assert image_resizer.get_max_zoom(6600, 6600) == 6
+
+    # 2**0.5 * 46340 == 65534, one below max
+    assert image_resizer.get_max_zoom(46340, 46340) == 1
+
+    # 2**0.5 * 46341 == 65536, one above max
+    assert image_resizer.get_max_zoom(46341, 46341) == 0

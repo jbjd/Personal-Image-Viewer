@@ -16,7 +16,7 @@ from image_viewer.image.cache import ImageCache, ImageCacheEntry
 from image_viewer.image.file import magic_number_guess
 from image_viewer.image.resizer import ImageResizer
 from image_viewer.state.rotation_state import RotationState
-from image_viewer.state.zoom_state import ZoomState
+from image_viewer.state.zoom_state import ZOOM_DISABLED, ZOOM_UNSET, ZoomState
 from image_viewer.util.PIL import (
     get_placeholder_for_errored_image,
     optimize_image_mode,
@@ -226,7 +226,8 @@ class ImageIO:
                 e, self.image_resizer.screen_width, self.image_resizer.screen_height
             )
             # Disable zoom for placeholder
-            self._zoom_state.max_level = -1
+            # TODO: Refactor this so state is managed more centrally
+            self._zoom_state.max_level = ZOOM_DISABLED
 
         return current_image
 
@@ -234,7 +235,7 @@ class ImageIO:
         self, direction: ZoomDirection | None, rotation: Rotation | None = None
     ) -> Image | None:
         """Gets current image with orientation changes like zoom and rotation"""
-        if self._zoom_state.max_level == 0:
+        if self._zoom_state.max_level == ZOOM_UNSET:
             self._zoom_state.max_level = self.image_resizer.get_max_zoom(
                 *self.PIL_image.size
             )

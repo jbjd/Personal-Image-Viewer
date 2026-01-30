@@ -3,6 +3,9 @@
 from image_viewer.constants import ZoomDirection
 from image_viewer.state.base import StateBase
 
+ZOOM_UNSET: int = -1
+ZOOM_DISABLED: int = -2
+
 
 class ZoomState(StateBase):
     """Represents level of zoom and stores max zoom level"""
@@ -11,12 +14,12 @@ class ZoomState(StateBase):
 
     def __init__(self) -> None:
         self.level: int = 0
-        self.max_level: int = 0
+        self.max_level: int = ZOOM_UNSET
 
     def reset(self) -> None:
         """Resets zoom level"""
         self.level = 0
-        self.max_level = 0
+        self.max_level = ZOOM_UNSET
 
     def try_update_zoom_level(self, direction: ZoomDirection | None) -> bool:
         """Tries to zoom in or out. Returns True if zoom level changed"""

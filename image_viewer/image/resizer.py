@@ -151,19 +151,12 @@ class ImageResizer:
         height_ratio: int = ceil(log2(image_height / self.screen_height))
 
         biggest_ratio: int = width_ratio if width_ratio > height_ratio else height_ratio
-
-        if biggest_ratio <= 0:
-            return MIN_ZOOM_LEVEL
+        zoom_level: int = (biggest_ratio << 1) if biggest_ratio > 1 else MIN_ZOOM_LEVEL
 
         largest_dimension: int = (
             image_width if image_width > image_height else image_height
         )
         upper_limit: int = int(log(JPEG_MAX_DIMENSION / largest_dimension, ZOOM_AMOUNT))
-
-        zoom_level: int = biggest_ratio << 1
-
-        if zoom_level < MIN_ZOOM_LEVEL:
-            zoom_level = MIN_ZOOM_LEVEL
 
         return zoom_level if zoom_level < upper_limit else upper_limit
 
