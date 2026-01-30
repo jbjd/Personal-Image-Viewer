@@ -4,6 +4,7 @@ import os
 import re
 import sys
 
+from image_viewer.state.zoom_state import ZOOM_DISABLED, ZOOM_UNSET
 from personal_python_ast_optimizer.regex.replace import RegexReplacement
 from PIL.AvifImagePlugin import DECODE_CODEC_CHOICE
 from PIL.DdsImagePlugin import DDS_MAGIC
@@ -21,7 +22,6 @@ from image_viewer.config import (
 )
 from image_viewer.constants import TEXT_RGB
 from image_viewer.image.resizer import JPEG_MAX_DIMENSION, MIN_ZOOM_LEVEL, ZOOM_AMOUNT
-from image_viewer.state.zoom_state import ZOOM_DISABLED, ZOOM_UNSET
 from image_viewer.ui.rename_entry import _ERROR_COLOR
 
 # Increment when edits to this file or module_dependencies are merged into main

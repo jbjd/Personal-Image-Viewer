@@ -1,7 +1,7 @@
 """Tests for the ZoomState class."""
 
 from image_viewer.constants import ZoomDirection
-from image_viewer.state.zoom_state import ZoomState
+from image_viewer.image.state import ZoomState
 
 
 def test_try_update_zoom_level():
