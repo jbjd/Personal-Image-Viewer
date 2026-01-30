@@ -1,5 +1,3 @@
-from typing import Final
-
 from PIL import ImageOps
 from PIL.Image import Image
 from PIL.Image import new as new_image
@@ -22,7 +20,7 @@ class ButtonIconFactory:
     __slots__ = ("icon_size", "ratio")
 
     def __init__(self, icon_size: int) -> None:
-        self.icon_size: Final[tuple[int, int]] = (icon_size, icon_size)
+        self.icon_size: tuple[int, int] = (icon_size, icon_size)
 
     def _resize_icon(self, image: Image) -> Image:
         """Returns copy of image that is icon size"""

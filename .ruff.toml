@@ -21,8 +21,10 @@ select = ["ALL"]
 # EM: Error messages
 # FBT: Boolean Trap (Slower)
 # FIX: Fix me
+# FURB136: Use min/max instead of if (slower)
 # PLC0415: Import should be at top-level
 # PLR0913: Too many arguments
+# PLR1730: Use min/max instead of boolean op (slower)
 # PLR2004: Magic value used in comparison
 # PTH: Use Pathlib (Wants slower API used)
 # PYI021: Docstrings should not be included in stubs (Needed for c extensions)
@@ -34,7 +36,7 @@ select = ["ALL"]
 # TD002: Missing author in TODO
 # TD003: Missing issue link in TODO
 # TRY003: Avoid specifying long messages outside the exception class (Slower and less clear)
-ignore = ["D202", "C416", "COM812", "D", "D102", "D105", "D107", "D203", "D205", "D213", "D401", "D415", "EM", "FBT", "FIX", "PLC0415", "PLR0913", "PLR2004", "PTH", "PYI021", "SIM105", "SLF001", "S110", "S603", "TC001", "TD002", "TD003", "TRY003"]
+ignore = ["D202", "C416", "COM812", "D", "D102", "D105", "D107", "D203", "D205", "D213", "D401", "D415", "EM", "FBT", "FIX", "FURB136", "PLC0415", "PLR0913", "PLR1730", "PLR2004", "PTH", "PYI021", "SIM105", "SLF001", "S110", "S603", "TC001", "TD002", "TD003", "TRY003"]
 
 [lint.extend-per-file-ignores]
 

@@ -5,12 +5,12 @@ from textwrap import wrap
 from typing import IO
 
 from PIL import Image as _Image  # avoid name conflicts
-from PIL.Image import Image, Resampling, new, register_open
+from PIL.Image import Image, Resampling, Transpose, new, register_open
 from PIL.ImageDraw import ImageDraw
 from PIL.ImageFont import truetype
 from PIL.JpegImagePlugin import JpegImageFile
 
-from image_viewer.constants import TEXT_RGB
+from image_viewer.constants import TEXT_RGB, Rotation
 
 # Modes that need more descriptive names or who's bpp
 # does not follow len(mode) * 8
@@ -65,9 +65,17 @@ def save_image(
     image.save(fp, extension, **kwargs)
 
 
-def rotate_image(image: Image, angle: int) -> Image:
+def rotate_image(image: Image, angle: Rotation) -> Image:
     """Rotates an image with the highest quality"""
-    return image.rotate(angle, Resampling.LANCZOS, expand=True)
+    match angle:
+        case Rotation.DOWN:
+            return image.transpose(Transpose.ROTATE_180)
+        case Rotation.RIGHT:
+            return image.transpose(Transpose.ROTATE_270)
+        case Rotation.LEFT:
+            return image.transpose(Transpose.ROTATE_90)
+        case _:
+            return image
 
 
 def image_is_animated(image: Image) -> bool:
@@ -196,7 +204,8 @@ def get_placeholder_for_errored_image(
     blank_image: Image = new("RGB", (screen_width, screen_height))
     draw: ImageDraw = ImageDraw(blank_image)
     line_rgb: tuple[int, int, int] = (30, 20, 20)
-    draw.line((0, 0, screen_width, screen_height), line_rgb, width=100)
+    line_width: int = int((screen_width / 1920) * 100)
+    draw.line((0, 0, screen_width, screen_height), line_rgb, width=line_width)
 
     # Write title
     *_, w, h = ImageDraw.font.getbbox(error_title)  # type: ignore[union-attr]

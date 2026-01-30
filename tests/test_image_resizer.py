@@ -5,7 +5,7 @@ from PIL.Image import Image, Resampling
 from PIL.Image import new as new_image
 
 from image_viewer.image.io import ImageIO, ReadImageResponse
-from image_viewer.image.resizer import ImageResizer
+from image_viewer.image.resizer import MIN_ZOOM_LEVEL, ImageResizer
 from tests.conftest import IMG_DIR
 
 _MODULE_PATH: str = "image_viewer.image.resizer"
@@ -87,19 +87,16 @@ def test_scale_dimensions(image_resizer: ImageResizer):
     assert image_resizer._scale_dimensions((1920, 1080), 1.5) == (2880, 1620)
 
 
-def test_get_zoomed_image_cap(image_resizer: ImageResizer):
-    """Should determine when zoom cap hit"""
-    image: Image = new_image("RGB", (1920, 1080))
+def test_get_max_zoom(image_resizer: ImageResizer):
+    """Should get correct max zoom value for 1920x1080 screen"""
+    assert image_resizer.get_max_zoom(400, 400) == MIN_ZOOM_LEVEL
 
-    # Mock zoom factor above min zoom when image is already the size of the screen
-    with (
-        patch(f"{_MODULE_PATH}.resize", return_value=image),
-        patch.object(ImageResizer, "_calculate_zoom_factor", return_value=2.25),
-    ):
-        zoomed_result = image_resizer.get_zoomed_image(image, 2)
-        assert zoomed_result.hit_max_zoom
+    assert image_resizer.get_max_zoom(2100, 2100) == MIN_ZOOM_LEVEL
 
-        # With a smaller image, the same zoom factor should not hit cap
-        image = new_image("RGB", (800, 1080))
-        zoomed_result = image_resizer.get_zoomed_image(image, 2)
-        assert not zoomed_result.hit_max_zoom
+    assert image_resizer.get_max_zoom(6600, 6600) == 6
+
+    # 2**0.5 * 46340 == 65534, one below max
+    assert image_resizer.get_max_zoom(46340, 46340) == 1
+
+    # 2**0.5 * 46341 == 65536, one above max
+    assert image_resizer.get_max_zoom(46341, 46341) == 0
