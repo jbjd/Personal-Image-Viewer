@@ -1,32 +1,48 @@
 """Tests for the ZoomState class."""
 
-from image_viewer.constants import ZoomDirection
-from image_viewer.image.state import ZoomState
+from image_viewer.constants import Rotation, ZoomDirection
+from image_viewer.image.state import ImageState
 
 
-def test_try_update_zoom_level():
-    """Should move zoom up or down based on input."""
-    zoom_state = ZoomState()
-    zoom_state.max_level = 1
+def test_try_update_state():
+    """Should move zoom and orientation based on input."""
+    state = ImageState()
+    state.zoom_level_max = 1
 
-    updated = zoom_state.try_update_zoom_level(ZoomDirection.OUT)
-    assert zoom_state.level == 0
+    updated = state.try_update(ZoomDirection.OUT, None)
+    assert state.zoom_level == 0
     assert not updated
 
-    updated = zoom_state.try_update_zoom_level(ZoomDirection.IN)
-    assert zoom_state.level == 1
+    updated = state.try_update(ZoomDirection.IN, None)
+    assert state.zoom_level == 1
     assert updated
 
-    updated = zoom_state.try_update_zoom_level(ZoomDirection.IN)
-    assert zoom_state.level == 1
+    updated = state.try_update(ZoomDirection.IN, None)
+    assert state.zoom_level == 1
     assert not updated
 
-    updated = zoom_state.try_update_zoom_level(ZoomDirection.OUT)
-    assert zoom_state.level == 0
+    updated = state.try_update(ZoomDirection.OUT, None)
+    assert state.zoom_level == 0
     assert updated
 
-    zoom_state.reset()
+    updated = state.try_update(ZoomDirection.IN, Rotation.DOWN)
+    assert state.zoom_level == 1
+    assert state.orientation == Rotation.DOWN
+    assert updated
 
-    default_zoom_state = ZoomState()
-    assert zoom_state.level == default_zoom_state.level
-    assert zoom_state.max_level == default_zoom_state.max_level
+    updated = state.try_update(None, Rotation.LEFT)
+    assert state.orientation == Rotation.LEFT
+    assert updated
+
+    updated = state.try_update(None, Rotation.LEFT)
+    assert state.orientation == Rotation.LEFT
+    assert not updated
+
+    state.zoom_rotate_allowed = False
+    state.reset()
+
+    default_state = ImageState()
+    assert state.zoom_level == default_state.zoom_level
+    assert state.zoom_level_max == default_state.zoom_level_max
+    assert state.orientation == default_state.orientation
+    assert state.zoom_rotate_allowed is default_state.zoom_rotate_allowed

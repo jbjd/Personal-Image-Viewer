@@ -18,7 +18,7 @@ class ImageState:
 
     def reset(self) -> None:
         """Resets members to default values."""
-        self.orientation: Rotation = Rotation.UP
+        self.orientation = Rotation.UP
         self.zoom_level = 0
         self.zoom_level_max = ZOOM_UNSET
         self.zoom_rotate_allowed = True
