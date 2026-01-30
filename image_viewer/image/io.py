@@ -254,7 +254,7 @@ class ImageIO:
         else:
             # Not in cache, resize to new zoom
             try:
-                image: Image = self.image_resizer.get_zoomed_image(
+                image = self.image_resizer.get_zoomed_image(
                     self.PIL_image,
                     zoom_level,
                     self._state.zoom_level == self._state.zoom_level_max,
