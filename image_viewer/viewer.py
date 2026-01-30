@@ -325,9 +325,6 @@ class ViewerApp:
 
     def handle_rotate_image(self, event: Event) -> None:
         """Rotates image, saves it to disk, and updates the display"""
-        if self.currently_animating():
-            return
-
         match event.keysym_num:
             case Key.LEFT:
                 rotation = Rotation.LEFT
@@ -451,7 +448,7 @@ class ViewerApp:
         self, direction: ZoomDirection | None = None, rotation: Rotation | None = None
     ) -> None:
         """Starts new thread for loading zoomed image"""
-        if self.currently_animating():
+        if not self.image_io.zoom_rotate_allowed:
             return
 
         self._start_image_load(self.load_zoomed_or_rotated_image, direction, rotation)
