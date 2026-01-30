@@ -96,6 +96,8 @@ def test_load_image_resize_error(image_io: ImageIO):
         image_io._resize_or_get_placeholder()
         mock_get_placeholder.assert_called_once()
 
+        assert not image_io._state.zoom_rotate_allowed
+
 
 def test_optimize_png_image_only_pngs(image_io: ImageIO):
     """Should not run on non-PNGs."""
