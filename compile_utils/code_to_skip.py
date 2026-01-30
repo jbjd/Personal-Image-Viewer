@@ -21,11 +21,11 @@ from image_viewer.config import (
 )
 from image_viewer.constants import TEXT_RGB
 from image_viewer.image.resizer import JPEG_MAX_DIMENSION, MIN_ZOOM_LEVEL, ZOOM_AMOUNT
-from image_viewer.state.zoom_state import ZOOM_DISABLED, ZOOM_UNSET
+from image_viewer.image.state import ZOOM_UNSET
 from image_viewer.ui.rename_entry import _ERROR_COLOR
 
 # Increment when edits to this file or module_dependencies are merged into main
-SKIP_ITERATION: int = 1
+SKIP_ITERATION: int = 2
 
 # Module independent skips
 
@@ -220,7 +220,6 @@ module_vars_to_fold: dict[
         "MIN_ZOOM_LEVEL": MIN_ZOOM_LEVEL,
         "TEXT_RGB": TEXT_RGB,
         "ZOOM_AMOUNT": ZOOM_AMOUNT,
-        "ZOOM_DISABLED": ZOOM_DISABLED,
         "ZOOM_UNSET": ZOOM_UNSET,
     },
     "PIL": {"SUPPORTED": True, "TYPE_CHECKING": False},
