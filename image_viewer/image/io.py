@@ -6,7 +6,6 @@ from collections.abc import Callable
 from io import BytesIO
 from threading import Thread
 
-from PIL import UnidentifiedImageError
 from PIL.Image import Image
 from PIL.Image import open as open_image
 
@@ -15,9 +14,9 @@ from image_viewer.constants import Rotation, ZoomDirection
 from image_viewer.image._read import CMemoryViewBuffer, read_image_into_buffer
 from image_viewer.image.cache import ImageCache, ImageCacheEntry
 from image_viewer.image.file import magic_number_guess
-from image_viewer.image.resizer import ImageResizer, ZoomedImageResult
+from image_viewer.image.resizer import ImageResizer
 from image_viewer.state.rotation_state import RotationState
-from image_viewer.state.zoom_state import ZoomState
+from image_viewer.state.zoom_state import ZOOM_DISABLED, ZOOM_UNSET, ZoomState
 from image_viewer.util.PIL import (
     get_placeholder_for_errored_image,
     optimize_image_mode,
@@ -128,7 +127,7 @@ class ImageIO:
             image: Image = open_image(image_bytes_io, "r", (expected_format,))
 
             return ReadImageResponse(image_buffer, image, expected_format)
-        except (FileNotFoundError, UnidentifiedImageError, OSError):
+        except OSError:
             return None
 
     def load_image(self, image_path: str) -> Image | None:
@@ -226,6 +225,9 @@ class ImageIO:
             current_image = get_placeholder_for_errored_image(
                 e, self.image_resizer.screen_width, self.image_resizer.screen_height
             )
+            # Disable zoom for placeholder
+            # TODO: Refactor this so state is managed more centrally
+            self._zoom_state.max_level = ZOOM_DISABLED
 
         return current_image
 
@@ -233,12 +235,17 @@ class ImageIO:
         self, direction: ZoomDirection | None, rotation: Rotation | None = None
     ) -> Image | None:
         """Gets current image with orientation changes like zoom and rotation"""
+        if self._zoom_state.max_level == ZOOM_UNSET:
+            self._zoom_state.max_level = self.image_resizer.get_max_zoom(
+                *self.PIL_image.size
+            )
+
         if not self._zoom_state.try_update_zoom_level(
             direction
         ) and not self._rotation_state.try_update_state(rotation):
             return None
 
-        rotation_angle: int = self._rotation_state.orientation
+        rotation_angle: Rotation = self._rotation_state.orientation
         zoom_level: int = self._zoom_state.level
 
         if zoom_level < len(self.zoomed_image_cache):
@@ -246,20 +253,16 @@ class ImageIO:
 
         # Not in cache, resize to new zoom
         try:
-            zoomed_image_result: ZoomedImageResult = (
-                self.image_resizer.get_zoomed_image(self.PIL_image, zoom_level)
+            zoomed_image: Image = self.image_resizer.get_zoomed_image(
+                self.PIL_image,
+                zoom_level,
+                self._zoom_state.level == self._zoom_state.max_level,
             )
-        except (FileNotFoundError, UnidentifiedImageError, ValueError) as e:
-            if isinstance(e, ValueError):
-                self._zoom_state.level -= 1
-                self._zoom_state.set_current_zoom_level_as_max()
+        except OSError:
             return None
 
-        if zoomed_image_result.hit_max_zoom:
-            self._zoom_state.set_current_zoom_level_as_max()
-
-        self.zoomed_image_cache.append(zoomed_image_result.image)
-        return rotate_image(zoomed_image_result.image, rotation_angle)
+        self.zoomed_image_cache.append(zoomed_image)
+        return rotate_image(zoomed_image, rotation_angle)
 
     def load_remaining_frames(
         self, original_image: Image, last_frame: int, load_id: int
