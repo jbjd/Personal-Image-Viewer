@@ -15,8 +15,7 @@ from image_viewer.image._read import CMemoryViewBuffer, read_image_into_buffer
 from image_viewer.image.cache import ImageCache, ImageCacheEntry
 from image_viewer.image.file import magic_number_guess
 from image_viewer.image.resizer import ImageResizer
-from image_viewer.state.rotation_state import RotationState
-from image_viewer.state.zoom_state import ZOOM_DISABLED, ZOOM_UNSET, ZoomState
+from image_viewer.image.state import ZOOM_UNSET, ImageState
 from image_viewer.util.PIL import (
     get_placeholder_for_errored_image,
     optimize_image_mode,
@@ -44,8 +43,7 @@ class ImageIO:
     __slots__ = (
         "PIL_image",
         "_image_optimized",
-        "_rotation_state",
-        "_zoom_state",
+        "_state",
         "animation_callback",
         "animation_frames",
         "current_load_id",
@@ -75,9 +73,12 @@ class ImageIO:
 
         self.animation_frames: list[Frame | None] = []
         self.frame_index: int = 0
-        self._rotation_state = RotationState()
-        self._zoom_state = ZoomState()
+        self._state = ImageState()
         self.zoomed_image_cache: list[Image] = []
+
+    @property
+    def zoom_rotate_allowed(self) -> bool:
+        return self._state.zoom_rotate_allowed
 
     def get_next_frame(self) -> Frame | None:
         """Gets next frame of animated image or empty frame while its being loaded"""
@@ -163,6 +164,7 @@ class ImageIO:
 
         frame_count: int = getattr(original_image, "n_frames", 1)
         if frame_count > 1:
+            self._state.zoom_rotate_allowed = False
             self.begin_animation(original_image, resized_image, frame_count)
 
         # first zoom level is just the image as is
@@ -225,9 +227,7 @@ class ImageIO:
             current_image = get_placeholder_for_errored_image(
                 e, self.image_resizer.screen_width, self.image_resizer.screen_height
             )
-            # Disable zoom for placeholder
-            # TODO: Refactor this so state is managed more centrally
-            self._zoom_state.max_level = ZOOM_DISABLED
+            self._state.zoom_rotate_allowed = False
 
         return current_image
 
@@ -235,34 +235,36 @@ class ImageIO:
         self, direction: ZoomDirection | None, rotation: Rotation | None = None
     ) -> Image | None:
         """Gets current image with orientation changes like zoom and rotation"""
-        if self._zoom_state.max_level == ZOOM_UNSET:
-            self._zoom_state.max_level = self.image_resizer.get_max_zoom(
+        if __debug__ and not self._state.zoom_rotate_allowed:
+            return None
+
+        if self._state.zoom_level_max == ZOOM_UNSET:
+            self._state.zoom_level_max = self.image_resizer.get_max_zoom(
                 *self.PIL_image.size
             )
 
-        if not self._zoom_state.try_update_zoom_level(
-            direction
-        ) and not self._rotation_state.try_update_state(rotation):
+        if not self._state.try_update(direction, rotation):
             return None
 
-        rotation_angle: Rotation = self._rotation_state.orientation
-        zoom_level: int = self._zoom_state.level
+        zoom_level: int = self._state.zoom_level
 
+        image: Image
         if zoom_level < len(self.zoomed_image_cache):
-            return rotate_image(self.zoomed_image_cache[zoom_level], rotation_angle)
+            image = self.zoomed_image_cache[zoom_level]
+        else:
+            # Not in cache, resize to new zoom
+            try:
+                image = self.image_resizer.get_zoomed_image(
+                    self.PIL_image,
+                    zoom_level,
+                    self._state.zoom_level == self._state.zoom_level_max,
+                )
+            except OSError:
+                return None
 
-        # Not in cache, resize to new zoom
-        try:
-            zoomed_image: Image = self.image_resizer.get_zoomed_image(
-                self.PIL_image,
-                zoom_level,
-                self._zoom_state.level == self._zoom_state.max_level,
-            )
-        except OSError:
-            return None
+            self.zoomed_image_cache.append(image)
 
-        self.zoomed_image_cache.append(zoomed_image)
-        return rotate_image(zoomed_image, rotation_angle)
+        return rotate_image(image, self._state.orientation)
 
     def load_remaining_frames(
         self, original_image: Image, last_frame: int, load_id: int
@@ -290,6 +292,5 @@ class ImageIO:
         self.animation_frames.clear()
         self.frame_index = 0
         self.PIL_image.close()
-        self._rotation_state.reset()
-        self._zoom_state.reset()
+        self._state.reset()
         self.zoomed_image_cache.clear()
