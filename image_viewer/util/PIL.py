@@ -278,13 +278,15 @@ def init_PIL(font_file: str, font_size: int) -> None:  # noqa: N802
     ImageDraw.font = _get_PIL_font(font_file, font_size)
 
 
-def _get_PIL_font(font_file: str, font_size: int) -> FreeTypeFont:  # noqa: N802
+def _get_PIL_font(font_file: str, font_size: int) -> FreeTypeFont:  # noqa: C901, N802
     """Returns font for PIL to use."""
 
+    font_folder: str
     if os.name == "nt":
         windir: str | None = os.environ.get("WINDIR")
         if windir:
-            for file in get_files_in_folder(os.path.join(windir, "fonts")):
+            font_folder = os.path.join(windir, "fonts")
+            for file in get_files_in_folder(font_folder):
                 if file == font_file:
                     return FreeTypeFont(os.path.join(font_folder, font_file), font_size)
     else:
