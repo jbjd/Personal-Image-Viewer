@@ -19,7 +19,7 @@ from image_viewer.constants import (
 )
 from image_viewer.files.file_manager import ImageFileManager
 from image_viewer.image.cache import ImageCache
-from image_viewer.image.io import ImageIO
+from image_viewer.image.image_io import ImageIO
 from image_viewer.ui.button import HoverableButtonUIElement, ToggleableButtonUIElement
 from image_viewer.ui.button_icon_factory import ButtonIconFactory
 from image_viewer.ui.canvas import CustomCanvas

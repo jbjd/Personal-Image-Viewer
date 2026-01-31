@@ -9,7 +9,7 @@ from PIL.Image import Image, new
 
 from image_viewer.animation.frame import Frame
 from image_viewer.image.cache import ImageCacheEntry
-from image_viewer.image.io import ImageIO, ReadImageResponse
+from image_viewer.image.image_io import ImageIO, ReadImageResponse
 from tests.conftest import EXAMPLE_JPEG_PATH
 
 _MODULE_PATH: str = "image_viewer.image.io"
