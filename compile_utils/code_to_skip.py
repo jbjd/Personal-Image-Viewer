@@ -25,7 +25,7 @@ from image_viewer.image.state import ZOOM_UNSET
 from image_viewer.ui.rename_entry import _ERROR_COLOR
 
 # Increment when edits to this file or module_dependencies are merged into main
-SKIP_ITERATION: int = 2
+SKIP_ITERATION: int = 3
 
 # Module independent skips
 
@@ -119,6 +119,7 @@ functions_to_skip: dict[str, set[str]] = {
         "load_default_imagefont",
         "load_default",
         "load_path",
+        "load",
     },
     "PIL.ImageMath": {"unsafe_eval"},
     "PIL.ImageOps": {
@@ -186,13 +187,10 @@ classes_to_skip: dict[str, set[str]] = {
         "SupportsGetData",
     },
     "PIL.ImageFile": {"Parser", "PyEncoder", "StubHandler", "StubImageFile"},
-    "PIL.ImageFont": {"TransposedFont"},
+    "PIL.ImageFont": {"Axis", "ImageFont", "TransposedFont"},
     "PIL.ImageOps": {"SupportsGetMesh"},
     "PIL.ImageTk": {"BitmapImage"},
     "PIL.PngImagePlugin": {"PngInfo"},
-    f"{IMAGE_VIEWER_NAME}.state.base": {"StateBase"},
-    f"{IMAGE_VIEWER_NAME}.state.rotation_state": {"StateBase"},
-    f"{IMAGE_VIEWER_NAME}.state.zoom_state": {"StateBase"},
 }
 
 
@@ -289,6 +287,9 @@ regex_to_apply_py: dict[str, list[RegexReplacement]] = {
             pattern=r"try:.*DeferredError\.new\(ex\)",
             replacement="from . import _imagingft as core",
             flags=re.DOTALL,
+        ),
+        RegexReplacement(
+            pattern=r"if isinstance\(core, DeferredError\):.*?core\.ex", flags=re.DOTALL
         ),
         RegexReplacement(pattern=r"MAX_STRING_LENGTH is not None and"),
     ],
