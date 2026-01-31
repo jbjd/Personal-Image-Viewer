@@ -25,7 +25,7 @@ from image_viewer.image.state import ZOOM_UNSET
 from image_viewer.ui.rename_entry import _ERROR_COLOR
 
 # Increment when edits to this file or module_dependencies are merged into main
-SKIP_ITERATION: int = 3
+SKIP_ITERATION: int = 4
 
 # Module independent skips
 
@@ -54,7 +54,6 @@ functions_to_skip: dict[str, set[str]] = {
         "alpha_composite",
         "blend",
         "composite",
-        "debug",
         "deprecate",
         "effect_mandelbrot",
         "entropy",
@@ -115,11 +114,18 @@ functions_to_skip: dict[str, set[str]] = {
     "PIL.ImageFont": {
         "__getstate__",
         "__setstate__",
+        "font_variant",
+        "get_variation_axes",
+        "get_variation_names",
+        "getmask",
+        "getmask2",
         "getmetrics",
         "load_default_imagefont",
         "load_default",
         "load_path",
         "load",
+        "set_variation_by_axes",
+        "set_variation_by_name",
     },
     "PIL.ImageMath": {"unsafe_eval"},
     "PIL.ImageOps": {
@@ -273,6 +279,7 @@ regex_to_apply_py: dict[str, list[RegexReplacement]] = {
             replacement="from . import _imaging as core",
             flags=re.DOTALL,
         ),
+        RegexReplacement(pattern=r"parent_name =.*, plugin, e\)", flags=re.DOTALL),
         RegexReplacement(pattern=r"def preinit\(\).*_initialized = 1", flags=re.DOTALL),
     ],
     "PIL.ImageDraw": [
