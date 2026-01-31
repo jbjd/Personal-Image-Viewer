@@ -12,7 +12,9 @@ from PIL.ImageFont import FreeTypeFont
 from PIL.JpegImagePlugin import JpegImageFile
 
 from image_viewer.constants import TEXT_RGB, Rotation
-from image_viewer.util.os import get_files_in_folder
+
+if os.name == "nt":
+    from image_viewer.util._os_nt import get_files_in_folder
 
 # Modes that need more descriptive names or who's bpp
 # does not follow len(mode) * 8
@@ -279,22 +281,12 @@ def init_PIL(font_file: str, font_size: int) -> None:  # noqa: N802
 def _get_PIL_font(font_file: str, font_size: int) -> FreeTypeFont:  # noqa: N802
     """Returns font for PIL to use."""
 
-    font_folders: list[str] = _get_font_folders()
-    for font_folder in font_folders:
-        for file in get_files_in_folder(font_folder):
-            if file == font_file:
-                return FreeTypeFont(os.path.join(font_folder, font_file), font_size)
-
-    raise RuntimeError(f"Can't find font {font_file}, try adjusting config.ini")
-
-
-def _get_font_folders() -> list[str]:
-    """Returns folders where fonts can be found."""
-
-    folders: list[str]
     if os.name == "nt":
         windir: str | None = os.environ.get("WINDIR")
-        folders = [os.path.join(windir, "fonts")] if windir else []
+        if windir:
+            for file in get_files_in_folder(os.path.join(windir, "fonts")):
+                if file == font_file:
+                    return FreeTypeFont(os.path.join(font_folder, font_file), font_size)
     else:
         data_home: str | None = os.environ.get("XDG_DATA_HOME")
         if not data_home:
@@ -305,6 +297,14 @@ def _get_font_folders() -> list[str]:
             data_dirs = "/usr/local/share:/usr/share"
 
         parent_folders: list[str] = [data_home, *data_dirs.split(":")]
-        folders = [os.path.join(p, "fonts") for p in parent_folders]
+        font_folders: list[str] = [os.path.join(p, "fonts") for p in parent_folders]
 
-    return folders
+        for font_folder in font_folders:
+            for root_folder, __, files in os.walk(font_folder):
+                for file in files:
+                    if file == font_file:
+                        return FreeTypeFont(
+                            os.path.join(root_folder, font_file), font_size
+                        )
+
+    raise RuntimeError(f"Can't find font {font_file}, try adjusting config.ini")

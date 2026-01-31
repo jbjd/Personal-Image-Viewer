@@ -378,6 +378,7 @@ class TrashPermissionError(PermissionError):
 
 
 # Keys are relative paths or globs. globs should target a single file
+tcl_folder: str = "tcl8/*" if os.name == "nt" else "tcl/tcl8"
 regex_to_apply_tk: dict[str, list[RegexReplacement]] = {
     "tk/ttk/ttk.tcl": [
         # Loads themes that are not used
@@ -387,7 +388,7 @@ regex_to_apply_tk: dict[str, list[RegexReplacement]] = {
             flags=re.DOTALL,
         )
     ],
-    "tcl8/*/platform-*.tm": [
+    f"{tcl_folder}/platform-*.tm": [
         # Discontinued OS
         RegexReplacement(pattern=r"osf1 \{.*?\}", flags=re.DOTALL),
         RegexReplacement(
@@ -397,7 +398,7 @@ regex_to_apply_tk: dict[str, list[RegexReplacement]] = {
 }
 
 if sys.platform != "darwin":
-    regex_to_apply_tk["tcl8/*/platform-*.tm"].append(
+    regex_to_apply_tk[f"{tcl_folder}/platform-*.tm"].append(
         RegexReplacement(pattern=r"darwin \{.*?aix", replacement="aix", flags=re.DOTALL)
     )
 
