@@ -2,7 +2,7 @@ import os
 from collections.abc import Callable
 from time import perf_counter
 from tkinter import Event, Tk
-from typing import Never, ParamSpec, TypeVar, TypeVarTuple
+from typing import Never, TypeVar, TypeVarTuple
 
 from PIL.Image import Image
 from PIL.ImageTk import PhotoImage
@@ -40,7 +40,6 @@ else:
     from tkinter import PhotoImage as tkPhotoImage
 
 _Ts = TypeVarTuple("_Ts")
-_P = ParamSpec("_P")
 _R = TypeVar("_R")
 
 
@@ -278,12 +277,12 @@ class ViewerApp:
         self.app.mainloop()
 
     def unresponsive_long_running_process(
-        self, function: Callable[_P, _R], *args: _P.args, **kwargs: _P.kwargs
+        self, function: Callable[[*_Ts], _R], *args: *_Ts
     ) -> _R:
         self.app.config(cursor="watch")
         self.app.update()
         try:
-            return function(*args, **kwargs)
+            return function(*args)
         finally:
             self.app.config(cursor="")
 
