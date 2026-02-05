@@ -1,5 +1,7 @@
 """Classes for loading PIL images from disk"""
 
+# Note: file name can't be "io" since it breaks debugger for some reason
+
 import os
 import tempfile
 from collections.abc import Callable
