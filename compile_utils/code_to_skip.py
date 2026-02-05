@@ -25,7 +25,7 @@ from image_viewer.image.state import ZOOM_UNSET
 from image_viewer.ui.rename_entry import _ERROR_COLOR
 
 # Increment when edits to this file or module_dependencies are merged into main
-SKIP_ITERATION: int = 3
+SKIP_ITERATION: int = 4
 
 # Module independent skips
 
@@ -54,7 +54,6 @@ functions_to_skip: dict[str, set[str]] = {
         "alpha_composite",
         "blend",
         "composite",
-        "debug",
         "deprecate",
         "effect_mandelbrot",
         "entropy",
@@ -66,6 +65,7 @@ functions_to_skip: dict[str, set[str]] = {
         "getLogger",
         "getmodebandnames",
         "getxmp",
+        "init",
         "linear_gradient",
         "putalpha",
         "radial_gradient",
@@ -115,11 +115,16 @@ functions_to_skip: dict[str, set[str]] = {
     "PIL.ImageFont": {
         "__getstate__",
         "__setstate__",
+        "font_variant",
+        "get_variation_axes",
+        "get_variation_names",
         "getmetrics",
         "load_default_imagefont",
         "load_default",
         "load_path",
         "load",
+        "set_variation_by_axes",
+        "set_variation_by_name",
     },
     "PIL.ImageMath": {"unsafe_eval"},
     "PIL.ImageOps": {
@@ -172,7 +177,7 @@ vars_to_skip: dict[str, set[str]] = {
     "PIL.JpegImagePlugin": {"format_description"},
     "PIL.PngImagePlugin": {"format_description"},
     "PIL.WebPImagePlugin": {"format_description"},
-    f"{IMAGE_VIEWER_NAME}.viewer": {"_P", "_R", "_Ts"},
+    f"{IMAGE_VIEWER_NAME}.viewer": {"_R", "_Ts"},
 }
 
 if os.name == "nt":
@@ -273,6 +278,11 @@ regex_to_apply_py: dict[str, list[RegexReplacement]] = {
             replacement="from . import _imaging as core",
             flags=re.DOTALL,
         ),
+        RegexReplacement(
+            pattern="if im is None and formats is ID:.*?if im:",
+            replacement="if im:",
+            flags=re.DOTALL,
+        ),
         RegexReplacement(pattern=r"def preinit\(\).*_initialized = 1", flags=re.DOTALL),
     ],
     "PIL.ImageDraw": [
@@ -368,6 +378,7 @@ class TrashPermissionError(PermissionError):
 
 
 # Keys are relative paths or globs. globs should target a single file
+tcl_folder: str = "tcl8/*" if os.name == "nt" else "tcl/tcl8"
 regex_to_apply_tk: dict[str, list[RegexReplacement]] = {
     "tk/ttk/ttk.tcl": [
         # Loads themes that are not used
@@ -377,7 +388,7 @@ regex_to_apply_tk: dict[str, list[RegexReplacement]] = {
             flags=re.DOTALL,
         )
     ],
-    "tcl8/*/platform-*.tm": [
+    f"{tcl_folder}/platform-*.tm": [
         # Discontinued OS
         RegexReplacement(pattern=r"osf1 \{.*?\}", flags=re.DOTALL),
         RegexReplacement(
@@ -387,7 +398,7 @@ regex_to_apply_tk: dict[str, list[RegexReplacement]] = {
 }
 
 if sys.platform != "darwin":
-    regex_to_apply_tk["tcl8/*/platform-*.tm"].append(
+    regex_to_apply_tk[f"{tcl_folder}/platform-*.tm"].append(
         RegexReplacement(pattern=r"darwin \{.*?aix", replacement="aix", flags=re.DOTALL)
     )
 
