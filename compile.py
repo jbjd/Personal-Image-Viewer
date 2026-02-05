@@ -119,7 +119,11 @@ try:
             + f"-{SKIP_ITERATION}"
             + f"-AssumeThisMachine:{args.assume_this_machine}"
         )
-        cached_iteration_path: str = os.path.join(src_folder_path, module.name) + ".txt"
+
+        module_import_name: str = get_normalized_module_name(module)
+        cached_iteration_path: str = (
+            os.path.join(src_folder_path, module_import_name) + ".txt"
+        )
 
         try:
             cached_iteration: str = read_file_utf8(cached_iteration_path)
@@ -133,7 +137,6 @@ try:
 
         _logger.info("Setting up module: %s", module.name)
 
-        module_import_name: str = get_normalized_module_name(module)
         sub_modules_to_skip: set[str] = {
             i for i in modules_to_skip if i.startswith(module_import_name)
         }
