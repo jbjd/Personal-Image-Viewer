@@ -478,10 +478,10 @@ custom_nuitka_regex: dict[str, list[RegexReplacement]] = {
     ],
     "importing/Recursion.py": [
         RegexReplacement(
-            r"if is_stdlib and module_name in detectStdlibAutoInclusionModules\(\)\:",
-            f"""if is_stdlib and module_name in detectStdlibAutoInclusionModules():
+            r"if is_stdlib and module_name in detectStdlibAutoInclusionModules\(\) and not no_case:",  # noqa: E501
+            f"""if is_stdlib and module_name in detectStdlibAutoInclusionModules() and not no_case:
         if module_name in {_skippable_std_modules}:
-            return False, 'Excluding unnecessary parts of standard library.'""",
+            return False, 'Excluding unnecessary parts of standard library.'""",  # noqa: E501
         )
     ],
 }
