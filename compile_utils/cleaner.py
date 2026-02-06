@@ -22,6 +22,7 @@ from personal_python_ast_optimizer.parser.config import (
 )
 from personal_python_ast_optimizer.parser.run import run_unparser
 from personal_python_ast_optimizer.regex.replace import (
+    RegexNoMatchException,
     RegexReplacement,
     re_replace,
     re_replace_file,
@@ -70,7 +71,10 @@ def clean_file_and_copy(
         regex_replacements: list[RegexReplacement] = regex_to_apply_py.pop(
             module_import_path
         )
-        source = re_replace(source, regex_replacements, True)
+        try:
+            source = re_replace(source, regex_replacements, True)
+        except RegexNoMatchException as e:
+            raise RuntimeError(f"Failed to apply regex to {module_import_path}") from e
 
     all_vars_to_fold: dict[str, str | bytes | bool | int | float | complex | None] = (
         module_vars_to_fold.get(module_name, {})

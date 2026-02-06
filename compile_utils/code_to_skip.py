@@ -26,7 +26,7 @@ from image_viewer.image.state import ZOOM_UNSET
 from image_viewer.ui.rename_entry import _ERROR_COLOR
 
 # Increment when edits to this file or module_dependencies are merged into main
-SKIP_ITERATION: int = 0
+SKIP_ITERATION: int = 1
 
 # Module independent skips
 
@@ -321,19 +321,28 @@ regex_to_apply_py: dict[str, list[RegexReplacement]] = {
             r"def jpeg_factory\(.*return im",
             "def jpeg_factory(fp,filename=None):return JpegImageFile(fp,filename)",
             flags=re.DOTALL,
-        )
+        ),
+        RegexReplacement(  # Remove Exif usage to remove Tiff dependency
+            r"if isinstance\(exif, Image\.Exif\):\s+exif = exif.tobytes\(\)"
+        ),
     ],
     "PIL.PngImagePlugin": [
         RegexReplacement(
             pattern=r"raise EOFError\(.*?\)", replacement="raise EOFError", count=0
-        )
+        ),
+        RegexReplacement(  # Remove Exif usage to remove Tiff dependency
+            r"if isinstance\(exif, Image\.Exif\):\s+exif = exif.tobytes\(8\)"
+        ),
     ],
     "PIL.WebPImagePlugin": [
         RegexReplacement(
             pattern=r"try:\s+?from \. import _webp.*?SUPPORTED = False",
             replacement="from . import _webp;SUPPORTED = True",
             flags=re.DOTALL,
-        )
+        ),
+        RegexReplacement(  # Remove Exif usage to remove Tiff dependency
+            r"if isinstance\(exif, Image\.Exif\):\s+exif = exif.tobytes\(\)", count=2
+        ),
     ],
 }
 
