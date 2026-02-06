@@ -2,11 +2,13 @@
 
 import logging
 import sys
+from functools import lru_cache
 
 LOGGER_NAME: str = "personal_logger"
 
 
-def setup_logging(level: int = logging.INFO) -> logging.Logger:
+@lru_cache(maxsize=1)
+def get_logger() -> logging.Logger:
     """Sets up logger with levels below error going to stdout and
     error and fatal going to stderr.
 
@@ -14,7 +16,7 @@ def setup_logging(level: int = logging.INFO) -> logging.Logger:
     :returns: The setup logger."""
 
     logger = logging.getLogger(LOGGER_NAME)
-    logger.setLevel(level)
+    logger.setLevel(logging.INFO)  # TODO: Make configurable
 
     # Send DEBUG - WARNING to stdout and ERROR to stderr
     handler = logging.StreamHandler(sys.stdout)
