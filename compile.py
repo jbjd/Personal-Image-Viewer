@@ -192,7 +192,7 @@ try:
         target_file_path, nuitka_args, build_folder_path, args.assume_this_machine
     )
 
-    _logger.info("Waiting for nuitka compilation...")
+    _logger.info("Waiting for nuitka compilation...\n")
 
     install_path: str = args.install_path if not args.debug else nuitka_dist_path
 
