@@ -55,7 +55,8 @@ def write_custom_module_version(
     custom_version: int | str,
     append: str = "",
 ) -> None:
-    """Writes version file for custom module.
+    """Writes version file for custom module. Should be called when caching a
+    custom module is complete.
 
     :param folder_path: Path to custom module
     :param module_name: Name of module
@@ -67,6 +68,8 @@ def write_custom_module_version(
     file_path: str = _get_version_file_path(folder_path, module_name)
 
     write_file_utf8(file_path, contents)
+
+    _logger.info("Cached module: %s", module_name)
 
 
 def custom_module_version_up_to_date(

@@ -161,5 +161,3 @@ def setup_custom_nuitka_install(custom_nuitka_path: str) -> None:
     write_custom_module_version(
         custom_nuitka_path, "nuitka", nuitka_version, _CUSTOM_NUITKA_VERSION
     )
-
-    _logger.info("Nuitka setup complete")

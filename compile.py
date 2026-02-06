@@ -180,8 +180,6 @@ try:
             custom_version_flags,
         )
 
-        _logger.info("%s setup complete", module_import_name)
-
     if warn_unused_skips:
         warn_unused_code_skips()
 
