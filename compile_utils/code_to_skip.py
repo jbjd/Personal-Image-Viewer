@@ -9,6 +9,7 @@ from PIL.AvifImagePlugin import DECODE_CODEC_CHOICE
 from PIL.DdsImagePlugin import DDS_MAGIC
 from PIL.GifImagePlugin import _FORCE_OPTIMIZE
 from PIL.GimpGradientFile import EPSILON
+from PIL.Image import WARN_POSSIBLE_FORMATS
 from PIL.ImageFile import MAXBLOCK
 from PIL.ImageFont import MAX_STRING_LENGTH
 
@@ -25,7 +26,7 @@ from image_viewer.image.state import ZOOM_UNSET
 from image_viewer.ui.rename_entry import _ERROR_COLOR
 
 # Increment when edits to this file or module_dependencies are merged into main
-SKIP_ITERATION: int = 4
+SKIP_ITERATION: int = 0
 
 # Module independent skips
 
@@ -236,6 +237,7 @@ vars_to_fold: dict[
     "PIL.DdsImagePlugin": {"DDS_MAGIC": DDS_MAGIC},
     "PIL.GifImagePlugin": {"_FORCE_OPTIMIZE": _FORCE_OPTIMIZE},
     "PIL.GimpGradientFile": {"EPSILON": EPSILON},
+    "PIL.Image": {"WARN_POSSIBLE_FORMATS": WARN_POSSIBLE_FORMATS},
     "PIL.ImageFile": {"MAXBLOCK": MAXBLOCK},
     "PIL.ImageFont": {"MAX_STRING_LENGTH": MAX_STRING_LENGTH // 1000},
 }
