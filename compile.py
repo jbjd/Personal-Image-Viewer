@@ -10,13 +10,15 @@ from personal_compile_tools.file_operations import (
     copy_folder,
     delete_folder,
     get_folder_size,
-    read_file_utf8,
-    write_file_utf8,
 )
 from personal_compile_tools.modules import get_module_file_path
 from personal_compile_tools.validation import raise_if_not_root
 
 from compile_utils.args import CompileArgumentParser, CompileNamespace, NuitkaArgs
+from compile_utils.build_setup import (
+    custom_module_version_up_to_date,
+    write_custom_module_version,
+)
 from compile_utils.cleaner import (
     clean_file_and_copy,
     clean_tk_files,
@@ -26,7 +28,7 @@ from compile_utils.cleaner import (
 )
 from compile_utils.code_to_skip import SKIP_ITERATION
 from compile_utils.constants import BUILD_INFO_FILE, IMAGE_VIEWER_NAME
-from compile_utils.log import setup_logging
+from compile_utils.log import get_logger
 from compile_utils.module_dependencies import (
     get_normalized_module_name,
     module_dependencies,
@@ -92,7 +94,7 @@ validate_python_version()
 validate_module_requirements()
 validate_PIL()
 
-_logger = setup_logging()
+_logger = get_logger()
 
 os.makedirs(src_folder_path, exist_ok=True)
 try:
@@ -111,39 +113,39 @@ try:
     warn_unused_skips: bool = True
 
     minifier_version: str = get_module_version("personal_python_ast_optimizer")
+    custom_version_flags: str = (
+        f"assume_this_machine={args.assume_this_machine}\n"
+        f"minifier_version={minifier_version}"
+    )
     for module in module_dependencies:
-        cleaned_module_iteration: str = (
-            get_module_version(module.name)
-            + "-"
-            + minifier_version
-            + f"-{SKIP_ITERATION}"
-            + f"-AssumeThisMachine:{args.assume_this_machine}"
-        )
-
         module_import_name: str = get_normalized_module_name(module)
-        cached_iteration_path: str = (
-            os.path.join(src_folder_path, module_import_name) + ".txt"
-        )
-
-        try:
-            cached_iteration: str = read_file_utf8(cached_iteration_path)
-        except FileNotFoundError:
-            pass
-        else:
-            if cached_iteration == cleaned_module_iteration:
-                _logger.info("Using cached version of module: %s", module.name)
-                warn_unused_skips = False
-                continue
-
-        _logger.info("Setting up module: %s", module.name)
-
-        sub_modules_to_skip: set[str] = {
-            i for i in modules_to_skip if i.startswith(module_import_name)
-        }
 
         module_file_path: str = get_module_file_path(module_import_name)
         module_file: str = os.path.basename(module_file_path)
         module_folder_path: str = os.path.dirname(module_file_path)
+
+        is_one_file: bool = module_folder_path.endswith("site-packages")
+
+        module_version: str = get_module_version(module.name)
+        custom_module_path: str = (
+            src_folder_path
+            if is_one_file
+            else os.path.join(src_folder_path, module_import_name)
+        )
+
+        if custom_module_version_up_to_date(
+            custom_module_path,
+            module_import_name,
+            module_version,
+            SKIP_ITERATION,
+            custom_version_flags,
+        ):
+            warn_unused_skips = False
+            continue
+
+        sub_modules_to_skip: set[str] = {
+            i for i in modules_to_skip if i.startswith(module_import_name)
+        }
 
         if module_import_name == "PIL" and os.name != "nt":
             site_packages_path = os.path.dirname(module_folder_path)
@@ -152,7 +154,7 @@ try:
             delete_folder(new_lib_path)
             copy_folder(old_lib_path, new_lib_path)
 
-        if module_folder_path.endswith("site-packages"):  # Its one file
+        if is_one_file:
             clean_file_and_copy(
                 module_file_path,
                 os.path.join(src_folder_path, module_file),
@@ -160,8 +162,8 @@ try:
                 module_import_name,
                 args.assume_this_machine,
             )
-        else:  # Its a folder
-            delete_folder(os.path.join(src_folder_path, module_import_name))
+        else:
+            delete_folder(custom_module_path)
             move_files_to_tmp_and_clean(
                 module_folder_path,
                 src_folder_path,
@@ -170,7 +172,13 @@ try:
                 sub_modules_to_skip,
             )
 
-        write_file_utf8(cached_iteration_path, cleaned_module_iteration)
+        write_custom_module_version(
+            custom_module_path,
+            module_import_name,
+            module_version,
+            SKIP_ITERATION,
+            custom_version_flags,
+        )
 
     if warn_unused_skips:
         warn_unused_code_skips()
@@ -184,7 +192,7 @@ try:
         target_file_path, nuitka_args, build_folder_path, args.assume_this_machine
     )
 
-    _logger.info("Waiting for nuitka compilation...")
+    _logger.info("Waiting for nuitka compilation...\n")
 
     install_path: str = args.install_path if not args.debug else nuitka_dist_path
 

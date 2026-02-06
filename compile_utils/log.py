@@ -5,16 +5,22 @@ import sys
 
 LOGGER_NAME: str = "personal_logger"
 
+_logger: logging.Logger | None = None
 
-def setup_logging(level: int = logging.INFO) -> logging.Logger:
+
+def get_logger() -> logging.Logger:
     """Sets up logger with levels below error going to stdout and
     error and fatal going to stderr.
 
     :param level: Logging level.
     :returns: The setup logger."""
+    global _logger
+
+    if _logger is not None:
+        return _logger
 
     logger = logging.getLogger(LOGGER_NAME)
-    logger.setLevel(level)
+    logger.setLevel(logging.INFO)  # TODO: Make configurable
 
     # Send DEBUG - WARNING to stdout and ERROR to stderr
     handler = logging.StreamHandler(sys.stdout)
@@ -26,4 +32,5 @@ def setup_logging(level: int = logging.INFO) -> logging.Logger:
     logger.addHandler(handler)
     logger.addHandler(error_handler)
 
+    _logger = logger
     return logger

@@ -9,6 +9,7 @@ from PIL.AvifImagePlugin import DECODE_CODEC_CHOICE
 from PIL.DdsImagePlugin import DDS_MAGIC
 from PIL.GifImagePlugin import _FORCE_OPTIMIZE
 from PIL.GimpGradientFile import EPSILON
+from PIL.Image import WARN_POSSIBLE_FORMATS
 from PIL.ImageFile import MAXBLOCK
 from PIL.ImageFont import MAX_STRING_LENGTH
 
@@ -25,7 +26,7 @@ from image_viewer.image.state import ZOOM_UNSET
 from image_viewer.ui.rename_entry import _ERROR_COLOR
 
 # Increment when edits to this file or module_dependencies are merged into main
-SKIP_ITERATION: int = 4
+SKIP_ITERATION: int = 5
 
 # Module independent skips
 
@@ -236,6 +237,7 @@ vars_to_fold: dict[
     "PIL.DdsImagePlugin": {"DDS_MAGIC": DDS_MAGIC},
     "PIL.GifImagePlugin": {"_FORCE_OPTIMIZE": _FORCE_OPTIMIZE},
     "PIL.GimpGradientFile": {"EPSILON": EPSILON},
+    "PIL.Image": {"WARN_POSSIBLE_FORMATS": WARN_POSSIBLE_FORMATS},
     "PIL.ImageFile": {"MAXBLOCK": MAXBLOCK},
     "PIL.ImageFont": {"MAX_STRING_LENGTH": MAX_STRING_LENGTH // 1000},
 }
@@ -319,19 +321,28 @@ regex_to_apply_py: dict[str, list[RegexReplacement]] = {
             r"def jpeg_factory\(.*return im",
             "def jpeg_factory(fp,filename=None):return JpegImageFile(fp,filename)",
             flags=re.DOTALL,
-        )
+        ),
+        RegexReplacement(  # Remove Exif usage to remove Tiff dependency
+            r"if isinstance\(exif, Image\.Exif\):\s+exif = exif.tobytes\(\)"
+        ),
     ],
     "PIL.PngImagePlugin": [
         RegexReplacement(
             pattern=r"raise EOFError\(.*?\)", replacement="raise EOFError", count=0
-        )
+        ),
+        RegexReplacement(  # Remove Exif usage to remove Tiff dependency
+            r"if isinstance\(exif, Image\.Exif\):\s+exif = exif.tobytes\(8\)"
+        ),
     ],
     "PIL.WebPImagePlugin": [
         RegexReplacement(
             pattern=r"try:\s+?from \. import _webp.*?SUPPORTED = False",
             replacement="from . import _webp;SUPPORTED = True",
             flags=re.DOTALL,
-        )
+        ),
+        RegexReplacement(  # Remove Exif usage to remove Tiff dependency
+            r"if isinstance\(exif, Image\.Exif\):\s+exif = exif.tobytes\(\)", count=2
+        ),
     ],
 }
 
@@ -478,10 +489,10 @@ custom_nuitka_regex: dict[str, list[RegexReplacement]] = {
     ],
     "importing/Recursion.py": [
         RegexReplacement(
-            r"if is_stdlib and module_name in detectStdlibAutoInclusionModules\(\)\:",
-            f"""if is_stdlib and module_name in detectStdlibAutoInclusionModules():
+            r"if is_stdlib and module_name in detectStdlibAutoInclusionModules\(\) and not no_case:",  # noqa: E501
+            f"""if is_stdlib and module_name in detectStdlibAutoInclusionModules() and not no_case:
         if module_name in {_skippable_std_modules}:
-            return False, 'Excluding unnecessary parts of standard library.'""",
+            return False, 'Excluding unnecessary parts of standard library.'""",  # noqa: E501
         )
     ],
 }

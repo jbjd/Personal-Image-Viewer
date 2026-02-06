@@ -3,7 +3,6 @@
 import tomllib
 from importlib.metadata import PackageNotFoundError
 from importlib.metadata import version as get_module_version
-from logging import getLogger
 from sys import version_info
 from typing import Any
 
@@ -15,10 +14,10 @@ from personal_compile_tools.requirements import Requirement, parse_requirements_
 
 from compile_utils.constants import PROJECT_FILE
 from compile_utils.exceptions import InvalidEnvironmentError
-from compile_utils.log import LOGGER_NAME
+from compile_utils.log import get_logger
 from compile_utils.module_dependencies import module_dependencies
 
-_logger = getLogger(LOGGER_NAME)
+_logger = get_logger()
 
 _required_python_version: tuple[int, int] | None = None
 
@@ -27,7 +26,7 @@ def get_required_python_version() -> tuple[int, int]:
     """Returns required python version by parsing it out of the pyproject.toml file.
 
     :returns: Tuple of the required version."""
-    global _required_python_version  # noqa: PLW0603
+    global _required_python_version
 
     if _required_python_version is not None:
         return _required_python_version

@@ -3,7 +3,6 @@
 import os
 import sys
 from importlib.metadata import version as get_module_version
-from logging import getLogger
 from subprocess import Popen
 from sysconfig import get_paths
 
@@ -15,10 +14,14 @@ from personal_compile_tools.file_operations import (
 )
 from personal_python_ast_optimizer.regex.replace import re_replace
 
+from compile_utils.build_setup import (
+    custom_module_version_up_to_date,
+    write_custom_module_version,
+)
 from compile_utils.code_to_skip import custom_nuitka_regex
-from compile_utils.log import LOGGER_NAME
+from compile_utils.log import get_logger
 
-_logger = getLogger(LOGGER_NAME)
+_logger = get_logger()
 
 
 def start_nuitka_compilation(
@@ -115,8 +118,6 @@ def _get_nuitka_env(assume_this_machine: bool) -> dict[str, str]:
     return compile_env
 
 
-_CUSTOM_NUITKA_VERSION_FILE: str = "version.txt"
-
 # Incremented when edits are made to the custom nuitka to cache break
 _CUSTOM_NUITKA_VERSION: int = 0
 
@@ -129,21 +130,12 @@ def setup_custom_nuitka_install(custom_nuitka_path: str) -> None:
 
     :param custom_nuitka_path: Folder path to use"""
 
-    version_file_path: str = os.path.join(
-        custom_nuitka_path, _CUSTOM_NUITKA_VERSION_FILE
-    )
-    expected_version: str = f"{get_module_version('nuitka')}-{_CUSTOM_NUITKA_VERSION}"
+    nuitka_version: str = get_module_version("nuitka")
 
-    try:
-        found_version: str = read_file_utf8(version_file_path).strip()
-    except FileNotFoundError:
-        pass
-    else:
-        if found_version == expected_version:
-            _logger.info("Custom nuitka setup up-to-date")
-            return
-
-    _logger.warning("Setting up custom nuitka implementation...")
+    if custom_module_version_up_to_date(
+        custom_nuitka_path, "nuitka", nuitka_version, _CUSTOM_NUITKA_VERSION
+    ):
+        return
 
     delete_folder(custom_nuitka_path)
     os.makedirs(custom_nuitka_path)
@@ -166,6 +158,6 @@ def setup_custom_nuitka_install(custom_nuitka_path: str) -> None:
         new_path: str = os.path.join(custom_nuitka_path, rel_path)
         write_file_utf8(new_path, source, make_folders=True)
 
-    write_file_utf8(version_file_path, expected_version)
-
-    _logger.warning("Setup complete")
+    write_custom_module_version(
+        custom_nuitka_path, "nuitka", nuitka_version, _CUSTOM_NUITKA_VERSION
+    )
