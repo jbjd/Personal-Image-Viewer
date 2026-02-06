@@ -113,6 +113,10 @@ try:
     warn_unused_skips: bool = True
 
     minifier_version: str = get_module_version("personal_python_ast_optimizer")
+    custom_version_flags: str = (
+        f"assume_this_machine={args.assume_this_machine}\n"
+        f"minifier_version={minifier_version}"
+    )
     for module in module_dependencies:
         module_import_name: str = get_normalized_module_name(module)
 
@@ -128,7 +132,6 @@ try:
             if is_one_file
             else os.path.join(src_folder_path, module_import_name)
         )
-        custom_version_flags: str = f"assume_this_machine={args.assume_this_machine}"
 
         if custom_module_version_up_to_date(
             custom_module_path,
