@@ -115,26 +115,34 @@ try:
     minifier_version: str = get_module_version("personal_python_ast_optimizer")
     for module in module_dependencies:
         module_import_name: str = get_normalized_module_name(module)
-        module_version: str = get_module_version(module.name)
-        custom_module_path: str = os.path.join(src_folder_path, module_import_name)
-        custom_version_flags: str = f"assume_this_machine={args.assume_this_machine}"
-
-        if custom_module_version_up_to_date(
-            custom_module_path, module_version, SKIP_ITERATION, custom_version_flags
-        ):
-            _logger.info("Using cached version of module: %s", module.name)
-            warn_unused_skips = False
-            continue
-
-        _logger.info("Setting up module: %s", module.name)
-
-        sub_modules_to_skip: set[str] = {
-            i for i in modules_to_skip if i.startswith(module_import_name)
-        }
 
         module_file_path: str = get_module_file_path(module_import_name)
         module_file: str = os.path.basename(module_file_path)
         module_folder_path: str = os.path.dirname(module_file_path)
+
+        is_one_file: bool = module_folder_path.endswith("site-packages")
+
+        module_version: str = get_module_version(module.name)
+        custom_module_path: str = (
+            src_folder_path
+            if is_one_file
+            else os.path.join(src_folder_path, module_import_name)
+        )
+        custom_version_flags: str = f"assume_this_machine={args.assume_this_machine}"
+
+        if custom_module_version_up_to_date(
+            custom_module_path,
+            module_import_name,
+            module_version,
+            SKIP_ITERATION,
+            custom_version_flags,
+        ):
+            warn_unused_skips = False
+            continue
+
+        sub_modules_to_skip: set[str] = {
+            i for i in modules_to_skip if i.startswith(module_import_name)
+        }
 
         if module_import_name == "PIL" and os.name != "nt":
             site_packages_path = os.path.dirname(module_folder_path)
@@ -143,7 +151,7 @@ try:
             delete_folder(new_lib_path)
             copy_folder(old_lib_path, new_lib_path)
 
-        if module_folder_path.endswith("site-packages"):  # Its one file
+        if is_one_file:
             clean_file_and_copy(
                 module_file_path,
                 os.path.join(src_folder_path, module_file),
@@ -151,7 +159,7 @@ try:
                 module_import_name,
                 args.assume_this_machine,
             )
-        else:  # Its a folder
+        else:
             delete_folder(custom_module_path)
             move_files_to_tmp_and_clean(
                 module_folder_path,
@@ -162,8 +170,14 @@ try:
             )
 
         write_custom_module_version(
-            custom_module_path, module_version, SKIP_ITERATION, custom_version_flags
+            custom_module_path,
+            module_import_name,
+            module_version,
+            SKIP_ITERATION,
+            custom_version_flags,
         )
+
+        _logger.info("%s setup complete", module_import_name)
 
     if warn_unused_skips:
         warn_unused_code_skips()

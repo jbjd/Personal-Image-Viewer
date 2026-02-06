@@ -133,12 +133,9 @@ def setup_custom_nuitka_install(custom_nuitka_path: str) -> None:
     nuitka_version: str = get_module_version("nuitka")
 
     if custom_module_version_up_to_date(
-        custom_nuitka_path, nuitka_version, _CUSTOM_NUITKA_VERSION
+        custom_nuitka_path, "nuitka", nuitka_version, _CUSTOM_NUITKA_VERSION
     ):
-        _logger.info("Custom nuitka setup up-to-date")
         return
-
-    _logger.info("Setting up custom nuitka implementation...")
 
     delete_folder(custom_nuitka_path)
     os.makedirs(custom_nuitka_path)
@@ -162,7 +159,7 @@ def setup_custom_nuitka_install(custom_nuitka_path: str) -> None:
         write_file_utf8(new_path, source, make_folders=True)
 
     write_custom_module_version(
-        custom_nuitka_path, nuitka_version, _CUSTOM_NUITKA_VERSION
+        custom_nuitka_path, "nuitka", nuitka_version, _CUSTOM_NUITKA_VERSION
     )
 
-    _logger.info("Setup complete")
+    _logger.info("Nuitka setup complete")
