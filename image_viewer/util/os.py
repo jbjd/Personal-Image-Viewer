@@ -17,7 +17,7 @@ if os.name == "nt":
 
     # TODO: Move windows popups to C code
     def set_hwnd(new_hwnd: int) -> None:
-        global hwnd  # noqa: PLW0603
+        global hwnd
 
         _set_hwnd(new_hwnd)
         hwnd = new_hwnd
