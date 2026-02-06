@@ -5,7 +5,6 @@ import re
 import subprocess
 from collections.abc import Iterator
 from glob import glob
-from logging import getLogger
 from re import sub
 
 from personal_compile_tools.file_operations import (
@@ -23,6 +22,7 @@ from personal_python_ast_optimizer.parser.config import (
 )
 from personal_python_ast_optimizer.parser.run import run_unparser
 from personal_python_ast_optimizer.regex.replace import (
+    RegexNoMatchException,
     RegexReplacement,
     re_replace,
     re_replace_file,
@@ -44,7 +44,7 @@ from compile_utils.code_to_skip import (
     vars_to_fold,
     vars_to_skip,
 )
-from compile_utils.log import LOGGER_NAME
+from compile_utils.log import get_logger
 from compile_utils.validation import get_required_python_version
 
 SEPARATORS = r"[\\/]" if os.name == "nt" else r"[/]"
@@ -52,7 +52,7 @@ SEPARATORS = r"[\\/]" if os.name == "nt" else r"[/]"
 # Ensure this file is git ignored
 MINIFIER_FAILED_FILE_NAME: str = "minifier_failure.py.example"
 
-_logger = getLogger(LOGGER_NAME)
+_logger = get_logger()
 
 
 def clean_file_and_copy(
@@ -71,7 +71,10 @@ def clean_file_and_copy(
         regex_replacements: list[RegexReplacement] = regex_to_apply_py.pop(
             module_import_path
         )
-        source = re_replace(source, regex_replacements, True)
+        try:
+            source = re_replace(source, regex_replacements, True)
+        except RegexNoMatchException as e:
+            raise RuntimeError(f"Failed to apply regex to {module_import_path}") from e
 
     all_vars_to_fold: dict[str, str | bytes | bool | int | float | complex | None] = (
         module_vars_to_fold.get(module_name, {})
