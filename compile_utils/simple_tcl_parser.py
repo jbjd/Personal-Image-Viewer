@@ -15,10 +15,6 @@ def tcl_parse(source: str) -> list[str]:
 
     tokens: list[str] = []
 
-    def find_token_end(token: str) -> int:
-        nonlocal source, token_start
-        return source.find(token, token_start + 1)
-
     while token_start < source_end:
         first_char: str = source[token_start]
 
@@ -28,17 +24,19 @@ def tcl_parse(source: str) -> list[str]:
             continue
 
         if first_char == "#":
-            comment_end: int = find_token_end("\n")
+            comment_end: int = source.find("\n", token_start + 1)
             if comment_end == -1:
                 tokens.append(source[token_start:])
             else:
                 tokens.append(source[token_start:comment_end])
                 token_end = comment_end
         elif first_char == '"':
-            string_end: int = find_token_end('"')
-            if string_end == -1:
-                raise SyntaxError("Found unclosed string")
-            token_end = string_end + 1
+            token_end = token_start + 1
+            while token_end < source_end and (
+                source[token_end] != '"' or source[token_end - 1] == "\\"
+            ):
+                token_end += 1
+            token_end += 1
             string_token: str = source[token_start:token_end]
             tokens.append(string_token)
         else:
@@ -111,4 +109,8 @@ def tcl_minify(source: str) -> str:
 
 # # comment
 # """
+# print(tcl_minify(test))
+
+
+# test = '''puts "escaped \\"quote\\""'''
 # print(tcl_minify(test))
