@@ -1,3 +1,6 @@
+import re
+
+
 def is_whitespace_or_semicolon(token: str) -> bool:
     return token.isspace() or token == ";"
 
@@ -7,7 +10,7 @@ def is_delimiter(token: str) -> bool:
 
 
 def tcl_parse(source: str) -> list[str]:
-    source = source.replace("\\\n", "")
+    source = re.sub(r"\\\n[ \t]*", " ", source)
 
     token_start: int = 0
     token_end: int = 0
