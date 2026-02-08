@@ -7,7 +7,7 @@ def is_delimiter(token: str) -> bool:
 
 
 def tcl_parse(source: str) -> list[str]:
-    source = source.replace("\\n", "")
+    source = source.replace("\\\n", "")
 
     token_start: int = 0
     token_end: int = 0
