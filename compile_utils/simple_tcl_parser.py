@@ -83,7 +83,6 @@ def tcl_optimize(tokens: list[str]) -> None:  # noqa:
         ):
             pass
         else:
-            # TODO: token[0] != "#" breaks everything for some reason
             new_tokens.append(token)
 
     while new_tokens and new_tokens[-1].isspace():
