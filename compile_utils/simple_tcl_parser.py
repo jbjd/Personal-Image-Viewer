@@ -6,7 +6,9 @@ def is_delimiter(token: str) -> bool:
     return is_whitespace_or_semicolon(token) or token in ("[", "]", "{", "}")
 
 
-def tcl_parse(source: str) -> list[str]:  # noqa: PLR0912
+def tcl_parse(source: str) -> list[str]:
+    source = source.replace("\\n", "")
+
     token_start: int = 0
     token_end: int = 0
     source_end: int = len(source)
@@ -19,17 +21,6 @@ def tcl_parse(source: str) -> list[str]:  # noqa: PLR0912
 
     while token_start < source_end:
         first_char: str = source[token_start]
-        if first_char.isspace():
-            if not tokens or is_whitespace_or_semicolon(tokens[-1]):
-                if tokens and (
-                    first_char == "\n"
-                    or (first_char == ";" and tokens[-1] in (" ", "\t"))
-                ):
-                    tokens[-1] = first_char
-            else:
-                tokens.append(first_char)
-            token_start += 1
-            continue
 
         if is_delimiter(first_char):
             tokens.append(first_char)
@@ -39,14 +30,16 @@ def tcl_parse(source: str) -> list[str]:  # noqa: PLR0912
         if first_char == "#":
             comment_end: int = find_token_end("\n")
             if comment_end == -1:
-                break  # end of file
-            token_end = comment_end
+                tokens.append(source[token_start:])
+            else:
+                tokens.append(source[token_start:comment_end])
+                token_end = comment_end
         elif first_char == '"':
             string_end: int = find_token_end('"')
             if string_end == -1:
                 raise SyntaxError("Found unclosed string")
             token_end = string_end + 1
-            string_token: str = source[token_start:token_end].replace("\\n", "")
+            string_token: str = source[token_start:token_end]
             tokens.append(string_token)
         else:
             token_end = token_start + 1
@@ -63,16 +56,36 @@ def tcl_parse(source: str) -> list[str]:  # noqa: PLR0912
     return tokens
 
 
-def tcl_optimize(tokens: list[str], remove_print: bool) -> None:
+def tcl_optimize(tokens: list[str], remove_print: bool) -> None:  # noqa:
     if not tokens:
         return
 
+    skip_until_line_end: bool = False
     new_tokens: list[str] = []
+
     for token in tokens:
+        if skip_until_line_end:
+            if token in ("\n", ";"):
+                skip_until_line_end = False
+            continue
+
         if token == "}" and new_tokens and new_tokens[-1].isspace():
             new_tokens[-1] = token
-        else:
+        elif token.isspace():
+            if not new_tokens:
+                pass
+            elif is_whitespace_or_semicolon(new_tokens[-1]):
+                if token == "\n" or (token == ";" and new_tokens[-1] in (" ", "\t")):
+                    new_tokens[-1] = token
+            else:
+                new_tokens.append(token)
+        elif remove_print and token in ("puts", "parray"):
+            skip_until_line_end = True
+        elif token[0] != "#":
             new_tokens.append(token)
+
+    while new_tokens and new_tokens[-1].isspace():
+        new_tokens.pop()
 
     tokens[:] = new_tokens
 
@@ -98,10 +111,12 @@ def tcl_minify(source: str, remove_print: bool = True) -> str:
 #         }  # some comment
 #     }
 # }
-# puts "hello   world";
+# if { $::tcl_platform(platform) eq {windows} } {
+#     puts -nonewline "hello   world";
+# }
 # namespace eval ::tcl::clock \\
 # [list variable LibDir [info library]]
 
-
+# # comment
 # """
 # print(tcl_minify(test))
