@@ -56,19 +56,13 @@ def tcl_parse(source: str) -> list[str]:
     return tokens
 
 
-def tcl_optimize(tokens: list[str], remove_print: bool) -> None:  # noqa:
+def tcl_optimize(tokens: list[str]) -> None:  # noqa:
     if not tokens:
         return
 
-    skip_until_line_end: bool = False
     new_tokens: list[str] = []
 
     for token in tokens:
-        if skip_until_line_end:
-            if token in ("\n", ";"):
-                skip_until_line_end = False
-            continue
-
         if token == "}" and new_tokens and new_tokens[-1].isspace():
             new_tokens[-1] = token
         elif token.isspace():
@@ -79,8 +73,6 @@ def tcl_optimize(tokens: list[str], remove_print: bool) -> None:  # noqa:
                     new_tokens[-1] = token
             else:
                 new_tokens.append(token)
-        elif remove_print and token in ("puts", "parray"):
-            skip_until_line_end = True
         elif token[0] != "#":
             new_tokens.append(token)
 
@@ -94,10 +86,10 @@ def tcl_unparse(tokens: list[str]) -> str:
     return "".join(str(token) for token in tokens)
 
 
-def tcl_minify(source: str, remove_print: bool = True) -> str:
+def tcl_minify(source: str) -> str:
     tokens: list[str] = tcl_parse(source)
 
-    tcl_optimize(tokens, remove_print)
+    tcl_optimize(tokens)
 
     return tcl_unparse(tokens)
 
