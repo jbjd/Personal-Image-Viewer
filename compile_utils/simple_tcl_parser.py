@@ -1,14 +1,6 @@
 import re
 
 
-def is_whitespace_or_semicolon(token: str) -> bool:
-    return token.isspace() or token == ";"
-
-
-def is_delimiter(token: str) -> bool:
-    return is_whitespace_or_semicolon(token) or token in ("[", "]", "{", "}")
-
-
 def tcl_parse(source: str) -> list[str]:
     source = re.sub(r"\\\n[ \t]*", " ", source)
 
@@ -21,12 +13,25 @@ def tcl_parse(source: str) -> list[str]:
     while token_start < source_end:
         first_char: str = source[token_start]
 
-        if is_delimiter(first_char):
-            tokens.append(first_char)
+        if _is_whitespace_or_semicolon(first_char):
             token_start += 1
+            if tokens:
+                if _is_whitespace_or_semicolon(tokens[-1]):
+                    if first_char == "\n" or (
+                        first_char == ";" and tokens[-1] in (" ", "\t")
+                    ):
+                        tokens[-1] = first_char
+                else:
+                    tokens.append(first_char)
+
             continue
 
-        if first_char == "#":
+        if _is_delimiter(first_char):
+            token_start += 1
+            tokens.append(first_char)
+            continue
+
+        if _is_token_comment(first_char, tokens):
             comment_end: int = source.find("\n", token_start + 1)
             if comment_end == -1:
                 tokens.append(source[token_start:])
@@ -44,7 +49,7 @@ def tcl_parse(source: str) -> list[str]:
             tokens.append(string_token)
         else:
             token_end = token_start + 1
-            while token_end < source_end and not is_delimiter(source[token_end]):
+            while token_end < source_end and not _is_delimiter(source[token_end]):
                 token_end += 1
             token: str = source[token_start:token_end]
             if token == "\\" and source[token_end : token_end + 1] == "\n":
@@ -62,18 +67,21 @@ def tcl_optimize(tokens: list[str]) -> None:  # noqa:
         return
 
     new_tokens: list[str] = []
+    depth: int = 0
 
     for token in tokens:
+        if token == "{":
+            depth += 1
+        elif token == "}":
+            depth -= 1
+
         if token == "}" and new_tokens and new_tokens[-1].isspace():
             new_tokens[-1] = token
-        elif token.isspace():
-            if not new_tokens:
-                pass
-            elif is_whitespace_or_semicolon(new_tokens[-1]):
-                if token == "\n" or (token == ";" and new_tokens[-1] in (" ", "\t")):
-                    new_tokens[-1] = token
-            else:
-                new_tokens.append(token)
+        elif (token == "\n" and (not new_tokens or new_tokens[-1] == "\n")) or (
+            _is_token_comment(token, new_tokens) and depth == 0
+        ):
+            # https://wiki.tcl-lang.org/page/Why+can+I+not+place+unmatched+braces+in+Tcl+comments
+            pass
         else:
             # TODO: token[0] != "#" breaks everything for some reason
             new_tokens.append(token)
@@ -96,22 +104,24 @@ def tcl_minify(source: str) -> str:
     return tcl_unparse(tokens)
 
 
-# test = """
-# uplevel \\#0 {
-#     package require msgcat 1.6
-#     if { $::tcl_platform(platform) eq {windows} } {
-#         if { [catch { package require registry 1.1 }] } {
-#             namespace eval ::tcl::clock [list variable NoRegistry {}]
-#         }  # some comment
-#     }
-# }
-# if { $::tcl_platform(platform) eq {windows} } {
-#     puts -nonewline "hello   world";
-# }
-# namespace eval ::tcl::clock \\
-# [list variable LibDir [info library]]
+def _is_whitespace_or_semicolon(token: str) -> bool:
+    return token.isspace() or token == ";"
 
-# # comment
+
+def _is_delimiter(token: str) -> bool:
+    return _is_whitespace_or_semicolon(token) or token in ("[", "]", "{", "}")
+
+
+def _is_token_comment(token: str, previous_tokens: list[str]) -> bool:
+    return token[0] == "#" and (
+        not previous_tokens or previous_tokens[-1][-1:] in ("\n", ";")
+    )
+
+
+# test = """
+# proc auto_load {cmd {namespace {}}} {
+# }
+# #comment
 # """
 # print(tcl_minify(test))
 
