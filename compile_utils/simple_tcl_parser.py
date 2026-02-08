@@ -26,7 +26,7 @@ def tcl_parse(source: str) -> list[str]:
 
             continue
 
-        if _is_delimiter(first_char):
+        if _is_bracket(first_char):
             token_start += 1
             tokens.append(first_char)
             continue
