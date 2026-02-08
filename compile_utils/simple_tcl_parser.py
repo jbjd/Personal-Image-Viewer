@@ -77,11 +77,25 @@ def tcl_optimize(tokens: list[str]) -> None:  # noqa:
 
         if token == "}" and new_tokens and new_tokens[-1].isspace():
             new_tokens[-1] = token
-        elif (token == "\n" and (not new_tokens or new_tokens[-1] == "\n")) or (
-            _is_token_comment(token, new_tokens)
-            and _safe_to_remove_comment(token, depth)
-        ):
+        elif token == "\n" and (not new_tokens or new_tokens[-1] == "\n"):
             pass
+        elif _is_token_comment(token, new_tokens):
+            open_curly_count: int
+            closing_curly_count: int
+
+            # https://wiki.tcl-lang.org/page/Why+can+I+not+place+unmatched+braces+in+Tcl+comments
+            if depth > 0:
+                open_curly_count = token.count("{")
+                closing_curly_count = token.count("}")
+            else:
+                open_curly_count = 0
+                closing_curly_count = 0
+
+            if open_curly_count > 0 or closing_curly_count > 0:
+                depth += open_curly_count
+                depth -= closing_curly_count
+                new_tokens.append(token)
+                continue
         else:
             new_tokens.append(token)
 
@@ -121,15 +135,11 @@ def _is_token_comment(token: str, previous_tokens: list[str]) -> bool:
     )
 
 
-def _safe_to_remove_comment(comment: str, depth: int) -> bool:
-    # https://wiki.tcl-lang.org/page/Why+can+I+not+place+unmatched+braces+in+Tcl+comments
-    return depth == 0 or ("{" not in comment and "}" not in comment)
-
-
-# test = """
-# proc auto_load {cmd {namespace {}}} {
+# test = """switch b {
+#     # match a {
+#      puts "Matched a" }
+#     b { puts "Matched b" }
 # }
-# #comment
 # """
 # print(tcl_minify(test))
 
