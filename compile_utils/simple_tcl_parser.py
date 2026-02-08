@@ -78,9 +78,9 @@ def tcl_optimize(tokens: list[str]) -> None:  # noqa:
         if token == "}" and new_tokens and new_tokens[-1].isspace():
             new_tokens[-1] = token
         elif (token == "\n" and (not new_tokens or new_tokens[-1] == "\n")) or (
-            _is_token_comment(token, new_tokens) and depth == 0
+            _is_token_comment(token, new_tokens)
+            and _safe_to_remove_comment(token, depth)
         ):
-            # https://wiki.tcl-lang.org/page/Why+can+I+not+place+unmatched+braces+in+Tcl+comments
             pass
         else:
             # TODO: token[0] != "#" breaks everything for some reason
@@ -108,14 +108,23 @@ def _is_whitespace_or_semicolon(token: str) -> bool:
     return token.isspace() or token == ";"
 
 
+def _is_bracket(token: str) -> bool:
+    return token in ("[", "]", "{", "}")
+
+
 def _is_delimiter(token: str) -> bool:
-    return _is_whitespace_or_semicolon(token) or token in ("[", "]", "{", "}")
+    return _is_whitespace_or_semicolon(token) or _is_bracket(token)
 
 
 def _is_token_comment(token: str, previous_tokens: list[str]) -> bool:
     return token[0] == "#" and (
         not previous_tokens or previous_tokens[-1][-1:] in ("\n", ";")
     )
+
+
+def _safe_to_remove_comment(comment: str, depth: int) -> bool:
+    # https://wiki.tcl-lang.org/page/Why+can+I+not+place+unmatched+braces+in+Tcl+comments
+    return depth == 0 or ("{" not in comment and "}" not in comment)
 
 
 # test = """
