@@ -91,7 +91,9 @@ def test_get_max_zoom(image_resizer: ImageResizer):
     """Should get correct max zoom value for 1920x1080 screen"""
     assert image_resizer.get_max_zoom(400, 400) == MIN_ZOOM_LEVEL
 
-    assert image_resizer.get_max_zoom(2100, 2100) == MIN_ZOOM_LEVEL
+    assert image_resizer.get_max_zoom(1920, 1080) == MIN_ZOOM_LEVEL
+
+    assert image_resizer.get_max_zoom(3300, 3300) == 5
 
     assert image_resizer.get_max_zoom(6600, 6600) == 6
 
