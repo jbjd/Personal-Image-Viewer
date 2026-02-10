@@ -151,7 +151,9 @@ class ImageResizer:
         height_ratio: int = ceil(log2(image_height / self.screen_height))
 
         biggest_ratio: int = width_ratio if width_ratio > height_ratio else height_ratio
-        zoom_level: int = (biggest_ratio << 1) if biggest_ratio > 1 else MIN_ZOOM_LEVEL
+        zoom_level: int = (
+            (biggest_ratio << 1) + 1 if biggest_ratio > 1 else MIN_ZOOM_LEVEL
+        )
 
         largest_dimension: int = (
             image_width if image_width > image_height else image_height
