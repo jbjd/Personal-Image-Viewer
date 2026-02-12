@@ -56,9 +56,6 @@ ignore = ["D202", "COM812", "C416", "C901", "D", "D102", "D105", "D107", "D203",
 # D104: Missing docstring in public package
 "tests/__init__.py" = ["D104"]
 
-[lint.isort]
-known-third-party = ["nuitka"]
-
 [format]
 quote-style = "double"
 indent-style = "space"
