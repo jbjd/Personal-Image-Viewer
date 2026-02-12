@@ -27,6 +27,7 @@ from personal_python_ast_optimizer.regex.replace import (
     re_replace,
     re_replace_file,
 )
+from personal_simple_tcl_minifier.parse import tcl_minify
 
 from compile_utils.code_to_skip import (
     classes_to_skip,
@@ -45,7 +46,6 @@ from compile_utils.code_to_skip import (
     vars_to_skip,
 )
 from compile_utils.log import get_logger
-from compile_utils.simple_tcl_parser import tcl_minify
 from compile_utils.validation import get_required_python_version
 
 SEPARATORS = r"[\\/]" if os.name == "nt" else r"[/]"
