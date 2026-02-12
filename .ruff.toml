@@ -7,9 +7,9 @@ target-version = "py312"
 select = ["ALL"]
 
 # D202: Newline after doc string (Less readable)
-# COM812: Trailing Comma (Only covers single line trailing commas, seems out of place)
 # C416: Unnecessary Comprehension (Slower)
 # C901: Effectively dupe of PLR0912
+# COM812: Trailing Comma (Only covers single line trailing commas, seems out of place)
 # D: Doc style
 # D102: Undocumented public method
 # D105: Undocumented magic method
@@ -40,7 +40,7 @@ select = ["ALL"]
 # TD002: Missing author in TODO
 # TD003: Missing issue link in TODO
 # TRY003: Avoid specifying long messages outside the exception class (Slower and less clear)
-ignore = ["D202", "COM812", "C416", "C901", "D", "D102", "D105", "D107", "D203", "D205", "D213", "D401", "D415", "EM", "FBT", "FIX", "FURB136", "PLC0415", "PLR0912", "PLR0913", "PLR1730", "PLR2004", "PLW0603", "PTH", "PYI021", "SIM105", "SLF001", "S105", "S110", "S603", "TC001", "TD002", "TD003", "TRY003"]
+ignore = ["D202", "C416", "C901", "COM812", "D", "D102", "D105", "D107", "D203", "D205", "D213", "D401", "D415", "EM", "FBT", "FIX", "FURB136", "PLC0415", "PLR0912", "PLR0913", "PLR1730", "PLR2004", "PLW0603", "PTH", "PYI021", "SIM105", "SLF001", "S105", "S110", "S603", "TC001", "TD002", "TD003", "TRY003"]
 
 [lint.extend-per-file-ignores]
 
