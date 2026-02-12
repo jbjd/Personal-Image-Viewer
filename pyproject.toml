@@ -13,10 +13,13 @@ skip = "build"
 [tool.coverage.run]
 omit = ["__init__.py", "main.py"]
 
+[tool.mypy]
+ignore_missing_imports = "True"
+exclude = "build/|test.py"
+
 [tool.pytest]
 pythonpath = ["image_viewer"]
 testpaths = ["tests"]
-
 markers = [
     "memory_leak: Tests that check if compiled C extensions leak memory"
 ]
