@@ -55,14 +55,11 @@ build-all: build-util-os-nt build-util-generic build-image-read
 install:
 	$(PYTHON_FOR_INSTALL_STEP) compile.py --assume-this-machine --strip --no-cleanup
 
-clean:
-	rm --preserve-root -Irf */__pycache__/ *.dist/ *.build/ build/ tmp*/ *.egg-info/ .mypy_cache/ .pytest_cache/ */ERROR.log *.exe .coverage compilation-report.xml nuitka-crash-report.xml
-
 validate:
 	ruff check .
 	ruff format --check
 	mypy . --check-untyped-defs
-	codespell image_viewer tests compile_utils compile.py .ruff.toml README.md
+	codespell
 
 test:
 	$(PYTHON_FOR_INSTALL_STEP) -m pytest -m "not memory_leak" --cov=image_viewer --cov-report term-missing
