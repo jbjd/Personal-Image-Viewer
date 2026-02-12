@@ -27,6 +27,7 @@ from personal_python_ast_optimizer.regex.replace import (
     re_replace,
     re_replace_file,
 )
+from personal_simple_tcl_minifier.parse import tcl_minify
 
 from compile_utils.code_to_skip import (
     classes_to_skip,
@@ -207,40 +208,10 @@ def clean_tk_files(compile_dir: str) -> None:
         code_file: str = glob_result[0]
         re_replace_file(code_file, regexes, raise_if_not_applied=True)
 
-    # strip various things in tcl files
-    comments = RegexReplacement(pattern=r"^\s*#.*", flags=re.MULTILINE, count=0)
-    whitespace_around_newlines = RegexReplacement(
-        pattern=r"\n\s+", replacement="\n", count=0
-    )
-    consecutive_whitespace = RegexReplacement(
-        pattern="[ \t][ \t]+", replacement=" ", count=0
-    )
-    prints = RegexReplacement(pattern="^(puts|parray) .*", flags=re.MULTILINE, count=0)
-    extra_new_lines = RegexReplacement(pattern="\n\n+", replacement="\n", count=0)
-    starting_new_line = RegexReplacement(pattern="^\n", count=1)
-    whitespace_between_brackets = RegexReplacement(
-        pattern="}\n}", replacement="}}", count=0
-    )
-
     for code_file in _get_files_in_folder_with_filter(compile_dir, (".tcl", ".tm")):
-        re_replace_file(
-            code_file,
-            [
-                comments,
-                whitespace_around_newlines,
-                consecutive_whitespace,
-                prints,
-                extra_new_lines,
-                starting_new_line,
-                whitespace_between_brackets,
-            ],
-        )
-
-    re_replace_file(
-        os.path.join(compile_dir, "tcl/tclIndex"),
-        whitespace_around_newlines,
-        raise_if_not_applied=True,
-    )
+        source: str = read_file_utf8(code_file)
+        source = tcl_minify(source)
+        write_file_utf8(code_file, source)
 
 
 def strip_files(compile_dir: str) -> None:

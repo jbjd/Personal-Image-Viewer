@@ -278,7 +278,7 @@ def init_PIL(font_file: str, font_size: int) -> None:  # noqa: N802
     ImageDraw.font = _get_PIL_font(font_file, font_size)
 
 
-def _get_PIL_font(font_file: str, font_size: int) -> FreeTypeFont:  # noqa: C901, N802
+def _get_PIL_font(font_file: str, font_size: int) -> FreeTypeFont:  # noqa: N802
     """Returns font for PIL to use."""
 
     font_folder: str
