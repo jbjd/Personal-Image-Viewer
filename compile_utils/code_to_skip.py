@@ -26,7 +26,7 @@ from image_viewer.image.state import ZOOM_UNSET
 from image_viewer.ui.rename_entry import _ERROR_COLOR
 
 # Increment when edits to this file or module_dependencies are merged into main
-SKIP_ITERATION: int = 5
+SKIP_ITERATION: int = 6
 
 # Module independent skips
 
@@ -126,6 +126,7 @@ functions_to_skip: dict[str, set[str]] = {
         "load",
         "set_variation_by_axes",
         "set_variation_by_name",
+        "truetype",
     },
     "PIL.ImageMath": {"unsafe_eval"},
     "PIL.ImageOps": {
@@ -153,6 +154,7 @@ functions_to_skip: dict[str, set[str]] = {
         "sepia",
         "wedge",
     },
+    "PIL.ImageSequence": {"all_frames"},
     "PIL.ImageTk": {"_get_image_from_kw", "getimage"},
     "PIL.GifImagePlugin": {"_save_netpbm", "getheader", "register_mime"},
     "PIL.JpegImagePlugin": {"_getexif", "_getmp", "load_djpeg", "register_mime"},
@@ -303,7 +305,11 @@ regex_to_apply_py: dict[str, list[RegexReplacement]] = {
         RegexReplacement(
             pattern=r"if isinstance\(core, DeferredError\):.*?core\.ex", flags=re.DOTALL
         ),
-        RegexReplacement(pattern=r"MAX_STRING_LENGTH is not None and"),
+        RegexReplacement(
+            pattern=r"if layout_engine not in.*?elif.*?layout_engine = Layout\.BASIC",
+            replacement="layout_engine = Layout.BASIC",
+            flags=re.DOTALL,
+        ),
     ],
     "PIL.ImageMode": [
         RegexReplacement(
