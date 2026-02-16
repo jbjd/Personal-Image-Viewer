@@ -82,6 +82,8 @@ class ImageResizer:
             image_width / self.screen_width, image_height / self.screen_height
         )
 
+        if ratio_to_screen >= 8:
+            return (1, 8)
         if ratio_to_screen >= 4:
             return (1, 4)
         if ratio_to_screen >= 2:
