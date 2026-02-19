@@ -64,8 +64,8 @@ def rotate_image(image: Image, angle: Rotation) -> Image:
 def image_is_animated(image: Image) -> bool:
     """Checks if PIL Image is animated.
 
-    :param image: A PIL Image.
-    :returns: True if image is animated."""
+    :param image: A PIL Image
+    :returns: True if image is animated"""
 
     return getattr(image, "is_animated", False)
 
@@ -159,7 +159,7 @@ def create_dropdown_image(text: str) -> Image:
     line_count: int = text.count("\n") + 1
     line_spacing: int = round(line_height * 0.8)
 
-    x_padding: int = max(int(line_width * 0.14), 20)
+    x_padding: int = int(line_width * 0.14)
     y_padding: int = line_spacing * (line_count + 1)
 
     width: int = line_width + x_padding

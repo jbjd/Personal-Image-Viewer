@@ -209,13 +209,16 @@ try:
         with open(
             os.path.join(nuitka_dist_path, BUILD_INFO_FILE), "w", encoding="utf-8"
         ) as fp:
-            fp.write(f"OS: {os.name}\n")
-            fp.write(f"Python: {sys.version}\n")
-            fp.write("Dependencies:\n")
+            fp.write(
+                f"""OS: {os.name}
+Python: {sys.version}
+Arguments: {args}
+Dependencies:
+"""
+            )
             for module in module_dependencies:
                 name: str = module.name
                 fp.write(f"\t{name}: {get_module_version(name)}\n")
-            fp.write(f"Arguments: {args}\n")
 
     clean_tk_files(nuitka_dist_path)
     if args.strip:
