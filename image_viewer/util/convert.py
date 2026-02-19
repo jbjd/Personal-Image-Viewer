@@ -5,15 +5,17 @@ from typing import IO
 
 from PIL.Image import Image
 from PIL.Image import open as open_image
+from PIL.ImageSequence import Iterator as ImageIterator
 from PIL.JpegImagePlugin import RAWMODE as VALID_JPEG_MODES
 
+from image_viewer.animation.frame import DEFAULT_ANIMATION_SPEED_MS
 from image_viewer.constants import VALID_FILE_TYPES
 from image_viewer.image.file import magic_number_guess
-from image_viewer.util.PIL import image_is_animated, save_image
+from image_viewer.util.PIL import image_is_animated
 
 
 def try_convert_file_and_save_new(
-    old_path: str, new_path: str | IO[bytes], target_format: str, quality: int = 90
+    old_path: str, new_path: str | IO[bytes], target_format: str, quality: int = 96
 ) -> bool:
     """Tries to convert image at old_path to a target format at new_path.
 
@@ -38,25 +40,39 @@ def try_convert_file_and_save_new(
 
         temp_img: Image
         with open_image(fp) as temp_img:
-            is_animated: bool = image_is_animated(temp_img)
-            if is_animated and target_format not in ("webp", "gif", "png"):
-                raise ValueError
+            save_kwargs: dict = {
+                "optimize": True,
+                "quality": quality,
+                "icc_profile": temp_img.info.get("icc_profile"),
+            }
 
-            if target_format in ("jpg", "jpeg", "jif", "jfif", "jpe"):
-                target_format = "jpeg"
-                if temp_img.mode not in VALID_JPEG_MODES:
-                    temp_img = temp_img.convert("RGB")  # noqa: PLW2901
-            elif (
-                target_format == "gif"
-                and original_ext == "webp"
-                and "background" in temp_img.info
-            ):
-                # This pop fixes missing bitmap error during webp -> gif conversion
-                del temp_img.info["background"]
+            if image_is_animated(temp_img):
+                if target_format not in ("webp", "gif", "png"):
+                    raise ValueError
 
-            save_image(
-                temp_img, new_path, target_format, quality, is_animated=is_animated
-            )
+                save_kwargs["save_all"] = True
+                save_kwargs["loop"] = temp_img.info.get("loop", 0)
+
+                save_kwargs["duration"] = [
+                    frame.info.get("duration", DEFAULT_ANIMATION_SPEED_MS)
+                    for frame in ImageIterator(temp_img)
+                ]
+
+            match target_format:
+                case "avif":
+                    save_kwargs["speed"] = 0
+                case "jpg" | "jpeg" | "jif" | "jfif" | "jpe":
+                    target_format = "jpeg"
+                    if temp_img.mode not in VALID_JPEG_MODES:
+                        temp_img = temp_img.convert("RGB")  # noqa: PLW2901
+                case "gif":
+                    if original_ext == "webp" and "background" in temp_img.info:
+                        # This pop fixes missing bitmap error
+                        del temp_img.info["background"]
+                case "webp":
+                    save_kwargs["method"] = 6
+
+            temp_img.save(new_path, target_format, **save_kwargs)
 
     return True
 
