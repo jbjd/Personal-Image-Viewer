@@ -48,27 +48,6 @@ def get_mode_info(mode: str) -> tuple[str, int]:
     )
 
 
-def save_image(
-    image: Image,
-    fp: str | IO[bytes],
-    extension: str,
-    quality: int,
-    is_animated: bool | None = None,
-) -> None:
-    """Saves a PIL image to disk"""
-    save_all: bool = image_is_animated(image) if is_animated is None else is_animated
-
-    kwargs: dict = {
-        "optimize": True,
-        "speed": 0,
-        "quality": quality,
-        "save_all": save_all,
-        "icc_profile": image.info.get("icc_profile"),
-    }
-
-    image.save(fp, extension, **kwargs)
-
-
 def rotate_image(image: Image, angle: Rotation) -> Image:
     """Rotates an image with the highest quality"""
     match angle:
@@ -144,8 +123,12 @@ def _has_useless_alpha_channel(image: Image) -> bool:
     if image.mode not in _modes_with_alpha:
         return False
 
-    alpha_colors: list[tuple[int, tuple[int, ...]]] = image.split()[-1].getcolors()  # type: ignore[assignment]
-    return len(alpha_colors) == 1 and alpha_colors[0][1] == 255
+    image.load()
+    alpha_distribution: list[int] = image.im.split()[-1].histogram()
+    return (
+        all(alpha_distribution[i] == 0 for i in range(254))
+        and alpha_distribution[255] > 0
+    )
 
 
 def _should_be_grayscale(image: Image) -> bool:
@@ -156,7 +139,7 @@ def _should_be_grayscale(image: Image) -> bool:
     if image.mode != "RGB":
         return False
 
-    colors: list[tuple[int, tuple[int, ...]]] | None = image.getcolors()  # type: ignore[assignment]
+    colors: list[tuple[int, tuple[int, int, int]]] | None = image.getcolors()  # type: ignore[assignment]
     return colors is not None and all(rgb[0] == rgb[1] == rgb[2] for _, rgb in colors)
 
 

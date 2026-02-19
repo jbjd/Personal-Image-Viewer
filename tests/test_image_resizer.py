@@ -13,7 +13,8 @@ _MODULE_PATH: str = "image_viewer.image.resizer"
 
 def test_jpeg_scale_factor(image_resizer: ImageResizer):
     """Should return correct ratios for a 1080x1920 screen"""
-    assert image_resizer._get_jpeg_scale_factor(9999, 9999) == (1, 4)
+    assert image_resizer._get_jpeg_scale_factor(9999, 9999) == (1, 8)
+    assert image_resizer._get_jpeg_scale_factor(6666, 6666) == (1, 4)
     assert image_resizer._get_jpeg_scale_factor(3000, 3000) == (1, 2)
     assert image_resizer._get_jpeg_scale_factor(1, 1) is None
 

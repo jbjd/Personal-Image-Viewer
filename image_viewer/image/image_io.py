@@ -22,7 +22,6 @@ from image_viewer.util.PIL import (
     get_placeholder_for_errored_image,
     optimize_image_mode,
     rotate_image,
-    save_image,
 )
 
 
@@ -181,11 +180,10 @@ class ImageIO:
         :param image_path: Path to the current image
         :returns: If optimization was performed"""
 
-        image_format: str | None = self.PIL_image.format
-        if self._image_optimized or image_format != "PNG":
+        if self._image_optimized or self.PIL_image.format != "PNG":
             return False
 
-        image = optimize_image_mode(self.PIL_image)
+        image: Image = optimize_image_mode(self.PIL_image)
 
         delete_tmp_file: bool = True
         tmp_file = tempfile.NamedTemporaryFile(  # noqa: SIM115
@@ -193,7 +191,12 @@ class ImageIO:
         )
         try:
             with tmp_file:
-                save_image(image, tmp_file, image_format, 100)
+                image.save(
+                    tmp_file,
+                    "PNG",
+                    quality=100,
+                    icc_profile=image.info.get("icc_profile"),
+                )
 
             original_size: int = self.image_buffer.byte_size
             new_size: int = os.stat(tmp_file.name).st_size
