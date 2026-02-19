@@ -3,6 +3,8 @@ indent-width = 4
 
 target-version = "py312"
 
+exclude = ["*.ipynb", "test.py"]
+
 [lint]
 select = ["ALL"]
 
