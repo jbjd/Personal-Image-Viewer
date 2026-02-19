@@ -2,13 +2,13 @@ import os
 from enum import Enum
 from os import stat_result
 from time import ctime
+from tkinter.filedialog import askopenfilename
 
 from PIL.Image import Image
 
 from image_viewer.actions.types import Convert, Delete, Rename
 from image_viewer.actions.undoer import ActionUndoer, UndoResponse
 from image_viewer.constants import VALID_FILE_TYPES, Movement
-from image_viewer.files.file_dialog_asker import FileDialogAsker
 from image_viewer.image.cache import ImageCache, ImageCacheEntry
 from image_viewer.image.file import ImageName, ImageNameList, ImageSearchResult
 from image_viewer.util.convert import try_convert_file_and_save_new
@@ -31,10 +31,10 @@ class ImageFileManager:
     """Manages interaction with and tracking of image files"""
 
     __slots__ = (
+        "_dialog_file_types",
         "_files",
         "action_undoer",
         "current_image",
-        "file_dialog_asker",
         "image_cache",
         "image_folder",
         "path_to_image",
@@ -44,9 +44,10 @@ class ImageFileManager:
         """Load single file for display before we load the rest"""
         self.image_folder: str = get_normalized_folder_name(first_image_path)
         self.image_cache: ImageCache = image_cache
-
         self.action_undoer = ActionUndoer()
-        self.file_dialog_asker = FileDialogAsker(VALID_FILE_TYPES)
+        self._dialog_file_types: list[tuple[str, str]] = [
+            ("", f"*.{file_type}") for file_type in VALID_FILE_TYPES
+        ]
 
         first_image_name = ImageName(os.path.basename(first_image_path))
         self._files = ImageNameList([first_image_name])
@@ -69,7 +70,12 @@ class ImageFileManager:
     def move_to_new_file(self) -> bool:
         """Opens native open file dialog and points to new image if selected.
         Returns True if user selected a file, False if dialog was exited"""
-        new_file_path: str = self.file_dialog_asker.ask_open_image(self.image_folder)
+        new_file_path: str = askopenfilename(
+            title="Open Image",
+            initialdir=self.image_folder,
+            filetypes=self._dialog_file_types,
+        )
+
         if new_file_path == "":
             return False
 
