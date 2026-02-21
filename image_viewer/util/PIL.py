@@ -64,8 +64,8 @@ def rotate_image(image: Image, angle: Rotation) -> Image:
 def image_is_animated(image: Image) -> bool:
     """Checks if PIL Image is animated.
 
-    :param image: A PIL Image.
-    :returns: True if image is animated."""
+    :param image: A PIL Image
+    :returns: True if image is animated"""
 
     return getattr(image, "is_animated", False)
 
