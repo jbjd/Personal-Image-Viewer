@@ -40,7 +40,7 @@ static inline CMemoryViewBuffer *CMemoryViewBuffer_New(PyObject *pyMemoryView, c
 }
 // CMemoryViewBuffer End
 
-// CMemoryViewBufferJpeg End
+// CMemoryViewBufferJpeg Start
 static PyMemberDef CMemoryViewBufferJpeg_members[] = {
     {"dimensions", Py_T_OBJECT_EX, offsetof(CMemoryViewBufferJpeg, dimensions), Py_READONLY, 0},
     {NULL}};
