@@ -10,6 +10,12 @@ typedef struct
 typedef struct
 {
     FileAction base;
+    PyObject *new_path;
+} Rename;
+
+typedef struct
+{
+    FileAction base;
 } Delete;
 
 #endif /* PIV_ACTIONS */
