@@ -8,6 +8,13 @@ static PyMemberDef FileAction_members[] = {
     {"original_path", Py_T_OBJECT_EX, offsetof(FileAction, original_path), Py_READONLY, 0},
     {NULL}};
 
+static void FileAction_init_set(FileAction *self, PyObject *original_path)
+{
+    Py_XDECREF(self->original_path);
+    Py_INCREF(original_path);
+    self->original_path = original_path;
+}
+
 static int FileAction_init(FileAction *self, PyObject *args, PyObject *kwds)
 {
     PyObject *original_path;
@@ -18,9 +25,7 @@ static int FileAction_init(FileAction *self, PyObject *args, PyObject *kwds)
         return -1;
     }
 
-    Py_XDECREF(self->original_path);
-    Py_INCREF(original_path);
-    self->original_path = original_path;
+    FileAction_init_set(self, original_path);
 
     return 0;
 }
@@ -47,6 +52,15 @@ static PyMemberDef Rename_members[] = {
     {"new_path", Py_T_OBJECT_EX, offsetof(Rename, new_path), Py_READONLY, 0},
     {NULL}};
 
+static void Rename_init_set(Rename *self, PyObject *original_path, PyObject *new_path)
+{
+    FileAction_init_set(&self->base, original_path);
+
+    Py_XDECREF(self->new_path);
+    Py_INCREF(new_path);
+    self->new_path = new_path;
+}
+
 static int Rename_init(Rename *self, PyObject *args, PyObject *kwds)
 {
     PyObject *original_path;
@@ -58,13 +72,7 @@ static int Rename_init(Rename *self, PyObject *args, PyObject *kwds)
         return -1;
     }
 
-    Py_XDECREF(self->base.original_path);
-    Py_INCREF(original_path);
-    self->base.original_path = original_path;
-
-    Py_XDECREF(self->new_path);
-    Py_INCREF(new_path);
-    self->new_path = new_path;
+    Rename_init_set(self, original_path, new_path);
 
     return 0;
 }
@@ -72,7 +80,7 @@ static int Rename_init(Rename *self, PyObject *args, PyObject *kwds)
 static void Rename_dealloc(Rename *self)
 {
     Py_XDECREF(self->new_path);
-    FileAction_dealloc((FileAction *)self);
+    FileAction_dealloc(&self->base);
 }
 
 static PyTypeObject Rename_Type = {
@@ -87,6 +95,50 @@ static PyTypeObject Rename_Type = {
     .tp_members = Rename_members,
 };
 // Rename End
+
+// Convert Start
+static PyMemberDef Convert_members[] = {
+    {"original_file_deleted", Py_T_OBJECT_EX, offsetof(Convert, original_file_deleted), Py_READONLY, 0},
+    {NULL}};
+
+static int Convert_init(Convert *self, PyObject *args, PyObject *kwds)
+{
+    PyObject *original_path;
+    PyObject *new_path;
+    PyObject *original_file_deleted;
+
+    if (!PyArg_ParseTuple(args, "OOO", &original_path, &new_path, &original_file_deleted))
+    {
+        PyErr_SetString(PyExc_TypeError, "Convert.__init__ takes 3 positional arguments");
+        return -1;
+    }
+
+    Rename_init_set(&self->base, original_path, new_path);
+
+    Py_XDECREF(self->original_file_deleted);
+    Py_INCREF(original_file_deleted);
+    self->original_file_deleted = original_file_deleted;
+
+    return 0;
+}
+
+static void Convert_dealloc(Convert *self)
+{
+    Rename_dealloc(&self->base);
+}
+
+static PyTypeObject Convert_Type = {
+    .ob_base = PyVarObject_HEAD_INIT(NULL, 0).tp_name = "_actions.Convert",
+    .tp_basicsize = sizeof(Convert),
+    .tp_itemsize = 0,
+    .tp_base = &Rename_Type,
+    .tp_flags = Py_TPFLAGS_DEFAULT | Py_TPFLAGS_IMMUTABLETYPE,
+    .tp_new = PyType_GenericNew,
+    .tp_init = (initproc)Convert_init,
+    .tp_dealloc = (destructor)Convert_dealloc,
+    .tp_members = Convert_members,
+};
+// Convert End
 
 // Delete Start
 static int Delete_init(Delete *self, PyObject *args, PyObject *kwds)
@@ -122,6 +174,7 @@ PyMODINIT_FUNC PyInit__actions(void)
 {
     if (unlikely(PyType_Ready(&FileAction_Type) < 0 ||
                  PyType_Ready(&Rename_Type) < 0 ||
+                 PyType_Ready(&Convert_Type) < 0 ||
                  PyType_Ready(&Delete_Type) < 0))
     {
         return NULL;
@@ -131,6 +184,7 @@ PyMODINIT_FUNC PyInit__actions(void)
 
     if (unlikely(PyModule_AddObjectRef(module, "FileAction", (PyObject *)&FileAction_Type) < 0 ||
                  PyModule_AddObjectRef(module, "Rename", (PyObject *)&Rename_Type) < 0 ||
+                 PyModule_AddObjectRef(module, "Convert", (PyObject *)&Convert_Type) < 0 ||
                  PyModule_AddObjectRef(module, "Delete", (PyObject *)&Delete_Type) < 0))
     {
         Py_DECREF(module);
