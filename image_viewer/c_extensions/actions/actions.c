@@ -40,7 +40,7 @@ static PyTypeObject FileAction_Type = {
     .ob_base = PyVarObject_HEAD_INIT(NULL, 0).tp_name = "_actions.FileAction",
     .tp_basicsize = sizeof(FileAction),
     .tp_itemsize = 0,
-    .tp_flags = Py_TPFLAGS_DEFAULT | Py_TPFLAGS_IMMUTABLETYPE | Py_TPFLAGS_DISALLOW_INSTANTIATION | Py_TPFLAGS_BASETYPE,
+    .tp_flags = Py_TPFLAGS_DEFAULT | Py_TPFLAGS_IMMUTABLETYPE | Py_TPFLAGS_IS_ABSTRACT | Py_TPFLAGS_BASETYPE,
     .tp_init = (initproc)FileAction_init,
     .tp_dealloc = (destructor)FileAction_dealloc,
     .tp_members = FileAction_members,
