@@ -67,19 +67,4 @@ class ActionUndoer(deque[FileAction]):
             return None
 
         action: FileAction = self[-1]
-
-        if type(action) is Rename:
-            return f"Rename {action.new_path} back to {action.original_path}?"
-        if type(action) is Convert and action.original_file_deleted:
-            return (
-                f"Delete {action.new_path} and restore {action.original_path}"
-                " from trash?"
-            )
-        if type(action) is Convert:
-            return f"Delete {action.new_path}?"
-        if type(action) is Delete:
-            return f"Restore {action.original_path} from trash?"
-
-        assert_never(  # pragma: no cover
-            action.__class__.__name__  # type: ignore[arg-type]
-        )
+        return action.get_undo_message()

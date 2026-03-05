@@ -48,6 +48,17 @@ static PyTypeObject FileAction_Type = {
 // FileAction End
 
 // Rename Start
+static PyObject *Rename_get_undo_message(PyObject *self, PyObject *Py_UNUSED(ignored))
+{
+    Rename *self_rename = (Rename *)self;
+
+    return PyUnicode_FromFormat("Rename %U back to %U?", self_rename->new_path, self_rename->base.original_path);
+}
+
+static PyMethodDef Rename_methods[] = {
+    {"get_undo_message", Rename_get_undo_message, METH_NOARGS, NULL},
+    {NULL, NULL, 0, NULL}};
+
 static PyMemberDef Rename_members[] = {
     {"new_path", Py_T_OBJECT_EX, offsetof(Rename, new_path), Py_READONLY, 0},
     {NULL}};
@@ -92,11 +103,25 @@ static PyTypeObject Rename_Type = {
     .tp_new = PyType_GenericNew,
     .tp_init = (initproc)Rename_init,
     .tp_dealloc = (destructor)Rename_dealloc,
+    .tp_methods = Rename_methods,
     .tp_members = Rename_members,
 };
 // Rename End
 
 // Convert Start
+static PyObject *Convert_get_undo_message(PyObject *self, PyObject *Py_UNUSED(ignored))
+{
+    Convert *self_convert = (Convert *)self;
+
+    return self_convert->original_file_deleted == Py_True
+               ? PyUnicode_FromFormat("Delete %U and restore %U from trash?", self_convert->base.new_path, self_convert->base.base.original_path)
+               : PyUnicode_FromFormat("Delete %U?", self_convert->base.new_path);
+}
+
+static PyMethodDef Convert_methods[] = {
+    {"get_undo_message", Convert_get_undo_message, METH_NOARGS, NULL},
+    {NULL, NULL, 0, NULL}};
+
 static PyMemberDef Convert_members[] = {
     {"original_file_deleted", Py_T_OBJECT_EX, offsetof(Convert, original_file_deleted), Py_READONLY, 0},
     {NULL}};
@@ -136,11 +161,23 @@ static PyTypeObject Convert_Type = {
     .tp_new = PyType_GenericNew,
     .tp_init = (initproc)Convert_init,
     .tp_dealloc = (destructor)Convert_dealloc,
+    .tp_methods = Convert_methods,
     .tp_members = Convert_members,
 };
 // Convert End
 
 // Delete Start
+static PyObject *Delete_get_undo_message(PyObject *self, PyObject *Py_UNUSED(ignored))
+{
+    Delete *self_delete = (Delete *)self;
+
+    return PyUnicode_FromFormat("Restore %U from trash?", self_delete->base.original_path);
+}
+
+static PyMethodDef Delete_methods[] = {
+    {"get_undo_message", Delete_get_undo_message, METH_NOARGS, NULL},
+    {NULL, NULL, 0, NULL}};
+
 static int Delete_init(Delete *self, PyObject *args, PyObject *kwds)
 {
     return FileAction_init((FileAction *)self, args, kwds);
@@ -160,6 +197,7 @@ static PyTypeObject Delete_Type = {
     .tp_new = PyType_GenericNew,
     .tp_init = (initproc)Delete_init,
     .tp_dealloc = (destructor)Delete_dealloc,
+    .tp_methods = Delete_methods,
 };
 // Delete End
 

@@ -40,21 +40,27 @@ def test_get_message_when_empty():
 
 
 @pytest.mark.parametrize(
-    "action",
+    ("action", "expected_message"),
     [
-        (Delete("original_path")),
-        (Convert("original_path", "new_path", original_file_deleted=True)),
-        (Convert("original_path", "new_path", original_file_deleted=False)),
-        (Rename("original_path", "new_path")),
+        (Delete("original_path"), "Restore original_path from trash?"),
+        (
+            Convert("original_path", "new_path", True),
+            "Delete new_path and restore original_path from trash?",
+        ),
+        (Convert("original_path", "new_path", False), "Delete new_path?"),
+        (
+            Rename("original_path", "new_path"),
+            "Rename new_path back to original_path?",
+        ),
     ],
 )
-def test_undo_action(action: FileAction):
+def test_undo_action(action: FileAction, expected_message: str):
     """Should call correct functions based on action to undo"""
 
     action_undoer = ActionUndoer()
 
     action_undoer.append(action)
-    assert action_undoer.get_undo_message()
+    assert action_undoer.get_undo_message() == expected_message
 
     with (
         patch(f"{_MODULE_PATH}.undoer.trash_file") as mock_trash,

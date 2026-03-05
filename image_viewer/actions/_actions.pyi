@@ -1,3 +1,6 @@
+from abc import abstractmethod
+from typing import override
+
 class FileAction:
     """Abstract class that can't be instantiated.
 
@@ -7,6 +10,9 @@ class FileAction:
 
     original_path: str
 
+    @abstractmethod
+    def get_undo_message(self) -> str: ...
+
 class Rename(FileAction):
     """Represents a file path changing"""
 
@@ -15,6 +21,8 @@ class Rename(FileAction):
     new_path: str
 
     def __init__(self, original_path: str, new_path: str, /) -> None: ...
+    @override
+    def get_undo_message(self) -> str: ...
 
 class Convert(Rename):
     """Represents a conversion done to a file such that a new path exists,
@@ -26,12 +34,16 @@ class Convert(Rename):
     original_file_deleted: bool
 
     def __init__(
-        self, original_path: str, new_path: str, original_file_deleted: bool
+        self, original_path: str, new_path: str, original_file_deleted: bool, /
     ) -> None: ...
+    @override
+    def get_undo_message(self) -> str: ...
 
 class Delete(FileAction):
     """Represents a file being deleted and sent to the recycle bin"""
 
     __slots__ = ()
 
-    def __init__(self, original_path: str) -> None: ...
+    def __init__(self, original_path: str, /) -> None: ...
+    @override
+    def get_undo_message(self) -> str: ...
