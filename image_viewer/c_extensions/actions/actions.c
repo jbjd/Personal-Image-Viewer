@@ -19,7 +19,7 @@ static int FileAction_init(FileAction *self, PyObject *args, PyObject *kwds)
 {
     PyObject *original_path;
 
-    if (!PyArg_ParseTuple(args, "O", &original_path))
+    if (unlikely(!PyArg_ParseTuple(args, "O", &original_path)))
     {
         PyErr_SetString(PyExc_TypeError, "FileAction.__init__ takes 1 positional argument");
         return -1;
@@ -77,7 +77,7 @@ static int Rename_init(Rename *self, PyObject *args, PyObject *kwds)
     PyObject *original_path;
     PyObject *new_path;
 
-    if (!PyArg_ParseTuple(args, "OO", &original_path, &new_path))
+    if (unlikely(!PyArg_ParseTuple(args, "OO", &original_path, &new_path)))
     {
         PyErr_SetString(PyExc_TypeError, "Rename.__init__ takes 2 positional arguments");
         return -1;
@@ -132,7 +132,7 @@ static int Convert_init(Convert *self, PyObject *args, PyObject *kwds)
     PyObject *new_path;
     PyObject *original_file_deleted;
 
-    if (!PyArg_ParseTuple(args, "OOO", &original_path, &new_path, &original_file_deleted))
+    if (unlikely(!PyArg_ParseTuple(args, "OOO", &original_path, &new_path, &original_file_deleted)))
     {
         PyErr_SetString(PyExc_TypeError, "Convert.__init__ takes 3 positional arguments");
         return -1;
@@ -201,6 +201,84 @@ static PyTypeObject Delete_Type = {
 };
 // Delete End
 
+// ActionQueue Start
+static inline bool ActionQueue_is_empty(ActionQueue *self)
+{
+    return self->actions[self->index] == NULL;
+}
+
+static PyObject *ActionQueue_append(PyObject *self, PyObject *arg)
+{
+    ActionQueue *self_action_queue = (ActionQueue *)self;
+    bool is_empty = ActionQueue_is_empty(self_action_queue);
+    self_action_queue->actions[self_action_queue->index] = arg;
+
+    if (!is_empty)
+    {
+        self_action_queue->index = (self_action_queue->index + 1) % self_action_queue->max_size;
+    }
+
+    return Py_None;
+}
+
+static PyObject *ActionQueue_get_undo_message(PyObject *self, PyObject *Py_UNUSED(ignored))
+{
+    ActionQueue *self_action_queue = (ActionQueue *)self;
+    bool is_empty = ActionQueue_is_empty(self_action_queue);
+
+    return is_empty ? Py_None : PyObject_CallMethod(self_action_queue->actions[self_action_queue->index], "get_undo_message", NULL);
+}
+
+static PyMethodDef ActionQueue_methods[] = {
+    {"append", ActionQueue_append, METH_O, NULL},
+    {"get_undo_message", ActionQueue_get_undo_message, METH_NOARGS, NULL},
+    {NULL, NULL, 0, NULL}};
+
+static PyObject *ActionQueue_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
+{
+    ActionQueue *self;
+
+    self = (ActionQueue *)type->tp_alloc(type, 0);
+    if (unlikely(self == NULL))
+    {
+        return NULL;
+    }
+
+    int max_size;
+    int success = PyArg_ParseTuple(args, "i", &max_size);
+    if (unlikely(!success || max_size < 0 || max_size > 100))
+    {
+        PyErr_SetString(PyExc_TypeError, success == false ? "ActionQueue takes 1 positional argument of a 32-bit integer"
+                                         : max_size < 0   ? "ActionQueue can't have a size below 0"
+                                                          : "ActionQueue can't have a size over 100");
+        Py_DECREF(self);
+        return NULL;
+    }
+
+    self->actions = calloc(max_size, sizeof(PyObject *));
+    self->index = 0;
+    self->max_size = max_size;
+
+    return (PyObject *)self;
+}
+
+static void ActionQueue_dealloc(ActionQueue *self)
+{
+    free(self->actions);
+    Py_TYPE(self)->tp_free((PyObject *)self);
+}
+
+static PyTypeObject ActionQueue_Type = {
+    .ob_base = PyVarObject_HEAD_INIT(NULL, 0).tp_name = "_actions.ActionQueue",
+    .tp_basicsize = sizeof(ActionQueue),
+    .tp_itemsize = 0,
+    .tp_flags = Py_TPFLAGS_DEFAULT | Py_TPFLAGS_IMMUTABLETYPE,
+    .tp_new = ActionQueue_new,
+    .tp_dealloc = (destructor)ActionQueue_dealloc,
+    .tp_methods = ActionQueue_methods,
+};
+// ActionQueue End
+
 static struct PyModuleDef actions_module = {
     PyModuleDef_HEAD_INIT,
     "_actions",
@@ -213,7 +291,8 @@ PyMODINIT_FUNC PyInit__actions(void)
     if (unlikely(PyType_Ready(&FileAction_Type) < 0 ||
                  PyType_Ready(&Rename_Type) < 0 ||
                  PyType_Ready(&Convert_Type) < 0 ||
-                 PyType_Ready(&Delete_Type) < 0))
+                 PyType_Ready(&Delete_Type) < 0 ||
+                 PyType_Ready(&ActionQueue_Type) < 0))
     {
         return NULL;
     }
@@ -223,7 +302,8 @@ PyMODINIT_FUNC PyInit__actions(void)
     if (unlikely(PyModule_AddObjectRef(module, "FileAction", (PyObject *)&FileAction_Type) < 0 ||
                  PyModule_AddObjectRef(module, "Rename", (PyObject *)&Rename_Type) < 0 ||
                  PyModule_AddObjectRef(module, "Convert", (PyObject *)&Convert_Type) < 0 ||
-                 PyModule_AddObjectRef(module, "Delete", (PyObject *)&Delete_Type) < 0))
+                 PyModule_AddObjectRef(module, "Delete", (PyObject *)&Delete_Type) < 0 ||
+                 PyModule_AddObjectRef(module, "ActionQueue", (PyObject *)&ActionQueue_Type) < 0))
     {
         Py_DECREF(module);
         return NULL;
