@@ -204,21 +204,47 @@ static PyTypeObject Delete_Type = {
 // ActionQueue Start
 static inline bool ActionQueue_is_empty(ActionQueue *self)
 {
-    return self->actions[self->index] == NULL;
+    return self->index == 0 && self->actions[self->index] == NULL;
+}
+
+static inline void ActionQueue_set(ActionQueue *self, PyObject *arg)
+{
+    self->actions[self->index] = arg;
+}
+
+static inline void ActionQueue_move(ActionQueue *self, int amount)
+{
+    self->index = (self->index + amount) % self->max_size;
 }
 
 static PyObject *ActionQueue_append(PyObject *self, PyObject *arg)
 {
     ActionQueue *self_action_queue = (ActionQueue *)self;
-    bool is_empty = ActionQueue_is_empty(self_action_queue);
-    self_action_queue->actions[self_action_queue->index] = arg;
+    ActionQueue_set(self_action_queue, arg);
+    Py_INCREF(arg);
 
-    if (!is_empty)
-    {
-        self_action_queue->index = (self_action_queue->index + 1) % self_action_queue->max_size;
-    }
+    ActionQueue_move(self_action_queue, 1);
 
     return Py_None;
+}
+
+static PyObject *ActionQueue_pop(PyObject *self, PyObject *Py_UNUSED(ignored))
+{
+    ActionQueue *self_action_queue = (ActionQueue *)self;
+    bool is_empty = ActionQueue_is_empty(self_action_queue);
+
+    if (is_empty)
+    {
+        return Py_None;
+    }
+
+    ActionQueue_move(self_action_queue, -1);
+    PyObject *to_return = self_action_queue->actions[self_action_queue->index];
+
+    ActionQueue_set(self_action_queue, NULL);
+    Py_DECREF(to_return);
+
+    return to_return;
 }
 
 static PyObject *ActionQueue_get_undo_message(PyObject *self, PyObject *Py_UNUSED(ignored))
@@ -231,6 +257,7 @@ static PyObject *ActionQueue_get_undo_message(PyObject *self, PyObject *Py_UNUSE
 
 static PyMethodDef ActionQueue_methods[] = {
     {"append", ActionQueue_append, METH_O, NULL},
+    {"pop", ActionQueue_pop, METH_NOARGS, NULL},
     {"get_undo_message", ActionQueue_get_undo_message, METH_NOARGS, NULL},
     {NULL, NULL, 0, NULL}};
 
@@ -264,6 +291,10 @@ static PyObject *ActionQueue_new(PyTypeObject *type, PyObject *args, PyObject *k
 
 static void ActionQueue_dealloc(ActionQueue *self)
 {
+    for (int i = 0; i < self->max_size; ++i)
+    {
+        Py_XDECREF(self->actions[self->index]);
+    }
     free(self->actions);
     Py_TYPE(self)->tp_free((PyObject *)self);
 }
