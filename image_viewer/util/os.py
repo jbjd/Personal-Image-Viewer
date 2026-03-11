@@ -9,9 +9,8 @@ if os.name == "nt":
     from ctypes import windll  # type: ignore[attr-defined]
 
     from image_viewer.util._os_nt import get_files_in_folder as _get_files_in_folder_nt
-    from image_viewer.util._os_nt import restore_file as _restore_file_nt
+    from image_viewer.util._os_nt import restore_file, trash_file
     from image_viewer.util._os_nt import set_hwnd as _set_hwnd
-    from image_viewer.util._os_nt import trash_file as _trash_file_nt
 
     hwnd: int = 0
 
@@ -35,7 +34,8 @@ else:  # assume linux for now
     from configparser import Error as ConfigParserError
     from tkinter.messagebox import askyesno, showinfo
 
-    from send2trash.plat_other import HOMETRASH, send2trash
+    from send2trash.plat_other import HOMETRASH
+    from send2trash.plat_other import send2trash as trash_file  # noqa: F401
 
     TRASH_INFO: str = f"{HOMETRASH}/info/"
 
@@ -43,7 +43,7 @@ else:  # assume linux for now
         return a < b
 
     # TODO: Port this to C and see if its faster
-    def _restore_file_linux(original_path: str) -> None:
+    def restore_file(original_path: str) -> None:
         name_re: re.Pattern = _get_trashinfo_regex(original_path)
 
         for file in get_files_in_folder(TRASH_INFO):
@@ -159,26 +159,6 @@ def get_byte_display(size_in_bytes: int) -> str:
     kb_size: int = 1024 if os.name == "nt" else 1000
     size_in_kb: int = size_in_bytes // kb_size
     return f"{size_in_kb / kb_size:.2f}mb" if size_in_kb > 999 else f"{size_in_kb}kb"
-
-
-def trash_file(path: str) -> None:
-    """OS generic way to send files to trash.
-
-    :param path: A path to trash."""
-    if os.name == "nt":
-        _trash_file_nt(path)
-    else:
-        send2trash(path)
-
-
-def restore_file(path: str) -> None:
-    """OS generic way to restore a file from trash.
-
-    :param path: A path to restore."""
-    if os.name == "nt":
-        _restore_file_nt(path)
-    else:
-        _restore_file_linux(path)
 
 
 def get_normalized_folder_name(path: str) -> str:

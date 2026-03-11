@@ -201,14 +201,15 @@ classes_to_skip: dict[str, set[str]] = {
     "PIL.PngImagePlugin": {"PngInfo"},
 }
 
-
-from_imports_to_skip: dict[str, set[str]] = {"PIL.Image": {"deprecate"}}
-
 dict_keys_to_skip: dict[str, set[str]] = {}
 
 decorators_to_skip: dict[str, set[str]] = {}
 
 imports_to_skip: dict[str, set[str]] = {"PIL.Image": {"defusedxml"}}
+
+unused_imports_to_preserve: dict[str, set[str]] = {
+    f"{IMAGE_VIEWER_NAME}.util.os": {"trash_file"}
+}
 
 module_vars_to_fold: dict[
     str,
