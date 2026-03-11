@@ -21,9 +21,6 @@ if os.name == "nt":
         _set_hwnd(new_hwnd)
         hwnd = new_hwnd
 
-    def os_name_compare(a: str, b: str) -> bool:
-        return windll.shlwapi.StrCmpLogicalW(a, b) < 0
-
     def get_files_in_folder(folder_path: str) -> Iterator[str]:
         files: list[str] = _get_files_in_folder_nt(folder_path)
         return iter(files)
@@ -35,15 +32,14 @@ else:  # assume linux for now
     from tkinter.messagebox import askyesno, showinfo
 
     from send2trash.plat_other import HOMETRASH
-    from send2trash.plat_other import send2trash as trash_file  # noqa: F401
+    from send2trash.plat_other import (  # type: ignore[no-redef]
+        send2trash as trash_file,  # noqa: F401
+    )
 
     TRASH_INFO: str = f"{HOMETRASH}/info/"
 
-    def os_name_compare(a: str, b: str) -> bool:
-        return a < b
-
     # TODO: Port this to C and see if its faster
-    def restore_file(original_path: str) -> None:
+    def restore_file(original_path: str, /) -> None:
         name_re: re.Pattern = _get_trashinfo_regex(original_path)
 
         for file in get_files_in_folder(TRASH_INFO):
@@ -126,6 +122,12 @@ else:  # assume linux for now
 
                 if not is_dir:
                     yield entry.name
+
+
+def file_name_compare(a: str, b: str) -> bool:
+    """Comparison function for sorting files by name."""
+
+    return windll.shlwapi.StrCmpLogicalW(a, b) < 0 if os.name == "nt" else a < b
 
 
 def show_info(title: str, body: str) -> None:
