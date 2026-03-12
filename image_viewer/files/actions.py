@@ -2,8 +2,11 @@
 Classes representing undoable actions that a user can do
 """
 
+import os
 from abc import abstractmethod
 from typing import override
+
+from image_viewer.util.os import restore_file, trash_file
 
 
 class FileAction:
@@ -15,8 +18,16 @@ class FileAction:
         self.original_path: str = original_path
 
     @abstractmethod
-    def get_undo_message() -> str:
+    def get_undo_message(self) -> str:
         """Returns message to use when undoing this action."""
+
+    @abstractmethod
+    def undo(self) -> tuple[str, str]:
+        """Undoes this action by moving/deleting files to restore state before
+        action occurred.
+
+        :returns: Tuple of path restored and path removed,
+        paths will be empty if unchanged"""
 
 
 class Rename(FileAction):
@@ -31,6 +42,11 @@ class Rename(FileAction):
     @override
     def get_undo_message(self) -> str:
         return f"Rename {self.new_path} back to {self.original_path}?"
+
+    @override
+    def undo(self) -> tuple[str, str]:
+        os.rename(self.new_path, self.original_path)
+        return (self.original_path, self.new_path)
 
 
 class Convert(Rename):
@@ -54,6 +70,16 @@ class Convert(Rename):
             else f"Delete {self.new_path}?"
         )
 
+    @override
+    def undo(self) -> tuple[str, str]:
+        trash_file(self.new_path)
+
+        if self.original_file_deleted:
+            restore_file(self.original_path)
+            return (self.original_path, self.new_path)
+
+        return ("", self.new_path)
+
 
 class Delete(FileAction):
     """Represents a file being deleted and sent to the recycle bin"""
@@ -63,3 +89,8 @@ class Delete(FileAction):
     @override
     def get_undo_message(self) -> str:
         return f"Restore {self.original_path} from trash?"
+
+    @override
+    def undo(self) -> tuple[str, str]:
+        restore_file(self.original_path)
+        return (self.original_path, "")

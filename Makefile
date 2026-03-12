@@ -39,9 +39,6 @@ OPTIMIZATION_FLAG=-O3
 C_SOURCE=image_viewer/c_extensions
 C_FLAGS_SHARED=-L$(PYTHON_LIBS) -I$(PYTHON_INCLUDES) -l$(PYTHON_DLL) $(OPTIMIZATION_FLAG) -march=native -mtune=native -ffinite-math-only -fgcse-las -fgcse-sm -fisolate-erroneous-paths-attribute -fno-signed-zeros -frename-registers -fsched-pressure -s -shared -Wall -Werror $(OS_FLAGS)
 
-build-actions:
-	gcc $(C_SOURCE)/actions/actions.c $(C_FLAGS_SHARED) -o image_viewer/actions/_actions.$(COMPILED_EXT)
-
 build-image-read:
 	gcc $(C_SOURCE)/image/read.c $(C_FLAGS_SHARED) -o image_viewer/image/_read.$(COMPILED_EXT) -lturbojpeg
 
@@ -53,7 +50,7 @@ ifeq ($(OS),Windows_NT)
 	gcc $(C_SOURCE)/util/os_nt.c $(C_SOURCE)/b64/cencode.c -I$(C_SOURCE) -lshlwapi -loleaut32 -lole32 $(C_FLAGS_SHARED) -o image_viewer/util/_os_nt.$(COMPILED_EXT)
 endif
 
-build-all: build-actions build-image-read build-util-generic build-util-os-nt
+build-all: build-image-read build-util-generic build-util-os-nt
 
 install:
 	$(PYTHON_FOR_INSTALL_STEP) compile.py --assume-this-machine --strip --no-cleanup

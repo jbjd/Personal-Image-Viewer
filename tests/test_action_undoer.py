@@ -8,35 +8,9 @@ import pytest
 # Breaks type()/isinstance() since python sees different import paths
 # One starting with image_viewer.action..., the other just action...
 # But importing the imported types in the undoer file works
-from image_viewer.actions.undoer import (
-    ActionUndoer,
-    Convert,
-    Delete,
-    FileAction,
-    Rename,
-    UndoResponse,
-)
+from image_viewer.files.actions import Convert, Delete, FileAction, Rename
 
-_MODULE_PATH = "image_viewer.actions"
-
-
-def test_max_length():
-    """Should only preserve the last X actions."""
-    max_length: int = 4
-    action_undoer = ActionUndoer(max_length)
-
-    action_undoer.append(Rename("This will get", "thrown out"))
-    action_undoer.append(Rename("", ""))
-    action_undoer.append(Convert("", "", False))
-    action_undoer.append(Convert("", "", True))
-    action_undoer.append(Delete(""))
-
-    assert len(action_undoer) == max_length
-
-
-def test_get_message_when_empty():
-    action_undoer = ActionUndoer()
-    assert action_undoer.get_undo_message() is None
+_MODULE_PATH = "image_viewer.files.actions"
 
 
 @pytest.mark.parametrize(
@@ -57,18 +31,15 @@ def test_get_message_when_empty():
 def test_undo_action(action: FileAction, expected_message: str):
     """Should call correct functions based on action to undo"""
 
-    action_undoer = ActionUndoer()
-
-    action_undoer.append(action)
-    assert action_undoer.get_undo_message() == expected_message
+    assert action.get_undo_message() == expected_message
 
     with (
-        patch(f"{_MODULE_PATH}.undoer.trash_file") as mock_trash,
-        patch(f"{_MODULE_PATH}.undoer.restore_file") as mock_undelete,
-        patch(f"{_MODULE_PATH}.undoer.os.rename") as mock_rename,
+        patch(f"{_MODULE_PATH}.trash_file") as mock_trash,
+        patch(f"{_MODULE_PATH}.restore_file") as mock_undelete,
+        patch(f"{_MODULE_PATH}.os.rename") as mock_rename,
     ):
-        undo_response: UndoResponse = action_undoer.undo()
-        _assert_correct_undo_response(action, undo_response)
+        path_restored, path_removed = action.undo()
+        _assert_correct_undo_response(action, path_restored, path_removed)
 
         if type(action) is Delete or (
             type(action) is Convert and action.original_file_deleted
@@ -89,17 +60,17 @@ def test_undo_action(action: FileAction, expected_message: str):
 
 
 def _assert_correct_undo_response(
-    action: FileAction, undo_response: UndoResponse
+    action: FileAction, path_restored: str, path_removed: str
 ) -> None:
     """Assert that given a specific file actions,
     response has correct values populated."""
 
     if type(action) is Delete:
-        assert not undo_response.path_removed
+        assert not path_removed
     else:
-        assert undo_response.path_removed
+        assert path_removed
 
     if type(action) is Convert and not action.original_file_deleted:
-        assert not undo_response.path_restored
+        assert not path_restored
     else:
-        assert undo_response.path_restored
+        assert path_restored

@@ -1,4 +1,5 @@
 import os
+from collections import deque
 from enum import Enum
 from os import stat_result
 from time import ctime
@@ -6,9 +7,8 @@ from tkinter.filedialog import askopenfilename
 
 from PIL.Image import Image
 
-from image_viewer.actions.types import Convert, Delete, Rename
-from image_viewer.actions.undoer import ActionUndoer, UndoResponse
 from image_viewer.constants import VALID_FILE_TYPES, Movement
+from image_viewer.files.actions import Convert, Delete, FileAction, Rename
 from image_viewer.image.cache import ImageCache, ImageCacheEntry
 from image_viewer.image.file import ImageName, ImageNameList, ImageSearchResult
 from image_viewer.util.convert import try_convert_file_and_save_new
@@ -33,7 +33,7 @@ class ImageFileManager:
     __slots__ = (
         "_dialog_file_types",
         "_files",
-        "action_undoer",
+        "action_queue",
         "current_image",
         "image_cache",
         "image_folder",
@@ -44,7 +44,7 @@ class ImageFileManager:
         """Load single file for display before we load the rest"""
         self.image_folder: str = get_normalized_folder_name(first_image_path)
         self.image_cache: ImageCache = image_cache
-        self.action_undoer = ActionUndoer()
+        self.action_queue: deque[FileAction] = deque()
         self._dialog_file_types: list[tuple[str, str]] = [
             ("", f"*.{file_type}") for file_type in VALID_FILE_TYPES
         ]
@@ -201,7 +201,7 @@ class ImageFileManager:
         """Safely sends current image to trash."""
         try:
             trash_file(self.path_to_image)
-            self.action_undoer.append(Delete(self.path_to_image))
+            self.action_queue.append(Delete(self.path_to_image))
         except (OSError, FileNotFoundError):
             pass
 
@@ -255,7 +255,7 @@ class ImageFileManager:
         else:
             result = self._rename(original_path, new_path)
 
-        self.action_undoer.append(result)
+        self.action_queue.append(result)
 
         # Only add image if its still in the directory we are currently in
         if get_normalized_folder_name(new_path) == get_normalized_folder_name(
@@ -369,16 +369,21 @@ class ImageFileManager:
         """Attempts to undo most recent action after confirming with user.
 
         :returns: True if most recent action was undone."""
-        if not self._confirm_undo():
+        if not self.action_queue:
             return False
 
+        if not ask_yes_no("Undo Action", self.action_queue[-1].get_undo_message()):
+            return False
+
+        path_restored: str
+        path_removed: str
         try:
-            undo_response: UndoResponse = self.action_undoer.undo()
+            path_restored, path_removed = self.action_queue.pop().undo()
         except OSError:
             return False  # TODO: error popup?
 
-        image_added: str = os.path.basename(undo_response.path_restored)
-        image_removed: str = os.path.basename(undo_response.path_removed)
+        image_added: str = os.path.basename(path_restored)
+        image_removed: str = os.path.basename(path_removed)
 
         if image_removed != "":
             search_result: ImageSearchResult = self._files.search(image_removed)
@@ -396,17 +401,6 @@ class ImageFileManager:
             self._update_after_move_or_edit()
 
         return True
-
-    def _confirm_undo(self) -> bool:
-        """Checks that there is an action to undo and shows a yes/no confirmation popup.
-
-        :returns: True if there's something to undo and user said yes."""
-
-        undo_message: str | None = self.action_undoer.get_undo_message()
-
-        return (
-            False if undo_message is None else ask_yes_no("Undo Action", undo_message)
-        )
 
     def current_image_cache_still_fresh(self) -> bool:
         """Checks if cache for currently displayed image is still up to date.
