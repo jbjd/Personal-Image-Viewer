@@ -44,7 +44,9 @@ class ImageFileManager:
         """Load single file for display before we load the rest"""
         self.image_folder: str = get_normalized_folder_name(first_image_path)
         self.image_cache: ImageCache = image_cache
-        self.action_queue: deque[FileAction] = deque()
+
+        # TODO: Make maxlen configurable
+        self.action_queue: deque[FileAction] = deque(maxlen=8)
         self._dialog_file_types: list[tuple[str, str]] = [
             ("", f"*.{file_type}") for file_type in VALID_FILE_TYPES
         ]
