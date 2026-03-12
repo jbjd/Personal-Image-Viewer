@@ -4,10 +4,6 @@ from unittest.mock import patch
 
 import pytest
 
-# Hack: Importing the Undo types from their original file
-# Breaks type()/isinstance() since python sees different import paths
-# One starting with image_viewer.action..., the other just action...
-# But importing the imported types in the undoer file works
 from image_viewer.files.actions import Convert, Delete, FileAction, Rename
 
 _MODULE_PATH = "image_viewer.files.actions"
