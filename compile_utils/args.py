@@ -119,7 +119,7 @@ class CompileArgumentParser(ArgumentParser):
         )
         self.add_argument_ext(
             "--extra-checks",
-            "Adds extra checks during build. Only useful for developemnt"
+            "Adds extra checks during build. Only useful for development"
             "Should be unnecessary unless doing development.",
             is_development=True,
         )
