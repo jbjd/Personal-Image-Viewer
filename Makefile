@@ -53,7 +53,7 @@ endif
 build-all: build-image-read build-util-generic build-util-os-nt
 
 install:
-	$(PYTHON_FOR_INSTALL_STEP) compile.py --assume-this-machine --strip --no-cleanup
+	$(PYTHON_FOR_INSTALL_STEP) compile.py --assume-this-machine --strip
 
 validate:
 	ruff check .

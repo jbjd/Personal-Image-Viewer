@@ -172,9 +172,10 @@ def move_files_to_tmp_and_clean(
         )
 
 
-def warn_unused_code_skips() -> None:
+def warn_unused_code_skips(modules_no_warn_unused_skips: list[str]) -> None:
     """If any values remain from code_to_skip imports, warn
     that they were unused"""
+
     for skips, friendly_name in (
         (classes_to_skip, "skip classes"),
         (decorators_to_skip, "skip decorators"),
@@ -186,11 +187,12 @@ def warn_unused_code_skips() -> None:
         (regex_to_apply_py, "apply regex"),
     ):
         for module in skips:
-            _logger.warning(
-                "Asked to %s in module %s, but was not found",
-                friendly_name,
-                module,
-            )
+            if all(not module.startswith(m) for m in modules_no_warn_unused_skips):
+                _logger.warning(
+                    "Asked to %s in module %s, but was not found",
+                    friendly_name,
+                    module,
+                )
 
 
 def clean_tk_files(compile_dir: str) -> None:
