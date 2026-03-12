@@ -61,7 +61,8 @@ class CompileNamespace(Namespace):
     assume_this_machine: bool
     strip: bool
     skip_nuitka: bool
-    no_cleanup: bool
+    extra_checks: bool
+    no_cache: bool
     build_info_file: bool
     user_nuitka_args: list[str]
 
@@ -117,15 +118,27 @@ class CompileArgumentParser(ArgumentParser):
             ),
         )
         self.add_argument_ext(
+            "--extra-checks",
+            "Adds extra checks during build. Only useful for development"
+            "Should be unnecessary unless doing development.",
+            is_development=True,
+        )
+        self.add_argument_ext(
+            "--no-cache",
+            "Removes cached parts of build process. "
+            "Should be unnecessary unless doing development.",
+            is_development=True,
+        )
+        self.add_argument_ext(
             "--debug",
             (
                 "Doesn't move compiled code to install path, doesn't check for root, "
-                "assumes --no-cleanup and --report, adds "
+                "assumes --report and --extra_checks, adds "
                 f"{NuitkaArgs.WARN_IMPLICIT_EXCEPTIONS}, {NuitkaArgs.WARN_UNUSUAL_CODE}"
                 f", and {NuitkaArgs.WINDOWS_CONSOLE_MODE}={ConsoleMode.FORCE} "
                 f"flags to nuitka."
             ),
-            is_debug=True,
+            is_development=True,
         )
         self.add_argument_ext(
             "--skip-nuitka",
@@ -135,12 +148,7 @@ class CompileArgumentParser(ArgumentParser):
                 "Assumes --no-cleanup however nuitka's build folder is never made "
                 "so only the tmp folder is not cleaned up."
             ),
-            is_debug=True,
-        )
-        self.add_argument_ext(
-            "--no-cleanup",
-            "Does not delete temporary files used for compilation/installation.",
-            is_debug=True,
+            is_development=True,
         )
         if os.name == "nt":
             self.add_argument_ext(
@@ -154,7 +162,7 @@ class CompileArgumentParser(ArgumentParser):
         name: str,
         help_text: str,
         default: str | bool = False,
-        is_debug: bool = False,
+        is_development: bool = False,
         affected_os: Literal["Windows"] | None = None,
     ) -> None:
         """Extension of add_argument to simplify repeated patterns.
@@ -162,10 +170,11 @@ class CompileArgumentParser(ArgumentParser):
         :param name: The name of the argument.
         :param: help_text: A description of what the argument does.
         :param default: The default value. Bools use store_true and strings use store.
-        :param is_debug: Adds to help text that this is intended for debugging."""
+        :param is_development: Adds to help text that flag is for dev purposes."""
 
-        if is_debug:
-            help_text += " This option is exposed for debugging."
+        if is_development:
+            help_text += " This option is exposed for development."
+
         if affected_os is not None:
             help_text = f"({affected_os} only) " + help_text
 
@@ -206,19 +215,20 @@ class CompileArgumentParser(ArgumentParser):
         to be passed to nuitka."""
         nuitka_args.append(NuitkaArgs.STANDALONE)
 
-        if args.report or args.debug:
+        if args.debug:
+            args.report = True
+            args.extra_checks = True
+        else:
+            nuitka_args.append(NuitkaArgs.DEPLOYMENT)
+            nuitka_args.append(NuitkaArgs.REMOVE_OUTPUT)
+
+        if args.report:
             nuitka_args.append(NuitkaArgs.REPORT.with_value(REPORT_FILE))
             if args.debug:
                 nuitka_args += [
                     NuitkaArgs.WARN_IMPLICIT_EXCEPTIONS,
                     NuitkaArgs.WARN_UNUSUAL_CODE,
                 ]
-
-        if not args.debug:
-            nuitka_args.append(NuitkaArgs.DEPLOYMENT)
-
-            if not args.no_cleanup:
-                nuitka_args.append(NuitkaArgs.REMOVE_OUTPUT)
 
         nuitka_args.append(NuitkaArgs.ENABLE_PLUGIN.with_value("tk-inter"))
 

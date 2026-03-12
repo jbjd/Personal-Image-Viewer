@@ -18,8 +18,7 @@
             "request": "launch",
             "program": "C:/Python/Viewer/compile.py",
             "args": [
-                "--debug",
-                "--no-cleanup"
+                "--debug"
             ],
             "console": "integratedTerminal",
             "justMyCode": false
