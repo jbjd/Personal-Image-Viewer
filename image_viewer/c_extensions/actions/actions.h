@@ -26,12 +26,4 @@ typedef struct
     FileAction base;
 } Delete;
 
-typedef struct
-{
-    PyObject_HEAD;
-    PyObject **actions;
-    int index;
-    int max_size;
-} ActionQueue;
-
 #endif /* PIV_ACTIONS */

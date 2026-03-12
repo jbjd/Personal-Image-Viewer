@@ -11,7 +11,6 @@ class FileAction:
 
     __slots__ = ("original_path",)
 
-    @abstractmethod
     def __init__(self, original_path: str) -> None:
         self.original_path: str = original_path
 
@@ -60,9 +59,6 @@ class Delete(FileAction):
     """Represents a file being deleted and sent to the recycle bin"""
 
     __slots__ = ()
-
-    def __init__(self, original_path: str) -> None:
-        super().__init__(original_path)
 
     @override
     def get_undo_message(self) -> str:

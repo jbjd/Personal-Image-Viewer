@@ -1,21 +1,6 @@
 from abc import abstractmethod
 from typing import override
 
-class ActionQueue:
-    """Queue for FileActions"""
-
-    def __init__(self, max_size: int, /) -> None:
-        """"""
-
-    def append(self, file_action: FileAction, /) -> None:
-        """Appends a FileAction to the queue"""
-
-    def pop(self) -> FileAction | None:
-        """Pops a FileAction out of the queue"""
-
-    def get_undo_message(self) -> str:
-        """Returns message to use when undoing action on top of queue"""
-
 class FileAction:
     """Abstract class that can't be instantiated.
 
