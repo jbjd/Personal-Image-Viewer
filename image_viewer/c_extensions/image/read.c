@@ -24,7 +24,7 @@ static PyTypeObject CMemoryViewBuffer_Type = {
     .ob_base = PyVarObject_HEAD_INIT(NULL, 0).tp_name = "_read.CMemoryViewBuffer",
     .tp_basicsize = sizeof(CMemoryViewBuffer),
     .tp_itemsize = 0,
-    .tp_flags = Py_TPFLAGS_HAVE_STACKLESS_EXTENSION | Py_TPFLAGS_IMMUTABLETYPE | Py_TPFLAGS_DISALLOW_INSTANTIATION,
+    .tp_flags = Py_TPFLAGS_DEFAULT | Py_TPFLAGS_IMMUTABLETYPE | Py_TPFLAGS_DISALLOW_INSTANTIATION,
     .tp_dealloc = (destructor)CMemoryViewBuffer_dealloc,
     .tp_members = CMemoryViewBuffer_members,
 };
@@ -56,7 +56,7 @@ static PyTypeObject CMemoryViewBufferJpeg_Type = {
     .tp_basicsize = sizeof(CMemoryViewBufferJpeg),
     .tp_itemsize = 0,
     .tp_base = &CMemoryViewBuffer_Type,
-    .tp_flags = Py_TPFLAGS_HAVE_STACKLESS_EXTENSION | Py_TPFLAGS_IMMUTABLETYPE | Py_TPFLAGS_DISALLOW_INSTANTIATION,
+    .tp_flags = Py_TPFLAGS_DEFAULT | Py_TPFLAGS_IMMUTABLETYPE | Py_TPFLAGS_DISALLOW_INSTANTIATION,
     .tp_dealloc = (destructor)CMemoryViewBufferJpeg_dealloc,
     .tp_members = CMemoryViewBufferJpeg_members,
 };
