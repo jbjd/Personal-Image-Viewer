@@ -167,7 +167,6 @@ functions_to_skip: dict[str, set[str]] = {
         "verify",
     },
     "PIL.WebPImagePlugin": {"register_mime"},
-    f"{IMAGE_VIEWER_NAME}.actions.undoer": {"assert_never"},
 }
 
 

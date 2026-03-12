@@ -110,7 +110,7 @@ try:
         code_folder_path, src_folder_path, IMAGE_VIEWER_NAME, args.assume_this_machine
     )
 
-    warn_unused_skips: bool = True
+    modules_no_warn_unused_skips: list[str] = []
 
     minifier_version: str = get_module_version("personal_python_ast_optimizer")
     custom_version_flags: str = (
@@ -140,7 +140,7 @@ try:
             SKIP_ITERATION,
             custom_version_flags,
         ):
-            warn_unused_skips = False
+            modules_no_warn_unused_skips.append(module_import_name)
             continue
 
         sub_modules_to_skip: set[str] = {
@@ -180,8 +180,8 @@ try:
             custom_version_flags,
         )
 
-    if warn_unused_skips:
-        warn_unused_code_skips()
+    if args.extra_checks:
+        warn_unused_code_skips(modules_no_warn_unused_skips)
 
     if args.skip_nuitka:
         sys.exit(0)
@@ -228,7 +228,7 @@ Dependencies:
         delete_folder(install_path)
         os.rename(nuitka_dist_path, install_path)
 finally:
-    if not args.debug and not args.no_cleanup:
+    if args.no_cache:
         delete_folder(build_folder_path)
 
 _logger.info("\nFinished")

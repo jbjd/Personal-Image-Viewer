@@ -4,13 +4,15 @@ from unittest.mock import patch
 
 import pytest
 
-from image_viewer.actions.undoer import ActionUndoer, UndoResponse
 from image_viewer.constants import ImageFormats
+from image_viewer.files.actions import Rename
 from image_viewer.files.file_manager import ImageFileManager, _ShouldPreserveIndex
 from image_viewer.image.cache import ImageCache, ImageCacheEntry
 from image_viewer.image.file import ImageSearchResult
 from tests.conftest import EXAMPLE_PNG_PATH, IMG_DIR
 from tests.test_util.mocks import MockImage, MockStatResult
+
+_MODULE_PATH = "image_viewer.files.file_manager"
 
 
 def test_image_file_manager(file_manager: ImageFileManager):
@@ -134,19 +136,22 @@ def test_add_new_image_adjusts_index(
 
 def test_undo(file_manager: ImageFileManager):
     """Test correct behavior adding/removing with undo"""
-    with patch.object(ImageFileManager, "_confirm_undo", return_value=False):
-        assert not file_manager.undo_most_recent_action()
+
+    # Empty action queue
+    assert not file_manager.undo_most_recent_action()
 
     file_restored = "b.png"
     file_removed = file_manager._files[0].name
-    mock_undo_response = UndoResponse(file_restored, file_removed)
+    file_manager.action_queue.append(Rename(file_restored, file_removed))
+
+    with patch(f"{_MODULE_PATH}.ask_yes_no", return_value=False):
+        assert not file_manager.undo_most_recent_action()
+
+    mock_undo_response = (file_restored, file_removed)
     with (
-        patch.object(ImageFileManager, "_confirm_undo", return_value=True),
-        patch.object(
-            ActionUndoer, "undo", return_value=mock_undo_response
-        ) as mock_undo,
+        patch(f"{_MODULE_PATH}.ask_yes_no", return_value=True),
+        patch.object(Rename, "undo", return_value=mock_undo_response) as mock_undo,
     ):
-        file_manager.action_undoer = ActionUndoer()
         assert file_manager.undo_most_recent_action()
         assert len(file_manager._files) == 1
         assert file_manager._files[0].name == file_restored

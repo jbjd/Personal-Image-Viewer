@@ -34,7 +34,7 @@ static inline HWND PyLong_AsHWND(PyObject *pyLong)
 }
 
 /**
- * Given some data, opens, emptys, sets, and closes clipboard
+ * Given some data: opens, emptys, sets, and closes clipboard
  * with provided data.
  *
  * Returns WINBOOL of if successful. If it fails, call GetLastError for information.
@@ -76,7 +76,6 @@ static inline void ensure_double_null_terminated(char *str)
     str[strLen + 1] = '\0';
 }
 
-
 /**
  * Sets the hwnd value for all functions called in this module.
  * hwnd will be 0 until this is set.
@@ -87,7 +86,6 @@ static PyObject *set_hwnd(PyObject *self, PyObject *arg)
 
     return Py_None;
 }
-
 
 static PyObject *trash_file(PyObject *self, PyObject *arg)
 {
@@ -149,7 +147,7 @@ static PyObject *restore_file(PyObject *self, PyObject *arg)
     }
 
     char *originalPath = normalize_str_for_file_op(rawOriginalPath, rawOriginalPathSize);
-    originalPath[0] = tolower(originalPath[0]);  // Bin API can return upper or lower case drives so need to normalize on something
+    originalPath[0] = tolower(originalPath[0]); // Bin API can return upper or lower case drives so need to normalize on something
     char *targetToRestore = NULL;
     DATE targetRecycledTime = 0;
 
@@ -371,7 +369,7 @@ static PyObject *read_buffer_as_base64_and_copy_to_clipboard(PyObject *self, PyO
 
     Py_BEGIN_ALLOW_THREADS;
 
-    // encoded data is ~4/3x the size of the original data so make encoded buffer 2x the size.
+    // encoded data is ~4/3 the size of the original data so make encoded buffer 2x the size.
     HGLOBAL hGlobal = GlobalAlloc(GHND, 2 * remainingBytesToEncode);
     if (unlikely(hGlobal == NULL))
     {
