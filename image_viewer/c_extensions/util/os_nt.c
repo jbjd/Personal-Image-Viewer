@@ -87,6 +87,36 @@ static PyObject *set_hwnd(PyObject *self, PyObject *arg)
     return Py_None;
 }
 
+static PyObject *show_info(PyObject *self, PyObject *args)
+{
+    const char *title;
+    const char *body;
+
+    if (unlikely(!PyArg_ParseTuple(args, "ss", &title, &body)))
+    {
+        return NULL;
+    }
+
+    MessageBoxA(g_hwnd, body, title, 0);
+
+    return Py_None;
+}
+
+static PyObject *ask_yes_no(PyObject *self, PyObject *args)
+{
+    const char *title;
+    const char *body;
+
+    if (unlikely(!PyArg_ParseTuple(args, "ss", &title, &body)))
+    {
+        return NULL;
+    }
+
+    int result = MessageBoxA(g_hwnd, body, title, MB_YESNO);
+
+    return PyBool_FromLong(result == IDYES);
+}
+
 static PyObject *trash_file(PyObject *self, PyObject *arg)
 {
     Py_ssize_t rawPathSize;
@@ -411,6 +441,8 @@ end:
 
 static PyMethodDef os_methods[] = {
     {"set_hwnd", set_hwnd, METH_O, NULL},
+    {"show_info", show_info, METH_VARARGS, NULL},
+    {"ask_yes_no", ask_yes_no, METH_VARARGS, NULL},
     {"trash_file", trash_file, METH_O, NULL},
     {"restore_file", restore_file, METH_O, NULL},
     {"get_files_in_folder", get_files_in_folder, METH_O, NULL},
