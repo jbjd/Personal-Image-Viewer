@@ -10,6 +10,19 @@ if os.name == "nt":  # noqa: PYI002
 
         :param hwnd: The id of the window calling the functions."""
 
+    def show_info(title: str, body: str, /) -> None:
+        """Shows popup with a message.
+
+        :param title: The title of the popup
+        :param body: The body of the popup"""
+
+    def ask_yes_no(title: str, body: str, /) -> bool:
+        """Shows popup with a message and yes/no buttons.
+
+        :param title: The title of the popup
+        :param body: The body of the popup
+        :returns: True if user said yes"""
+
     def trash_file(file_path: str, /) -> None:
         """Moves a file to trash.
 

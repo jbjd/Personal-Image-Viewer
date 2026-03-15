@@ -34,8 +34,8 @@ if os.name == "nt":
         drop_file_to_clipboard,
         open_with,
         read_buffer_as_base64_and_copy_to_clipboard,
+        set_hwnd,
     )
-    from image_viewer.util.os import set_hwnd
 else:
     from tkinter import PhotoImage as tkPhotoImage
 
