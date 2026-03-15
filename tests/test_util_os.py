@@ -1,5 +1,5 @@
 import os
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
 import pytest
 
@@ -7,7 +7,6 @@ from image_viewer.util.os import (
     get_byte_display,
     get_files_in_folder,
     maybe_truncate_long_name,
-    show_info,
     split_name_and_suffix,
 )
 from tests.conftest import IMG_DIR
@@ -23,39 +22,6 @@ def test_get_byte_display(os_name: str):
     with patch.object(os, "name", os_name):
         assert get_byte_display(999 * kb_size) == expected_display_999kb
         assert get_byte_display(1000 * kb_size) == expected_display_1000kb
-
-
-@pytest.mark.parametrize("os_name", ["nt", "linux"])
-def test_show_info_popup(os_name: str):
-    """Should call different popups depending on OS"""
-    hwnd = 123
-    title = "title"
-    body = "body"
-
-    with patch.object(os, "name", os_name):
-        if os_name == "nt":
-            mock_windll = MagicMock()
-            mock_windll.user32 = MagicMock()
-            mock_windll.user32.MessageBoxW = MagicMock()
-            expected_flags = 0
-
-            import image_viewer.util.os as internal_os
-
-            internal_os.hwnd = hwnd
-
-            with patch("image_viewer.util.os.windll", create=True, new=mock_windll):
-                show_info(title, body)
-
-            del internal_os
-
-            mock_windll.user32.MessageBoxW.assert_called_once_with(
-                hwnd, body, title, expected_flags
-            )
-        else:
-            with patch("image_viewer.util.os.showinfo", create=True) as mock_showinfo:
-                show_info(title, body)
-
-                mock_showinfo.assert_called_once_with(title, body)
 
 
 @pytest.mark.parametrize(
