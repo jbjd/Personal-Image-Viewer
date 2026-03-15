@@ -99,7 +99,7 @@ static PyObject *is_valid_keybind(PyObject *self, PyObject *arg)
         size -= 8;
     }
 
-    return is_valid_key(keybind, size, prefixed) ? Py_True : Py_False;
+    return PyBool_FromLong(is_valid_key(keybind, size, prefixed));
 }
 
 static PyMethodDef generic_methods[] = {

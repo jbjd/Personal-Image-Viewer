@@ -131,7 +131,7 @@ static PyObject *decode_scaled_jpeg(PyObject *self, PyObject *const *args, Py_ss
 {
     if (unlikely(argLen != 2))
     {
-        PyErr_SetString(PyExc_TypeError, "decode_scaled_jpeg takes exactly two arguments");
+        PyErr_SetString(PyExc_TypeError, "");
         return NULL;
     }
 
