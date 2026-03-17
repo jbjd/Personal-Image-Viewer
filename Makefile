@@ -40,14 +40,14 @@ C_SOURCE=image_viewer/c_extensions
 C_FLAGS_SHARED=-L$(PYTHON_LIBS) -I$(PYTHON_INCLUDES) -l$(PYTHON_DLL) $(OPTIMIZATION_FLAG) -march=native -mtune=native -ffinite-math-only -fgcse-las -fgcse-sm -fisolate-erroneous-paths-attribute -fno-signed-zeros -frename-registers -fsched-pressure -s -shared -Wall -Werror $(OS_FLAGS)
 
 build-image-read:
-	gcc $(C_SOURCE)/image/read.c $(C_FLAGS_SHARED) -o image_viewer/image/_read.$(COMPILED_EXT) -lturbojpeg
+	gcc $(C_SOURCE)/python_modules/image/read.c $(C_FLAGS_SHARED) -I$(C_SOURCE) -o image_viewer/image/_read.$(COMPILED_EXT) -lturbojpeg
 
 build-util-generic:
-	gcc $(C_SOURCE)/util/generic.c $(C_FLAGS_SHARED) -o image_viewer/util/_generic.$(COMPILED_EXT)
+	gcc $(C_SOURCE)/python_modules/util/generic.c $(C_FLAGS_SHARED) -I$(C_SOURCE) -o image_viewer/util/_generic.$(COMPILED_EXT)
 
 build-util-os-nt:
 ifeq ($(OS),Windows_NT)
-	gcc $(C_SOURCE)/util/os_nt.c $(C_SOURCE)/b64/cencode.c -I$(C_SOURCE) -lshlwapi -loleaut32 -lole32 $(C_FLAGS_SHARED) -o image_viewer/util/_os_nt.$(COMPILED_EXT)
+	gcc $(C_SOURCE)/python_modules/util/os_nt.c $(C_SOURCE)/b64/cencode.c -I$(C_SOURCE) -lshlwapi -loleaut32 -lole32 $(C_FLAGS_SHARED) -o image_viewer/util/_os_nt.$(COMPILED_EXT)
 endif
 
 build-all: build-image-read build-util-generic build-util-os-nt

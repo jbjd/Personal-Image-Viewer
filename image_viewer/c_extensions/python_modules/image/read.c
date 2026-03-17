@@ -4,7 +4,7 @@
 #include <stddef.h>
 #include <turbojpeg.h>
 
-#include "../c_optimizations.h"
+#include "c_optimizations.h"
 #include "read.h"
 
 // CMemoryViewBuffer Start
