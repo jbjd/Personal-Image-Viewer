@@ -20,7 +20,9 @@ else:  # assume linux for now
     from configparser import ConfigParser
     from configparser import Error as ConfigParserError
     from tkinter.messagebox import askyesno as ask_yes_no  # noqa: F401
-    from tkinter.messagebox import showinfo as show_info  # noqa: F401
+    from tkinter.messagebox import (  # type: ignore[assignment]
+        showinfo as show_info,  # noqa: F401
+    )
 
     from send2trash.plat_other import HOMETRASH
     from send2trash.plat_other import (  # type: ignore[no-redef]
