@@ -1,37 +1,8 @@
-#include <ctype.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
-static inline bool is_comment(const char *line)
-{
-    return line[0] == ';';
-}
-
-char *str_strip(char *str)
-{
-    size_t size = strlen(str);
-
-    if (size == 0)
-    {
-        goto end;
-    }
-
-    char *str_end = str + size - 1;
-    while (str_end >= str && isspace(*str_end))
-    {
-        --str_end;
-    }
-    *(str_end + 1) = '\0';
-
-    while (*str && isspace(*str))
-    {
-        ++str;
-    }
-
-end:
-    return str;
-}
+#include "_utils.h"
 
 int main()
 {
@@ -40,6 +11,8 @@ int main()
     {
         return 1;
     }
+
+    enum Header header = NONE;
 
     const int LINE_MAX_SIZE = 512;
     char *raw_line = (char *)malloc(LINE_MAX_SIZE * sizeof(char));
@@ -53,7 +26,23 @@ int main()
             continue;
         }
 
-        printf("%s\n", line);
+        enum Header new_header = parse_header(line, line_len);
+        if (new_header != NONE)
+        {
+            header = new_header;
+        }
+        else if (header != NONE)
+        {
+            const char *tmp[] = {
+                "NONE",
+                "FONT",
+                "CACHE",
+                "KEYBINDS",
+                "UI",
+            };
+            printf("Header %s - %s\n", tmp[header], line);
+        }
+        // else is value without header, ignore
     }
 
     fclose(file);
