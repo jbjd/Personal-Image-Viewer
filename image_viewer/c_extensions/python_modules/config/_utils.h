@@ -12,7 +12,9 @@ enum Header
 
 bool is_comment(const char *line);
 
-enum Header parse_header(const char *line, int line_len);
+enum Header parse_header(const char *line);
+
+void parse_line(char *line, int line_len, int max_len, char *value_out);
 
 char *str_strip(char *str);
 

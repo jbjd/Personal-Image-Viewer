@@ -4,6 +4,19 @@
 
 #include "_utils.h"
 
+#include "config.h"
+
+static void update_config(Config *config, enum Header header, char *key, void *value)
+{
+    switch (header)
+    {
+    case CACHE:
+        break;
+    default:
+        break;
+    }
+}
+
 int main()
 {
     FILE *file = fopen("image_viewer/config.ini", "r");
@@ -13,6 +26,7 @@ int main()
     }
 
     enum Header header = NONE;
+    Config config = {.size = 20};
 
     const int LINE_MAX_SIZE = 512;
     char *raw_line = (char *)malloc(LINE_MAX_SIZE * sizeof(char));
@@ -26,21 +40,19 @@ int main()
             continue;
         }
 
-        enum Header new_header = parse_header(line, line_len);
+        enum Header new_header = parse_header(line);
         if (new_header != NONE)
         {
             header = new_header;
         }
         else if (header != NONE)
         {
-            const char *tmp[] = {
-                "NONE",
-                "FONT",
-                "CACHE",
-                "KEYBINDS",
-                "UI",
-            };
-            printf("Header %s - %s\n", tmp[header], line);
+            char value[LINE_MAX_SIZE];
+            parse_line(line, line_len, LINE_MAX_SIZE, value);
+            if (value[0] != '\0')
+            {
+                printf("Key: %s Value: %s\n", line, value);
+            }
         }
         // else is value without header, ignore
     }

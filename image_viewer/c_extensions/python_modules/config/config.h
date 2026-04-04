@@ -7,31 +7,31 @@ typedef struct
 {
     PyObject_HEAD;
     // [FONT]
-    PyObject *font; // str
+    // PyObject *font;
     // [CACHE]
-    PyObject *size; // int
+    int size;
 
     // [KEYBINDS]
-    PyObject *keybing_config; // KeybindConfig
+    // PyObject *keybing_config; // KeybindConfig
 
     // [UI]
-    PyObject *background_color; // str
+    // char *background_color;
 } Config;
 
-typedef struct
-{
-    PyObject_HEAD;
+// typedef struct
+// {
+//     PyObject_HEAD;
 
-    // [KEYBINDS]
-    PyObject *copy_to_clipboard_as_base64; // str
-    PyObject *move_to_new_file;            // str
-    PyObject *optimize_image;              // str
-    PyObject *refresh;                     // str
-    PyObject *reload_image;                // str
-    PyObject *rename;                      // str
-    PyObject *show_details;                // str
-    PyObject *undo_most_recent_action;     // str
+//     // [KEYBINDS]
+//     PyObject *copy_to_clipboard_as_base64; // str
+//     PyObject *move_to_new_file;            // str
+//     PyObject *optimize_image;              // str
+//     PyObject *refresh;                     // str
+//     PyObject *reload_image;                // str
+//     PyObject *rename;                      // str
+//     PyObject *show_details;                // str
+//     PyObject *undo_most_recent_action;     // str
 
-} KeybindConfig;
+// } KeybindConfig;
 
 #endif /* PIV_CONFIG_CONFIG */

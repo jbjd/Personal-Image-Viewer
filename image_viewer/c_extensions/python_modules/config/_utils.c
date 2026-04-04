@@ -8,9 +8,9 @@ bool is_comment(const char *line)
     return line[0] == ';';
 }
 
-enum Header parse_header(const char *line, int line_len)
+enum Header parse_header(const char *line)
 {
-    if (line_len < 3 || line[0] != '[' || line[line_len - 1] != ']')
+    if (line[0] != '[')
     {
         return NONE;
     }
@@ -33,6 +33,31 @@ enum Header parse_header(const char *line, int line_len)
     }
 
     return NONE;
+}
+
+void parse_line(char *__restrict__ line, int line_len, int value_len, char *__restrict__ value_out)
+{
+    char *value_start = strchr(line, '=');
+
+    if (value_start == NULL)
+    {
+        line[0] = '\0';
+        return;
+    }
+
+    (*value_start) = '\0';
+    value_start += 1;
+
+    size_t size_reduction = strlen(line) + 1;
+
+    // Handle quotes
+    if ((*value_start == '"' || *value_start == '\'') && *value_start == line[line_len - 1])
+    {
+        value_start += 1;
+        line[line_len - 1] = '\0';
+    }
+
+    strncpy(value_out, value_start, value_len);
 }
 
 char *str_strip(char *str)
