@@ -67,19 +67,76 @@ static inline Config *Config_New()
 
     return config;
 }
+
+static inline void Config_ValidateAndSetDefaults(Config *config)
+{
+    if (config->font == NULL)
+    {
+#if defined(__WIN32__)
+        char *font = "arial.ttf";
+#else
+        char *font = "LiberationSans-Regular.ttf";
+#endif
+        config->font = PyUnicode_FromString(font);
+    }
+    if (config->size == NULL)
+    {
+        config->size = PyLong_FromLong(20);
+    }
+    if (config->copy_to_clipboard_as_base64 == NULL)
+    {
+        config->copy_to_clipboard_as_base64 = PyUnicode_FromString("<Control-E>");
+    }
+    if (config->move_to_new_file == NULL)
+    {
+        config->move_to_new_file = PyUnicode_FromString("<Control-m>");
+    }
+    if (config->optimize_image == NULL)
+    {
+        config->optimize_image = PyUnicode_FromString("<Control-o>");
+    }
+    if (config->refresh == NULL)
+    {
+        config->refresh = PyUnicode_FromString("<Control-r>");
+    }
+    if (config->reload_image == NULL)
+    {
+        config->reload_image = PyUnicode_FromString("<F5>");
+    }
+    if (config->rename == NULL)
+    {
+        config->rename = PyUnicode_FromString("<F2>");
+    }
+    if (config->show_details == NULL)
+    {
+        config->show_details = PyUnicode_FromString("<Control-d>");
+    }
+    if (config->undo_most_recent_action == NULL)
+    {
+        config->undo_most_recent_action = PyUnicode_FromString("<Control-z>");
+    }
+    if (config->background_color == NULL)
+    {
+        config->background_color = PyUnicode_FromString("#000000");
+    }
+}
 // Config End
 
 static void _update_config(Config *config, enum Header header, char *key, char *value)
 {
     switch (header)
     {
-    case CACHE:
-        printf("asdf");
-        // printf("%ld\n", PyLong_AsLong(PyLong_FromString("1a2", NULL, 10)));
-        //   if (strcmp(key, "SIZE"))
-        //   {
-        //       config.size = strtol(value);
-        //   }
+    case FONT:
+        if (strcmp(key, "DEFAULT") == 0)
+        {
+            config->font = PyUnicode_FromString(value);
+        }
+        break;
+    case UI:
+        if (strcmp(key, "BACKGROUND_COLOR") == 0)
+        {
+            config->background_color = PyUnicode_FromString(value);
+        }
         break;
     default:
         break;
@@ -88,6 +145,8 @@ static void _update_config(Config *config, enum Header header, char *key, char *
 
 PyObject *parse_config_file()
 {
+    Config *config = Config_New();
+
     FILE *file = fopen("image_viewer/config.ini", "r");
     if (file == NULL)
     {
@@ -95,7 +154,6 @@ PyObject *parse_config_file()
     }
 
     enum Header header = NONE;
-    Config *config = Config_New();
 
     const int LINE_MAX_SIZE = 512;
     char *raw_line = (char *)malloc(LINE_MAX_SIZE * sizeof(char));
@@ -128,16 +186,22 @@ PyObject *parse_config_file()
 
     fclose(file);
     free(raw_line);
+
 check_defaults:
-    return 0;
+    Config_ValidateAndSetDefaults(config);
+    return (PyObject *)config;
 }
+
+static PyMethodDef config_methods[] = {
+    {"parse_config_file", (PyCFunction)parse_config_file, METH_NOARGS, NULL},
+    {NULL, NULL, 0, NULL}};
 
 static struct PyModuleDef config_module = {
     PyModuleDef_HEAD_INIT,
     "_config",
     NULL,
     -1,
-    NULL};
+    config_methods};
 
 PyMODINIT_FUNC PyInit__config(void)
 {
