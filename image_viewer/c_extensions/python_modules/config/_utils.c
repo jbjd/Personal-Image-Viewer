@@ -3,6 +3,30 @@
 
 #include "_utils.h"
 
+/**
+ * Checks if input is a valid hex string in format #123ABC.
+ *
+ * @param hex Non-null char array to check.
+ * @return 1 if valid, 0 if not.
+ */
+bool is_valid_hex_color(char *hex)
+{
+    if (hex[0] != '#')
+    {
+        return 0;
+    }
+
+    for (int i = 1; i < 7; ++i)
+    {
+        if (!isxdigit(hex[i]))
+        {
+            return 0;
+        }
+    }
+
+    return hex[7] == '\0';
+}
+
 bool is_comment(const char *line)
 {
     return line[0] == ';' && line[0] == '#';

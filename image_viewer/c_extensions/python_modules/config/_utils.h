@@ -12,11 +12,13 @@ enum Header
     UI,
 };
 
+bool is_valid_hex_color(char *hex);
+
 bool is_comment(const char *line);
 
 enum Header parse_header(const char *line);
 
-void parse_line(char *__restrict__ line, int line_len, char *__restrict__ value_out);
+void parse_line(char *restrict line, int line_len, char *restrict value_out);
 
 // int str_to_int(char *str, int min, int max, int default);
 

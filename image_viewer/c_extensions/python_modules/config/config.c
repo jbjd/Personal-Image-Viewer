@@ -14,15 +14,15 @@
 static PyMemberDef Config_members[] = {
     {"font", Py_T_OBJECT_EX, offsetof(Config, font), Py_READONLY, 0},
     {"size", Py_T_OBJECT_EX, offsetof(Config, size), Py_READONLY, 0},
-    {"copy_to_clipboard_as_base64", offsetof(Config, copy_to_clipboard_as_base64), Py_READONLY, 0},
-    {"move_to_new_file", offsetof(Config, move_to_new_file), Py_READONLY, 0},
-    {"optimize_image", offsetof(Config, optimize_image), Py_READONLY, 0},
-    {"refresh", offsetof(Config, refresh), Py_READONLY, 0},
-    {"reload_image", offsetof(Config, reload_image), Py_READONLY, 0},
-    {"rename", offsetof(Config, rename), Py_READONLY, 0},
-    {"show_details", offsetof(Config, show_details), Py_READONLY, 0},
-    {"undo_most_recent_action", offsetof(Config, undo_most_recent_action), Py_READONLY, 0},
-    {"background_color", offsetof(Config, background_color), Py_READONLY, 0},
+    {"copy_to_clipboard_as_base64", Py_T_OBJECT_EX, offsetof(Config, copy_to_clipboard_as_base64), Py_READONLY, 0},
+    {"move_to_new_file", Py_T_OBJECT_EX, offsetof(Config, move_to_new_file), Py_READONLY, 0},
+    {"optimize_image", Py_T_OBJECT_EX, offsetof(Config, optimize_image), Py_READONLY, 0},
+    {"refresh", Py_T_OBJECT_EX, offsetof(Config, refresh), Py_READONLY, 0},
+    {"reload_image", Py_T_OBJECT_EX, offsetof(Config, reload_image), Py_READONLY, 0},
+    {"rename", Py_T_OBJECT_EX, offsetof(Config, rename), Py_READONLY, 0},
+    {"show_details", Py_T_OBJECT_EX, offsetof(Config, show_details), Py_READONLY, 0},
+    {"undo_most_recent_action", Py_T_OBJECT_EX, offsetof(Config, undo_most_recent_action), Py_READONLY, 0},
+    {"background_color", Py_T_OBJECT_EX, offsetof(Config, background_color), Py_READONLY, 0},
     {NULL}};
 
 static void Config_dealloc(Config *self)
@@ -133,7 +133,7 @@ static void _update_config(Config *config, enum Header header, char *key, char *
         }
         break;
     case UI:
-        if (strcmp(key, "BACKGROUND_COLOR") == 0)
+        if (strcmp(key, "BACKGROUND_COLOR") == 0 && is_valid_hex_color(value))
         {
             config->background_color = PyUnicode_FromString(value);
         }
