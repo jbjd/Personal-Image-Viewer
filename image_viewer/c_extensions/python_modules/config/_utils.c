@@ -35,7 +35,7 @@ enum Header parse_header(const char *line)
     return NONE;
 }
 
-void parse_line(char *restrict line, int line_len, int value_len, char *restrict value_out)
+void parse_line(char *restrict line, int line_len, char *restrict value_out)
 {
     char *value_start = strchr(line, '=');
 
@@ -55,7 +55,7 @@ void parse_line(char *restrict line, int line_len, int value_len, char *restrict
         line[line_len - 1] = '\0';
     }
 
-    strncpy(value_out, value_start, value_len);
+    strcpy(value_out, value_start);
 }
 
 // int str_to_int(char *str, int min, int max, int default, bool *out_error)

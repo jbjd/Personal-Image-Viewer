@@ -175,7 +175,7 @@ PyObject *parse_config_file()
         else if (header != NONE)
         {
             char value[LINE_MAX_SIZE];
-            parse_line(line, line_len, LINE_MAX_SIZE, value);
+            parse_line(line, line_len, value);
             if (value[0] != '\0')
             {
                 _update_config(config, header, line, value);
