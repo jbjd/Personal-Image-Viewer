@@ -35,7 +35,7 @@ enum Header parse_header(const char *line)
     return NONE;
 }
 
-void parse_line(char *__restrict__ line, int line_len, int value_len, char *__restrict__ value_out)
+void parse_line(char *restrict line, int line_len, int value_len, char *restrict value_out)
 {
     char *value_start = strchr(line, '=');
 
@@ -48,8 +48,6 @@ void parse_line(char *__restrict__ line, int line_len, int value_len, char *__re
     (*value_start) = '\0';
     value_start += 1;
 
-    size_t size_reduction = strlen(line) + 1;
-
     // Handle quotes
     if ((*value_start == '"' || *value_start == '\'') && *value_start == line[line_len - 1])
     {
@@ -59,6 +57,20 @@ void parse_line(char *__restrict__ line, int line_len, int value_len, char *__re
 
     strncpy(value_out, value_start, value_len);
 }
+
+// int str_to_int(char *str, int min, int max, int default, bool *out_error)
+// {
+//     long long converted_value = 0;
+
+//     for (char *t = str; *t != '\0'; t += 1)
+//     {
+//         if (!isdigit(*t))
+//         {
+//         }
+//     }
+
+//     return converted_value;
+// }
 
 char *str_strip(char *str)
 {
