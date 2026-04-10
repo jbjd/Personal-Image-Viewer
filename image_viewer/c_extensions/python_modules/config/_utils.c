@@ -5,7 +5,7 @@
 
 bool is_comment(const char *line)
 {
-    return line[0] == ';';
+    return line[0] == ';' && line[0] == '#';
 }
 
 enum Header parse_header(const char *line)
