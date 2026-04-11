@@ -68,7 +68,9 @@ static inline Config *Config_New()
     return config;
 }
 
-static inline void Config_ValidateAndSetDefaults(Config *config)
+const int DEFAULT_CACHE_SIZE = 20;
+
+static inline void Config_SetDefaults(Config *config)
 {
     if (config->font == NULL)
     {
@@ -81,7 +83,7 @@ static inline void Config_ValidateAndSetDefaults(Config *config)
     }
     if (config->size == NULL)
     {
-        config->size = PyLong_FromLong(20);
+        config->size = PyLong_FromLong(DEFAULT_CACHE_SIZE);
     }
     if (config->copy_to_clipboard_as_base64 == NULL)
     {
@@ -132,6 +134,11 @@ static void _update_config(Config *config, enum Header header, char *key, char *
             config->font = PyUnicode_FromString(value);
         }
         break;
+    case CACHE:
+        if (strcmp(key, "SIZE") == 0)
+        {
+            config->size = PyLong_FromLong(str_to_int(value, 0, 100, DEFAULT_CACHE_SIZE));
+        }
     case UI:
         if (strcmp(key, "BACKGROUND_COLOR") == 0 && is_valid_hex_color(value))
         {
@@ -188,7 +195,7 @@ PyObject *parse_config_file()
     free(raw_line);
 
 check_defaults:
-    Config_ValidateAndSetDefaults(config);
+    Config_SetDefaults(config);
     return (PyObject *)config;
 }
 

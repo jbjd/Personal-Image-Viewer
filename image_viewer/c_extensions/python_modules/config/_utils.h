@@ -20,7 +20,7 @@ enum Header parse_header(const char *line);
 
 void parse_line(char *restrict line, int line_len, char *restrict value_out);
 
-// int str_to_int(char *str, int min, int max, int default);
+int str_to_int(char *str, int min, int max, int default_value);
 
 char *str_strip(char *str);
 

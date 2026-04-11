@@ -4,7 +4,7 @@
 #include "_utils.h"
 
 /**
- * Checks if input is a valid hex string in format #123ABC.
+ * Checks if \p hex is in format "#123ABC".
  *
  * @param hex Non-null char array to check.
  * @return 1 if valid, 0 if not.
@@ -27,16 +27,28 @@ bool is_valid_hex_color(char *hex)
     return hex[7] == '\0';
 }
 
+/**
+ * Checks if \p line is a comment in an ini file.
+ *
+ * @param line Non-null and stripped char array to check.
+ * @return 1 if comment, 0 if not.
+ */
 bool is_comment(const char *line)
 {
     return line[0] == ';' && line[0] == '#';
 }
 
+/**
+ * Checks if \p line is an accepted header in the ini used by this program.
+ *
+ * @param line Non-null and stripped char array to check.
+ * @return 1 if accepted header, 0 if not.
+ */
 enum Header parse_header(const char *line)
 {
     if (line[0] != '[')
     {
-        return NONE;
+        goto end;
     }
 
     if (strcmp(line + 1, "FONT]") == 0)
@@ -56,9 +68,22 @@ enum Header parse_header(const char *line)
         return UI;
     }
 
+end:
     return NONE;
 }
 
+/**
+ * Parses \p line into key and value pair.
+ * Whitespace between equals sign is not handled.
+ *
+ * \p line is edited such that the first equals sign becomes the end of the array.
+ * \p value_out which must be as least the same length as \p line.
+ * If line is not a valid key-value pair, line is set to 0 length.
+ *
+ * @param line Non-null and stripped char array to parse.
+ * @param line_len strlen of line.
+ * @param value_out where value is written. Must be at least size of \p line
+ */
 void parse_line(char *restrict line, int line_len, char *restrict value_out)
 {
     char *value_start = strchr(line, '=');
@@ -82,19 +107,42 @@ void parse_line(char *restrict line, int line_len, char *restrict value_out)
     strcpy(value_out, value_start);
 }
 
-// int str_to_int(char *str, int min, int max, int default, bool *out_error)
-// {
-//     long long converted_value = 0;
+int str_to_int(char *str, int min, int max, int default_value)
+{
+    int sign = *str == '-' ? -1 : 1;
+    if (sign == -1)
+    {
+        ++str;
+    }
 
-//     for (char *t = str; *t != '\0'; t += 1)
-//     {
-//         if (!isdigit(*t))
-//         {
-//         }
-//     }
+    if (*str == '\0')
+    {
+        return default_value;
+    }
 
-//     return converted_value;
-// }
+    long long converted_value = 0;
+
+    for (; *str != '\0'; ++str)
+    {
+        if (!isdigit(*str))
+        {
+            return default_value;
+        }
+
+        converted_value = (converted_value * 10) + (sign * (*str - '0'));
+
+        if (converted_value < min)
+        {
+            return min;
+        }
+        if (converted_value > max)
+        {
+            return max;
+        }
+    }
+
+    return (int)converted_value;
+}
 
 char *str_strip(char *str)
 {
