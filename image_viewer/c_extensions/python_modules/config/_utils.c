@@ -74,7 +74,6 @@ end:
 
 /**
  * Parses \p line into key and value pair.
- * Whitespace between equals sign and key is not handled. (TODO)
  *
  * \p line is edited such that the first equals sign becomes the end of the array.
  * \p value_out which must be as least the same length as \p line.
@@ -86,21 +85,31 @@ end:
  */
 void parse_line(char *restrict line, int line_len, char *restrict value_out)
 {
-    char *value_start = strchr(line, '=');
+    size_t index = 0;
 
-    if (value_start == NULL)
+    for (; line[index] != '\0'; ++index)
     {
-        line[0] = '\0';
-        return;
+        if (line[index] == '=')
+        {
+            goto has_equals;
+        }
     }
 
-    (*value_start) = '\0';
-    ++value_start;
+    line[0] = '\0';
+    return;
 
+has_equals:
+    char *value_start = &line[index + 1];
     while (isspace(*value_start))
     {
         ++value_start;
     }
+
+    do
+    {
+        --index;
+    } while (index > 0 && isspace(line[index]));
+    line[index + 1] = '\0';
 
     // Handle quotes
     if ((*value_start == '"' || *value_start == '\'') && *value_start == line[line_len - 1])
