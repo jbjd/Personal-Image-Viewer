@@ -74,7 +74,7 @@ end:
 
 /**
  * Parses \p line into key and value pair.
- * Whitespace between equals sign is not handled.
+ * Whitespace between equals sign and key is not handled. (TODO)
  *
  * \p line is edited such that the first equals sign becomes the end of the array.
  * \p value_out which must be as least the same length as \p line.
@@ -95,7 +95,12 @@ void parse_line(char *restrict line, int line_len, char *restrict value_out)
     }
 
     (*value_start) = '\0';
-    value_start += 1;
+    ++value_start;
+
+    while (isspace(*value_start))
+    {
+        ++value_start;
+    }
 
     // Handle quotes
     if ((*value_start == '"' || *value_start == '\'') && *value_start == line[line_len - 1])
