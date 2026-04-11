@@ -139,6 +139,44 @@ static void _update_config(Config *config, enum Header header, char *key, char *
         {
             config->size = PyLong_FromLong(str_to_int(value, 0, 100, DEFAULT_CACHE_SIZE));
         }
+    case KEYBINDS:
+        if (!is_valid_keybind(value, strlen(value)))
+        {
+            break;
+        }
+        if (strcmp(key, "COPY_TO_CLIPBOARD_AS_BASE64") == 0)
+        {
+            config->copy_to_clipboard_as_base64 = PyUnicode_FromString(value);
+        }
+        if (strcmp(key, "MOVE_TO_NEW_FILE") == 0)
+        {
+            config->move_to_new_file = PyUnicode_FromString(value);
+        }
+        if (strcmp(key, "OPTIMIZE_IMAGE") == 0)
+        {
+            config->optimize_image = PyUnicode_FromString(value);
+        }
+        if (strcmp(key, "REFRESH") == 0)
+        {
+            config->refresh = PyUnicode_FromString(value);
+        }
+        if (strcmp(key, "RELOAD_IMAGE") == 0)
+        {
+            config->reload_image = PyUnicode_FromString(value);
+        }
+        if (strcmp(key, "RENAME") == 0)
+        {
+            config->rename = PyUnicode_FromString(value);
+        }
+        if (strcmp(key, "SHOW_DETAILS") == 0)
+        {
+            config->show_details = PyUnicode_FromString(value);
+        }
+        if (strcmp(key, "UNDO_MOST_RECENT_ACTION") == 0)
+        {
+            config->undo_most_recent_action = PyUnicode_FromString(value);
+        }
+        break;
     case UI:
         if (strcmp(key, "BACKGROUND_COLOR") == 0 && is_valid_hex_color(value))
         {

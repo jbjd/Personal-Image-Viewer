@@ -14,6 +14,8 @@ enum Header
 
 bool is_valid_hex_color(char *hex);
 
+bool is_valid_keybind(char *keybind, size_t keybind_len);
+
 bool is_comment(const char *line);
 
 enum Header parse_header(const char *line);
