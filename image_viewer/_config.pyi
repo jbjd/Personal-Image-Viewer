@@ -17,5 +17,7 @@ class Config:
         "ui_font",
     )
 
-def parse_config_file() -> Config:
-    """Parsed image_viewer/config.ini and returns provided values or default."""
+def parse_config_file(file_path: str | None = None) -> Config:
+    """Parsed image_viewer/config.ini and returns provided values or default.
+
+    :param file_path: Path to config ini file"""

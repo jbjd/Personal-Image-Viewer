@@ -186,11 +186,17 @@ static void _update_config(Config *config, enum Header header, char *key, char *
     }
 }
 
-PyObject *parse_config_file()
+PyObject *parse_config_file(PyObject *self, PyObject *args)
 {
+    char *path = NULL;
+    if (unlikely(!PyArg_ParseTuple(args, "|s", path)))
+    {
+        return NULL;
+    }
+
     Config *config = Config_New();
 
-    FILE *file = fopen("image_viewer/config.ini", "r");
+    FILE *file = fopen(path == NULL ? "image_viewer/config.ini" : path, "r");
     if (file == NULL)
     {
         goto check_defaults;
@@ -236,7 +242,7 @@ check_defaults:
 }
 
 static PyMethodDef config_methods[] = {
-    {"parse_config_file", (PyCFunction)parse_config_file, METH_NOARGS, NULL},
+    {"parse_config_file", (PyCFunction)parse_config_file, METH_VARARGS, NULL},
     {NULL, NULL, 0, NULL}};
 
 static struct PyModuleDef config_module = {
