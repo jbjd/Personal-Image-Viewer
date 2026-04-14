@@ -4,11 +4,10 @@
 #include <stdlib.h>
 
 #include "../../c_optimizations.h"
+
+#include "_defaults.h"
 #include "_utils.h"
-
 #include "config.h"
-
-#include <stdio.h> // tmp
 
 // Config Start
 static PyMemberDef Config_members[] = {
@@ -68,58 +67,51 @@ static inline Config *Config_New()
     return config;
 }
 
-const int DEFAULT_CACHE_SIZE = 20;
-
-static inline void Config_SetDefaults(Config *config)
+static inline void Config_SetDefaults(PyObject *self, Config *config)
 {
     if (config->cache_size == NULL)
     {
-        config->cache_size = PyLong_FromLong(DEFAULT_CACHE_SIZE);
+        config->cache_size = PyObject_GetAttrString(self, "DEFAULT_CACHE_SIZE");
     }
     if (config->kb_copy_to_clipboard_as_base64 == NULL)
     {
-        config->kb_copy_to_clipboard_as_base64 = PyUnicode_FromString("<Control-E>");
+        config->kb_copy_to_clipboard_as_base64 = PyObject_GetAttrString(self, "DEFAULT_KB_COPY_TO_CLIPBOARD_AS_BASE64");
     }
     if (config->kb_move_to_new_file == NULL)
     {
-        config->kb_move_to_new_file = PyUnicode_FromString("<Control-m>");
+        config->kb_move_to_new_file = PyObject_GetAttrString(self, "DEFAULT_KB_MOVE_TO_NEW_FILE");
     }
     if (config->kb_optimize_image == NULL)
     {
-        config->kb_optimize_image = PyUnicode_FromString("<Control-o>");
+        config->kb_optimize_image = PyObject_GetAttrString(self, "DEFAULT_KB_OPTIMIZE_IMAGE");
     }
     if (config->kb_refresh == NULL)
     {
-        config->kb_refresh = PyUnicode_FromString("<Control-r>");
+        config->kb_refresh = PyObject_GetAttrString(self, "DEFAULT_KB_REFRESH");
     }
     if (config->kb_reload_image == NULL)
     {
-        config->kb_reload_image = PyUnicode_FromString("<F5>");
+        config->kb_reload_image = PyObject_GetAttrString(self, "DEFAULT_KB_RELOAD_IMAGE");
     }
     if (config->kb_rename == NULL)
     {
-        config->kb_rename = PyUnicode_FromString("<F2>");
+        config->kb_rename = PyObject_GetAttrString(self, "DEFAULT_KB_RENAME");
     }
     if (config->kb_show_details == NULL)
     {
-        config->kb_show_details = PyUnicode_FromString("<Control-d>");
+        config->kb_show_details = PyObject_GetAttrString(self, "DEFAULT_KB_SHOW_DETAILS");
     }
     if (config->kb_undo_most_recent_action == NULL)
     {
-        config->kb_undo_most_recent_action = PyUnicode_FromString("<Control-z>");
+        config->kb_undo_most_recent_action = PyObject_GetAttrString(self, "DEFAULT_KB_UNDO_MOST_RECENT_ACTION");
     }
     if (config->ui_background_color == NULL)
     {
-        config->ui_background_color = PyUnicode_FromString("#000000");
+        config->ui_background_color = PyObject_GetAttrString(self, "DEFAULT_UI_BACKGROUND_COLOR");
     }
     if (config->ui_font == NULL)
     {
-#if defined(__WIN32__)
-        char *font = "arial.ttf";
-#else
-        char *font = "LiberationSans-Regular.ttf";
-#endif
-        config->ui_font = PyUnicode_FromString(font);
+        config->ui_font = PyObject_GetAttrString(self, "DEFAULT_UI_FONT");
     }
 }
 // Config End
@@ -237,7 +229,7 @@ PyObject *parse_config_file(PyObject *self, PyObject *args)
     free(raw_line);
 
 check_defaults:
-    Config_SetDefaults(config);
+    Config_SetDefaults(self, config);
     return (PyObject *)config;
 }
 
@@ -261,7 +253,18 @@ PyMODINIT_FUNC PyInit__config(void)
 
     PyObject *module = PyModule_Create(&config_module);
 
-    if (unlikely(PyModule_AddObjectRef(module, "Config", (PyObject *)&Config_Type) < 0))
+    if (unlikely(PyModule_AddObjectRef(module, "Config", (PyObject *)&Config_Type) < 0 ||
+                 PyModule_AddIntConstant(module, "DEFAULT_CACHE_SIZE", DEFAULT_CACHE_SIZE) ||
+                 PyModule_AddStringConstant(module, "DEFAULT_KB_COPY_TO_CLIPBOARD_AS_BASE64", DEFAULT_KB_COPY_TO_CLIPBOARD_AS_BASE64) ||
+                 PyModule_AddStringConstant(module, "DEFAULT_KB_MOVE_TO_NEW_FILE", DEFAULT_KB_MOVE_TO_NEW_FILE) ||
+                 PyModule_AddStringConstant(module, "DEFAULT_KB_OPTIMIZE_IMAGE", DEFAULT_KB_OPTIMIZE_IMAGE) ||
+                 PyModule_AddStringConstant(module, "DEFAULT_KB_REFRESH", DEFAULT_KB_REFRESH) ||
+                 PyModule_AddStringConstant(module, "DEFAULT_KB_RELOAD_IMAGE", DEFAULT_KB_RELOAD_IMAGE) ||
+                 PyModule_AddStringConstant(module, "DEFAULT_KB_RENAME", DEFAULT_KB_RENAME) ||
+                 PyModule_AddStringConstant(module, "DEFAULT_KB_SHOW_DETAILS", DEFAULT_KB_SHOW_DETAILS) ||
+                 PyModule_AddStringConstant(module, "DEFAULT_KB_UNDO_MOST_RECENT_ACTION", DEFAULT_KB_UNDO_MOST_RECENT_ACTION) ||
+                 PyModule_AddStringConstant(module, "DEFAULT_UI_BACKGROUND_COLOR", DEFAULT_UI_BACKGROUND_COLOR) ||
+                 PyModule_AddStringConstant(module, "DEFAULT_UI_FONT", DEFAULT_UI_FONT)))
     {
         Py_DECREF(module);
         return NULL;
