@@ -189,7 +189,7 @@ static void _update_config(Config *config, enum Header header, char *key, char *
 PyObject *parse_config_file(PyObject *self, PyObject *args)
 {
     char *path = NULL;
-    if (unlikely(!PyArg_ParseTuple(args, "|s", path)))
+    if (unlikely(!PyArg_ParseTuple(args, "|s", &path)))
     {
         return NULL;
     }
