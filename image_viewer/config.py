@@ -53,9 +53,6 @@ class Config:
         config_parser: ConfigParserExt = ConfigParserExt()
         config_parser.read(config_file)
 
-        self.font_file: str = config_parser.get_string_safe(
-            "FONT", "DEFAULT", DEFAULT_FONT
-        )
         self.max_items_in_cache: int = config_parser.get_int_safe(
             "CACHE", "SIZE", DEFAULT_MAX_ITEMS_IN_CACHE
         )
@@ -77,6 +74,7 @@ class Config:
             ),
             DEFAULT_BACKGROUND_COLOR,
         )
+        self.font_file: str = config_parser.get_string_safe("UI", "FONT", DEFAULT_FONT)
 
 
 class KeybindConfig:

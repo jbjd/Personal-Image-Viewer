@@ -107,11 +107,7 @@ enum Header parse_header(const char *line)
         goto end;
     }
 
-    if (strcmp(line + 1, "FONT]") == 0)
-    {
-        return FONT;
-    }
-    else if (strcmp(line + 1, "CACHE]") == 0)
+    if (strcmp(line + 1, "CACHE]") == 0)
     {
         return CACHE;
     }

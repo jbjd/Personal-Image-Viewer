@@ -6,7 +6,6 @@
 enum Header
 {
     NONE,
-    FONT,
     CACHE,
     KEYBINDS,
     UI,
