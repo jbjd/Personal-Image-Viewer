@@ -36,7 +36,6 @@ def empty_or_valid_keybind(keybind: str) -> bool:
 
 schema = Schema(
     {
-        "FONT": {"default": str},
         "CACHE": {"size": empty_or_valid_int},
         "KEYBINDS": {
             "copy_to_clipboard_as_base64": empty_or_valid_keybind,
@@ -48,7 +47,7 @@ schema = Schema(
             "show_details": empty_or_valid_keybind,
             "undo_most_recent_action": empty_or_valid_keybind,
         },
-        "UI": {"background_color": empty_or_valid_hex_color},
+        "UI": {"background_color": empty_or_valid_hex_color, "font": str},
     }
 )
 
