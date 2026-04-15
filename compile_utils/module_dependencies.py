@@ -13,7 +13,7 @@ module_dependencies: list[Requirement] = parse_requirements_file("requirements.t
 # be checked explicitly
 modules_to_include: list[str] = [
     "image_viewer.image._read",
-    "image_viewer.util._generic",
+    "image_viewer._config",
 ]
 if os.name == "nt":
     modules_to_include.append("image_viewer.util._os_nt")

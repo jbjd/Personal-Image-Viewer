@@ -7,8 +7,8 @@ from typing import Never, TypeVar, TypeVarTuple
 from PIL.Image import Image
 from PIL.ImageTk import PhotoImage
 
+from image_viewer._config import Config, parse_config_file
 from image_viewer.animation.frame import Frame
-from image_viewer.config import Config
 from image_viewer.constants import (
     ButtonName,
     Key,
@@ -62,8 +62,8 @@ class ViewerApp:
     )
 
     def __init__(self, first_image_path: str) -> None:
-        config = Config()
-        image_cache: ImageCache = ImageCache(config.max_items_in_cache)
+        config: Config = parse_config_file()
+        image_cache: ImageCache = ImageCache(config.cache_size)
         self.file_manager: ImageFileManager = ImageFileManager(
             first_image_path, image_cache
         )
@@ -82,7 +82,7 @@ class ViewerApp:
         if os.name == "nt":
             set_hwnd(self.app_id)
 
-        self.canvas = CustomCanvas(self.app, config.background_color)
+        self.canvas = CustomCanvas(self.app, config.ui_background_color)
         screen_height: int = self.canvas.screen_height
         screen_width: int = self.canvas.screen_width
 
@@ -91,7 +91,7 @@ class ViewerApp:
 
         self._load_assets(
             self.canvas,
-            config.font_file,
+            config.ui_font,
             self.canvas.screen_width,
             self._scale_pixels_to_height(32),
         )
@@ -100,7 +100,7 @@ class ViewerApp:
             screen_width, screen_height, image_cache, self.animation_loop
         )
 
-        init_PIL(config.font_file, self._scale_pixels_to_height(23))
+        init_PIL(config.ui_font, self._scale_pixels_to_height(23))
 
         self._init_image_display()
 
@@ -147,16 +147,16 @@ class ViewerApp:
         app.bind("<Escape>", self.handle_esc)
         app.bind("<KeyRelease>", self.handle_key_release)
         app.bind(
-            config.keybinds.copy_to_clipboard_as_base64,
+            config.kb_copy_to_clipboard_as_base64,
             self.copy_to_clipboard_as_base64,
         )
-        app.bind(config.keybinds.refresh, self.refresh)
-        app.bind(config.keybinds.reload_image, lambda _: self.load_image_unblocking())
-        app.bind(config.keybinds.rename, self.toggle_show_rename_window)
-        app.bind(config.keybinds.show_details, self.show_details)
-        app.bind(config.keybinds.move_to_new_file, self.move_to_new_file)
-        app.bind(config.keybinds.undo_most_recent_action, self.undo_most_recent_action)
-        app.bind(config.keybinds.optimize_image, self.optimize_current_image)
+        app.bind(config.kb_refresh, self.refresh)
+        app.bind(config.kb_reload_image, lambda _: self.load_image_unblocking())
+        app.bind(config.kb_rename, self.toggle_show_rename_window)
+        app.bind(config.kb_show_details, self.show_details)
+        app.bind(config.kb_move_to_new_file, self.move_to_new_file)
+        app.bind(config.kb_undo_most_recent_action, self.undo_most_recent_action)
+        app.bind(config.kb_optimize_image, self.optimize_current_image)
         app.bind(
             "<equal>",
             lambda e: self._only_for_this_window(

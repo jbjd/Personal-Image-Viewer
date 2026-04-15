@@ -1,4 +1,4 @@
-"""C extensions that aren't better classified in other files."""
+"""C functions exposed in python to help with testing."""
 
 def is_valid_hex_color(hex_color: str, /) -> bool:
     """Checks if a string is a valid hex color in the case-insensitive format '#ABC123'.

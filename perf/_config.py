@@ -1,14 +1,7 @@
-"""Config values and tools to read them."""
-
 import os
 from configparser import ConfigParser
-from enum import StrEnum
 
-from image_viewer.util._generic import is_valid_hex_color, is_valid_keybind
-
-DEFAULT_FONT: str = "arial.ttf" if os.name == "nt" else "LiberationSans-Regular.ttf"
-DEFAULT_MAX_ITEMS_IN_CACHE: int = 20
-DEFAULT_BACKGROUND_COLOR: str = "#000000"
+from tests.test_util._config import is_valid_hex_color, is_valid_keybind
 
 
 def _validate_hex_or_default(hex_color: str, default: str) -> str:
@@ -31,34 +24,14 @@ def _validate_keybind_or_default(keybind: str, default: str) -> str:
     return keybind if is_valid_keybind(keybind) else default
 
 
-class DefaultKeybinds(StrEnum):
-    """Defaults for keybinds that config.ini can override."""
-
-    COPY_TO_CLIPBOARD_AS_BASE64 = "<Control-E>"
-    MOVE_TO_NEW_FILE = "<Control-m>"
-    OPTIMIZE_IMAGE = "<Control-o>"
-    REFRESH = "<Control-r>"
-    RELOAD_IMAGE = "<F5>"
-    RENAME = "<F2>"
-    SHOW_DETAILS = "<Control-d>"
-    UNDO_MOST_RECENT_ACTION = "<Control-z>"
-
-
 class Config:
-    """Reads values from config.ini file."""
-
     __slots__ = ("background_color", "font_file", "keybinds", "max_items_in_cache")
 
     def __init__(self, config_file: str = "image_viewer/config.ini") -> None:
         config_parser: ConfigParserExt = ConfigParserExt()
         config_parser.read(config_file)
 
-        self.font_file: str = config_parser.get_string_safe(
-            "FONT", "DEFAULT", DEFAULT_FONT
-        )
-        self.max_items_in_cache: int = config_parser.get_int_safe(
-            "CACHE", "SIZE", DEFAULT_MAX_ITEMS_IN_CACHE
-        )
+        self.max_items_in_cache: int = config_parser.get_int_safe("CACHE", "SIZE", 20)
 
         self.keybinds = KeybindConfig(
             config_parser.get_string_safe("KEYBINDS", "COPY_TO_CLIPBOARD_AS_BASE64"),
@@ -72,10 +45,13 @@ class Config:
         )
 
         self.background_color = _validate_hex_or_default(
-            config_parser.get_string_safe(
-                "UI", "BACKGROUND_COLOR", DEFAULT_BACKGROUND_COLOR
-            ),
-            DEFAULT_BACKGROUND_COLOR,
+            config_parser.get_string_safe("UI", "BACKGROUND_COLOR", "#000000"),
+            "#000000",
+        )
+        self.font_file: str = config_parser.get_string_safe(
+            "UI",
+            "FONT",
+            "arial.ttf" if os.name == "nt" else "LiberationSans-Regular.ttf",
         )
 
 
@@ -105,26 +81,22 @@ class KeybindConfig:
         undo_most_recent_action: str,
     ) -> None:
         self.copy_to_clipboard_as_base64: str = _validate_keybind_or_default(
-            copy_to_clipboard_as_base64, DefaultKeybinds.COPY_TO_CLIPBOARD_AS_BASE64
+            copy_to_clipboard_as_base64, "<Control-E>"
         )
         self.move_to_new_file: str = _validate_keybind_or_default(
-            move_to_new_file, DefaultKeybinds.MOVE_TO_NEW_FILE
+            move_to_new_file, "<Control-m>"
         )
         self.optimize_image = _validate_keybind_or_default(
-            optimize_image, DefaultKeybinds.OPTIMIZE_IMAGE
+            optimize_image, "<Control-o>"
         )
-        self.refresh: str = _validate_keybind_or_default(
-            refresh, DefaultKeybinds.REFRESH
-        )
-        self.reload_image: str = _validate_keybind_or_default(
-            reload_image, DefaultKeybinds.RELOAD_IMAGE
-        )
-        self.rename: str = _validate_keybind_or_default(rename, DefaultKeybinds.RENAME)
+        self.refresh: str = _validate_keybind_or_default(refresh, "<Control-r>")
+        self.reload_image: str = _validate_keybind_or_default(reload_image, "<F5>")
+        self.rename: str = _validate_keybind_or_default(rename, "<F2>")
         self.show_details: str = _validate_keybind_or_default(
-            show_details, DefaultKeybinds.SHOW_DETAILS
+            show_details, "<Control-d>"
         )
         self.undo_most_recent_action: str = _validate_keybind_or_default(
-            undo_most_recent_action, DefaultKeybinds.UNDO_MOST_RECENT_ACTION
+            undo_most_recent_action, "<Control-z>"
         )
 
 

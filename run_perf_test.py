@@ -4,7 +4,7 @@ import importlib
 import sys
 from types import ModuleType
 
-perf_tests: list[str] = ["keybind"]
+perf_tests: list[str] = ["config"]
 
 if len(sys.argv) < 2 or sys.argv[1] not in perf_tests:
     exit_code: int
