@@ -1,14 +1,11 @@
-"""Config values and tools to read them."""
-
 import os
+import string
+import tempfile
 from configparser import ConfigParser
-from enum import StrEnum
+from time import perf_counter
 
+from image_viewer._config import parse_config_file
 from image_viewer.util._generic import is_valid_hex_color, is_valid_keybind
-
-DEFAULT_FONT: str = "arial.ttf" if os.name == "nt" else "LiberationSans-Regular.ttf"
-DEFAULT_MAX_ITEMS_IN_CACHE: int = 20
-DEFAULT_BACKGROUND_COLOR: str = "#000000"
 
 
 def _validate_hex_or_default(hex_color: str, default: str) -> str:
@@ -31,31 +28,14 @@ def _validate_keybind_or_default(keybind: str, default: str) -> str:
     return keybind if is_valid_keybind(keybind) else default
 
 
-class DefaultKeybinds(StrEnum):
-    """Defaults for keybinds that config.ini can override."""
-
-    COPY_TO_CLIPBOARD_AS_BASE64 = "<Control-E>"
-    MOVE_TO_NEW_FILE = "<Control-m>"
-    OPTIMIZE_IMAGE = "<Control-o>"
-    REFRESH = "<Control-r>"
-    RELOAD_IMAGE = "<F5>"
-    RENAME = "<F2>"
-    SHOW_DETAILS = "<Control-d>"
-    UNDO_MOST_RECENT_ACTION = "<Control-z>"
-
-
 class Config:
-    """Reads values from config.ini file."""
-
     __slots__ = ("background_color", "font_file", "keybinds", "max_items_in_cache")
 
     def __init__(self, config_file: str = "image_viewer/config.ini") -> None:
         config_parser: ConfigParserExt = ConfigParserExt()
         config_parser.read(config_file)
 
-        self.max_items_in_cache: int = config_parser.get_int_safe(
-            "CACHE", "SIZE", DEFAULT_MAX_ITEMS_IN_CACHE
-        )
+        self.max_items_in_cache: int = config_parser.get_int_safe("CACHE", "SIZE", 20)
 
         self.keybinds = KeybindConfig(
             config_parser.get_string_safe("KEYBINDS", "COPY_TO_CLIPBOARD_AS_BASE64"),
@@ -69,12 +49,14 @@ class Config:
         )
 
         self.background_color = _validate_hex_or_default(
-            config_parser.get_string_safe(
-                "UI", "BACKGROUND_COLOR", DEFAULT_BACKGROUND_COLOR
-            ),
-            DEFAULT_BACKGROUND_COLOR,
+            config_parser.get_string_safe("UI", "BACKGROUND_COLOR", "#000000"),
+            "#000000",
         )
-        self.font_file: str = config_parser.get_string_safe("UI", "FONT", DEFAULT_FONT)
+        self.font_file: str = config_parser.get_string_safe(
+            "UI",
+            "FONT",
+            "arial.ttf" if os.name == "nt" else "LiberationSans-Regular.ttf",
+        )
 
 
 class KeybindConfig:
@@ -103,26 +85,22 @@ class KeybindConfig:
         undo_most_recent_action: str,
     ) -> None:
         self.copy_to_clipboard_as_base64: str = _validate_keybind_or_default(
-            copy_to_clipboard_as_base64, DefaultKeybinds.COPY_TO_CLIPBOARD_AS_BASE64
+            copy_to_clipboard_as_base64, "<Control-E>"
         )
         self.move_to_new_file: str = _validate_keybind_or_default(
-            move_to_new_file, DefaultKeybinds.MOVE_TO_NEW_FILE
+            move_to_new_file, "<Control-m>"
         )
         self.optimize_image = _validate_keybind_or_default(
-            optimize_image, DefaultKeybinds.OPTIMIZE_IMAGE
+            optimize_image, "<Control-o>"
         )
-        self.refresh: str = _validate_keybind_or_default(
-            refresh, DefaultKeybinds.REFRESH
-        )
-        self.reload_image: str = _validate_keybind_or_default(
-            reload_image, DefaultKeybinds.RELOAD_IMAGE
-        )
-        self.rename: str = _validate_keybind_or_default(rename, DefaultKeybinds.RENAME)
+        self.refresh: str = _validate_keybind_or_default(refresh, "<Control-r>")
+        self.reload_image: str = _validate_keybind_or_default(reload_image, "<F5>")
+        self.rename: str = _validate_keybind_or_default(rename, "<F2>")
         self.show_details: str = _validate_keybind_or_default(
-            show_details, DefaultKeybinds.SHOW_DETAILS
+            show_details, "<Control-d>"
         )
         self.undo_most_recent_action: str = _validate_keybind_or_default(
-            undo_most_recent_action, DefaultKeybinds.UNDO_MOST_RECENT_ACTION
+            undo_most_recent_action, "<Control-z>"
         )
 
 
@@ -143,3 +121,50 @@ class ConfigParserExt(ConfigParser):
         result: str = super().get(section, option, fallback=fallback).strip("'\"")
 
         return result or fallback
+
+
+def run() -> None:
+    a = perf_counter()
+
+    [Config("some bad path") for _ in range(10)]
+
+    print("(Empty Config) Python time:", perf_counter() - a)
+
+    a = perf_counter()
+
+    [parse_config_file("some bad path") for _ in range(10)]
+
+    print("(Empty Config) C time:", perf_counter() - a)
+
+    a = perf_counter()
+
+    [Config() for _ in range(10)]
+
+    print("(Default Config) Python time:", perf_counter() - a)
+
+    a = perf_counter()
+
+    [parse_config_file() for _ in range(10)]
+
+    print("(Default Config) C time:", perf_counter() - a)
+
+    a = perf_counter()
+
+    with tempfile.NamedTemporaryFile("w") as tmp_file:
+        for letter in string.ascii_lowercase:
+            tmp_file.write(f"[{letter}]\n")
+            for letter2 in string.ascii_lowercase:
+                tmp_file.write(f"{letter2}=skdawuklvbaks3819fn389fb289bfukl\n")
+
+        tmp_file.write("[UI]\n")
+        tmp_file.write("FONT=iasvbweiruvbauios\n")
+
+        [Config(tmp_file.name) for _ in range(10)]
+
+        print("(Big Config) Python time:", perf_counter() - a)
+
+        a = perf_counter()
+
+        [parse_config_file(tmp_file.name) for _ in range(10)]
+
+        print("(Big Config) C time:", perf_counter() - a)
