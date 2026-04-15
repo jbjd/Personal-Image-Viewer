@@ -43,6 +43,17 @@ def test_config_reader_defaults():
 
     _assert_defaults(config)
 
+    assert is_valid_keybind(config.kb_copy_to_clipboard_as_base64)
+    assert is_valid_keybind(config.kb_move_to_new_file)
+    assert is_valid_keybind(config.kb_optimize_image)
+    assert is_valid_keybind(config.kb_refresh)
+    assert is_valid_keybind(config.kb_reload_image)
+    assert is_valid_keybind(config.kb_rename)
+    assert is_valid_keybind(config.kb_show_details)
+    assert is_valid_keybind(config.kb_undo_most_recent_action)
+
+    assert is_valid_hex_color(config.ui_background_color)
+
 
 def test_config_reader_int_fallback():
     """Should return default when"""
