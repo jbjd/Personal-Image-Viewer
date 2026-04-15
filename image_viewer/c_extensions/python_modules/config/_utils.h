@@ -2,6 +2,7 @@
 #define PIV_CONFIG_UTILS
 
 #include <Python.h>
+#include <stdbool.h>
 
 enum Header
 {
