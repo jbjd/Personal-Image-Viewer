@@ -1,3 +1,5 @@
+"""C extensions that implement a simplified ini parser."""
+
 from typing import Final
 
 DEFAULT_CACHE_SIZE: Final[int]

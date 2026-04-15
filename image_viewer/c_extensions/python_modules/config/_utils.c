@@ -9,7 +9,7 @@
  * @param hex Non-null char array to check
  * @return 1 if valid, 0 if not
  */
-bool is_valid_hex_color(char *hex)
+bool is_valid_hex_color(const char *hex)
 {
     if (hex[0] != '#')
     {
@@ -62,25 +62,25 @@ static inline bool is_valid_key(const char *key, size_t key_len, bool prefixed)
  * @param keybind Non-null char array to check
  * @return 1 if valid, 0 if not
  */
-bool is_valid_keybind(char *keybind, size_t keybind_len)
+bool is_valid_keybind(const char *keybind, size_t keybind_len)
 {
     if (keybind[0] != '<' || keybind[keybind_len - 1] != '>')
     {
         return false;
     }
 
-    keybind += 1;
+    size_t index = 1;
     keybind_len -= 2;
 
-    bool prefixed = strncmp(keybind, "Control-", 8) == 0;
+    bool prefixed = strncmp(keybind + index, "Control-", 8) == 0;
 
     if (prefixed)
     {
-        keybind += 8;
+        index += 8;
         keybind_len -= 8;
     }
 
-    return is_valid_key(keybind, keybind_len, prefixed);
+    return is_valid_key(keybind + index, keybind_len, prefixed);
 }
 
 /**

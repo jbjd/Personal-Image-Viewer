@@ -41,19 +41,17 @@ C_FLAGS_SHARED=-L$(PYTHON_LIBS) -I$(PYTHON_INCLUDES) -l$(PYTHON_DLL) $(OPTIMIZAT
 
 build-config:
 	gcc $(C_SOURCE)/python_modules/config/config.c $(C_SOURCE)/python_modules/config/_utils.c $(C_FLAGS_SHARED) -I$(C_SOURCE) -o image_viewer/_config.$(COMPILED_EXT)
+	gcc $(C_SOURCE)/python_modules/config/test_utils.c $(C_SOURCE)/python_modules/config/_utils.c $(C_FLAGS_SHARED) -I$(C_SOURCE) -o tests/test_util/_config.$(COMPILED_EXT)
 
 build-image-read:
 	gcc $(C_SOURCE)/python_modules/image/read.c $(C_FLAGS_SHARED) -I$(C_SOURCE) -o image_viewer/image/_read.$(COMPILED_EXT) -lturbojpeg
-
-build-util-generic:
-	gcc $(C_SOURCE)/python_modules/util/generic.c $(C_FLAGS_SHARED) -I$(C_SOURCE) -o image_viewer/util/_generic.$(COMPILED_EXT)
 
 build-util-os-nt:
 ifeq ($(OS),Windows_NT)
 	gcc $(C_SOURCE)/python_modules/util/os_nt.c $(C_SOURCE)/b64/cencode.c -I$(C_SOURCE) -lshlwapi -loleaut32 -lole32 $(C_FLAGS_SHARED) -o image_viewer/util/_os_nt.$(COMPILED_EXT)
 endif
 
-build-all: build-image-read build-util-generic build-util-os-nt
+build-all: build-config build-image-read build-util-os-nt
 
 install:
 	$(PYTHON_FOR_INSTALL_STEP) compile.py --assume-this-machine --strip

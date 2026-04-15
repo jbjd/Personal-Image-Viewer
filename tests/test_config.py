@@ -1,3 +1,5 @@
+import pytest
+
 from image_viewer._config import (
     DEFAULT_CACHE_SIZE,
     DEFAULT_KB_COPY_TO_CLIPBOARD_AS_BASE64,
@@ -13,6 +15,7 @@ from image_viewer._config import (
     Config,
     parse_config_file,
 )
+from tests.test_util._config import is_valid_hex_color, is_valid_keybind
 
 
 def test_config_reader():
@@ -21,7 +24,12 @@ def test_config_reader():
 
     assert config.cache_size == 100
 
+    assert config.kb_copy_to_clipboard_as_base64 == "<Control-K>"
     assert config.kb_move_to_new_file == "<F6>"
+    assert config.kb_optimize_image == "<Control-J>"
+    assert config.kb_refresh == "<Control-H>"
+    assert config.kb_reload_image == "<F7>"
+    assert config.kb_rename == "<F3>"
     assert config.kb_show_details == "<Control-a>"
     assert config.kb_undo_most_recent_action == "<Control-Z>"
 
@@ -33,6 +41,53 @@ def test_config_reader_defaults():
     """Should return all default values"""
     config: Config = parse_config_file("tests/data/config_empty.ini")
 
+    _assert_defaults(config)
+
+
+def test_config_reader_int_fallback():
+    """Should return default when"""
+    config: Config = parse_config_file("tests/data/config_bad_values.ini")
+
+    _assert_defaults(config)
+
+
+@pytest.mark.parametrize(
+    ("keybind", "expected"),
+    [
+        ("asdvbiu34uiyg", False),
+        ("<Control-d>", True),
+        ("<Control-F12>", True),
+        ("<Control->", False),
+        ("<F0>", False),
+        ("<F1>", True),
+        ("<F12>", True),
+        ("<F13>", False),
+        ("<F91>", False),
+        ("<k>", False),
+        ("<K>", True),
+    ],
+)
+def test_validate_keybind(keybind: str, expected: bool):
+    """Should correctly identify valid keybinds."""
+    assert is_valid_keybind(keybind) is expected
+
+
+@pytest.mark.parametrize(
+    ("hex_color", "expected"),
+    [
+        ("asdvbiu34uiyg", False),
+        ("#010101", True),
+        ("#01ABEF", True),
+        ("#01ABEG", False),
+        ("#01", False),
+    ],
+)
+def test_validate_hex(hex_color: str, expected: bool):
+    """Should correctly identify valid hexs."""
+    assert is_valid_hex_color(hex_color) is expected
+
+
+def _assert_defaults(config: Config) -> None:
     assert config.cache_size == DEFAULT_CACHE_SIZE
 
     assert (
@@ -48,53 +103,3 @@ def test_config_reader_defaults():
 
     assert config.ui_background_color == DEFAULT_UI_BACKGROUND_COLOR
     assert config.ui_font == DEFAULT_UI_FONT
-
-
-def test_config_reader_int_fallback():
-    """Should return default when"""
-    config: Config = parse_config_file("tests/data/config_bad_values.ini")
-
-    assert config.cache_size == DEFAULT_CACHE_SIZE
-
-    assert config.kb_move_to_new_file == DEFAULT_KB_MOVE_TO_NEW_FILE
-
-    assert config.ui_background_color == DEFAULT_UI_BACKGROUND_COLOR
-    assert config.ui_font == DEFAULT_UI_FONT
-
-
-# TODO: Move to CUnit
-
-# @pytest.mark.parametrize(
-#     ("keybind", "expected_keybind"),
-#     [
-#         ("asdvbiu34uiyg", _DEFAULT),
-#         ("<Control-d>", "<Control-d>"),
-#         ("<Control-F12>", "<Control-F12>"),
-#         ("<Control->", _DEFAULT),
-#         ("<F0>", _DEFAULT),
-#         ("<F1>", "<F1>"),
-#         ("<F12>", "<F12>"),
-#         ("<F13>", _DEFAULT),
-#         ("<F91>", _DEFAULT),
-#         ("<k>", _DEFAULT),
-#         ("<K>", "<K>"),
-#     ],
-# )
-# def test_validate_keybind_or_default(keybind: str, expected_keybind: str):
-#     """Should return original keybind or default if keybind was invalid"""
-#     assert _validate_keybind_or_default(keybind, _DEFAULT) == expected_keybind
-
-
-# @pytest.mark.parametrize(
-#     ("hex_color", "expected"),
-#     [
-#         ("asdvbiu34uiyg", _DEFAULT),
-#         ("#010101", "#010101"),
-#         ("#01ABEF", "#01ABEF"),
-#         ("#01ABEG", _DEFAULT),
-#         ("#01", _DEFAULT),
-#     ],
-# )
-# def test_validate_hex_or_default(hex_color: str, expected: str):
-#     """Should return original hex or default if it was invalid"""
-#     assert _validate_hex_or_default(hex_color, _DEFAULT) == expected

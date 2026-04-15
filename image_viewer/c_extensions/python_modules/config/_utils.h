@@ -11,9 +11,9 @@ enum Header
     UI,
 };
 
-bool is_valid_hex_color(char *hex);
+bool is_valid_hex_color(const char *hex);
 
-bool is_valid_keybind(char *keybind, size_t keybind_len);
+bool is_valid_keybind(const char *keybind, size_t keybind_len);
 
 bool is_comment(const char *line);
 
