@@ -33,6 +33,18 @@ class Config:
         "ui_font",
     )
 
+    cache_size: int
+    kb_copy_to_clipboard_as_base64: str
+    kb_move_to_new_file: str
+    kb_optimize_image: str
+    kb_refresh: str
+    kb_reload_image: str
+    kb_rename: str
+    kb_show_details: str
+    kb_undo_most_recent_action: str
+    ui_background_color: str
+    ui_font: str
+
 def parse_config_file(file_path: str | None = None) -> Config:
     """Parsed image_viewer/config.ini and returns provided values or default.
 
