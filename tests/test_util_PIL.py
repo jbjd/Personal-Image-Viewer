@@ -4,7 +4,7 @@ from unittest.mock import MagicMock, patch
 import pytest
 from PIL.Image import Image, new
 
-from image_viewer.config import DEFAULT_FONT
+from image_viewer._config import DEFAULT_UI_FONT
 from image_viewer.constants import ImageFormats
 from image_viewer.image.file import ImageName
 from image_viewer.util.PIL import (
@@ -35,7 +35,7 @@ def test_init_PIL():  # noqa: N802
     from PIL import Image as _Image
     from PIL.ImageDraw import ImageDraw
 
-    init_PIL(DEFAULT_FONT, 20)
+    init_PIL(DEFAULT_UI_FONT, 20)
     assert len(_Image._plugins) == 0
     assert ImageDraw.font is not None
 
@@ -43,7 +43,7 @@ def test_init_PIL():  # noqa: N802
 
 
 def test_create_images():
-    init_PIL(DEFAULT_FONT, 20)
+    init_PIL(DEFAULT_UI_FONT, 20)
 
     dropdown = create_dropdown_image("test\ntest")
     assert isinstance(dropdown, Image)
