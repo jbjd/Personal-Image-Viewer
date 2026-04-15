@@ -15,11 +15,6 @@ from PIL.ImageFont import MAX_STRING_LENGTH
 
 from compile_utils.constants import IMAGE_VIEWER_NAME
 from image_viewer.animation.frame import DEFAULT_ANIMATION_SPEED_MS
-from image_viewer.config import (
-    DEFAULT_BACKGROUND_COLOR,
-    DEFAULT_FONT,
-    DEFAULT_MAX_ITEMS_IN_CACHE,
-)
 from image_viewer.constants import TEXT_RGB
 from image_viewer.image.resizer import JPEG_MAX_DIMENSION, MIN_ZOOM_LEVEL, ZOOM_AMOUNT
 from image_viewer.image.state import ZOOM_UNSET
@@ -224,9 +219,6 @@ module_vars_to_fold: dict[
         "__name__": "__main__",
         "_ERROR_COLOR": _ERROR_COLOR,
         "DEFAULT_ANIMATION_SPEED_MS": DEFAULT_ANIMATION_SPEED_MS,
-        "DEFAULT_BACKGROUND_COLOR": DEFAULT_BACKGROUND_COLOR,
-        "DEFAULT_FONT": DEFAULT_FONT,
-        "DEFAULT_MAX_ITEMS_IN_CACHE": DEFAULT_MAX_ITEMS_IN_CACHE,
         "JPEG_MAX_DIMENSION": JPEG_MAX_DIMENSION,
         "MIN_ZOOM_LEVEL": MIN_ZOOM_LEVEL,
         "TEXT_RGB": TEXT_RGB,

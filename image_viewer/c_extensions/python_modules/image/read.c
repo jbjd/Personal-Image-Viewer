@@ -1,10 +1,9 @@
 #define PY_SSIZE_T_CLEAN
 
-#include <Python.h>
 #include <stddef.h>
 #include <turbojpeg.h>
 
-#include "../c_optimizations.h"
+#include "c_optimizations.h"
 #include "read.h"
 
 // CMemoryViewBuffer Start

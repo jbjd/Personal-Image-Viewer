@@ -1,101 +1,116 @@
 import pytest
 
-from image_viewer.config import (
-    DEFAULT_BACKGROUND_COLOR,
-    DEFAULT_FONT,
-    DEFAULT_MAX_ITEMS_IN_CACHE,
+from image_viewer._config import (
+    DEFAULT_CACHE_SIZE,
+    DEFAULT_KB_COPY_TO_CLIPBOARD_AS_BASE64,
+    DEFAULT_KB_MOVE_TO_NEW_FILE,
+    DEFAULT_KB_OPTIMIZE_IMAGE,
+    DEFAULT_KB_REFRESH,
+    DEFAULT_KB_RELOAD_IMAGE,
+    DEFAULT_KB_RENAME,
+    DEFAULT_KB_SHOW_DETAILS,
+    DEFAULT_KB_UNDO_MOST_RECENT_ACTION,
+    DEFAULT_UI_BACKGROUND_COLOR,
+    DEFAULT_UI_FONT,
     Config,
-    DefaultKeybinds,
-    _validate_hex_or_default,
-    _validate_keybind_or_default,
+    parse_config_file,
 )
-from image_viewer.util._generic import is_valid_keybind
-
-_DEFAULT = "default"
+from tests.test_util._config import is_valid_hex_color, is_valid_keybind
 
 
 def test_config_reader():
     """Should return all specified values"""
-    config = Config("tests/data/config.ini")
+    config: Config = parse_config_file("tests/data/config.ini")
 
-    assert config.font_file == "test"
-    assert config.max_items_in_cache == 999
-    assert config.background_color == "#ABCDEF"
+    assert config.cache_size == 100
 
-    assert config.keybinds.move_to_new_file == "<F6>"
-    assert config.keybinds.show_details == "<Control-a>"
-    assert config.keybinds.undo_most_recent_action == "<Control-Z>"
+    assert config.kb_copy_to_clipboard_as_base64 == "<Control-K>"
+    assert config.kb_move_to_new_file == "<F6>"
+    assert config.kb_optimize_image == "<Control-J>"
+    assert config.kb_refresh == "<Control-H>"
+    assert config.kb_reload_image == "<F7>"
+    assert config.kb_rename == "<F3>"
+    assert config.kb_show_details == "<Control-a>"
+    assert config.kb_undo_most_recent_action == "<Control-Z>"
+
+    assert config.ui_background_color == "#ABCDEF"
+    assert config.ui_font == "test"
 
 
 def test_config_reader_defaults():
     """Should return all default values"""
-    config = Config("tests/data/config_empty.ini")
+    config: Config = parse_config_file("tests/data/config_empty.ini")
 
-    assert config.font_file == DEFAULT_FONT
-    assert config.max_items_in_cache == DEFAULT_MAX_ITEMS_IN_CACHE
-    assert config.background_color == DEFAULT_BACKGROUND_COLOR
+    _assert_defaults(config)
 
-    assert (
-        config.keybinds.copy_to_clipboard_as_base64
-        == DefaultKeybinds.COPY_TO_CLIPBOARD_AS_BASE64
-    )
-    assert config.keybinds.move_to_new_file == DefaultKeybinds.MOVE_TO_NEW_FILE
-    assert config.keybinds.refresh == DefaultKeybinds.REFRESH
-    assert config.keybinds.reload_image == DefaultKeybinds.RELOAD_IMAGE
-    assert config.keybinds.rename == DefaultKeybinds.RENAME
-    assert config.keybinds.show_details == DefaultKeybinds.SHOW_DETAILS
-    assert (
-        config.keybinds.undo_most_recent_action
-        == DefaultKeybinds.UNDO_MOST_RECENT_ACTION
-    )
+    assert is_valid_keybind(config.kb_copy_to_clipboard_as_base64)
+    assert is_valid_keybind(config.kb_move_to_new_file)
+    assert is_valid_keybind(config.kb_optimize_image)
+    assert is_valid_keybind(config.kb_refresh)
+    assert is_valid_keybind(config.kb_reload_image)
+    assert is_valid_keybind(config.kb_rename)
+    assert is_valid_keybind(config.kb_show_details)
+    assert is_valid_keybind(config.kb_undo_most_recent_action)
+
+    assert is_valid_hex_color(config.ui_background_color)
 
 
 def test_config_reader_int_fallback():
     """Should return default when"""
-    config = Config("tests/data/config_bad_values.ini")
+    config: Config = parse_config_file("tests/data/config_bad_values.ini")
 
-    assert config.font_file == DEFAULT_FONT
-    assert config.max_items_in_cache == DEFAULT_MAX_ITEMS_IN_CACHE
-    assert config.background_color == DEFAULT_BACKGROUND_COLOR
-    assert config.keybinds.move_to_new_file == DefaultKeybinds.MOVE_TO_NEW_FILE
+    _assert_defaults(config)
 
 
 @pytest.mark.parametrize(
-    ("keybind", "expected_keybind"),
+    ("keybind", "expected"),
     [
-        ("asdvbiu34uiyg", _DEFAULT),
-        ("<Control-d>", "<Control-d>"),
-        ("<Control-F12>", "<Control-F12>"),
-        ("<Control->", _DEFAULT),
-        ("<F0>", _DEFAULT),
-        ("<F1>", "<F1>"),
-        ("<F12>", "<F12>"),
-        ("<F13>", _DEFAULT),
-        ("<F91>", _DEFAULT),
-        ("<k>", _DEFAULT),
-        ("<K>", "<K>"),
+        ("asdvbiu34uiyg", False),
+        ("<Control-d>", True),
+        ("<Control-F12>", True),
+        ("<Control->", False),
+        ("<F0>", False),
+        ("<F1>", True),
+        ("<F12>", True),
+        ("<F13>", False),
+        ("<F91>", False),
+        ("<k>", False),
+        ("<K>", True),
     ],
 )
-def test_validate_keybind_or_default(keybind: str, expected_keybind: str):
-    """Should return original keybind or default if keybind was invalid"""
-    assert _validate_keybind_or_default(keybind, _DEFAULT) == expected_keybind
-
-
-def test_default_keybinds_are_valid():
-    for keybind in DefaultKeybinds:
-        assert is_valid_keybind(keybind)
+def test_validate_keybind(keybind: str, expected: bool):
+    """Should correctly identify valid keybinds."""
+    assert is_valid_keybind(keybind) is expected
 
 
 @pytest.mark.parametrize(
     ("hex_color", "expected"),
     [
-        ("asdvbiu34uiyg", _DEFAULT),
-        ("#010101", "#010101"),
-        ("#01ABEF", "#01ABEF"),
-        ("#01ABEG", _DEFAULT),
-        ("#01", _DEFAULT),
+        ("asdvbiu34uiyg", False),
+        ("#010101", True),
+        ("#01ABEF", True),
+        ("#01ABEG", False),
+        ("#01", False),
     ],
 )
-def test_validate_hex_or_default(hex_color: str, expected: str):
-    """Should return original hex or default if it was invalid"""
-    assert _validate_hex_or_default(hex_color, _DEFAULT) == expected
+def test_validate_hex(hex_color: str, expected: bool):
+    """Should correctly identify valid hexs."""
+    assert is_valid_hex_color(hex_color) is expected
+
+
+def _assert_defaults(config: Config) -> None:
+    assert config.cache_size == DEFAULT_CACHE_SIZE
+
+    assert (
+        config.kb_copy_to_clipboard_as_base64 == DEFAULT_KB_COPY_TO_CLIPBOARD_AS_BASE64
+    )
+    assert config.kb_move_to_new_file == DEFAULT_KB_MOVE_TO_NEW_FILE
+    assert config.kb_optimize_image == DEFAULT_KB_OPTIMIZE_IMAGE
+    assert config.kb_refresh == DEFAULT_KB_REFRESH
+    assert config.kb_reload_image == DEFAULT_KB_RELOAD_IMAGE
+    assert config.kb_rename == DEFAULT_KB_RENAME
+    assert config.kb_show_details == DEFAULT_KB_SHOW_DETAILS
+    assert config.kb_undo_most_recent_action == DEFAULT_KB_UNDO_MOST_RECENT_ACTION
+
+    assert config.ui_background_color == DEFAULT_UI_BACKGROUND_COLOR
+    assert config.ui_font == DEFAULT_UI_FONT

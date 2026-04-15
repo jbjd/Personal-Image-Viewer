@@ -6,6 +6,7 @@ import pytest
 from psleak import MemoryLeakTestCase
 
 from compile_utils.exceptions import InvalidEnvironmentError
+from image_viewer._config import parse_config_file
 from image_viewer.image._read import decode_scaled_jpeg, read_image_into_buffer
 from tests.conftest import EXAMPLE_JPEG_PATH
 
@@ -30,6 +31,9 @@ class TestLeaks(MemoryLeakTestCase):
             os.environ["PYTHONMALLOC"] = self.malloc_env
         else:
             del os.environ["PYTHONMALLOC"]
+
+    def test_parse_config_file(self):
+        self.execute(parse_config_file, "some bad path")
 
     def test_read_image_into_buffer(self):
         self.execute(read_image_into_buffer, EXAMPLE_JPEG_PATH)

@@ -10,7 +10,7 @@ from PIL.Image import Image
 from PIL.Image import new as new_image
 from PIL.ImageTk import PhotoImage
 
-from image_viewer.config import DEFAULT_FONT
+from image_viewer._config import DEFAULT_UI_FONT
 from image_viewer.files.file_manager import ImageFileManager
 from image_viewer.image.cache import ImageCache
 from image_viewer.image.file import ImageName, ImageNameList
@@ -81,7 +81,7 @@ def image_io_fixture(image_cache: ImageCache) -> ImageIO:
 @pytest.fixture(name="rename_entry")
 def rename_entry_fixture(tk_app: Tk, canvas: CustomCanvas) -> RenameEntry:
     rename_id: int = canvas.create_window(0, 0, width=250, height=20, anchor="nw")
-    return RenameEntry(tk_app, canvas, rename_id, 250, DEFAULT_FONT)
+    return RenameEntry(tk_app, canvas, rename_id, 250, DEFAULT_UI_FONT)
 
 
 @pytest.fixture(name="viewer")
