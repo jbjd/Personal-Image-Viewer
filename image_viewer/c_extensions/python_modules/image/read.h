@@ -1,6 +1,8 @@
 #ifndef PIV_IMAGE_READ
 #define PIV_IMAGE_READ
 
+#include <Python.h>
+
 typedef struct
 {
     PyObject_HEAD;
