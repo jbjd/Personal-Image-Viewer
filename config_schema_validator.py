@@ -4,7 +4,7 @@ from configparser import ConfigParser
 
 from schema import Schema
 
-from image_viewer.util._generic import is_valid_hex_color, is_valid_keybind
+from tests.test_util._config import is_valid_hex_color, is_valid_keybind
 
 
 def strip_quotes(value: str) -> str:
