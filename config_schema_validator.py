@@ -52,7 +52,7 @@ schema: dict[str, dict[str, Callable[[str], bool]]] = {
         "show_details": empty_or_valid_keybind,
         "undo_most_recent_action": empty_or_valid_keybind,
     },
-    "UI": {"background_color": empty_or_valid_hex_color, "FONT": any_str},
+    "UI": {"background_color": empty_or_valid_hex_color, "font": any_str},
 }
 
 
@@ -116,6 +116,7 @@ class UnknownKey(SchemaIssue):
 
 issues: list[SchemaIssue] = []
 
+
 for schema_section, schema_keys in schema.items():
     section: dict[str, str] | None = config.pop(schema_section, None)
     if section is None:
@@ -135,9 +136,7 @@ for schema_section, schema_keys in schema.items():
             issues.append(BadKey(schema_section, schema_key, key))
 
     if section:
-        issues.extend(
-            UnknownKey(schema_section, schema_key) for schema_key in schema_keys
-        )
+        issues.extend(UnknownKey(schema_section, key) for key in section)
 
 
 if issues:
