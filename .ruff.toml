@@ -39,18 +39,19 @@ select = ["ALL"]
 # S603: Subprocess call: check for untrusted input
 # SIM105: Slower exception suppression (Wants slower check used)
 # SLF001: Private member access
+# T201: Print
 # TC001: Move import into a type-checking block (Irrelavent due to compilation)
 # TD002: Missing author in TODO
 # TD003: Missing issue link in TODO
+# TRY002: Use custom exceptions
 # TRY003: Avoid specifying long messages outside the exception class (Slower and less clear)
-ignore = ["C416", "C901", "COM812", "D", "D102", "D105", "D107", "D202", "D203", "D205", "D213", "D401", "D415", "EM", "ERA001", "FBT", "FIX", "FURB136", "PLC0415", "PLR0912", "PLR0913", "PLR1730", "PLR2004", "PLW0603", "PTH", "PYI021", "S105", "S110", "S603", "SIM105", "SLF001", "TC001", "TD002", "TD003", "TRY003"]
+ignore = ["C416", "C901", "COM812", "D", "D102", "D105", "D107", "D202", "D203", "D205", "D213", "D401", "D415", "EM", "ERA001", "FBT", "FIX", "FURB136", "PLC0415", "PLR0912", "PLR0913", "PLR1730", "PLR2004", "PLW0603", "PTH", "PYI021", "S105", "S110", "S603", "SIM105", "SLF001", "T201", "TC001", "TD002", "TD003", "TRY002", "TRY003"]
 
 [lint.extend-per-file-ignores]
 
 # S101: Assert
-# T201: Print
-"perf/*" = ["S101", "T201"]
-"run_perf_test.py" = ["S101", "T201"]
+"perf/*" = ["S101"]
+"run_perf_test.py" = ["S101"]
 
 # ANN201: Missing return type
 # PT011: Pytest raises
