@@ -4,11 +4,11 @@ from unittest.mock import mock_open, patch
 import pytest
 
 from image_viewer.constants import ImageFormats
-from image_viewer.util.convert import try_convert_file_and_save_new
+from image_viewer.utils.convert import try_convert_file_and_save_new
 from tests.conftest import EXAMPLE_JPEG_PATH, EXAMPLE_PNG_PATH
 from tests.test_util.mocks import MockImage
 
-_MODULE_PATH: str = "image_viewer.util.convert"
+_MODULE_PATH: str = "image_viewer.utils.convert"
 
 
 def _mock_open_image(_: str) -> MockImage:

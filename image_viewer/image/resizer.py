@@ -9,7 +9,7 @@ from image_viewer.image._read import (
     CMemoryViewBufferJpeg,
     decode_scaled_jpeg,
 )
-from image_viewer.util.PIL import resize
+from image_viewer.utils.PIL import resize
 
 JPEG_MAX_DIMENSION: int = 65_535
 ZOOM_AMOUNT: float = 2**0.5

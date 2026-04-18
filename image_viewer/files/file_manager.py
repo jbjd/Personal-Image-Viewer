@@ -11,14 +11,14 @@ from image_viewer.constants import VALID_FILE_TYPES, Movement
 from image_viewer.files.actions import Convert, Delete, FileAction, Rename
 from image_viewer.image.cache import ImageCache, ImageCacheEntry
 from image_viewer.image.file import ImageName, ImageNameList, ImageSearchResult
-from image_viewer.util.convert import try_convert_file_and_save_new
-from image_viewer.util.os import (
+from image_viewer.utils.convert import try_convert_file_and_save_new
+from image_viewer.utils.os import (
     ask_yes_no,
     get_files_in_folder,
     get_normalized_folder_name,
     trash_file,
 )
-from image_viewer.util.PIL import get_mode_info
+from image_viewer.utils.PIL import get_mode_info
 
 
 class _ShouldPreserveIndex(Enum):

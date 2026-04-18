@@ -3,7 +3,7 @@ from unittest.mock import patch
 
 import pytest
 
-from image_viewer.util.os import (
+from image_viewer.utils.os import (
     get_byte_display,
     get_files_in_folder,
     maybe_truncate_long_name,

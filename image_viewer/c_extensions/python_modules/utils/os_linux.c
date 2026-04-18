@@ -10,21 +10,21 @@
 static PyObject *read_buffer_as_base64(PyObject *self, PyObject *arg)
 {
     CMemoryViewBuffer *memoryViewBuffer = (CMemoryViewBuffer *)arg;
-    unsigned long remainingBytesToEncode = memoryViewBuffer->bufferSize;
-    char *originalBufferPosition = memoryViewBuffer->buffer;
+    unsigned long buffer_size = memoryViewBuffer->bufferSize;
+    char *buffer = memoryViewBuffer->buffer;
 
     char *encoded_buffer;
 
     Py_BEGIN_ALLOW_THREADS;
 
     // encoded data is ~4/3 the size of the original data so make encoded buffer 2x the size.
-    encoded_buffer = (char *)malloc(2 * remainingBytesToEncode * sizeof(char));
+    encoded_buffer = (char *)malloc(2 * buffer_size * sizeof(char));
     if (unlikely(encoded_buffer == NULL))
     {
         return NULL;
     }
 
-    encode_buffer_base64(originalBufferPosition, remainingBytesToEncode, encoded_buffer);
+    encode_buffer_base64(buffer, buffer_size, encoded_buffer);
 
     Py_END_ALLOW_THREADS;
     return PyUnicode_FromString(encoded_buffer);
