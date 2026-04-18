@@ -1,6 +1,5 @@
 """Conversion between image file types and representations."""
 
-import binascii
 from typing import IO
 
 from PIL.Image import Image
@@ -75,14 +74,3 @@ def try_convert_file_and_save_new(
             temp_img.save(new_path, target_format, **save_kwargs)
 
     return True
-
-
-def read_memory_as_base64(image_buffer: memoryview) -> str:
-    """Decodes some memory into a base64 string.
-
-    :param image_buffer: The memory buffer of an image to decode.
-    :returns: The decoded base64."""
-
-    return binascii.b2a_base64(image_buffer, newline=False).decode(
-        "ascii", errors="ignore"
-    )

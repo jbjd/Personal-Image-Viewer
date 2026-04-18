@@ -25,7 +25,6 @@ from image_viewer.ui.button_icon_factory import ButtonIconFactory
 from image_viewer.ui.canvas import CustomCanvas
 from image_viewer.ui.image import DropdownImageUIElement
 from image_viewer.ui.rename_entry import RenameEntry
-from image_viewer.utils.convert import read_memory_as_base64
 from image_viewer.utils.os import ask_yes_no, show_info
 from image_viewer.utils.PIL import create_dropdown_image, init_PIL
 
@@ -38,6 +37,8 @@ if os.name == "nt":
     )
 else:
     from tkinter import PhotoImage as tkPhotoImage
+
+    from image_viewer.utils._os_linux import read_buffer_as_base64
 
 _Ts = TypeVarTuple("_Ts")
 _R = TypeVar("_R")
@@ -412,9 +413,7 @@ class ViewerApp:
         if os.name == "nt":
             read_buffer_as_base64_and_copy_to_clipboard(self.image_io.image_buffer)
         else:
-            # TODO: See if I can use memoryview for clipboard_append
-            # so conversion can be in C
-            image_base64: str = read_memory_as_base64(self.image_io.image_buffer.view)
+            image_base64: str = read_buffer_as_base64(self.image_io.image_buffer)
 
             self.app.clipboard_clear()
             self.app.clipboard_append(image_base64)
