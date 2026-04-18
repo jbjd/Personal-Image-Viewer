@@ -37,19 +37,22 @@ endif
 
 OPTIMIZATION_FLAG=-O3
 C_SOURCE=image_viewer/c_extensions
+C_MODULE_FOLDER=$(C_SOURCE)/python_modules
 C_FLAGS_SHARED=-L$(PYTHON_LIBS) -I$(PYTHON_INCLUDES) -l$(PYTHON_DLL) $(OPTIMIZATION_FLAG) -march=native -mtune=native -ffinite-math-only -fgcse-las -fgcse-sm -fisolate-erroneous-paths-attribute -fno-signed-zeros -frename-registers -fsched-pressure -s -shared -Wall -Werror $(OS_FLAGS)
 
 build-config:
-	gcc $(C_SOURCE)/python_modules/config/config.c $(C_SOURCE)/python_modules/config/_utils.c $(C_FLAGS_SHARED) -I$(C_SOURCE) -o image_viewer/_config.$(COMPILED_EXT)
-	gcc $(C_SOURCE)/python_modules/config/test_utils.c $(C_SOURCE)/python_modules/config/_utils.c $(C_FLAGS_SHARED) -I$(C_SOURCE) -o tests/test_util/_config.$(COMPILED_EXT)
+	gcc $(C_MODULE_FOLDER)/config/config.c $(C_MODULE_FOLDER)/config/_utils.c $(C_FLAGS_SHARED) -I$(C_SOURCE) -o image_viewer/_config.$(COMPILED_EXT)
+	gcc $(C_MODULE_FOLDER)/config/test_utils.c $(C_MODULE_FOLDER)/config/_utils.c $(C_FLAGS_SHARED) -I$(C_SOURCE) -o tests/test_util/_config.$(COMPILED_EXT)
 
 build-image-read:
-	gcc $(C_SOURCE)/python_modules/image/read.c $(C_FLAGS_SHARED) -I$(C_SOURCE) -o image_viewer/image/_read.$(COMPILED_EXT) -lturbojpeg
+	gcc $(C_MODULE_FOLDER)/image/read.c -I$(C_SOURCE) $(C_FLAGS_SHARED) -o image_viewer/image/_read.$(COMPILED_EXT) -lturbojpeg
 
 build-util-os-nt:
-ifeq ($(OS),Windows_NT)
-	gcc $(C_SOURCE)/python_modules/util/os_nt.c $(C_SOURCE)/b64/cencode.c -I$(C_SOURCE) -lshlwapi -loleaut32 -lole32 $(C_FLAGS_SHARED) -o image_viewer/util/_os_nt.$(COMPILED_EXT)
-endif
+# ifeq ($(OS),Windows_NT)
+# 	gcc $(C_MODULE_FOLDER)/utils/os_nt.c $(C_MODULE_FOLDER)/utils/_utils.c $(C_SOURCE)/b64/cencode.c -I$(C_SOURCE) -lshlwapi -loleaut32 -lole32 $(C_FLAGS_SHARED) -o image_viewer/utils/_os_nt.$(COMPILED_EXT)
+# else
+	gcc $(C_MODULE_FOLDER)/utils/os_linux.c $(C_MODULE_FOLDER)/utils/_utils.c $(C_SOURCE)/b64/cencode.c -I$(C_SOURCE) $(C_FLAGS_SHARED) -o image_viewer/utils/_os_linux.$(COMPILED_EXT)
+# endif
 
 build-all: build-config build-image-read build-util-os-nt
 

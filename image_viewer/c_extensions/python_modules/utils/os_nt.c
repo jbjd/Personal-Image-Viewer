@@ -8,15 +8,16 @@
 #include <shlwapi.h>
 #include <windows.h>
 
-#include "c_optimizations.h"
-#include "b64/cencode.h"
-#include "python_modules/image/read.h"
-
 #ifdef __MINGW32__
 #include <shlobj.h>
 #else
 #include <shlobj_core.h>
 #endif
+
+#include "c_optimizations.h"
+#include "b64/cencode.h"
+#include "python_modules/image/read.h"
+#include "_utils.h"
 
 HWND g_hwnd = 0;
 
@@ -53,7 +54,7 @@ static inline WINBOOL set_win_clipboard(const UINT format, void *data)
 static inline char *normalize_str_for_file_op(const char *str, const Py_ssize_t size)
 {
     Py_ssize_t i = 0;
-    char *buffer = (char *)malloc((size + 2) * sizeof(char));
+    char *buffer = (char *)malloc(2 + size * sizeof(char));
 
     for (; i < size; i++)
     {
@@ -406,33 +407,19 @@ static PyObject *read_buffer_as_base64_and_copy_to_clipboard(PyObject *self, PyO
         goto end;
     }
 
-    base64_encodestate state;
-    char *encodedBuffer = (char *)GlobalLock(hGlobal);
-    char *encodedBufferPosition = encodedBuffer;
+    char *encoded_buffer = (char *)GlobalLock(hGlobal);
 
-    if (unlikely(encodedBuffer == NULL))
+    if (unlikely(encoded_buffer == NULL))
     {
         GlobalFree(hGlobal);
         goto end;
     }
 
-    base64_init_encodestate(&state);
-
-    const unsigned long MAX_BYTES_TO_ENCODE_AT_ONCE = 1048576;
-    while (remainingBytesToEncode > 0)
-    {
-        unsigned bytesToEncode = (unsigned)(remainingBytesToEncode < MAX_BYTES_TO_ENCODE_AT_ONCE ? remainingBytesToEncode : MAX_BYTES_TO_ENCODE_AT_ONCE);
-
-        encodedBufferPosition += base64_encode_block(originalBufferPosition, bytesToEncode, encodedBufferPosition, &state);
-        remainingBytesToEncode -= bytesToEncode;
-        originalBufferPosition += bytesToEncode;
-    }
-
-    base64_encode_blockend(encodedBuffer, &state);
+    encode_buffer_base64(originalBufferPosition, remainingBytesToEncode, encoded_buffer);
 
     GlobalUnlock(hGlobal);
 
-    set_win_clipboard(CF_TEXT, encodedBuffer);
+    set_win_clipboard(CF_TEXT, encoded_buffer);
 
 end:
     Py_END_ALLOW_THREADS;
