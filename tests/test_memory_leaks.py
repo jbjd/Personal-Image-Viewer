@@ -7,8 +7,15 @@ from psleak import MemoryLeakTestCase
 
 from compile_utils.exceptions import InvalidEnvironmentError
 from image_viewer._config import parse_config_file
-from image_viewer.image._read import decode_scaled_jpeg, read_image_into_buffer
+from image_viewer.image._read import (
+    CMemoryViewBuffer,
+    decode_scaled_jpeg,
+    read_image_into_buffer,
+)
 from tests.conftest import EXAMPLE_JPEG_PATH
+
+if os.name == "nt":
+    from image_viewer.util._os_nt import read_buffer_as_base64_and_copy_to_clipboard
 
 
 @pytest.mark.memory_leak
@@ -48,3 +55,13 @@ class TestLeaks(MemoryLeakTestCase):
         decode_scaled_jpeg(image_buffer, (1, 2))
 
         self.execute(decode_scaled_jpeg, image_buffer, (1, 2))
+
+    @pytest.mark.skipif(os.name != "nt", reason="Only availalbe on Windows")
+    def test_read_buffer_as_base64_and_copy_to_clipboard(self):
+        example_buffer: CMemoryViewBuffer | None = read_image_into_buffer(
+            EXAMPLE_JPEG_PATH
+        )
+
+        assert example_buffer is not None
+
+        self.execute(read_buffer_as_base64_and_copy_to_clipboard, example_buffer)
