@@ -21,7 +21,7 @@ from image_viewer.ui.button_icon_factory import ButtonIconFactory
 from image_viewer.ui.canvas import CustomCanvas
 from image_viewer.ui.rename_entry import RenameEntry
 from image_viewer.viewer import ViewerApp
-from tests.test_util.mocks import MockEvent, MockImage
+from tests.utils.mocks import MockEvent, MockImage
 
 WORKING_DIR: str = os.path.dirname(__file__)
 IMG_DIR: str = os.path.join(WORKING_DIR, "example_images")

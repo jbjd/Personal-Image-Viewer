@@ -8,8 +8,13 @@ FILE_NAME_MAX_LEN: int = 40
 if os.name == "nt":
     from ctypes import windll  # type: ignore[attr-defined]
 
-    from image_viewer.util._os_nt import ask_yes_no, restore_file, show_info, trash_file
-    from image_viewer.util._os_nt import get_files_in_folder as _get_files_in_folder_nt
+    from image_viewer.utils._os_nt import (
+        ask_yes_no,
+        restore_file,
+        show_info,
+        trash_file,
+    )
+    from image_viewer.utils._os_nt import get_files_in_folder as _get_files_in_folder_nt
 
     def get_files_in_folder(folder_path: str) -> Iterator[str]:
         files: list[str] = _get_files_in_folder_nt(folder_path)
