@@ -1,7 +1,7 @@
 import os
 from configparser import ConfigParser
 
-from tests.test_util._config import is_valid_hex_color, is_valid_keybind
+from tests.utils._config import is_valid_hex_color, is_valid_keybind
 
 
 def _validate_hex_or_default(hex_color: str, default: str) -> str:

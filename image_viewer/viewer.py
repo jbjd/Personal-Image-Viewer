@@ -25,12 +25,12 @@ from image_viewer.ui.button_icon_factory import ButtonIconFactory
 from image_viewer.ui.canvas import CustomCanvas
 from image_viewer.ui.image import DropdownImageUIElement
 from image_viewer.ui.rename_entry import RenameEntry
-from image_viewer.util.convert import read_memory_as_base64
-from image_viewer.util.os import ask_yes_no, show_info
-from image_viewer.util.PIL import create_dropdown_image, init_PIL
+from image_viewer.utils.convert import read_memory_as_base64
+from image_viewer.utils.os import ask_yes_no, show_info
+from image_viewer.utils.PIL import create_dropdown_image, init_PIL
 
 if os.name == "nt":
-    from image_viewer.util._os_nt import (
+    from image_viewer.utils._os_nt import (
         drop_file_to_clipboard,
         open_with,
         read_buffer_as_base64_and_copy_to_clipboard,
