@@ -21,7 +21,7 @@ from image_viewer.image.state import ZOOM_UNSET
 from image_viewer.ui.rename_entry import _ERROR_COLOR
 
 # Increment when edits to this file or module_dependencies are merged into main
-SKIP_ITERATION: int = 6
+SKIP_ITERATION: int = 7
 
 # Module independent skips
 
@@ -134,6 +134,7 @@ functions_to_skip: dict[str, set[str]] = {
         "equalize",
         "expand",
         "exif_transpose",
+        "fit",
         "grayscale",
         "mirror",
         "pad",
