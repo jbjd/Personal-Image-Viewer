@@ -447,7 +447,7 @@ if sys.platform != "darwin":
     data_files_to_exclude.append("tcl/encoding/mac*.enc")
 
 dlls_to_include: list[str] = ["libturbojpeg.dll"]
-dlls_to_exclude: list[str] = ["libcrypto-*", "vcruntime*_1.dll"]
+dlls_to_exclude: list[str] = ["libcrypto-*"]
 
 
 # Custom nuitka implementation
@@ -455,9 +455,13 @@ _skippable_std_modules = [
     "__hello__",
     "__phello__",
     "_aix_support",
+    "_markupbase",
     "_pylong",
+    "_wmi",
     "cgi",
     "cgitb",
+    "chunk",
+    "cmd",
     "configparser",
     "difflib",
     "filecmp",
@@ -473,20 +477,30 @@ _skippable_std_modules = [
     "pickletools",
     "pipes",
     "pkgutil",
+    "platform",
+    "poplib",
+    "pprint",
     "pstats",
     "pyclbr",
     "rlcompleter",
+    "sndhdr",
     "socketserver",
+    "sysconfig",
     "timeit",
     "tomllib",
     "trace",
+    "uu",
     "webbrowser",
     "xdrlib",
+    "zipimport",
 ]
+if sys.platform != "darwin":
+    _skippable_std_modules.append("_osx_support")
 
 if sys.version_info >= (3, 13):
     raise NotImplementedError(
-        "cgi, cgitb, mailcap, and pipes need to be removed from _skippable_std_modules"
+        "cgi, cgitb, chunk, mailcap, sndhdr, pipes, and uu "
+        "need to be removed from _skippable_std_modules"
     )
 
 custom_nuitka_regex: dict[str, list[RegexReplacement]] = {
