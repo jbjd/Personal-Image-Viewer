@@ -49,6 +49,9 @@ ignore = ["C416", "C901", "COM812", "D", "D102", "D105", "D107", "D202", "D203",
 
 [lint.extend-per-file-ignores]
 
+# N802 CamelCase
+"compile_utils/nuitka_plugins/piv_plugin.py" = ["N802"]
+
 # S101: Assert
 "perf/*" = ["S101"]
 "run_perf_test.py" = ["S101"]

@@ -11,7 +11,7 @@ from compile_utils.code_to_skip import (
     dlls_to_exclude,
     dlls_to_include,
 )
-from compile_utils.constants import BUILD_INFO_FILE, REPORT_FILE
+from compile_utils.constants import BUILD_INFO_FILE, DEV_ONLY_MESSAGE, REPORT_FILE
 from compile_utils.exceptions import InvalidEnvironmentError
 from compile_utils.module_dependencies import modules_to_include
 
@@ -175,7 +175,7 @@ class CompileArgumentParser(ArgumentParser):
         :param is_development: Adds to help text that flag is for dev purposes."""
 
         if is_development:
-            help_text += " This option is exposed for development."
+            help_text += DEV_ONLY_MESSAGE
 
         if affected_os is not None:
             help_text = f"({affected_os} only) " + help_text

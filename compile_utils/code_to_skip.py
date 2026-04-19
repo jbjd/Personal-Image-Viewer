@@ -519,34 +519,4 @@ custom_nuitka_regex: dict[str, list[RegexReplacement]] = {
             return False, 'Excluding unnecessary parts of standard library.'""",  # noqa: E501
         )
     ],
-    "tree/Building.py": [
-        RegexReplacement(
-            r"""ast_tree = parseSourceCodeToAst\(
-                    source_code=source_code,
-                    module_name=module_name,
-                    filename=source_filename,
-                    line_offset=0,
-                \)""",
-            r"""ast_tree = parseSourceCodeToAst(
-                    source_code=source_code,
-                    module_name=module_name,
-                    filename=source_filename,
-                    line_offset=0,
-                )
-
-                if module_name.getTopLevelPackageName() not in [
-                    "__main__",
-                    "image_viewer",
-                    "PIL",
-                ]:
-                    from personal_python_ast_optimizer.parser.config import SkipConfig
-                    from personal_python_ast_optimizer.parser.skipper import (
-                        AstNodeSkipper,
-                    )
-
-                    AstNodeSkipper(
-                        SkipConfig(module_name, target_python_version=(3, 12))
-                    ).visit(ast_tree)""",
-        )
-    ],
 }
