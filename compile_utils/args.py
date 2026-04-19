@@ -60,6 +60,7 @@ class CompileNamespace(Namespace):
     debug: bool
     assume_this_machine: bool
     strip: bool
+    distribution: bool
     skip_nuitka: bool
     extra_checks: bool
     no_cache: bool
@@ -117,6 +118,13 @@ class CompileArgumentParser(ArgumentParser):
                 "Requires strip being installed and on PATH."
             ),
         )
+        self.add_argument_ext("--distribution", "Includes licenses.")
+        if os.name == "nt":
+            self.add_argument_ext(
+                "--include-dlls",
+                "Finds used DLLs on system and include them in the build.",
+                affected_os="Windows",
+            )
         self.add_argument_ext(
             "--extra-checks",
             "Adds extra checks during build. Only useful for development"
@@ -150,12 +158,6 @@ class CompileArgumentParser(ArgumentParser):
             ),
             is_development=True,
         )
-        if os.name == "nt":
-            self.add_argument_ext(
-                "--include-dlls",
-                "Finds used DLLs on system and include them in the build.",
-                affected_os="Windows",
-            )
 
     def add_argument_ext(
         self,
@@ -239,6 +241,11 @@ class CompileArgumentParser(ArgumentParser):
             NuitkaArgs.NO_INCLUDE_DATA_FILES.with_value(glob)
             for glob in data_files_to_exclude
         ]
+        if not args.distribution:
+            nuitka_args.append(
+                NuitkaArgs.NO_INCLUDE_DATA_FILES.with_value("tk/license.terms")
+            )
+
         nuitka_args += [
             NuitkaArgs.INCLUDE_MODULE.with_value(module)
             for module in modules_to_include
