@@ -65,6 +65,7 @@ def get_nuitka_command(
         "--must-not-re-execute",
         "--python-flag=-OO,no_annotations,no_warnings,static_hashes",
         "--output-filename=viewer",
+        "--user-plugin=C:/Python/Viewer/compile_utils/nuitka_plugins/piv_plugin.py",
         *nuitka_args,
     ]
 
