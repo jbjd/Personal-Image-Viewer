@@ -6,7 +6,7 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 from image_viewer.viewer import ViewerApp
-from tests.test_util.mocks import MockEvent
+from tests.utils.mocks import MockEvent
 
 _MODULE_PATH: str = "image_viewer.viewer"
 

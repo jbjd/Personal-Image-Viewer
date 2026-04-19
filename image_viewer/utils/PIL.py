@@ -14,7 +14,7 @@ from PIL.JpegImagePlugin import JpegImageFile
 from image_viewer.constants import TEXT_RGB, Rotation
 
 if os.name == "nt":
-    from image_viewer.util._os_nt import get_files_in_folder
+    from image_viewer.utils._os_nt import get_files_in_folder
 
 # Modes that need more descriptive names or who's bpp
 # does not follow len(mode) * 8

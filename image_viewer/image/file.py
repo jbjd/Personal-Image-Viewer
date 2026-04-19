@@ -5,7 +5,7 @@ Deals with storing known image file paths and determining their true file extens
 from collections.abc import Iterable
 
 from image_viewer.constants import ImageFormats, Movement
-from image_viewer.util.os import file_name_compare
+from image_viewer.utils.os import file_name_compare
 
 
 class ImageName:
