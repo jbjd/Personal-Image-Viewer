@@ -6,7 +6,7 @@ import os
 from abc import abstractmethod
 from typing import override
 
-from image_viewer.util.os import restore_file, trash_file
+from image_viewer.utils.os import restore_file, trash_file
 
 
 class FileAction:

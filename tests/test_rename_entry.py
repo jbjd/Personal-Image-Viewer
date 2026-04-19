@@ -3,7 +3,7 @@ from unittest.mock import patch
 from image_viewer.constants import TEXT_RGB
 from image_viewer.ui.canvas import CustomCanvas
 from image_viewer.ui.rename_entry import _ERROR_COLOR, RenameEntry
-from tests.test_util.mocks import MockEvent
+from tests.utils.mocks import MockEvent
 
 
 def test_error_flash(rename_entry: RenameEntry):

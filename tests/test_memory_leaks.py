@@ -15,7 +15,7 @@ from image_viewer.image._read import (
 from tests.conftest import EXAMPLE_JPEG_PATH
 
 if os.name == "nt":
-    from image_viewer.util._os_nt import read_buffer_as_base64_and_copy_to_clipboard
+    from image_viewer.utils._os_nt import read_buffer_as_base64_and_copy_to_clipboard
 
 
 @pytest.mark.memory_leak

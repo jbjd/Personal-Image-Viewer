@@ -15,7 +15,7 @@ from image_viewer._config import (
     Config,
     parse_config_file,
 )
-from tests.test_util._config import is_valid_hex_color, is_valid_keybind
+from tests.utils._config import is_valid_hex_color, is_valid_keybind
 
 
 def test_config_reader():

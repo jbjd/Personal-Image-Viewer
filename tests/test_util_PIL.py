@@ -7,7 +7,7 @@ from PIL.Image import Image, new
 from image_viewer._config import DEFAULT_UI_FONT
 from image_viewer.constants import ImageFormats
 from image_viewer.image.file import ImageName
-from image_viewer.util.PIL import (
+from image_viewer.utils.PIL import (
     _preinit,
     create_dropdown_image,
     get_mode_info,
@@ -142,8 +142,8 @@ def test_preinit():
 
     with (
         patch("builtins.__import__", mock_import),
-        patch("image_viewer.util.PIL._Image", mock_image_module),
-        patch("image_viewer.util.PIL.register_open", mock_register_open),
+        patch("image_viewer.utils.PIL._Image", mock_image_module),
+        patch("image_viewer.utils.PIL.register_open", mock_register_open),
     ):
         _preinit()
 
@@ -170,8 +170,8 @@ def test_preinit_already_initialized():
     mock_image_module._initialized = 2
 
     with (
-        patch("image_viewer.util.PIL._Image", mock_image_module),
-        patch("image_viewer.util.PIL.register_open", mock_register_open),
+        patch("image_viewer.utils.PIL._Image", mock_image_module),
+        patch("image_viewer.utils.PIL.register_open", mock_register_open),
     ):
         _preinit()
 

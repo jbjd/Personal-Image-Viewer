@@ -5,7 +5,7 @@ from os import stat
 
 from PIL.Image import Image
 
-from image_viewer.util.os import get_byte_display
+from image_viewer.utils.os import get_byte_display
 
 
 class ImageCacheEntry:

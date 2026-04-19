@@ -202,7 +202,7 @@ decorators_to_skip: dict[str, set[str]] = {}
 imports_to_skip: dict[str, set[str]] = {"PIL.Image": {"defusedxml"}}
 
 unused_imports_to_preserve: dict[str, set[str]] = {
-    f"{IMAGE_VIEWER_NAME}.util.os": {
+    f"{IMAGE_VIEWER_NAME}.utils.os": {
         "ask_yes_no",
         "restore_file",
         "show_info",
@@ -243,7 +243,7 @@ vars_to_fold: dict[
 
 remove_all_re = RegexReplacement(pattern="^.*$", flags=re.DOTALL)
 regex_to_apply_py: dict[str, list[RegexReplacement]] = {
-    f"{IMAGE_VIEWER_NAME}.util.PIL": [
+    f"{IMAGE_VIEWER_NAME}.utils.PIL": [
         RegexReplacement(pattern=r"_Image._plugins = \[\]")
     ],
     "PIL.__init__": [
