@@ -10,7 +10,7 @@ from image_viewer.files.file_manager import ImageFileManager, _ShouldPreserveInd
 from image_viewer.image.cache import ImageCache, ImageCacheEntry
 from image_viewer.image.file import ImageSearchResult
 from tests.conftest import EXAMPLE_PNG_PATH, IMG_DIR
-from tests.test_util.mocks import MockImage, MockStatResult
+from tests.utils.mocks import MockImage, MockStatResult
 
 _MODULE_PATH = "image_viewer.files.file_manager"
 

@@ -7,7 +7,7 @@ from PIL.Image import Image
 from PIL.ImageTk import PhotoImage
 
 from image_viewer.ui.canvas import CustomCanvas
-from tests.test_util.mocks import MockEvent
+from tests.utils.mocks import MockEvent
 
 
 def test_create_assets(canvas: CustomCanvas, example_image: Image):
