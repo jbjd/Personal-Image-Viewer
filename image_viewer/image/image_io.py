@@ -18,7 +18,7 @@ from image_viewer.image.cache import ImageCache, ImageCacheEntry
 from image_viewer.image.file import magic_number_guess
 from image_viewer.image.resizer import ImageResizer
 from image_viewer.image.state import ZOOM_UNSET, ImageState
-from image_viewer.util.PIL import (
+from image_viewer.utils.PIL import (
     get_placeholder_for_errored_image,
     optimize_image_mode,
     rotate_image,
