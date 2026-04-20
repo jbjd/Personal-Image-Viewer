@@ -295,6 +295,12 @@ regex_to_apply_py: dict[str, list[RegexReplacement]] = {
             flags=re.DOTALL,
         ),
     ],
+    "PIL.ImageFile": [
+        RegexReplacement(
+            pattern=r"if isinstance\(self, StubImageFile\):.*?open\(self\)",
+            flags=re.DOTALL,
+        ),
+    ],
     "PIL.ImageFont": [
         RegexReplacement(
             pattern=r"try:.*DeferredError\.new\(ex\)",
@@ -309,7 +315,6 @@ regex_to_apply_py: dict[str, list[RegexReplacement]] = {
             replacement="layout_engine = Layout.BASIC",
             flags=re.DOTALL,
         ),
-
     ],
     "PIL.ImageMode": [
         RegexReplacement(
@@ -343,7 +348,7 @@ regex_to_apply_py: dict[str, list[RegexReplacement]] = {
     "PIL.ImageText": [
         RegexReplacement(
             pattern=r"isinstance\(self\.font, ImageFont\.TransposedFont\)",
-            replacement="self.font.__class__.__name__ == 'TransposedFont'"
+            replacement="self.font.__class__.__name__ == 'TransposedFont'",
         ),
     ],
     "PIL.WebPImagePlugin": [
