@@ -8,7 +8,7 @@ from PIL.Image import Image
 from PIL.ImageTk import PhotoImage
 
 from image_viewer._config import Config, parse_config_file
-from image_viewer.animation.frame import Frame
+from image_viewer.animation.frame import AnimationFrame
 from image_viewer.constants import (
     ButtonName,
     Key,
@@ -685,7 +685,7 @@ class ViewerApp:
 
         :param ms_backoff: Milliseconds until next frame should appear."""
         start: float = perf_counter()
-        frame: Frame | None = self.image_io.get_next_frame()
+        frame: AnimationFrame | None = self.image_io.get_next_frame()
 
         ms_until_next_frame: int
         if frame is None:  # trying to display frame before it is loaded
