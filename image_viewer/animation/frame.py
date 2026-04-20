@@ -5,7 +5,7 @@ from PIL.Image import Image
 DEFAULT_ANIMATION_SPEED_MS: int = 100
 
 
-class Frame:
+class AnimationFrame:
     """A frame within an animated image"""
 
     __slots__ = ("image", "ms_until_next_frame")

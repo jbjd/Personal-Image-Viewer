@@ -11,7 +11,7 @@ from threading import Thread
 from PIL.Image import Image
 from PIL.Image import open as open_image
 
-from image_viewer.animation.frame import Frame
+from image_viewer.animation.frame import AnimationFrame
 from image_viewer.constants import Rotation, ZoomDirection
 from image_viewer.image._read import CMemoryViewBuffer, read_image_into_buffer
 from image_viewer.image.cache import ImageCache, ImageCacheEntry
@@ -72,7 +72,7 @@ class ImageIO:
         self.image_buffer: CMemoryViewBuffer
         self.current_load_id: int = 0
 
-        self.animation_frames: list[Frame | None] = []
+        self.animation_frames: list[AnimationFrame | None] = []
         self.frame_index: int = 0
         self._state = ImageState()
         self.zoomed_image_cache: list[Image] = []
@@ -81,7 +81,7 @@ class ImageIO:
     def zoom_rotate_allowed(self) -> bool:
         return self._state.zoom_rotate_allowed
 
-    def get_next_frame(self) -> Frame | None:
+    def get_next_frame(self) -> AnimationFrame | None:
         """Gets next frame of animated image or empty frame while its being loaded"""
         try:
             self.frame_index = (self.frame_index + 1) % len(self.animation_frames)
@@ -100,7 +100,7 @@ class ImageIO:
         """Begins new thread to load frames of an animated image"""
         self.animation_frames = [None] * frame_count
 
-        first_frame: Frame = Frame(resized_image)
+        first_frame: AnimationFrame = AnimationFrame(resized_image)
         self.animation_frames[0] = first_frame
 
         Thread(
@@ -284,7 +284,7 @@ class ImageIO:
                     original_image
                 )
 
-                self.animation_frames[i] = Frame(frame_image)
+                self.animation_frames[i] = AnimationFrame(frame_image)
             except (IndexError, ValueError):
                 # Might index into animation_frames incorrectly
                 # Or perform action on closed image
