@@ -7,7 +7,7 @@ from unittest.mock import MagicMock, mock_open, patch
 from PIL import UnidentifiedImageError
 from PIL.Image import Image, new
 
-from image_viewer.animation.frame import Frame
+from image_viewer.animation.frame import AnimationFrame
 from image_viewer.image.cache import ImageCacheEntry
 from image_viewer.image.image_io import ImageIO, ReadImageResponse
 from tests.conftest import EXAMPLE_JPEG_PATH
@@ -18,10 +18,14 @@ _MODULE_PATH: str = "image_viewer.image.image_io"
 def test_next_frame(image_io: ImageIO):
     """Test expected behavior from getting next frame and resetting"""
 
-    frame1, frame2, frame3 = Frame(Image()), Frame(Image()), Frame(Image())
+    frame1, frame2, frame3 = (
+        AnimationFrame(Image()),
+        AnimationFrame(Image()),
+        AnimationFrame(Image()),
+    )
     image_io.animation_frames = [frame1, frame2, frame3]
 
-    example_frame: Frame | None = image_io.get_next_frame()
+    example_frame: AnimationFrame | None = image_io.get_next_frame()
     assert example_frame is frame2
     example_frame = image_io.get_next_frame()
     assert example_frame is frame3

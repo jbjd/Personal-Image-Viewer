@@ -8,7 +8,7 @@ from PIL.Image import Image
 from PIL.ImageTk import PhotoImage
 
 from image_viewer._config import Config, parse_config_file
-from image_viewer.animation.frame import Frame
+from image_viewer.animation.frame import AnimationFrame
 from image_viewer.constants import (
     ButtonName,
     Key,
@@ -32,9 +32,9 @@ from image_viewer.utils.PIL import create_dropdown_image, init_PIL
 if os.name == "nt":
     from image_viewer.utils._os_nt import (
         drop_file_to_clipboard,
+        init_c_utils,
         open_with,
         read_buffer_as_base64_and_copy_to_clipboard,
-        init_c_utils,
     )
 else:
     from tkinter import PhotoImage as tkPhotoImage
@@ -685,7 +685,7 @@ class ViewerApp:
 
         :param ms_backoff: Milliseconds until next frame should appear."""
         start: float = perf_counter()
-        frame: Frame | None = self.image_io.get_next_frame()
+        frame: AnimationFrame | None = self.image_io.get_next_frame()
 
         ms_until_next_frame: int
         if frame is None:  # trying to display frame before it is loaded
