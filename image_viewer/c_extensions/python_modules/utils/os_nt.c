@@ -77,12 +77,14 @@ static inline void ensure_double_null_terminated(char *str)
 }
 
 /**
- * Sets the hwnd value for all functions called in this module.
+ * Sets the hwnd value for all functions called in this module
+ * and sets SetProcessDpiAwareness to System Aware.
  * hwnd will be 0 until this is set.
  */
-static PyObject *set_hwnd(PyObject *self, PyObject *arg)
+static PyObject *init_c_utils(PyObject *self, PyObject *arg)
 {
     g_hwnd = PyLong_AsHWND(arg);
+    SetProcessDPIAware();         
 
     return Py_None;
 }
@@ -440,7 +442,7 @@ end:
 }
 
 static PyMethodDef os_methods[] = {
-    {"set_hwnd", set_hwnd, METH_O, NULL},
+    {"init_c_utils", init_c_utils, METH_O, NULL},
     {"show_info", show_info, METH_VARARGS, NULL},
     {"ask_yes_no", ask_yes_no, METH_VARARGS, NULL},
     {"trash_file", trash_file, METH_O, NULL},
