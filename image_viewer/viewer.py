@@ -34,7 +34,7 @@ if os.name == "nt":
         drop_file_to_clipboard,
         open_with,
         read_buffer_as_base64_and_copy_to_clipboard,
-        set_hwnd,
+        init_c_utils,
     )
 else:
     from tkinter import PhotoImage as tkPhotoImage
@@ -80,7 +80,7 @@ class ViewerApp:
         self.app_id: int = self.app.winfo_id()
 
         if os.name == "nt":
-            set_hwnd(self.app_id)
+            init_c_utils(self.app_id)
 
         self.canvas = CustomCanvas(self.app, config.ui_background_color)
         screen_height: int = self.canvas.screen_height
