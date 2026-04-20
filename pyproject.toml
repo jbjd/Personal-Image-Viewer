@@ -8,7 +8,7 @@ readme = "README.md"
 requires-python = "~=3.12.0"
 
 [tool.codespell]
-skip = "build"
+skip = "build,minifier_failure.py.example"
 
 [tool.coverage.run]
 omit = ["__init__.py", "main.py"]
