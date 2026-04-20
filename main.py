@@ -12,8 +12,4 @@ if __name__ == "__main__" and len(sys.argv) > 1:
         os.chdir(os.path.dirname(sys.argv[0]))
         sys.excepthook = exception_hook
 
-    if os.name == "nt":
-        from ctypes import windll
-        windll.shcore.SetProcessDpiAwareness(1)
-
     ViewerApp(sys.argv[1]).start()
