@@ -56,7 +56,7 @@ class TestLeaks(MemoryLeakTestCase):
 
         self.execute(decode_scaled_jpeg, image_buffer, (1, 2))
 
-    @pytest.mark.skipif(os.name != "nt", reason="Only availalbe on Windows")
+    @pytest.mark.skipif(os.name != "nt", reason="Only available on Windows")
     def test_read_buffer_as_base64_and_copy_to_clipboard(self):
         example_buffer: CMemoryViewBuffer | None = read_image_into_buffer(
             EXAMPLE_JPEG_PATH
