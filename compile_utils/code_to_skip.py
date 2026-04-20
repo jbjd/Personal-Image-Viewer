@@ -18,7 +18,7 @@ from image_viewer.animation.frame import DEFAULT_ANIMATION_SPEED_MS
 from image_viewer.constants import TEXT_RGB
 from image_viewer.image.resizer import JPEG_MAX_DIMENSION, MIN_ZOOM_LEVEL, ZOOM_AMOUNT
 from image_viewer.image.state import ZOOM_UNSET
-from image_viewer.ui.rename_entry import _ERROR_COLOR
+from image_viewer.ui.rename_entry import _ERROR_COLOR, _MAX_ENTRY_SIZE
 
 # Increment when edits to this file or module_dependencies are merged into main
 SKIP_ITERATION: int = 7
@@ -219,6 +219,7 @@ module_vars_to_fold: dict[
         "__debug__": False,
         "__name__": "__main__",
         "_ERROR_COLOR": _ERROR_COLOR,
+        "_MAX_ENTRY_SIZE": _MAX_ENTRY_SIZE,
         "DEFAULT_ANIMATION_SPEED_MS": DEFAULT_ANIMATION_SPEED_MS,
         "JPEG_MAX_DIMENSION": JPEG_MAX_DIMENSION,
         "MIN_ZOOM_LEVEL": MIN_ZOOM_LEVEL,
