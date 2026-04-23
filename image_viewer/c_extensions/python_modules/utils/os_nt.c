@@ -21,10 +21,9 @@
 HWND g_hwnd = 0;
 
 /**
- * Given a PyObject representing an int in Python,
- * cast it to an HWND.
+ * Casts a PyObject representing an int to an HWND.
  *
- * Returns casted HWND.
+ * @return PyLong casted HWND.
  */
 static inline HWND PyLong_AsHWND(PyObject *pyLong)
 {
@@ -34,10 +33,11 @@ static inline HWND PyLong_AsHWND(PyObject *pyLong)
 }
 
 /**
- * Given some data: opens, emptys, sets, and closes clipboard
- * with provided data.
+ * Sets clipboard data and format.
  *
- * Returns WINBOOL of if successful. If it fails, call GetLastError for information.
+ * @param format UINT format that the windows clipboard supports
+ * @param data to set to clipboard
+ * @return WINBOOL thats true when successful. If it fails, call GetLastError for information.
  */
 static inline WINBOOL set_win_clipboard(const UINT format, void *data)
 {
@@ -48,7 +48,11 @@ static inline WINBOOL set_win_clipboard(const UINT format, void *data)
  * Copies string into a newly allocated buffer, replaces all
  * forward slashes with backslashes, and double null terminates it.
  *
- * Caller must free this string.
+ * Caller must free this malloc'ed string.
+ *
+ * @param str A string to normalize
+ * @param size Length of provided string
+ * @return Newly malloc'ed string
  */
 static inline char *normalize_str_for_file_op(const char *str, const Py_ssize_t size)
 {
@@ -69,6 +73,8 @@ static inline char *normalize_str_for_file_op(const char *str, const Py_ssize_t 
  * Adds another null terminator to a string.
  *
  * Caller responsible for ensuring provided string has enough space for one additional char.
+ *
+ * @param str A string to double null terminate
  */
 static inline void ensure_double_null_terminated(char *str)
 {
@@ -76,15 +82,10 @@ static inline void ensure_double_null_terminated(char *str)
     str[strLen + 1] = '\0';
 }
 
-/**
- * Sets the hwnd value for all functions called in this module
- * and sets SetProcessDpiAwareness to System Aware.
- * hwnd will be 0 until this is set.
- */
 static PyObject *init_c_utils(PyObject *self, PyObject *arg)
 {
     g_hwnd = PyLong_AsHWND(arg);
-    SetProcessDPIAware();         
+    SetProcessDPIAware();
 
     return Py_None;
 }
