@@ -90,7 +90,7 @@ static PyObject *read_image_into_buffer(PyObject *self, PyObject *arg)
     const long size = ftell(file);
     fseek(file, 0, SEEK_SET);
 
-    if (size < 0)
+    if (unlikely(size < 0))
     {
         fclose(file);
         goto error;
@@ -105,7 +105,7 @@ static PyObject *read_image_into_buffer(PyObject *self, PyObject *arg)
 
     const size_t readBytes = fread(buffer, sizeof(char), size, file);
     fclose(file);
-    if (readBytes != size)
+    if (unlikely(readBytes != size))
     {
         goto error;
     }
@@ -121,6 +121,14 @@ error:
     return Py_None;
 }
 
+/**
+ * Scales dimension by ratio of numerator over demoninator.
+ *
+ * @param dimension int to scale
+ * @param numerator of ratio to scale by
+ * @param denominator of ratio to scale by
+ * @return Scaled value
+ */
 static inline int get_scaled_dimension(int dimension, int numerator, int denominator)
 {
     return (dimension * numerator + denominator - 1) / denominator;
@@ -149,7 +157,7 @@ static PyObject *decode_scaled_jpeg(PyObject *self, PyObject *const *args, Py_ss
     }
 
     int width, height;
-    if (tjDecompressHeader(decompressHandle, (unsigned char *)memoryViewBuffer->buffer, memoryViewBuffer->bufferSize, &width, &height) < 0)
+    if (unlikely(tjDecompressHeader(decompressHandle, (unsigned char *)memoryViewBuffer->buffer, memoryViewBuffer->bufferSize, &width, &height) < 0))
     {
         goto error_free_handle;
     }
@@ -166,16 +174,16 @@ static PyObject *decode_scaled_jpeg(PyObject *self, PyObject *const *args, Py_ss
         goto error_free_handle;
     }
 
-    if (tjDecompress2(
-            decompressHandle,
-            (unsigned char *)memoryViewBuffer->buffer,
-            memoryViewBuffer->bufferSize,
-            (unsigned char *)resizedJpegBuffer,
-            scaledWidth,
-            0,
-            scaledHeight,
-            pixelFormat,
-            0) < 0)
+    if (unlikely(tjDecompress2(
+                     decompressHandle,
+                     (unsigned char *)memoryViewBuffer->buffer,
+                     memoryViewBuffer->bufferSize,
+                     (unsigned char *)resizedJpegBuffer,
+                     scaledWidth,
+                     0,
+                     scaledHeight,
+                     pixelFormat,
+                     0) < 0))
     {
         goto error_free_buffer;
     }
@@ -196,17 +204,17 @@ error_free_handle:
     return NULL;
 }
 
-static PyMethodDef jpeg_methods[] = {
+static PyMethodDef image_read_methods[] = {
     {"read_image_into_buffer", read_image_into_buffer, METH_O, NULL},
     {"decode_scaled_jpeg", (PyCFunction)decode_scaled_jpeg, METH_FASTCALL, NULL},
     {NULL, NULL, 0, NULL}};
 
-static struct PyModuleDef jpeg_module = {
+static struct PyModuleDef image_read_module = {
     PyModuleDef_HEAD_INIT,
     "_read",
     NULL,
     -1,
-    jpeg_methods};
+    image_read_methods};
 
 PyMODINIT_FUNC PyInit__read(void)
 {
@@ -217,7 +225,7 @@ PyMODINIT_FUNC PyInit__read(void)
         return NULL;
     }
 
-    PyObject *module = PyModule_Create(&jpeg_module);
+    PyObject *module = PyModule_Create(&image_read_module);
 
     if (unlikely(
             PyModule_AddObjectRef(module, "CMemoryViewBuffer", (PyObject *)&CMemoryViewBuffer_Type) < 0 ||

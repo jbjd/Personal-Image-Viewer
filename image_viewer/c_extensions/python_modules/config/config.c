@@ -237,7 +237,7 @@ static PyMethodDef config_methods[] = {
     {"parse_config_file", (PyCFunction)parse_config_file, METH_VARARGS, NULL},
     {NULL, NULL, 0, NULL}};
 
-static struct PyModuleDef config_module = {
+static struct PyModuleDef config_test_utils_module = {
     PyModuleDef_HEAD_INIT,
     "_config",
     NULL,
@@ -251,20 +251,20 @@ PyMODINIT_FUNC PyInit__config(void)
         return NULL;
     }
 
-    PyObject *module = PyModule_Create(&config_module);
+    PyObject *module = PyModule_Create(&config_test_utils_module);
 
-    if (unlikely(PyModule_AddObjectRef(module, "Config", (PyObject *)&Config_Type) < 0 ||
-                 PyModule_AddIntConstant(module, "DEFAULT_CACHE_SIZE", DEFAULT_CACHE_SIZE) ||
-                 PyModule_AddStringConstant(module, "DEFAULT_KB_COPY_TO_CLIPBOARD_AS_BASE64", DEFAULT_KB_COPY_TO_CLIPBOARD_AS_BASE64) ||
-                 PyModule_AddStringConstant(module, "DEFAULT_KB_MOVE_TO_NEW_FILE", DEFAULT_KB_MOVE_TO_NEW_FILE) ||
-                 PyModule_AddStringConstant(module, "DEFAULT_KB_OPTIMIZE_IMAGE", DEFAULT_KB_OPTIMIZE_IMAGE) ||
-                 PyModule_AddStringConstant(module, "DEFAULT_KB_REFRESH", DEFAULT_KB_REFRESH) ||
-                 PyModule_AddStringConstant(module, "DEFAULT_KB_RELOAD_IMAGE", DEFAULT_KB_RELOAD_IMAGE) ||
-                 PyModule_AddStringConstant(module, "DEFAULT_KB_RENAME", DEFAULT_KB_RENAME) ||
-                 PyModule_AddStringConstant(module, "DEFAULT_KB_SHOW_DETAILS", DEFAULT_KB_SHOW_DETAILS) ||
-                 PyModule_AddStringConstant(module, "DEFAULT_KB_UNDO_MOST_RECENT_ACTION", DEFAULT_KB_UNDO_MOST_RECENT_ACTION) ||
-                 PyModule_AddStringConstant(module, "DEFAULT_UI_BACKGROUND_COLOR", DEFAULT_UI_BACKGROUND_COLOR) ||
-                 PyModule_AddStringConstant(module, "DEFAULT_UI_FONT", DEFAULT_UI_FONT)))
+    if (unlikely(PyModule_AddObjectRef(module, VARIABLE_NAME(Config), (PyObject *)&Config_Type) < 0 ||
+                 PyModule_AddIntConstant(module, VARIABLE_NAME(DEFAULT_CACHE_SIZE), DEFAULT_CACHE_SIZE) ||
+                 PyModule_AddStringConstant(module, VARIABLE_NAME(DEFAULT_KB_COPY_TO_CLIPBOARD_AS_BASE64), DEFAULT_KB_COPY_TO_CLIPBOARD_AS_BASE64) ||
+                 PyModule_AddStringConstant(module, VARIABLE_NAME(DEFAULT_KB_MOVE_TO_NEW_FILE), DEFAULT_KB_MOVE_TO_NEW_FILE) ||
+                 PyModule_AddStringConstant(module, VARIABLE_NAME(DEFAULT_KB_OPTIMIZE_IMAGE), DEFAULT_KB_OPTIMIZE_IMAGE) ||
+                 PyModule_AddStringConstant(module, VARIABLE_NAME(DEFAULT_KB_REFRESH), DEFAULT_KB_REFRESH) ||
+                 PyModule_AddStringConstant(module, VARIABLE_NAME(DEFAULT_KB_RELOAD_IMAGE), DEFAULT_KB_RELOAD_IMAGE) ||
+                 PyModule_AddStringConstant(module, VARIABLE_NAME(DEFAULT_KB_RENAME), DEFAULT_KB_RENAME) ||
+                 PyModule_AddStringConstant(module, VARIABLE_NAME(DEFAULT_KB_SHOW_DETAILS), DEFAULT_KB_SHOW_DETAILS) ||
+                 PyModule_AddStringConstant(module, VARIABLE_NAME(DEFAULT_KB_UNDO_MOST_RECENT_ACTION), DEFAULT_KB_UNDO_MOST_RECENT_ACTION) ||
+                 PyModule_AddStringConstant(module, VARIABLE_NAME(DEFAULT_UI_BACKGROUND_COLOR), DEFAULT_UI_BACKGROUND_COLOR) ||
+                 PyModule_AddStringConstant(module, VARIABLE_NAME(DEFAULT_UI_FONT), DEFAULT_UI_FONT)))
     {
         Py_DECREF(module);
         return NULL;
