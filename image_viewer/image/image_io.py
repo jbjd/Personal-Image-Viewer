@@ -2,8 +2,7 @@
 
 # Note: file name can't be "io" since it breaks debugger for some reason
 
-import os
-import tempfile
+import io
 from collections.abc import Callable
 from io import BytesIO
 from threading import Thread
@@ -185,36 +184,29 @@ class ImageIO:
 
         image: Image = optimize_image_mode(self.PIL_image)
 
-        delete_tmp_file: bool = True
-        tmp_file = tempfile.NamedTemporaryFile(  # noqa: SIM115
-            dir=os.path.dirname(image_path), delete=False
+        optimized_bytes = io.BytesIO()
+        image.save(
+            optimized_bytes,
+            "PNG",
+            quality=100,
+            icc_profile=image.info.get("icc_profile"),
         )
-        try:
-            with tmp_file:
-                image.save(
-                    tmp_file,
-                    "PNG",
-                    quality=100,
-                    icc_profile=image.info.get("icc_profile"),
-                )
 
-            original_size: int = self.image_buffer.byte_size
-            new_size: int = os.stat(tmp_file.name).st_size
+        original_size: int = self.image_buffer.byte_size
 
-            if new_size > 0 and new_size < original_size:
-                os.replace(tmp_file.name, image_path)
-                delete_tmp_file = False
-                self.PIL_image = image
-                self.image_cache.update_value(image_path, new_size, image.mode)
+        buffer: memoryview[int] = optimized_bytes.getbuffer()
+        new_size: int = buffer.nbytes
 
-        finally:
-            if delete_tmp_file:
-                os.remove(tmp_file.name)
+        size_reduced: bool = new_size > 0 and new_size < original_size
+        if size_reduced:
+            with open(image_path, "wb") as fp:
+                fp.write(buffer)
+            self.PIL_image = image
+            self.image_cache.update_value(image_path, new_size, image.mode)
 
         self._image_optimized = True
 
-        # If tmp not deleted, it means we updated original image
-        return not delete_tmp_file
+        return size_reduced
 
     def _resize_or_get_placeholder(self) -> Image:
         """Resizes PIL image or returns placeholder if corrupted in some way"""
