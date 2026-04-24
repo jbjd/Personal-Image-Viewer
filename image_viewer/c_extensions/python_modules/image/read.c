@@ -122,7 +122,7 @@ error:
 }
 
 /**
- * Scales dimension by ratio of numerator over demoninator.
+ * Scales dimension by ratio of numerator over denominator.
  *
  * @param dimension int to scale
  * @param numerator of ratio to scale by

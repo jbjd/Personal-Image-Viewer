@@ -56,6 +56,16 @@ MINIFIER_FAILED_FILE_NAME: str = "minifier_failure.py.example"
 _logger = get_logger()
 
 
+def _write_minify_failure(file_name: str, context_message: str, source: str) -> None:
+    _logger.exception(
+        "Error when %s on file %s, writing source to %s",
+        context_message,
+        file_name,
+        MINIFIER_FAILED_FILE_NAME,
+    )
+    write_file_utf8(MINIFIER_FAILED_FILE_NAME, source)
+
+
 def clean_file_and_copy(
     path: str,
     new_path: str,
@@ -75,6 +85,7 @@ def clean_file_and_copy(
         try:
             source = re_replace(source, regex_replacements, True)
         except RegexNoMatchException as e:
+            _write_minify_failure(module_import_path, "applying regex", source)
             raise RuntimeError(f"Failed to apply regex to {module_import_path}") from e
 
     all_vars_to_fold: dict[str, str | bytes | bool | int | float | complex | None] = (
@@ -106,12 +117,7 @@ def clean_file_and_copy(
             ),
         )
     except Exception:
-        _logger.exception(
-            "Error when running minifier on file %s, writing source to %s",
-            module_import_path,
-            MINIFIER_FAILED_FILE_NAME,
-        )
-        write_file_utf8(MINIFIER_FAILED_FILE_NAME, source)
+        _write_minify_failure(module_import_path, "running ast optimizer", source)
         raise
 
     write_file_utf8(new_path, source)
