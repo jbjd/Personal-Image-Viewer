@@ -76,11 +76,18 @@ def test_jpeg_fit_to_screen_large_image(image_io: ImageIO, image_resizer: ImageR
 
 def test_get_image_fit_to_screen(image_resizer: ImageResizer):
     """Should resize and return PIL image"""
-    image: Image = new_image("RGB", (10, 10))
 
-    with patch("image_viewer.image.resizer.resize", return_value=image) as mock_resize:
-        assert isinstance(image_resizer.get_image_fit_to_screen(image), Image)
-        mock_resize.assert_called_once()
+    resized_image: Image = image_resizer.get_image_fit_to_screen(
+        new_image("P", (10, 10))
+    )
+    assert resized_image.mode == "P"
+    assert resized_image.size == (1080, 1080)
+
+    resized_image = image_resizer.get_image_fit_to_screen(new_image("RGBA", (10, 10)))
+    assert resized_image.mode == "RGBA"
+
+    resized_image = image_resizer.get_image_fit_to_screen(new_image("LA", (10, 10)))
+    assert resized_image.mode == "LA"
 
 
 def test_scale_dimensions(image_resizer: ImageResizer):

@@ -174,6 +174,7 @@ vars_to_skip: dict[str, set[str]] = {
     "PIL.GifImagePlugin": {"_Palette", "format_description"},
     "PIL.JpegImagePlugin": {"format_description"},
     "PIL.PngImagePlugin": {"format_description"},
+    "PIL.ImageText": {"Font"},
     "PIL.WebPImagePlugin": {"format_description"},
     f"{IMAGE_VIEWER_NAME}.viewer": {"_R", "_Ts"},
 }
@@ -190,7 +191,7 @@ classes_to_skip: dict[str, set[str]] = {
         "SupportsGetData",
     },
     "PIL.ImageFile": {"Parser", "PyEncoder", "StubHandler", "StubImageFile"},
-    "PIL.ImageFont": {"Axis", "ImageFont", "TransposedFont"},
+    "PIL.ImageFont": {"Axis", "TransposedFont"},
     "PIL.ImageOps": {"SupportsGetMesh"},
     "PIL.ImageTk": {"BitmapImage"},
     "PIL.PngImagePlugin": {"PngInfo"},
@@ -295,6 +296,12 @@ regex_to_apply_py: dict[str, list[RegexReplacement]] = {
             flags=re.DOTALL,
         ),
     ],
+    "PIL.ImageFile": [
+        RegexReplacement(
+            pattern=r"if isinstance\(self, StubImageFile\):.*?open\(self\)",
+            flags=re.DOTALL,
+        ),
+    ],
     "PIL.ImageFont": [
         RegexReplacement(
             pattern=r"try:.*DeferredError\.new\(ex\)",
@@ -337,6 +344,12 @@ regex_to_apply_py: dict[str, list[RegexReplacement]] = {
         ),
         RegexReplacement(  # Remove Exif usage to remove Tiff dependency
             r"if isinstance\(exif, Image\.Exif\):\s+exif = exif.tobytes\(8\)"
+        ),
+    ],
+    "PIL.ImageText": [
+        RegexReplacement(
+            pattern=r"isinstance\(self\.font, ImageFont\.TransposedFont\)",
+            replacement="self.font.__class__.__name__ == 'TransposedFont'",
         ),
     ],
     "PIL.WebPImagePlugin": [
