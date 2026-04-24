@@ -55,6 +55,7 @@ MINIFIER_FAILED_FILE_NAME: str = "minifier_failure.py.example"
 
 _logger = get_logger()
 
+
 def _write_minify_failure(file_name: str, context_message: str, source: str) -> None:
     _logger.exception(
         "Error when %s on file %s, writing source to %s",
