@@ -37,7 +37,7 @@ static inline HWND PyLong_AsHWND(PyObject *pyLong)
  *
  * @param format UINT format that the windows clipboard supports
  * @param data to set to clipboard
- * @return WINBOOL thats true when successful. If it fails, call GetLastError for information.
+ * @return WINBOOL that's true when successful. If it fails, call GetLastError for information.
  */
 static inline WINBOOL set_win_clipboard(const UINT format, void *data)
 {
