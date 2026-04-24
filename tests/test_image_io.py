@@ -18,7 +18,11 @@ _MODULE_PATH: str = "image_viewer.image.image_io"
 def test_next_frame(image_io: ImageIO):
     """Test expected behavior from getting next frame and resetting"""
 
-    frame1, frame2, frame3 = AnimationFrame(Image()), AnimationFrame(Image()), AnimationFrame(Image())
+    frame1, frame2, frame3 = (
+        AnimationFrame(Image()),
+        AnimationFrame(Image()),
+        AnimationFrame(Image()),
+    )
     image_io.animation_frames = [frame1, frame2, frame3]
 
     example_frame: AnimationFrame | None = image_io.get_next_frame()
@@ -135,10 +139,10 @@ def test_optimize_png_image(image_io: ImageIO):
 
         # Optimizing again should result in nothing happening
         # even if _image_optimized = False
-        with patch(f"{_MODULE_PATH}.os.replace") as mock_os_replace:
+        with patch("builtins.open") as mock_open:
             image_io._image_optimized = False
             assert not image_io.optimize_png_image(original_image.name)
-            mock_os_replace.assert_not_called()
+            mock_open.assert_not_called()
     finally:
         image_io.reset_and_setup()
         original_image.close()

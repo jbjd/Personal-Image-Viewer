@@ -32,9 +32,9 @@ from image_viewer.utils.PIL import create_dropdown_image, init_PIL
 if os.name == "nt":
     from image_viewer.utils._os_nt import (
         drop_file_to_clipboard,
+        init_c_utils,
         open_with,
         read_buffer_as_base64_and_copy_to_clipboard,
-        init_c_utils,
     )
 else:
     from tkinter import PhotoImage as tkPhotoImage

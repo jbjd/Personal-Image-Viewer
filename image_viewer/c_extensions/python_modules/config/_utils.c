@@ -84,6 +84,37 @@ bool is_valid_keybind(const char *keybind, size_t keybind_len)
 }
 
 /**
+ * Strips whitespace from start and end of string.
+ *
+ * @param str Non-null string to strip
+ * @return updated pointer to the same string
+ */
+char *str_strip(char *str)
+{
+    size_t size = strlen(str);
+
+    if (size == 0)
+    {
+        goto end;
+    }
+
+    char *str_end = str + size - 1;
+    while (str_end >= str && isspace(*str_end))
+    {
+        --str_end;
+    }
+    *(str_end + 1) = '\0';
+
+    while (*str && isspace(*str))
+    {
+        ++str;
+    }
+
+end:
+    return str;
+}
+
+/**
  * Checks if \p line is a comment in an ini file.
  *
  * @param line Non-null and stripped char array to check
@@ -173,12 +204,26 @@ has_equals:
     strcpy(value_out, value_start);
 }
 
+/**
+ * Custom string to int parse with clamps and negative handling. Invalid values return default.
+ *
+ * @param str Non-null string to parse
+ * @param min Minimum value returned
+ * @param max Maximum value returned
+ * @param default_value Returned when non-integer formatted value passed
+ * @return parsed value as int
+ */
 int str_to_int(char *str, int min, int max, int default_value)
 {
-    int sign = *str == '-' ? -1 : 1;
-    if (sign == -1)
+    int sign;
+    if (*str == '-')
     {
+        sign = -1;
         ++str;
+    }
+    else
+    {
+        sign = 1;
     }
 
     if (*str == '\0')
@@ -208,29 +253,4 @@ int str_to_int(char *str, int min, int max, int default_value)
     }
 
     return (int)converted_value;
-}
-
-char *str_strip(char *str)
-{
-    size_t size = strlen(str);
-
-    if (size == 0)
-    {
-        goto end;
-    }
-
-    char *str_end = str + size - 1;
-    while (str_end >= str && isspace(*str_end))
-    {
-        --str_end;
-    }
-    *(str_end + 1) = '\0';
-
-    while (*str && isspace(*str))
-    {
-        ++str;
-    }
-
-end:
-    return str;
 }
