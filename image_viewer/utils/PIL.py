@@ -27,7 +27,7 @@ _mode_info_special_cases: dict[str, tuple[str, int]] = {
     "1": ("Black And White", 1),
 }
 
-_modes_with_alpha: tuple[str, str] = ("RGBA", "LA")
+_alpha_to_precomputed: dict[str, str] = {"RGBA": "RGBa", "LA": "La"}
 
 
 def get_mode_info(mode: str) -> tuple[str, int]:
@@ -80,21 +80,18 @@ def resize(
 
     box: tuple[int, int, int, int] = (0, 0, *image.size)
     original_mode: str = image.mode
-    modes_to_convert: dict[str, str] = {
-        "RGBA": "RGBa",
-        "LA": "La",
-        "P": "RGB",
-        "1": "RGB",
-    }
 
-    if original_mode in modes_to_convert:
-        new_mode: str = modes_to_convert[original_mode]
+    if original_mode in _alpha_to_precomputed:
+        new_mode: str = _alpha_to_precomputed[original_mode]
         image = image.convert(new_mode)
 
-    resized_image: Image = image._new(image.im.resize(size, resample, box))
+    resized_image: Image = image._new(
+        image.im.resize(
+            size, Resampling.NEAREST if original_mode in ("1", "P") else resample, box
+        )
+    )
 
-    # These mode were temporarily converted to pre-compute alpha and should be reverted
-    if original_mode in _modes_with_alpha:
+    if original_mode in _alpha_to_precomputed:
         resized_image = resized_image.convert(original_mode)
 
     return resized_image
@@ -120,7 +117,7 @@ def _has_useless_alpha_channel(image: Image) -> bool:
 
     :param image: PIL Image to check
     :returns: If alpha channel is useless"""
-    if image.mode not in _modes_with_alpha:
+    if image.mode not in _alpha_to_precomputed:
         return False
 
     image.load()
