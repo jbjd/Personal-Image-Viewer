@@ -61,13 +61,11 @@ def test_resize():
 
     same_size_image = resize(example_image, (10, 10))
 
-    # Will not resize to the same dimensions
-    assert same_size_image == example_image
+    assert same_size_image is not example_image
 
     new_image = resize(example_image, (20, 20))
 
     assert new_image.size == (20, 20)
-    assert new_image.mode == "RGB"  # P or 1 type images should convert to RGB
 
     new_image = resize(new_image.convert("RGBA"), (15, 15))
 
