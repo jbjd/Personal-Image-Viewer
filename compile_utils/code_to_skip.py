@@ -477,7 +477,6 @@ _skippable_std_modules = [
     "cgitb",
     "chunk",
     "cmd",
-    "configparser",
     "difflib",
     "filecmp",
     "fileinput",
@@ -511,6 +510,8 @@ _skippable_std_modules = [
 ]
 if sys.platform != "darwin":
     _skippable_std_modules.append("_osx_support")
+if sys.platform != "win32":
+    _skippable_std_modules.append("configparser")
 
 if sys.version_info >= (3, 13):
     raise NotImplementedError(
