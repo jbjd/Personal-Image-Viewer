@@ -103,6 +103,7 @@ def optimize_image_mode(image: Image) -> Image:
     :param image: PIL Image to optimize
     :returns: New PIL Image with optimized mode or original if already optimal"""
 
+    image.load()
     if _has_useless_alpha_channel(image):
         image = image.convert(image.mode[:-1])
 
@@ -120,12 +121,7 @@ def _has_useless_alpha_channel(image: Image) -> bool:
     if image.mode not in _alpha_to_precomputed:
         return False
 
-    image.load()
-    alpha_distribution: list[int] = image.im.split()[-1].histogram()
-    return (
-        all(alpha_distribution[i] == 0 for i in range(254))
-        and alpha_distribution[255] > 0
-    )
+    return image.im.split()[-1].getextrema() == (255, 255)
 
 
 def _should_be_grayscale(image: Image) -> bool:
