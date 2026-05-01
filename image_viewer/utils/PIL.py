@@ -132,7 +132,7 @@ def _should_be_grayscale(image: Image) -> bool:
     if image.mode != "RGB":
         return False
 
-    colors: list[tuple[int, tuple[int, int, int]]] | None = image.getcolors()  # type: ignore[assignment]
+    colors: list[tuple[int, tuple[int, int, int]]] | None = image.im.getcolors(256)
     return colors is not None and all(rgb[0] == rgb[1] == rgb[2] for _, rgb in colors)
 
 
@@ -162,7 +162,7 @@ def create_dropdown_image(text: str) -> Image:
     image: Image = new("RGBA", (width, height), dropdown_rgba)
 
     draw: ImageDraw = ImageDraw(image)
-    draw.text((10, line_spacing), text, fill="white", spacing=line_spacing)
+    draw.text((x_padding // 2, line_spacing), text, TEXT_RGB, spacing=line_spacing)
 
     return draw._image
 
