@@ -6,11 +6,7 @@ from argparse import ArgumentParser, Namespace
 from enum import StrEnum
 from typing import Literal
 
-from compile_utils.code_to_skip import (
-    data_files_to_exclude,
-    dlls_to_exclude,
-    dlls_to_include,
-)
+from compile_utils.code_to_skip import data_files_to_exclude, dlls_to_include
 from compile_utils.constants import BUILD_INFO_FILE, REPORT_FILE
 from compile_utils.exceptions import InvalidEnvironmentError
 from compile_utils.module_dependencies import modules_to_include
@@ -249,9 +245,6 @@ class CompileArgumentParser(ArgumentParser):
         nuitka_args += [
             NuitkaArgs.INCLUDE_MODULE.with_value(module)
             for module in modules_to_include
-        ]
-        nuitka_args += [
-            NuitkaArgs.NO_INCLUDE_DLLS.with_value(glob) for glob in dlls_to_exclude
         ]
 
         if os.name == "nt" and args.include_dlls:
