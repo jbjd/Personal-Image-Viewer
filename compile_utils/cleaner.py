@@ -228,13 +228,17 @@ def strip_files(compile_dir: str) -> None:
     """Runs strip on all exe/dll files in provided dir"""
 
     # TODO: Had issues adding .so here on linux. Should be revisited here at some point
-    for strippable_file in _get_files_in_folder_with_filter(
-        compile_dir, (".exe", ".dll", ".pyd")
-    ):
-        result = subprocess.run(["strip", "--strip-all", strippable_file], check=False)  # noqa: S607
+    result = subprocess.run(
+        [  # noqa: S607
+            "strip",
+            "--strip-all",
+            *_get_files_in_folder_with_filter(compile_dir, (".exe", ".dll", ".pyd")),
+        ],
+        check=False,
+    )
 
-        if result.returncode != 0:
-            _logger.warning("Failed to strip file %s", strippable_file)
+    if result.returncode != 0:
+        _logger.warning("Strip returned non-zero status")
 
 
 def _get_tokens_to_skip_config(module_import_path: str) -> TokensConfig:
