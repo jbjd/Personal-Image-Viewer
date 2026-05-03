@@ -462,7 +462,6 @@ if sys.platform != "darwin":
     data_files_to_exclude.append("tcl/encoding/mac*.enc")
 
 dlls_to_include: list[str] = ["libturbojpeg.dll"]
-dlls_to_exclude: list[str] = ["libcrypto-*"]
 
 
 # Custom nuitka implementation
