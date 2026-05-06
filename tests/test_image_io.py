@@ -7,8 +7,8 @@ from unittest.mock import MagicMock, mock_open, patch
 from PIL import UnidentifiedImageError
 from PIL.Image import Image, new
 
-from image_viewer.animation.frame import AnimationFrame
 from image_viewer.image.cache import ImageCacheEntry
+from image_viewer.image.frame import AnimationFrame
 from image_viewer.image.image_io import ImageIO, ReadImageResponse
 from tests.conftest import EXAMPLE_JPEG_PATH
 

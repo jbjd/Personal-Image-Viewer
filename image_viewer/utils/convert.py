@@ -8,9 +8,9 @@ from PIL.Image import open as open_image
 from PIL.ImageSequence import Iterator as ImageIterator
 from PIL.JpegImagePlugin import RAWMODE as VALID_JPEG_MODES
 
-from image_viewer.animation.frame import DEFAULT_ANIMATION_SPEED_MS
 from image_viewer.constants import VALID_FILE_TYPES
 from image_viewer.image.file import magic_number_guess
+from image_viewer.image.frame import DEFAULT_ANIMATION_SPEED_MS
 from image_viewer.utils.PIL import image_is_animated
 
 
