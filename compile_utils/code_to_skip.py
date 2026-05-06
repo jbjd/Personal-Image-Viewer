@@ -14,8 +14,8 @@ from PIL.ImageFile import MAXBLOCK
 from PIL.ImageFont import MAX_STRING_LENGTH
 
 from compile_utils.constants import IMAGE_VIEWER_NAME
-from image_viewer.animation.frame import DEFAULT_ANIMATION_SPEED_MS
 from image_viewer.constants import TEXT_RGB
+from image_viewer.image.frame import DEFAULT_ANIMATION_SPEED_MS
 from image_viewer.image.resizer import JPEG_MAX_DIMENSION, MIN_ZOOM_LEVEL, ZOOM_AMOUNT
 from image_viewer.image.state import ZOOM_UNSET
 from image_viewer.ui.rename_entry import _ERROR_COLOR, _MAX_ENTRY_SIZE
