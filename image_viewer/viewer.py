@@ -8,7 +8,6 @@ from PIL.Image import Image
 from PIL.ImageTk import PhotoImage
 
 from image_viewer._config import Config, parse_config_file
-from image_viewer.animation.frame import AnimationFrame
 from image_viewer.constants import (
     ButtonName,
     Key,
@@ -19,6 +18,7 @@ from image_viewer.constants import (
 )
 from image_viewer.files.file_manager import ImageFileManager
 from image_viewer.image.cache import ImageCache
+from image_viewer.image.frame import AnimationFrame
 from image_viewer.image.image_io import ImageIO
 from image_viewer.ui.button import HoverableButtonUIElement, ToggleableButtonUIElement
 from image_viewer.ui.button_icon_factory import ButtonIconFactory
