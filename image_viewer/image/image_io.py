@@ -10,11 +10,11 @@ from threading import Thread
 from PIL.Image import Image
 from PIL.Image import open as open_image
 
-from image_viewer.animation.frame import AnimationFrame
 from image_viewer.constants import Rotation, ZoomDirection
 from image_viewer.image._read import CMemoryViewBuffer, read_image_into_buffer
 from image_viewer.image.cache import ImageCache, ImageCacheEntry
 from image_viewer.image.file import magic_number_guess
+from image_viewer.image.frame import AnimationFrame
 from image_viewer.image.resizer import ImageResizer
 from image_viewer.image.state import ZOOM_UNSET, ImageState
 from image_viewer.utils.PIL import (

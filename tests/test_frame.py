@@ -1,6 +1,6 @@
 from PIL.Image import Image
 
-from image_viewer.animation.frame import DEFAULT_ANIMATION_SPEED_MS, AnimationFrame
+from image_viewer.image.frame import DEFAULT_ANIMATION_SPEED_MS, AnimationFrame
 
 
 def test_get_ms_until_next_frame():
