@@ -11,7 +11,7 @@ requires-python = "~=3.12.0"
 skip = "build,minifier_failure.py.example"
 
 [tool.coverage.run]
-omit = ["__init__.py", "main.py"]
+omit = ["__init__.py", "main.py", "tests/*"]
 
 [tool.mypy]
 ignore_missing_imports = "True"

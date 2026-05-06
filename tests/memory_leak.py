@@ -1,8 +1,8 @@
 """Tests for memory leaks in C extension modules."""
 
 import os
+import unittest
 
-import pytest
 from psleak import MemoryLeakTestCase
 
 from compile_utils.exceptions import InvalidEnvironmentError
@@ -18,7 +18,6 @@ if os.name == "nt":
     from image_viewer.utils._os_nt import read_buffer_as_base64_and_copy_to_clipboard
 
 
-@pytest.mark.memory_leak
 class TestLeaks(MemoryLeakTestCase):
     warmup_times = 1
 
@@ -39,7 +38,7 @@ class TestLeaks(MemoryLeakTestCase):
         else:
             del os.environ["PYTHONMALLOC"]
 
-    def test_parse_config_file(self):
+    def test_parse_config_file_defaults(self):
         self.execute(parse_config_file, "some bad path")
 
     def test_read_image_into_buffer(self):
@@ -56,7 +55,7 @@ class TestLeaks(MemoryLeakTestCase):
 
         self.execute(decode_scaled_jpeg, image_buffer, (1, 2))
 
-    @pytest.mark.skipif(os.name != "nt", reason="Only available on Windows")
+    @unittest.skipIf(os.name != "nt", "Only available on Windows")
     def test_read_buffer_as_base64_and_copy_to_clipboard(self):
         example_buffer: CMemoryViewBuffer | None = read_image_into_buffer(
             EXAMPLE_JPEG_PATH

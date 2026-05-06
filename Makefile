@@ -40,6 +40,12 @@ C_SOURCE=image_viewer/c_extensions
 C_PYTHON_MODULES=$(C_SOURCE)/python_modules
 C_FLAGS_SHARED=-L$(PYTHON_LIBS) -I$(PYTHON_INCLUDES) -l$(PYTHON_DLL) $(OPTIMIZATION_FLAG) -march=native -mtune=native -ffinite-math-only -fgcse-las -fgcse-sm -fisolate-erroneous-paths-attribute -fno-signed-zeros -frename-registers -fsched-pressure -s -shared -Wall -Werror $(OS_FLAGS)
 
+validate:
+	ruff check .
+	ruff format --check
+	mypy . --check-untyped-defs
+	codespell
+
 build-config:
 	gcc $(C_PYTHON_MODULES)/config/config.c $(C_PYTHON_MODULES)/config/_utils.c $(C_FLAGS_SHARED) -I$(C_SOURCE) -o image_viewer/_config.$(COMPILED_EXT)
 	gcc $(C_PYTHON_MODULES)/config/test_utils.c $(C_PYTHON_MODULES)/config/_utils.c $(C_FLAGS_SHARED) -I$(C_SOURCE) -o tests/utils/_config.$(COMPILED_EXT)
@@ -57,17 +63,12 @@ build-all: build-config build-image-read build-util-os-nt
 install:
 	$(PYTHON_FOR_INSTALL_STEP) compile.py --assume-this-machine --strip
 
-validate:
-	ruff check .
-	ruff format --check
-	mypy . --check-untyped-defs
-	codespell
-
 test:
-	$(PYTHON_FOR_INSTALL_STEP) -m pytest -m "not memory_leak" --cov=image_viewer --cov-report term-missing
+	coverage run -m unittest discover tests
+	coverage report
 
 PYTHONUNBUFFERED=1
 export PYTHONUNBUFFERED
 
 test-memory-leak:
-	$(PYTHON_FOR_INSTALL_STEP) -m pytest -m "memory_leak"
+	$(PYTHON_FOR_INSTALL_STEP) -m unittest ./tests/memory_leak.py
