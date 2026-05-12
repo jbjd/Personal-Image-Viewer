@@ -10,23 +10,23 @@ from PIL.Image import Image
 from PIL.Image import new as new_image
 from PIL.ImageTk import PhotoImage
 
-from image_viewer.config import DEFAULT_FONT
+from image_viewer._config import DEFAULT_UI_FONT
 from image_viewer.files.file_manager import ImageFileManager
 from image_viewer.image.cache import ImageCache
 from image_viewer.image.file import ImageName, ImageNameList
-from image_viewer.image.loader import ImageLoader
+from image_viewer.image.image_io import ImageIO
 from image_viewer.image.resizer import ImageResizer
 from image_viewer.ui.button import IconImages
 from image_viewer.ui.button_icon_factory import ButtonIconFactory
 from image_viewer.ui.canvas import CustomCanvas
 from image_viewer.ui.rename_entry import RenameEntry
 from image_viewer.viewer import ViewerApp
-from tests.test_util.mocks import MockEvent, MockImage
+from tests.utils.mocks import MockEvent, MockImage
 
 WORKING_DIR: str = os.path.dirname(__file__)
 IMG_DIR: str = os.path.join(WORKING_DIR, "example_images")
-EXAMPLE_IMG_PATH: str = os.path.join(IMG_DIR, "a.png")
-MAIN_DIR: str = os.path.dirname(WORKING_DIR)
+EXAMPLE_PNG_PATH: str = os.path.join(IMG_DIR, "a.png")
+EXAMPLE_JPEG_PATH: str = os.path.join(IMG_DIR, "d.jpg")
 
 
 @pytest.fixture(name="tk_app", scope="session")
@@ -37,7 +37,7 @@ def tk_app_fixture() -> Tk:
 
 
 @pytest.fixture(name="canvas")
-def canvas_fixture(tk_app) -> CustomCanvas:
+def canvas_fixture(tk_app: Tk) -> CustomCanvas:
     custom_canvas = CustomCanvas(tk_app, "#000000")
     custom_canvas.screen_height = 1080
     custom_canvas.screen_width = 1080
@@ -56,12 +56,12 @@ def image_cache_fixture() -> ImageCache:
 
 @pytest.fixture(name="file_manager")
 def file_manager_fixture(image_cache: ImageCache) -> ImageFileManager:
-    return ImageFileManager(EXAMPLE_IMG_PATH, image_cache)
+    return ImageFileManager(EXAMPLE_PNG_PATH, image_cache)
 
 
 @pytest.fixture(name="file_manager_with_3_images")
 def file_manager_with_3_images_fixture(image_cache: ImageCache) -> ImageFileManager:
-    manager = ImageFileManager(EXAMPLE_IMG_PATH, image_cache)
+    manager = ImageFileManager(EXAMPLE_PNG_PATH, image_cache)
     manager._files = ImageNameList([*map(ImageName, ("a.png", "c.jpg", "e.webp"))])
     return manager
 
@@ -71,23 +71,17 @@ def image_resizer_fixture() -> ImageResizer:
     return ImageResizer(1920, 1080)
 
 
-@pytest.fixture(name="image_loader")
-def image_loader_fixture(image_cache: ImageCache) -> ImageLoader:
-    image_loader = ImageLoader(1920, 1080, image_cache, lambda *_: None)
-    image_loader.PIL_image = MockImage()
-    return image_loader
+@pytest.fixture(name="image_io")
+def image_io_fixture(image_cache: ImageCache) -> ImageIO:
+    image_io = ImageIO(1920, 1080, image_cache, lambda *_: None)
+    image_io.PIL_image = MockImage()
+    return image_io
 
 
 @pytest.fixture(name="rename_entry")
 def rename_entry_fixture(tk_app: Tk, canvas: CustomCanvas) -> RenameEntry:
-    rename_id: int = canvas.create_window(
-        0,
-        0,
-        width=250,
-        height=20,
-        anchor="nw",
-    )
-    return RenameEntry(tk_app, canvas, rename_id, 250, DEFAULT_FONT)
+    rename_id: int = canvas.create_window(0, 0, width=250, height=20, anchor="nw")
+    return RenameEntry(tk_app, canvas, rename_id, 250, DEFAULT_UI_FONT)
 
 
 @pytest.fixture(name="viewer")
@@ -107,7 +101,7 @@ def viewer_fixture() -> ViewerApp:
         patch("image_viewer.viewer.CustomCanvas"),
         patch("image_viewer.viewer.ButtonIconFactory", mock_icon_factory),
     ):
-        return ViewerApp(EXAMPLE_IMG_PATH, MAIN_DIR)
+        return ViewerApp(EXAMPLE_PNG_PATH)
 
 
 @pytest.fixture(name="focused_event")

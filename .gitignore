@@ -5,6 +5,7 @@
 __pycache__/
 .mypy_cache/
 .pytest_cache/
+.ruff_cache/
 build/
 *.egg-info
 .venv
@@ -16,8 +17,7 @@ ERROR.log
 minifier_failure.py.example
 
 # Image Viewer Compilation
-tmp*/
-nuitka/
+build/
 
 # Nuitka
 *.bin
@@ -31,6 +31,8 @@ nuitka-crash-report.xml
 # Compiled Python Extensions
 *.pyd
 *.so
+
+libturbojpeg.*
 
 *.ipynb
 test.py

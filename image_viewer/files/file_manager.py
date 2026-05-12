@@ -1,23 +1,24 @@
 import os
+from collections import deque
 from enum import Enum
 from os import stat_result
 from time import ctime
-from tkinter.messagebox import askyesno
+from tkinter.filedialog import askopenfilename
 
 from PIL.Image import Image
 
-from image_viewer.actions.types import Convert, Delete, Rename
-from image_viewer.actions.undoer import ActionUndoer, UndoResponse
 from image_viewer.constants import VALID_FILE_TYPES, Movement
-from image_viewer.files.file_dialog_asker import FileDialogAsker
+from image_viewer.files.actions import Convert, Delete, FileAction, Rename
 from image_viewer.image.cache import ImageCache, ImageCacheEntry
 from image_viewer.image.file import ImageName, ImageNameList, ImageSearchResult
-from image_viewer.util.convert import try_convert_file_and_save_new
-from image_viewer.util.os import (
+from image_viewer.utils.convert import try_convert_file_and_save_new
+from image_viewer.utils.os import (
+    ask_yes_no,
     get_files_in_folder,
     get_normalized_folder_name,
     trash_file,
 )
+from image_viewer.utils.PIL import get_mode_info
 
 
 class _ShouldPreserveIndex(Enum):
@@ -30,10 +31,10 @@ class ImageFileManager:
     """Manages interaction with and tracking of image files"""
 
     __slots__ = (
+        "_dialog_file_types",
         "_files",
-        "action_undoer",
+        "action_queue",
         "current_image",
-        "file_dialog_asker",
         "image_cache",
         "image_folder",
         "path_to_image",
@@ -44,8 +45,11 @@ class ImageFileManager:
         self.image_folder: str = get_normalized_folder_name(first_image_path)
         self.image_cache: ImageCache = image_cache
 
-        self.action_undoer = ActionUndoer()
-        self.file_dialog_asker = FileDialogAsker(VALID_FILE_TYPES)
+        # TODO: Make maxlen configurable
+        self.action_queue: deque[FileAction] = deque(maxlen=8)
+        self._dialog_file_types: list[tuple[str, str]] = [
+            ("", f"*.{file_type}") for file_type in VALID_FILE_TYPES
+        ]
 
         first_image_name = ImageName(os.path.basename(first_image_path))
         self._files = ImageNameList([first_image_name])
@@ -68,7 +72,12 @@ class ImageFileManager:
     def move_to_new_file(self) -> bool:
         """Opens native open file dialog and points to new image if selected.
         Returns True if user selected a file, False if dialog was exited"""
-        new_file_path: str = self.file_dialog_asker.ask_open_image(self.image_folder)
+        new_file_path: str = askopenfilename(
+            title="Open Image",
+            initialdir=self.image_folder,
+            filetypes=self._dialog_file_types,
+        )
+
         if new_file_path == "":
             return False
 
@@ -129,7 +138,7 @@ class ImageFileManager:
         self.image_cache.clear()
         self.update_files_with_known_starting_image(image_name_to_start_at)
 
-    def get_cached_metadata(self, get_all_details: bool = True) -> str:
+    def get_current_cached_metadata(self, get_all_details: bool = True) -> str:
         """Returns formatted string of cached metadata on current image.
         Can raise KeyError on failure to get data."""
         image_info: ImageCacheEntry = self.image_cache[self.path_to_image]
@@ -141,18 +150,9 @@ class ImageFileManager:
         if not get_all_details:
             return short_details
 
-        mode: str = image_info.mode
-        bpp: int = len(mode) * 8 if mode != "1" else 1
         readable_mode: str
-        match mode:
-            case "P":
-                readable_mode = "Palette"
-            case "L":
-                readable_mode = "Grayscale"
-            case "1":
-                readable_mode = "Black And White"
-            case _:
-                readable_mode = mode
+        bpp: int
+        readable_mode, bpp = get_mode_info(image_info.mode)
 
         details: str = (
             f"{short_details}\n"
@@ -161,20 +161,18 @@ class ImageFileManager:
         )
         return details
 
-    def get_image_details(
-        self, PIL_image: Image  # pylint: disable=invalid-name
-    ) -> str | None:
+    def get_current_image_details(self, PIL_image: Image) -> str | None:  # noqa: N803
         """Returns a formatted string of data from cache/OS call/PIL object
         or None if failed to read from cache."""
         try:
-            details: str = self.get_cached_metadata()
+            details: str = self.get_current_cached_metadata()
         except KeyError:
             return None  # don't fail trying to read, if not in cache just exit
 
         try:
             image_metadata: stat_result = os.stat(self.path_to_image)
             created_time_epoch: float = (
-                image_metadata.st_birthtime  # type: ignore # Linux
+                image_metadata.st_birthtime  # type: ignore[attr-defined]
                 if os.name == "nt"
                 else image_metadata.st_ctime
             )
@@ -205,7 +203,7 @@ class ImageFileManager:
         """Safely sends current image to trash."""
         try:
             trash_file(self.path_to_image)
-            self.action_undoer.append(Delete(self.path_to_image))
+            self.action_queue.append(Delete(self.path_to_image))
         except (OSError, FileNotFoundError):
             pass
 
@@ -261,7 +259,7 @@ class ImageFileManager:
         else:
             result = self._rename(original_path, new_path)
 
-        self.action_undoer.append(result)
+        self.action_queue.append(result)
 
         # Only add image if its still in the directory we are currently in
         if get_normalized_folder_name(new_path) == get_normalized_folder_name(
@@ -310,9 +308,8 @@ class ImageFileManager:
         if os.path.exists(new_full_path):
             raise FileExistsError
 
-        if will_move_dirs and not askyesno(
-            "Confirm move",
-            f"Move file to {new_dir} ?",
+        if will_move_dirs and not ask_yes_no(
+            "Confirm move", f"Move file to {new_dir} ?"
         ):
             raise OSError
 
@@ -322,9 +319,8 @@ class ImageFileManager:
         self, original_path: str, new_full_path: str, new_format: str
     ) -> Convert:
         """Asks user to delete old file and returns Convert result"""
-        delete: bool = askyesno(
-            "Confirm deletion",
-            f"Converted file to {new_format}, delete old file?",
+        delete: bool = ask_yes_no(
+            "Confirm deletion", f"Converted file to {new_format}, delete old file?"
         )
 
         if delete:
@@ -377,16 +373,21 @@ class ImageFileManager:
         """Attempts to undo most recent action after confirming with user.
 
         :returns: True if most recent action was undone."""
-        if not self._confirm_undo():
+        if not self.action_queue:
             return False
 
+        if not ask_yes_no("Undo Action", self.action_queue[-1].get_undo_message()):
+            return False
+
+        path_restored: str
+        path_removed: str
         try:
-            undo_response: UndoResponse = self.action_undoer.undo()
+            path_restored, path_removed = self.action_queue.pop().undo()
         except OSError:
             return False  # TODO: error popup?
 
-        image_added: str = os.path.basename(undo_response.path_restored)
-        image_removed: str = os.path.basename(undo_response.path_removed)
+        image_added: str = os.path.basename(path_restored)
+        image_removed: str = os.path.basename(path_removed)
 
         if image_removed != "":
             search_result: ImageSearchResult = self._files.search(image_removed)
@@ -404,15 +405,6 @@ class ImageFileManager:
             self._update_after_move_or_edit()
 
         return True
-
-    def _confirm_undo(self) -> bool:
-        """Checks that there is an action to undo and shows a yes/no confirmation popup.
-
-        :returns: True if there's something to undo and user said yes."""
-
-        undo_message: str | None = self.action_undoer.get_undo_message()
-
-        return False if undo_message is None else askyesno("Undo Action", undo_message)
 
     def current_image_cache_still_fresh(self) -> bool:
         """Checks if cache for currently displayed image is still up to date.

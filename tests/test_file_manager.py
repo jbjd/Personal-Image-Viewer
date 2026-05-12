@@ -4,15 +4,15 @@ from unittest.mock import patch
 
 import pytest
 
-from image_viewer.actions.undoer import ActionUndoer, UndoResponse
 from image_viewer.constants import ImageFormats
-from image_viewer.files.file_dialog_asker import FileDialogAsker
+from image_viewer.files.actions import Rename
 from image_viewer.files.file_manager import ImageFileManager, _ShouldPreserveIndex
 from image_viewer.image.cache import ImageCache, ImageCacheEntry
 from image_viewer.image.file import ImageSearchResult
-from tests.conftest import EXAMPLE_IMG_PATH, IMG_DIR
-from tests.test_util.exception import safe_wrapper
-from tests.test_util.mocks import MockImage, MockStatResult
+from tests.conftest import EXAMPLE_PNG_PATH, IMG_DIR
+from tests.utils.mocks import MockImage, MockStatResult
+
+_MODULE_PATH = "image_viewer.files.file_manager"
 
 
 def test_image_file_manager(file_manager: ImageFileManager):
@@ -34,19 +34,16 @@ def test_image_file_manager(file_manager: ImageFileManager):
         file_manager.rename_or_convert_current_image("c.webp", "png")
 
     # Try to rename a.png mocking the os call away should pass
-    with patch("os.rename", lambda *_: None):
-        with (
-            patch.object(
-                ImageFileManager,
-                "_ask_to_delete_old_image_after_convert",
-                lambda *_: None,
-            ),
-            patch(
-                "image_viewer.files.file_manager.askyesno",
-                lambda *_: True,
-            ),
-        ):
-            file_manager.rename_or_convert_current_image("example.test", "png")
+    with (
+        patch("os.rename", lambda *_: None),
+        patch.object(
+            ImageFileManager,
+            "_ask_to_delete_old_image_after_convert",
+            lambda *_: None,
+        ),
+        patch("image_viewer.files.file_manager.ask_yes_no", lambda *_: True),
+    ):
+        file_manager.rename_or_convert_current_image("example.test")
 
     # test remove_current_image functionality
     for _ in range(4):
@@ -59,28 +56,31 @@ def test_image_file_manager(file_manager: ImageFileManager):
 
 
 def test_bad_path(image_cache: ImageCache):
+    """Should raise ValueError when bad path provided."""
+
     # doesn't exist
+    file_manager = ImageFileManager("bad/path", image_cache)
     with pytest.raises(ValueError):
-        file_manager = ImageFileManager("bad/path", image_cache)
         file_manager.validate_current_path()
+
     # wrong file type
+    file_manager = ImageFileManager(
+        os.path.join(IMG_DIR, "not_an_image.txt"), image_cache
+    )
     with pytest.raises(ValueError):
-        file_manager = ImageFileManager(
-            os.path.join(IMG_DIR, "not_an_image.txt"), image_cache
-        )
         file_manager.validate_current_path()
 
 
-@patch("image_viewer.files.file_manager.askyesno", lambda *_: False)
+@patch("image_viewer.files.file_manager.ask_yes_no", lambda *_: False)
 def test_bad_path_for_rename(file_manager: ImageFileManager):
     """When calling rename, certain conditions should raise errors"""
     with pytest.raises(OSError):
         file_manager.rename_or_convert_current_image(
             os.path.join("this/does/not/exist", "asdf.png"), "png"
         )
-    # If path exists, error when user cancels (mocked in askyesno)
+    # If path exists, error when user cancels (mocked in ask_yes_no)
     with pytest.raises(OSError):
-        file_manager.rename_or_convert_current_image(EXAMPLE_IMG_PATH, "png")
+        file_manager.rename_or_convert_current_image(EXAMPLE_PNG_PATH)
 
 
 def test_move_index(file_manager: ImageFileManager):
@@ -95,10 +95,6 @@ def test_delete_file(file_manager: ImageFileManager):
     # add one extra image so it doesn't error after removing the only file
     file_manager.add_new_image("Some_image.png", _ShouldPreserveIndex.NO)
 
-    tempfile._TemporaryFileWrapper.close = safe_wrapper(  # type: ignore
-        tempfile._TemporaryFileWrapper.close
-    )
-
     with tempfile.NamedTemporaryFile() as tmp:
         file_manager.path_to_image = tmp.name
         file_manager.trash_current_image()
@@ -106,7 +102,12 @@ def test_delete_file(file_manager: ImageFileManager):
 
 
 @pytest.mark.parametrize(
-    "starting_display_index,preserve_index,insertion_index,expected_display_index",
+    (
+        "starting_display_index",
+        "preserve_index",
+        "insertion_index",
+        "expected_display_index",
+    ),
     [
         (1, _ShouldPreserveIndex.NO, 1, 1),
         (1, _ShouldPreserveIndex.IF_INSERTED_AT_OR_BEFORE, 1, 2),
@@ -135,23 +136,22 @@ def test_add_new_image_adjusts_index(
 
 def test_undo(file_manager: ImageFileManager):
     """Test correct behavior adding/removing with undo"""
-    with patch.object(
-        ImageFileManager,
-        "_confirm_undo",
-        return_value=False,
-    ):
-        assert not file_manager.undo_most_recent_action()
+
+    # Empty action queue
+    assert not file_manager.undo_most_recent_action()
 
     file_restored = "b.png"
     file_removed = file_manager._files[0].name
-    mock_undo_response = UndoResponse(file_restored, file_removed)
+    file_manager.action_queue.append(Rename(file_restored, file_removed))
+
+    with patch(f"{_MODULE_PATH}.ask_yes_no", return_value=False):
+        assert not file_manager.undo_most_recent_action()
+
+    mock_undo_response = (file_restored, file_removed)
     with (
-        patch.object(ImageFileManager, "_confirm_undo", return_value=True),
-        patch.object(
-            ActionUndoer, "undo", return_value=mock_undo_response
-        ) as mock_undo,
+        patch(f"{_MODULE_PATH}.ask_yes_no", return_value=True),
+        patch.object(Rename, "undo", return_value=mock_undo_response) as mock_undo,
     ):
-        file_manager.action_undoer = ActionUndoer()
         assert file_manager.undo_most_recent_action()
         assert len(file_manager._files) == 1
         assert file_manager._files[0].name == file_restored
@@ -164,37 +164,37 @@ def test_get_and_show_details(file_manager: ImageFileManager):
     """Should return a string containing details on current cached image and show it"""
 
     # Will exit if no details in cache
-    PIL_image = MockImage()
+    PIL_image = MockImage()  # noqa: N806
     PIL_image.info["comment"] = b"test"
 
-    details = file_manager.get_image_details(PIL_image)
+    details = file_manager.get_current_image_details(PIL_image)
     assert details is None
 
     for mode in ("P", "L", "1", "ANYTHING_ELSE"):
         file_manager.image_cache[file_manager.path_to_image] = ImageCacheEntry(
-            PIL_image, (100, 100), "100kb", 9999, mode, ImageFormats.PNG
+            PIL_image, (100, 100), 9999, mode, ImageFormats.PNG
         )
         readable_mode = {"P": "Palette", "L": "Grayscale", "1": "Black And White"}.get(
             mode, mode
         )
-        metadata: str = file_manager.get_cached_metadata()
+        metadata: str = file_manager.get_current_cached_metadata()
         assert " bpp " + readable_mode in metadata
         assert ImageFormats.PNG in metadata
 
-        metadata = file_manager.get_cached_metadata(get_all_details=False)
+        metadata = file_manager.get_current_cached_metadata(get_all_details=False)
         assert metadata.count("\n") == 1
         assert " bpp " + readable_mode not in metadata
         assert ImageFormats.PNG not in metadata
 
     with patch.object(os, "stat", return_value=MockStatResult(0)):
-        details = file_manager.get_image_details(PIL_image)
+        details = file_manager.get_current_image_details(PIL_image)
         assert details is not None
         assert "Created" in details
         assert "Comment" in details
 
     # Will not fail getting file metadata
     with patch.object(os, "stat", side_effect=OSError):
-        details = file_manager.get_image_details(PIL_image)
+        details = file_manager.get_current_image_details(PIL_image)
         assert details is not None
         assert "Created" not in details
 
@@ -217,7 +217,7 @@ def test_move_to_new_file(file_manager: ImageFileManager):
     file_manager.image_folder = "some/path"
 
     with patch(
-        "image_viewer.files.file_manager.FileDialogAsker.ask_open_image",
+        "image_viewer.files.file_manager.askopenfilename",
         return_value=chosen_path,
     ):
         assert file_manager.move_to_new_file()
@@ -228,26 +228,10 @@ def test_move_to_new_file(file_manager: ImageFileManager):
 def test_move_to_new_file_cancelled(file_manager: ImageFileManager):
     """When user closes file dialog, function exits immediately"""
     with patch(
-        "image_viewer.files.file_manager.FileDialogAsker.ask_open_image",
+        "image_viewer.files.file_manager.askopenfilename",
         return_value="",
     ):
         assert not file_manager.move_to_new_file()
-
-
-def test_ask_open_image():
-    """When user closes file dialog, function exits immediately"""
-    asker = FileDialogAsker(["jpg", "png"])
-    chosen_dir: str = "/"
-
-    with patch(
-        "image_viewer.files.file_dialog_asker.askopenfilename"
-    ) as mock_ask_open_filename:
-        asker.ask_open_image(chosen_dir)
-        mock_ask_open_filename.assert_called_once_with(
-            title="Open Image",
-            initialdir=chosen_dir,
-            filetypes=asker._dialog_file_types,
-        )
 
 
 def test_current_image_cache_still_fresh(file_manager: ImageFileManager):

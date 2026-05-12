@@ -1,22 +1,17 @@
 """Constants needed in multiple spots of the codebase."""
 
 from enum import IntEnum, StrEnum
-from typing import Iterable
 
 
 class ImageFormats(StrEnum):
     """Image formats that this program supports."""
 
-    AVIF = "avif"
-    DDS = "dds"
-    GIF = "gif"
-    JFIF = "jfif"
-    JIF = "jif"
-    JPE = "jpe"
-    JPEG = "jpeg"
-    JPG = "jpg"
-    PNG = "png"
-    WEBP = "webp"
+    AVIF = "AVIF"
+    DDS = "DDS"
+    GIF = "GIF"
+    JPEG = "JPEG"
+    PNG = "PNG"
+    WEBP = "WebP"
 
 
 class Key(IntEnum):
@@ -68,7 +63,18 @@ class ButtonName(StrEnum):
     DROPDOWN = "dropdown"
 
 
-VALID_FILE_TYPES: Iterable[str] = ImageFormats.__members__.values()
+VALID_FILE_TYPES: set[str] = {
+    "avif",
+    "gif",
+    "jpg",
+    "jpeg",
+    "jpe",
+    "jfif",
+    "jif",
+    "png",
+    "webp",
+    "dds",
+}
 
 
 TEXT_RGB: str = "#FEFEFE"

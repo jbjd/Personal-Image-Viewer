@@ -1,3 +1,4 @@
-nuitka==2.8.9
-personal-python-ast-optimizer @ git+https://github.com/jbjd/Python-Ast-Optimizer@v5.2.3
-personal-compile-tools @ git+https://github.com/jbjd/Compile-Tools@v1.3.0
+nuitka==4.0.8
+personal-python-ast-optimizer @ git+https://github.com/jbjd/Python-Ast-Optimizer@v8.1.0
+personal-compile-tools @ git+https://github.com/jbjd/Python-Compile-Tools@v2.0.1
+personal-simple-tcl-minifier @ git+https://github.com/jbjd/Simple-Tcl-Minifier@v0.0.1

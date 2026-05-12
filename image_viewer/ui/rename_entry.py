@@ -1,21 +1,32 @@
-from tkinter import Canvas, Entry, Event, Tk
+from tkinter import Canvas, Entry, Event, StringVar, Tk
 from typing import Literal
 
 from image_viewer.constants import TEXT_RGB
 from image_viewer.ui.base import UIElementBase
 
 _ERROR_COLOR: str = "#E6505F"
+_MAX_ENTRY_SIZE: int = 1024
+
+
+def _validate_input(user_input: StringVar) -> None:
+    text: str = user_input.get()
+    if len(text) > _MAX_ENTRY_SIZE:
+        user_input.set(text[:_MAX_ENTRY_SIZE])
 
 
 class RenameEntry(Entry, UIElementBase):
     """Entry for use in a rename window"""
 
-    __slots__ = ("being_resized", "min_width", "text")
+    __slots__ = ("_entry_text", "being_resized", "min_width", "text")
 
     def __init__(
-        self, master: Tk, canvas: Canvas, id: int, min_width: int, font: str
+        self, master: Tk, canvas: Canvas, canvas_id: int, min_width: int, font: str
     ) -> None:
-        UIElementBase.__init__(self, id)
+        UIElementBase.__init__(self, canvas_id)
+
+        self._entry_text = StringVar()
+        self._entry_text.trace("w", lambda *_: _validate_input(self._entry_text))
+
         Entry.__init__(
             self,
             master,
@@ -26,6 +37,7 @@ class RenameEntry(Entry, UIElementBase):
             disabledforeground="black",
             borderwidth=0,
             width=min_width,
+            textvariable=self._entry_text,
         )
         canvas.itemconfigure(self.id, state="hidden", window=self)
 

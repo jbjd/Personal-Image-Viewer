@@ -3,10 +3,9 @@
 import os
 import re
 import subprocess
+from collections.abc import Iterator
 from glob import glob
-from logging import getLogger
 from re import sub
-from typing import Iterator
 
 from personal_compile_tools.file_operations import (
     copy_file,
@@ -19,43 +18,60 @@ from personal_python_ast_optimizer.parser.config import (
     SkipConfig,
     TokensConfig,
     TokenTypesConfig,
+    TypeHintsToSkip,
 )
-from personal_python_ast_optimizer.parser.minifier import MinifyUnparser
-from personal_python_ast_optimizer.parser.run import run_minify_parser
-from personal_python_ast_optimizer.regex.apply import apply_regex, apply_regex_to_file
-from personal_python_ast_optimizer.regex.classes import RegexReplacement
+from personal_python_ast_optimizer.parser.run import run_unparser
+from personal_python_ast_optimizer.regex.replace import (
+    RegexNoMatchException,
+    RegexReplacement,
+    re_replace,
+    re_replace_file,
+)
+from personal_simple_tcl_minifier.parse import tcl_minify
 
 from compile_utils.code_to_skip import (
     classes_to_skip,
     decorators_to_always_skip,
     decorators_to_skip,
     dict_keys_to_skip,
-    from_imports_to_skip,
     functions_to_always_skip,
     functions_to_skip,
-    module_imports_to_skip,
+    imports_to_skip,
+    module_vars_to_fold,
     no_warn_tokens,
     regex_to_apply_py,
     regex_to_apply_tk,
+    unused_imports_to_preserve,
     vars_to_fold,
     vars_to_skip,
 )
-from compile_utils.constants import LOGGER_NAME
+from compile_utils.log import get_logger
 from compile_utils.validation import get_required_python_version
 
-if os.name == "nt":
-    SEPARATORS = r"[\\/]"
-else:
-    SEPARATORS = r"[/]"
+SEPARATORS = r"[\\/]" if os.name == "nt" else r"[/]"
 
 # Ensure this file is git ignored
 MINIFIER_FAILED_FILE_NAME: str = "minifier_failure.py.example"
 
-_logger = getLogger(LOGGER_NAME)
+_logger = get_logger()
+
+
+def _write_minify_failure(file_name: str, context_message: str, source: str) -> None:
+    _logger.exception(
+        "Error when %s on file %s, writing source to %s",
+        context_message,
+        file_name,
+        MINIFIER_FAILED_FILE_NAME,
+    )
+    write_file_utf8(MINIFIER_FAILED_FILE_NAME, source)
 
 
 def clean_file_and_copy(
-    path: str, new_path: str, module_name: str, module_import_path: str
+    path: str,
+    new_path: str,
+    module_name: str,
+    module_import_path: str,
+    assume_this_machine: bool,
 ) -> None:
     """Given a python file path,
     applies regexes/skips/minification and writes results to new_path"""
@@ -66,33 +82,42 @@ def clean_file_and_copy(
         regex_replacements: list[RegexReplacement] = regex_to_apply_py.pop(
             module_import_path
         )
-        source = apply_regex(source, regex_replacements, module_import_path)
+        try:
+            source = re_replace(source, regex_replacements, True)
+        except RegexNoMatchException as e:
+            _write_minify_failure(module_import_path, "applying regex", source)
+            raise RuntimeError(f"Failed to apply regex to {module_import_path}") from e
 
-    code_cleaner = MinifyUnparser()
+    all_vars_to_fold: dict[str, str | bytes | bool | int | float | complex | None] = (
+        module_vars_to_fold.get(module_name, {})
+        | vars_to_fold.pop(module_import_path, {})
+    )
 
     try:
-        source = run_minify_parser(
-            code_cleaner,
+        source = run_unparser(
             source,
-            SkipConfig(
+            skip_config=SkipConfig(
                 module_import_path,
                 target_python_version=get_required_python_version(),
                 tokens_config=_get_tokens_to_skip_config(module_import_path),
-                token_types_config=TokenTypesConfig(skip_overload_functions=True),
+                token_types_config=TokenTypesConfig(
+                    skip_type_hints=TypeHintsToSkip.ALL,
+                    skip_asserts=True,
+                    skip_overload_functions=True,
+                ),
                 optimizations_config=OptimizationsConfig(
-                    vars_to_fold=vars_to_fold[module_name],
-                    fold_constants=False,  # Nuitka does this internally
-                    assume_this_machine=True,
+                    vars_to_fold=all_vars_to_fold,
+                    collection_concat_to_unpack=True,
+                    assume_this_machine=assume_this_machine,
+                    simplify_named_tuples=True,
+                    unused_imports_to_preserve=unused_imports_to_preserve.pop(
+                        module_import_path, set()
+                    ),
                 ),
             ),
         )
     except Exception:
-        _logger.error(
-            "Error when running minifier on file %s, writing source to %s",
-            module_import_path,
-            MINIFIER_FAILED_FILE_NAME,
-        )
-        write_file_utf8(MINIFIER_FAILED_FILE_NAME, source)
+        _write_minify_failure(module_import_path, "running ast optimizer", source)
         raise
 
     write_file_utf8(new_path, source)
@@ -102,6 +127,7 @@ def move_files_to_tmp_and_clean(
     source_dir: str,
     tmp_dir: str,
     module_name: str,
+    assume_this_machine: bool,
     modules_to_skip: set[str] | None = None,
 ) -> None:
     """Moves python files from source_dir to temp_dir
@@ -111,13 +137,10 @@ def move_files_to_tmp_and_clean(
     else:
         modules_to_skip_re = ""
 
-    for python_file in _get_files_in_folder_with_filter(
+    for relative_file_path in _get_files_in_folder_with_filter(
         source_dir, (".py", ".pyd", ".so")
     ):
-        if os.path.basename(python_file) == "main.py":
-            continue
-
-        python_file = os.path.abspath(python_file)
+        python_file = os.path.join(source_dir, relative_file_path)
         relative_path: str = python_file.replace(source_dir, "").strip("/\\")
         module_import_path: str = sub(SEPARATORS, ".", f"{module_name}.{relative_path}")
         module_import_path = module_import_path[:-3]  # chops .py
@@ -138,7 +161,13 @@ def move_files_to_tmp_and_clean(
 
         os.makedirs(os.path.dirname(new_path), exist_ok=True)
         if python_file.endswith(".py"):
-            clean_file_and_copy(python_file, new_path, module_name, module_import_path)
+            clean_file_and_copy(
+                python_file,
+                new_path,
+                module_name,
+                module_import_path,
+                assume_this_machine,
+            )
         else:
             copy_file(python_file, new_path)
 
@@ -149,25 +178,27 @@ def move_files_to_tmp_and_clean(
         )
 
 
-def warn_unused_code_skips() -> None:
+def warn_unused_code_skips(modules_no_warn_unused_skips: list[str]) -> None:
     """If any values remain from code_to_skip imports, warn
     that they were unused"""
+
     for skips, friendly_name in (
-        (classes_to_skip, "classes"),
-        (decorators_to_skip, "decorators"),
-        (dict_keys_to_skip, "dictionary Keys"),
-        (from_imports_to_skip, "from imports"),
-        (module_imports_to_skip, "module imports"),
-        (functions_to_skip, "functions"),
-        (vars_to_skip, "variables"),
-        (regex_to_apply_py, "with regex"),
+        (classes_to_skip, "skip classes"),
+        (decorators_to_skip, "skip decorators"),
+        (dict_keys_to_skip, "skip dictionary Keys"),
+        (imports_to_skip, "skip module imports"),
+        (functions_to_skip, "skip functions"),
+        (vars_to_fold, "fold variables"),
+        (vars_to_skip, "skip variables"),
+        (regex_to_apply_py, "apply regex"),
     ):
         for module in skips:
-            _logger.warning(
-                "Asked to skip %s in module %s, but was not found",
-                friendly_name,
-                module,
-            )
+            if all(not module.startswith(m) for m in modules_no_warn_unused_skips):
+                _logger.warning(
+                    "Asked to %s in module %s, but was not found",
+                    friendly_name,
+                    module,
+                )
 
 
 def clean_tk_files(compile_dir: str) -> None:
@@ -181,78 +212,50 @@ def clean_tk_files(compile_dir: str) -> None:
 
         # globs are used since files may have versioning in name
         # They are intended to target a single file
-        code_file: str = glob_result[0]
-        apply_regex_to_file(code_file, regexes, warning_id=path_or_glob)
+        if len(glob_result) > 1:
+            _logger.warning("Glob %s found multiple files", path_or_glob)
 
-    # strip various things in tcl files
-    comments = RegexReplacement(pattern=r"^\s*#.*", flags=re.MULTILINE)
-    whitespace_around_newlines = RegexReplacement(pattern=r"\n\s+", replacement="\n")
-    consecutive_whitespace = RegexReplacement(pattern="[ \t][ \t]+", replacement=" ")
-    prints = RegexReplacement(pattern="^(puts|parray) .*", flags=re.MULTILINE)
-    extra_new_lines = RegexReplacement(pattern="\n\n+", replacement="\n")
-    starting_new_line = RegexReplacement(pattern="^\n", count=1)
-    whitespace_between_brackets = RegexReplacement(pattern="}\n}", replacement="}}")
+        code_file: str = glob_result[0]
+        re_replace_file(code_file, regexes, raise_if_not_applied=True)
 
     for code_file in _get_files_in_folder_with_filter(compile_dir, (".tcl", ".tm")):
-        apply_regex_to_file(
-            code_file,
-            [
-                comments,
-                whitespace_around_newlines,
-                consecutive_whitespace,
-                prints,
-                extra_new_lines,
-                starting_new_line,
-                whitespace_between_brackets,
-            ],
-        )
-
-    apply_regex_to_file(
-        os.path.join(compile_dir, "tcl/tclIndex"),
-        whitespace_around_newlines,
-        warning_id="tclIndex",
-    )
+        source: str = read_file_utf8(code_file)
+        source = tcl_minify(source)
+        write_file_utf8(code_file, source)
 
 
 def strip_files(compile_dir: str) -> None:
     """Runs strip on all exe/dll files in provided dir"""
 
-    # Had issues adding .so here on linux. Should be revisited here at some point
-    for strippable_file in _get_files_in_folder_with_filter(
-        compile_dir, (".exe", ".dll", ".pyd")
-    ):
-        result = subprocess.run(["strip", "--strip-all", strippable_file], check=False)
+    # TODO: Had issues adding .so here on linux. Should be revisited here at some point
+    result = subprocess.run(
+        [  # noqa: S607
+            "strip",
+            "--strip-all",
+            *_get_files_in_folder_with_filter(compile_dir, (".exe", ".dll", ".pyd")),
+        ],
+        check=False,
+    )
 
-        if result.returncode != 0:
-            _logger.warning("Failed to strip file %s", strippable_file)
+    if result.returncode != 0:
+        _logger.warning("Strip returned non-zero status")
 
 
 def _get_tokens_to_skip_config(module_import_path: str) -> TokensConfig:
-    classes: set[str] | None = classes_to_skip.pop(module_import_path, None)
-    decorators: set[str] | None = decorators_to_skip.pop(module_import_path, None)
-    dict_keys: set[str] | None = dict_keys_to_skip.pop(module_import_path, None)
-    from_imports: set[str] | None = from_imports_to_skip.pop(module_import_path, None)
-    module_imports: set[str] | None = module_imports_to_skip.pop(
-        module_import_path, None
-    )
-    functions: set[str] | None = functions_to_skip.pop(module_import_path, None)
-    variables: set[str] | None = vars_to_skip.pop(module_import_path, None)
+    classes: set[str] = classes_to_skip.pop(module_import_path, set())
+    decorators: set[str] = decorators_to_skip.pop(module_import_path, set())
+    dict_keys: set[str] = dict_keys_to_skip.pop(module_import_path, set())
+    module_imports: set[str] = imports_to_skip.pop(module_import_path, set())
+    functions: set[str] = functions_to_skip.pop(module_import_path, set())
+    variables: set[str] = vars_to_skip.pop(module_import_path, set())
 
-    if decorators is None:
-        decorators = decorators_to_always_skip
-    else:
-        decorators |= decorators.union(decorators_to_always_skip)
-
-    if functions is None:
-        functions = functions_to_always_skip
-    else:
-        functions |= functions.union(functions_to_always_skip)
+    decorators |= decorators.union(decorators_to_always_skip)
+    functions |= functions.union(functions_to_always_skip)
 
     return TokensConfig(
         classes_to_skip=classes,
         decorators_to_skip=decorators,
         dict_keys_to_skip=dict_keys,
-        from_imports_to_skip=from_imports,
         module_imports_to_skip=module_imports,
         functions_to_skip=functions,
         variables_to_skip=variables,

@@ -4,14 +4,12 @@ import sys
 
 if __name__ == "__main__" and len(sys.argv) > 1:
     from image_viewer.exceptions import exception_hook
-    from image_viewer.util.os import get_path_to_exe_folder
     from image_viewer.viewer import ViewerApp
 
-    path_to_exe_folder: str = get_path_to_exe_folder()
-
     if not __debug__:
-        sys.excepthook = lambda error_type, error, trace: exception_hook(
-            error_type, error, trace, path_to_exe_folder
-        )
+        import os
 
-    ViewerApp(sys.argv[1], path_to_exe_folder).start()
+        os.chdir(os.path.dirname(sys.argv[0]))
+        sys.excepthook = exception_hook
+
+    ViewerApp(sys.argv[1]).start()

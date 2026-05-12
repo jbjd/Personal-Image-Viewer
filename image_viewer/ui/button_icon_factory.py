@@ -1,5 +1,3 @@
-from typing import Final
-
 from PIL import ImageOps
 from PIL.Image import Image
 from PIL.Image import new as new_image
@@ -7,7 +5,7 @@ from PIL.ImageDraw import ImageDraw
 from PIL.ImageTk import PhotoImage
 
 from image_viewer.ui.button import IconImages
-from image_viewer.util.PIL import resize
+from image_viewer.utils.PIL import resize
 
 DEFAULT_ICON_SIZE: tuple[int, int] = (32, 32)
 
@@ -22,7 +20,7 @@ class ButtonIconFactory:
     __slots__ = ("icon_size", "ratio")
 
     def __init__(self, icon_size: int) -> None:
-        self.icon_size: Final[tuple[int, int]] = (icon_size, icon_size)
+        self.icon_size: tuple[int, int] = (icon_size, icon_size)
 
     def _resize_icon(self, image: Image) -> Image:
         """Returns copy of image that is icon size"""
@@ -64,8 +62,7 @@ class ButtonIconFactory:
         exit_hover_rgb: tuple[int, int, int] = (180, 25, 20)
         draw, draw_hovered = self._make_icon_base(exit_rgb, exit_hover_rgb)
         return IconImages(
-            self.make_icon_from_draw(draw),
-            self._draw_x_symbol(draw_hovered),
+            self.make_icon_from_draw(draw), self._draw_x_symbol(draw_hovered)
         )
 
     def _draw_minify_symbol(self, draw: ImageDraw) -> PhotoImage:

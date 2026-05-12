@@ -2,10 +2,10 @@
 Deals with storing known image file paths and determining their true file extension.
 """
 
-from typing import Iterable
+from collections.abc import Iterable
 
 from image_viewer.constants import Movement
-from image_viewer.util.os import os_name_compare
+from image_viewer.utils.os import file_name_compare
 
 
 class ImageName:
@@ -20,14 +20,14 @@ class ImageName:
         self.suffix: str = name[index:].lower() if index else ""
 
     def __lt__(self, other: "ImageName") -> bool:
-        return os_name_compare(self.name, other.name)
+        return file_name_compare(self.name, other.name)
 
 
 class ImageSearchResult:
     """Represents a search such that index is where the image is or would be inserted
     depending on if found is True or False respectively."""
 
-    __slots__ = ("index", "found")
+    __slots__ = ("found", "index")
 
     def __init__(self, index: int, found: bool) -> None:
         self.index: int = index
@@ -124,7 +124,7 @@ class ImageNameList(list[ImageName]):
             if current_image == target_image_name:
                 return ImageSearchResult(index=mid, found=True)
 
-            if os_name_compare(target_image_name, current_image):
+            if file_name_compare(target_image_name, current_image):
                 high = mid - 1
             else:
                 low = mid + 1

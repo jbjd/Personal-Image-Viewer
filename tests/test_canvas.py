@@ -7,7 +7,7 @@ from PIL.Image import Image
 from PIL.ImageTk import PhotoImage
 
 from image_viewer.ui.canvas import CustomCanvas
-from tests.test_util.mocks import MockEvent
+from tests.utils.mocks import MockEvent
 
 
 def test_create_assets(canvas: CustomCanvas, example_image: Image):
@@ -58,7 +58,7 @@ def test_widget_visible(canvas: CustomCanvas):
 
 
 @pytest.mark.parametrize(
-    "start_coords,end_coords,expected_move_amount",
+    ("start_coords", "end_coords", "expected_move_amount"),
     [
         ((0, 0), (10, 10), (10, 10)),
         ((0, 0), (9999, 9999), (1920, 1080)),
