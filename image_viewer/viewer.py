@@ -572,7 +572,7 @@ class ViewerApp:
             return
         try:
             self.file_manager.rename_or_convert_current_image(
-                self.image_io.PIL_image, self.image_io.image_buffer.format, user_input
+                self.image_io.PIL_image, user_input
             )
         except (OSError, FileExistsError, ValueError):
             self.rename_entry.error_flash()

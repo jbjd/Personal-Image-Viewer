@@ -44,11 +44,11 @@ class MockImage(Image):
     _size: tuple[int, int] = (0, 0)
 
     def __init__(
-        self, n_frames: int = 1, image_format: str = "", mode: str = "P"
+        self, n_frames: int = 1, image_format: str | None = None, mode: str = "P"
     ) -> None:
         super().__init__()
 
-        self.format: str = image_format
+        self.format: str | None = image_format
         self.n_frames: int = n_frames
         self._mode: str = mode
         self.closed: bool = False

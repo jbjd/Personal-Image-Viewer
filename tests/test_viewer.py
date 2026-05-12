@@ -155,8 +155,6 @@ def test_rename_or_convert(tk: Tk, viewer: ViewerApp, user_input: str):  # noqa:
     event = MagicMock()
     image_io = MagicMock()
     image_io.PIL_image = Image()
-    image_io.image_buffer = MagicMock()
-    image_io.image_buffer.format = "png"
     viewer.image_io = image_io
     with (
         patch("image_viewer.viewer.RenameEntry.get", return_value=user_input),
@@ -171,5 +169,5 @@ def test_rename_or_convert(tk: Tk, viewer: ViewerApp, user_input: str):  # noqa:
             mock_rename_or_convert_current_image.assert_not_called()
         else:
             mock_rename_or_convert_current_image.assert_called_once_with(
-                image_io.PIL_image, image_io.image_buffer.format, stripped_input
+                image_io.PIL_image, stripped_input
             )

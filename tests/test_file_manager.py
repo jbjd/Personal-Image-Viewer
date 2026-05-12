@@ -31,7 +31,7 @@ def test_image_file_manager(file_manager: ImageFileManager):
 
     # Should not try to rename/convert when file with that name already exists
     with pytest.raises(FileExistsError):
-        file_manager.rename_or_convert_current_image(MockImage(), "jpeg", "c.webp")
+        file_manager.rename_or_convert_current_image(MockImage(), "c.webp")
 
     # Try to rename a.png mocking the os call away should pass
     with (
@@ -43,7 +43,7 @@ def test_image_file_manager(file_manager: ImageFileManager):
         ),
         patch("image_viewer.files.file_manager.ask_yes_no", lambda *_: True),
     ):
-        file_manager.rename_or_convert_current_image(MockImage(), "png", "example.test")
+        file_manager.rename_or_convert_current_image(MockImage(), "example.test")
 
     # test remove_current_image functionality
     for _ in range(4):

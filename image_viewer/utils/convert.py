@@ -13,7 +13,6 @@ from image_viewer.utils.PIL import image_is_animated
 
 def try_convert_image_and_save_new(
     original_image: Image,
-    original_format: str,
     new_path: str,
     target_format: str,
     quality: int = 96,
@@ -21,14 +20,16 @@ def try_convert_image_and_save_new(
     """Tries to convert image at old_path to a target format at new_path.
 
     :param original_image: PIL image to convert
-    :
     :apram new_path: Path to save the new image to
     :param target_format: Format to convert to
     :param quality: Quality 0-100 to pass to encoder
     :returns: bool if conversion performed successfully
     :raises ValueError: If converting animated file to non-animated format"""
 
-    original_format = original_format.lower()
+    if original_image.format is None:
+        return False
+
+    original_format = original_image.format.lower()
     target_format = target_format.lower()
 
     # Only first letter checked since jpeg is the only supported file extension

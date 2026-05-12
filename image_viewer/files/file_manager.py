@@ -226,7 +226,7 @@ class ImageFileManager:
         self.image_cache.pop_safe(key)
 
     def rename_or_convert_current_image(
-        self, original_image: Image, original_format: str, new_name_or_path: str
+        self, original_image: Image, new_name_or_path: str
     ) -> None:
         """Try to either rename or convert based on input"""
         new_dir: str
@@ -250,7 +250,7 @@ class ImageFileManager:
         if (
             new_image_name.suffix != self.current_image.suffix
             and try_convert_image_and_save_new(
-                original_image, original_format, new_path, new_image_name.suffix
+                original_image, new_path, new_image_name.suffix
             )
         ):
             result = self._ask_to_delete_old_image_after_convert(
