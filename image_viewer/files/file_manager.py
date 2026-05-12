@@ -11,7 +11,7 @@ from image_viewer.constants import VALID_FILE_TYPES, Movement
 from image_viewer.files.actions import Convert, Delete, FileAction, Rename
 from image_viewer.image.cache import ImageCache, ImageCacheEntry
 from image_viewer.image.file import ImageName, ImageNameList, ImageSearchResult
-from image_viewer.utils.convert import try_convert_file_and_save_new
+from image_viewer.utils.convert import try_convert_image_and_save_new
 from image_viewer.utils.os import (
     ask_yes_no,
     get_files_in_folder,
@@ -226,7 +226,7 @@ class ImageFileManager:
         self.image_cache.pop_safe(key)
 
     def rename_or_convert_current_image(
-        self, new_name_or_path: str, original_format: str
+        self, original_image: Image, original_format: str, new_name_or_path: str
     ) -> None:
         """Try to either rename or convert based on input"""
         new_dir: str
@@ -249,8 +249,8 @@ class ImageFileManager:
         result: Rename
         if (
             new_image_name.suffix != self.current_image.suffix
-            and try_convert_file_and_save_new(
-                original_path, new_path, original_format, new_image_name.suffix
+            and try_convert_image_and_save_new(
+                original_image, original_format, new_path, new_image_name.suffix
             )
         ):
             result = self._ask_to_delete_old_image_after_convert(

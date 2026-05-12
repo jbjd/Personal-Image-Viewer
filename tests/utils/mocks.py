@@ -43,10 +43,12 @@ class MockImage(Image):
     info: dict = {}  # noqa: RUF012
     _size: tuple[int, int] = (0, 0)
 
-    def __init__(self, n_frames: int = 1, format: str = "", mode: str = "P") -> None:  # noqa: A002
+    def __init__(
+        self, n_frames: int = 1, image_format: str = "", mode: str = "P"
+    ) -> None:
         super().__init__()
 
-        self.format: str = format
+        self.format: str = image_format
         self.n_frames: int = n_frames
         self._mode: str = mode
         self.closed: bool = False
@@ -62,6 +64,9 @@ class MockImage(Image):
 
     def close(self) -> None:
         self.closed = True
+
+    def copy(self) -> MockImage:
+        return MockImage(self.n_frames, self.format, self.mode)
 
     def __enter__(self) -> Self:
         return self
