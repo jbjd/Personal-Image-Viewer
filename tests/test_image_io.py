@@ -14,6 +14,8 @@ from tests.conftest import EXAMPLE_JPEG_PATH
 
 _MODULE_PATH: str = "image_viewer.image.image_io"
 
+# TODO: Test image load on each supported file type
+
 
 def test_next_frame(image_io: ImageIO):
     """Test expected behavior from getting next frame and resetting"""
@@ -80,7 +82,7 @@ def test_load_image_in_cache(image_io: ImageIO):
         patch.object(
             ImageIO,
             "read_image",
-            lambda *_: ReadImageResponse(mock_image_buffer, Image(), image_format),
+            lambda *_: ReadImageResponse(mock_image_buffer, Image()),
         ),
         patch(f"{_MODULE_PATH}.open_image", lambda *_: Image()),
     ):

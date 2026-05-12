@@ -31,7 +31,7 @@ def test_image_file_manager(file_manager: ImageFileManager):
 
     # Should not try to rename/convert when file with that name already exists
     with pytest.raises(FileExistsError):
-        file_manager.rename_or_convert_current_image("c.webp", "png")
+        file_manager.rename_or_convert_current_image("c.webp", "jpeg")
 
     # Try to rename a.png mocking the os call away should pass
     with (
@@ -43,7 +43,7 @@ def test_image_file_manager(file_manager: ImageFileManager):
         ),
         patch("image_viewer.files.file_manager.ask_yes_no", lambda *_: True),
     ):
-        file_manager.rename_or_convert_current_image("example.test")
+        file_manager.rename_or_convert_current_image("example.test", "png")
 
     # test remove_current_image functionality
     for _ in range(4):
@@ -71,16 +71,16 @@ def test_bad_path(image_cache: ImageCache):
         file_manager.validate_current_path()
 
 
-@patch("image_viewer.files.file_manager.ask_yes_no", lambda *_: False)
 def test_bad_path_for_rename(file_manager: ImageFileManager):
     """When calling rename, certain conditions should raise errors"""
-    with pytest.raises(OSError):
-        file_manager.rename_or_convert_current_image(
-            os.path.join("this/does/not/exist", "asdf.png"), "png"
-        )
-    # If path exists, error when user cancels (mocked in ask_yes_no)
-    with pytest.raises(OSError):
-        file_manager.rename_or_convert_current_image(EXAMPLE_PNG_PATH)
+    with patch("image_viewer.files.file_manager.ask_yes_no", lambda *_: False):
+        with pytest.raises(OSError):
+            file_manager.rename_or_convert_current_image(
+                os.path.join("this/does/not/exist", "asdf.png"), "jpeg"
+            )
+        # If path exists, error when user cancels (mocked in ask_yes_no)
+        with pytest.raises(OSError):
+            file_manager.rename_or_convert_current_image(EXAMPLE_PNG_PATH, "jpeg")
 
 
 def test_move_index(file_manager: ImageFileManager):

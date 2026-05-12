@@ -9,7 +9,7 @@
 // CMemoryViewBuffer Start
 static PyMemberDef CMemoryViewBuffer_members[] = {
     {"byte_size", Py_T_ULONG, offsetof(CMemoryViewBuffer, bufferSize), Py_READONLY, 0},
-    {"format_guess", Py_T_STRING_INPLACE, offsetof(CMemoryViewBuffer, formatGuess), Py_READONLY, 0},
+    {"format", Py_T_STRING, offsetof(CMemoryViewBuffer, format), Py_READONLY, 0},
     {"view", Py_T_OBJECT_EX, offsetof(CMemoryViewBuffer, view), Py_READONLY, 0},
     {NULL}};
 
@@ -29,25 +29,38 @@ static PyTypeObject CMemoryViewBuffer_Type = {
     .tp_members = CMemoryViewBuffer_members,
 };
 
+static const char *PNG = "PNG";
+static const char *WEBP = "WebP";
+static const char *GIF = "GIF";
+static const char *DDS = "DDS";
+static const char *JPEG = "JPEG";
+static const char *AVIF = "AVIF";
+
 static inline void _magic_number_guess(CMemoryViewBuffer *view_buffer)
 {
-    if (strncmp(view_buffer->buffer, "\x89PNG", 4) == 0){
-        strcpy(view_buffer->formatGuess, "PNG");
+    if (strncmp(view_buffer->buffer, "\x89PNG", 4) == 0)
+    {
+        view_buffer->format = PNG;
     }
-    else if (strncmp(view_buffer->buffer, "RIFF", 4) == 0){
-        strcpy(view_buffer->formatGuess, "WebP");
+    else if (strncmp(view_buffer->buffer, "RIFF", 4) == 0)
+    {
+        view_buffer->format = WEBP;
     }
-    else if (strncmp(view_buffer->buffer, "GIF8", 4) == 0){
-        strcpy(view_buffer->formatGuess, "GIF");
+    else if (strncmp(view_buffer->buffer, "GIF8", 4) == 0)
+    {
+        view_buffer->format = GIF;
     }
-    else if (strncmp(view_buffer->buffer, "DDS ", 4) == 0){
-        strcpy(view_buffer->formatGuess, "DDS");
+    else if (strncmp(view_buffer->buffer, "DDS ", 4) == 0)
+    {
+        view_buffer->format = DDS;
     }
-    else if (strncmp(view_buffer->buffer, "\xff\xd8\xff", 3) == 0){
-        strcpy(view_buffer->formatGuess, "JPEG");
+    else if (strncmp(view_buffer->buffer, "\xff\xd8\xff", 3) == 0)
+    {
+        view_buffer->format = JPEG;
     }
-    else{
-        strcpy(view_buffer->formatGuess, "AVIF");
+    else
+    {
+        view_buffer->format = AVIF;
     }
 }
 
