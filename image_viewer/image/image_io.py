@@ -153,7 +153,7 @@ class ImageIO:
                 original_image.size,
                 byte_size,
                 original_mode,
-                original_image.format,
+                self.image_buffer.format,
             )
 
         frame_count: int = getattr(original_image, "n_frames", 1)
