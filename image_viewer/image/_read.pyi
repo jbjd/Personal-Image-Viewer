@@ -1,13 +1,21 @@
 """C extensions that interact with image files."""
 
+PNG: str = "PNG"
+JPEG: str = "JPEG"
+GIF: str = "GIF"
+WEBP: str = "WEBP"
+AVIF: str = "AVIF"
+DDS: str = "DDS"
+
 class CMemoryViewBuffer:
     """Can't be instantiated in Python.
 
     Contains a memoryview object to malloc'ed C data."""
 
-    __slots__ = ("byte_size", "view")
+    __slots__ = ("byte_size", "format", "view")
 
     byte_size: int
+    format: str
     view: memoryview
 
 class CMemoryViewBufferJpeg(CMemoryViewBuffer):
