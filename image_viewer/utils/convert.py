@@ -20,7 +20,7 @@ def try_convert_image_and_save_new(
     """Tries to convert image at old_path to a target format at new_path.
 
     :param original_image: PIL image to convert
-    :apram new_path: Path to save the new image to
+    :param new_path: Path to save the new image to
     :param target_format: Format to convert to
     :param quality: Quality 0-100 to pass to encoder
     :returns: bool if conversion performed successfully

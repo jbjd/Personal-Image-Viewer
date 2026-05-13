@@ -108,7 +108,8 @@ class ImageIO:
         backoff: int = ms_until_next_frame + 50
         self.animation_callback(ms_until_next_frame, backoff)
 
-    def read_image(self, path_to_image: str) -> ReadImageResponse | None:
+    @staticmethod
+    def read_image(path_to_image: str) -> ReadImageResponse | None:
         """Tries to open file on disk as PIL Image
         Returns Image or None on failure"""
         try:
