@@ -1,6 +1,7 @@
 """Setup logic for build folder."""
 
 import os
+import sys
 from functools import lru_cache
 
 from personal_compile_tools.file_operations import read_file_utf8, write_file_utf8
@@ -45,7 +46,7 @@ def create_custom_module_version(
     :param append: Any arbitrary string to append
     :returns: Created version"""
 
-    return f"{module_version}-{custom_version}\n{append}\n"
+    return f"{sys.version_info[:2]}\n{module_version}-{custom_version}\n{append}\n"
 
 
 def write_custom_module_version(
