@@ -13,7 +13,6 @@ from PIL.Image import open as open_image
 from image_viewer.constants import Rotation, ZoomDirection
 from image_viewer.image._read import CMemoryViewBuffer, read_image_into_buffer
 from image_viewer.image.cache import ImageCache, ImageCacheEntry
-from image_viewer.image.file import magic_number_guess
 from image_viewer.image.frame import AnimationFrame
 from image_viewer.image.resizer import ImageResizer
 from image_viewer.image.state import ZOOM_UNSET, ImageState
@@ -27,14 +26,11 @@ from image_viewer.utils.PIL import (
 class ReadImageResponse:
     """Response when reading an image from disk"""
 
-    __slots__ = ("expected_format", "image", "image_buffer")
+    __slots__ = ("image", "image_buffer")
 
-    def __init__(
-        self, image_buffer: CMemoryViewBuffer, image: Image, expected_format: str
-    ) -> None:
+    def __init__(self, image_buffer: CMemoryViewBuffer, image: Image) -> None:
         self.image_buffer: CMemoryViewBuffer = image_buffer
         self.image: Image = image
-        self.expected_format: str = expected_format
 
 
 class ImageIO:
@@ -112,7 +108,8 @@ class ImageIO:
         backoff: int = ms_until_next_frame + 50
         self.animation_callback(ms_until_next_frame, backoff)
 
-    def read_image(self, path_to_image: str) -> ReadImageResponse | None:
+    @staticmethod
+    def read_image(path_to_image: str) -> ReadImageResponse | None:
         """Tries to open file on disk as PIL Image
         Returns Image or None on failure"""
         try:
@@ -122,12 +119,10 @@ class ImageIO:
             if image_buffer is None:
                 return None
 
-            expected_format: str = magic_number_guess(image_buffer.view[:4].tobytes())
-
             image_bytes_io = BytesIO(image_buffer.view)
-            image: Image = open_image(image_bytes_io, "r", (expected_format,))
+            image: Image = open_image(image_bytes_io, "r", (image_buffer.format,))
 
-            return ReadImageResponse(image_buffer, image, expected_format)
+            return ReadImageResponse(image_buffer, image)
         except OSError:
             return None
 
@@ -159,7 +154,7 @@ class ImageIO:
                 original_image.size,
                 byte_size,
                 original_mode,
-                read_image_response.expected_format,
+                self.image_buffer.format,
             )
 
         frame_count: int = getattr(original_image, "n_frames", 1)

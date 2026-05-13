@@ -26,19 +26,23 @@ from tests.utils.mocks import MockEvent, MockImage
 WORKING_DIR: str = os.path.dirname(__file__)
 IMG_DIR: str = os.path.join(WORKING_DIR, "example_images")
 EXAMPLE_PNG_PATH: str = os.path.join(IMG_DIR, "a.png")
+EXAMPLE_WEBP_PATH: str = os.path.join(IMG_DIR, "c.webp")
 EXAMPLE_JPEG_PATH: str = os.path.join(IMG_DIR, "d.jpg")
+EXAMPLE_DDS_PATH: str = os.path.join(IMG_DIR, "e.dds")
+EXAMPLE_AVIF_PATH: str = os.path.join(IMG_DIR, "f.avif")
+EXAMPLE_GIF_PATH: str = os.path.join(IMG_DIR, "g.gif")
 
 
-@pytest.fixture(name="tk_app", scope="session")
-def tk_app_fixture() -> Tk:
+@pytest.fixture(name="tk", scope="session")
+def tk_fixture() -> Tk:
     app = Tk()
     app.withdraw()
     return app
 
 
 @pytest.fixture(name="canvas")
-def canvas_fixture(tk_app: Tk) -> CustomCanvas:
-    custom_canvas = CustomCanvas(tk_app, "#000000")
+def canvas_fixture(tk: Tk) -> CustomCanvas:
+    custom_canvas = CustomCanvas(tk, "#000000")
     custom_canvas.screen_height = 1080
     custom_canvas.screen_width = 1080
     return custom_canvas
@@ -79,9 +83,9 @@ def image_io_fixture(image_cache: ImageCache) -> ImageIO:
 
 
 @pytest.fixture(name="rename_entry")
-def rename_entry_fixture(tk_app: Tk, canvas: CustomCanvas) -> RenameEntry:
+def rename_entry_fixture(tk: Tk, canvas: CustomCanvas) -> RenameEntry:
     rename_id: int = canvas.create_window(0, 0, width=250, height=20, anchor="nw")
-    return RenameEntry(tk_app, canvas, rename_id, 250, DEFAULT_UI_FONT)
+    return RenameEntry(tk, canvas, rename_id, 250, DEFAULT_UI_FONT)
 
 
 @pytest.fixture(name="viewer")

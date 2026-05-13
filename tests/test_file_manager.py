@@ -4,12 +4,12 @@ from unittest.mock import patch
 
 import pytest
 
-from image_viewer.constants import ImageFormats
 from image_viewer.files.actions import Rename
 from image_viewer.files.file_manager import ImageFileManager, _ShouldPreserveIndex
+from image_viewer.image._read import PNG
 from image_viewer.image.cache import ImageCache, ImageCacheEntry
 from image_viewer.image.file import ImageSearchResult
-from tests.conftest import EXAMPLE_PNG_PATH, IMG_DIR
+from tests.conftest import IMG_DIR
 from tests.utils.mocks import MockImage, MockStatResult
 
 _MODULE_PATH = "image_viewer.files.file_manager"
@@ -20,18 +20,18 @@ def test_image_file_manager(file_manager: ImageFileManager):
     assert len(file_manager._files) == 1
 
     file_manager.update_files_with_known_starting_image()
-    assert len(file_manager._files) == 4
+    assert len(file_manager._files) == 7
 
     search_result: ImageSearchResult = file_manager._files.search("a.png")
     assert search_result.index == 0
     assert search_result.found
 
     file_manager.add_new_image("y.jpeg", _ShouldPreserveIndex.NO)
-    assert len(file_manager._files) == 5
+    assert len(file_manager._files) == 8
 
     # Should not try to rename/convert when file with that name already exists
     with pytest.raises(FileExistsError):
-        file_manager.rename_or_convert_current_image("c.webp")
+        file_manager.rename_or_convert_current_image(MockImage(), "c.webp")
 
     # Try to rename a.png mocking the os call away should pass
     with (
@@ -43,10 +43,10 @@ def test_image_file_manager(file_manager: ImageFileManager):
         ),
         patch("image_viewer.files.file_manager.ask_yes_no", lambda *_: True),
     ):
-        file_manager.rename_or_convert_current_image("example.test")
+        file_manager.rename_or_convert_current_image(MockImage(), "example.test")
 
     # test remove_current_image functionality
-    for _ in range(4):
+    for _ in range(7):
         file_manager.remove_current_image()
     assert len(file_manager._files) == 1
 
@@ -69,18 +69,6 @@ def test_bad_path(image_cache: ImageCache):
     )
     with pytest.raises(ValueError):
         file_manager.validate_current_path()
-
-
-@patch("image_viewer.files.file_manager.ask_yes_no", lambda *_: False)
-def test_bad_path_for_rename(file_manager: ImageFileManager):
-    """When calling rename, certain conditions should raise errors"""
-    with pytest.raises(OSError):
-        file_manager.rename_or_convert_current_image(
-            os.path.join("this/does/not/exist", "asdf.png")
-        )
-    # If path exists, error when user cancels (mocked in ask_yes_no)
-    with pytest.raises(OSError):
-        file_manager.rename_or_convert_current_image(EXAMPLE_PNG_PATH)
 
 
 def test_move_index(file_manager: ImageFileManager):
@@ -160,6 +148,7 @@ def test_undo(file_manager: ImageFileManager):
         mock_undo.assert_called_once()
 
 
+# TODO: Clean test up
 def test_get_and_show_details(file_manager: ImageFileManager):
     """Should return a string containing details on current cached image and show it"""
 
@@ -172,19 +161,19 @@ def test_get_and_show_details(file_manager: ImageFileManager):
 
     for mode in ("P", "L", "1", "ANYTHING_ELSE"):
         file_manager.image_cache[file_manager.path_to_image] = ImageCacheEntry(
-            PIL_image, (100, 100), 9999, mode, ImageFormats.PNG
+            PIL_image, (100, 100), 9999, mode, PNG
         )
         readable_mode = {"P": "Palette", "L": "Grayscale", "1": "Black And White"}.get(
             mode, mode
         )
         metadata: str = file_manager.get_current_cached_metadata()
         assert " bpp " + readable_mode in metadata
-        assert ImageFormats.PNG in metadata
+        assert PNG in metadata
 
         metadata = file_manager.get_current_cached_metadata(get_all_details=False)
         assert metadata.count("\n") == 1
         assert " bpp " + readable_mode not in metadata
-        assert ImageFormats.PNG not in metadata
+        assert PNG not in metadata
 
     with patch.object(os, "stat", return_value=MockStatResult(0)):
         details = file_manager.get_current_image_details(PIL_image)

@@ -9,8 +9,7 @@ from image_viewer.ui.button_icon_factory import ButtonIconFactory
 
 
 def test_create_icons(
-    # unused tk_app needed to create photo images
-    tk_app: Tk,  # noqa: ARG001
+    tk: Tk,  # noqa: ARG001
     button_icon_factory: ButtonIconFactory,
 ):
     """Should successfully create all icons as PhotoImages."""
