@@ -1,6 +1,6 @@
 import pytest
 
-from image_viewer.constants import ImageFormats
+from image_viewer.image._read import AVIF, DDS, GIF, JPEG, PNG, WEBP
 from image_viewer.utils.convert import try_convert_image_and_save_new
 from tests.utils.mocks import MockImage
 
@@ -32,13 +32,13 @@ def test_convert_to_bad_type():
 @pytest.mark.parametrize(
     ("true_file_extension", "target_format"),
     [
-        (ImageFormats.WEBP, ImageFormats.PNG),
-        (ImageFormats.PNG, ImageFormats.JPEG),
-        (ImageFormats.PNG, ImageFormats.WEBP),
-        (ImageFormats.PNG, ImageFormats.GIF),
-        (ImageFormats.PNG, ImageFormats.DDS),
-        (ImageFormats.PNG, ImageFormats.PNG),
-        (ImageFormats.JPEG, ImageFormats.JPEG),
+        (WEBP, PNG),
+        (PNG, JPEG),
+        (PNG, WEBP),
+        (AVIF, GIF),
+        (PNG, DDS),
+        (PNG, PNG),
+        (JPEG, JPEG),
     ],
 )
 def test_convert_between_types(true_file_extension: str, target_format: str):

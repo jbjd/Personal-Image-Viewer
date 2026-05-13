@@ -3,17 +3,6 @@
 from enum import IntEnum, StrEnum
 
 
-class ImageFormats(StrEnum):  # TODO: Remove
-    """Image formats that this program supports."""
-
-    AVIF = "AVIF"
-    DDS = "DDS"
-    GIF = "GIF"
-    JPEG = "JPEG"
-    PNG = "PNG"
-    WEBP = "WebP"
-
-
 class Key(IntEnum):
     """Tkinter keysym numbers."""
 

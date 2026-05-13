@@ -1,5 +1,12 @@
 """C extensions that interact with image files."""
 
+PNG: str = "PNG"
+JPEG: str = "JPEG"
+GIF: str = "GIF"
+WEBP: str = "WEBP"
+AVIF: str = "AVIF"
+DDS: str = "DDS"
+
 class CMemoryViewBuffer:
     """Can't be instantiated in Python.
 

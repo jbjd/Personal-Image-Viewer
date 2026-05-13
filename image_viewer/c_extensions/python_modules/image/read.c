@@ -9,8 +9,8 @@
 // CMemoryViewBuffer Start
 static PyMemberDef CMemoryViewBuffer_members[] = {
     {"byte_size", Py_T_ULONG, offsetof(CMemoryViewBuffer, bufferSize), Py_READONLY, 0},
-    {"format", Py_T_STRING, offsetof(CMemoryViewBuffer, format), Py_READONLY, 0},
     {"view", Py_T_OBJECT_EX, offsetof(CMemoryViewBuffer, view), Py_READONLY, 0},
+    {"format", Py_T_OBJECT_EX, offsetof(CMemoryViewBuffer, format), Py_READONLY, 0},
     {NULL}};
 
 static void CMemoryViewBuffer_dealloc(CMemoryViewBuffer *self)
@@ -30,47 +30,47 @@ static PyTypeObject CMemoryViewBuffer_Type = {
 };
 
 static const char *PNG = "PNG";
-static const char *WEBP = "WebP";
-static const char *GIF = "GIF";
-static const char *DDS = "DDS";
 static const char *JPEG = "JPEG";
+static const char *GIF = "GIF";
+static const char *WEBP = "WebP";
 static const char *AVIF = "AVIF";
+static const char *DDS = "DDS";
 
-static inline void _magic_number_guess(CMemoryViewBuffer *view_buffer)
+static inline void _magic_number_guess(PyObject *self, CMemoryViewBuffer *view_buffer)
 {
     if (strncmp(view_buffer->buffer, "\x89PNG", 4) == 0)
     {
-        view_buffer->format = PNG;
-    }
-    else if (strncmp(view_buffer->buffer, "RIFF", 4) == 0)
-    {
-        view_buffer->format = WEBP;
-    }
-    else if (strncmp(view_buffer->buffer, "GIF8", 4) == 0)
-    {
-        view_buffer->format = GIF;
-    }
-    else if (strncmp(view_buffer->buffer, "DDS ", 4) == 0)
-    {
-        view_buffer->format = DDS;
+        view_buffer->format = PyObject_GetAttrString(self, VARIABLE_NAME(PNG));
     }
     else if (strncmp(view_buffer->buffer, "\xff\xd8\xff", 3) == 0)
     {
-        view_buffer->format = JPEG;
+        view_buffer->format = PyObject_GetAttrString(self, VARIABLE_NAME(JPEG));
+    }
+    else if (strncmp(view_buffer->buffer, "RIFF", 4) == 0)
+    {
+        view_buffer->format = PyObject_GetAttrString(self, VARIABLE_NAME(WEBP));
+    }
+    else if (strncmp(view_buffer->buffer, "GIF8", 4) == 0)
+    {
+        view_buffer->format = PyObject_GetAttrString(self, VARIABLE_NAME(GIF));
+    }
+    else if (strncmp(view_buffer->buffer, "DDS ", 4) == 0)
+    {
+        view_buffer->format = PyObject_GetAttrString(self, VARIABLE_NAME(DDS));
     }
     else
     {
-        view_buffer->format = AVIF;
+        view_buffer->format = PyObject_GetAttrString(self, VARIABLE_NAME(AVIF));
     }
 }
 
-static inline CMemoryViewBuffer *CMemoryViewBuffer_New(PyObject *pyMemoryView, char *buffer, unsigned long bufferSize)
+static inline CMemoryViewBuffer *CMemoryViewBuffer_New(PyObject *self, PyObject *pyMemoryView, char *buffer, unsigned long bufferSize)
 {
     CMemoryViewBuffer *cMemoryBuffer = (CMemoryViewBuffer *)PyObject_New(CMemoryViewBuffer, &CMemoryViewBuffer_Type);
     cMemoryBuffer->view = pyMemoryView;
     cMemoryBuffer->buffer = buffer;
     cMemoryBuffer->bufferSize = bufferSize;
-    _magic_number_guess(cMemoryBuffer);
+    _magic_number_guess(self, cMemoryBuffer);
 
     return cMemoryBuffer;
 }
@@ -153,7 +153,7 @@ static PyObject *read_image_into_buffer(PyObject *self, PyObject *arg)
         goto error;
     }
 
-    return (PyObject *)CMemoryViewBuffer_New(pyMemoryView, buffer, size);
+    return (PyObject *)CMemoryViewBuffer_New(self, pyMemoryView, buffer, size);
 error:
     return Py_None;
 }
@@ -266,7 +266,13 @@ PyMODINIT_FUNC PyInit__read(void)
 
     if (unlikely(
             PyModule_AddObjectRef(module, "CMemoryViewBuffer", (PyObject *)&CMemoryViewBuffer_Type) < 0 ||
-            PyModule_AddObjectRef(module, "CMemoryViewBufferJpeg", (PyObject *)&CMemoryViewBufferJpeg_Type) < 0))
+            PyModule_AddObjectRef(module, "CMemoryViewBufferJpeg", (PyObject *)&CMemoryViewBufferJpeg_Type) < 0 ||
+            PyModule_AddStringConstant(module, VARIABLE_NAME(PNG), PNG) ||
+            PyModule_AddStringConstant(module, VARIABLE_NAME(JPEG), JPEG) ||
+            PyModule_AddStringConstant(module, VARIABLE_NAME(GIF), GIF) ||
+            PyModule_AddStringConstant(module, VARIABLE_NAME(WEBP), WEBP) ||
+            PyModule_AddStringConstant(module, VARIABLE_NAME(AVIF), AVIF) ||
+            PyModule_AddStringConstant(module, VARIABLE_NAME(DDS), DDS)))
     {
         Py_DECREF(module);
         return NULL;
