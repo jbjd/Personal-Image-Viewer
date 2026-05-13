@@ -8,15 +8,8 @@ from image_viewer.ui.button import IconImages
 from image_viewer.ui.button_icon_factory import ButtonIconFactory
 
 
-def _assert_icons_type(icons: IconImages):
-    """Asserts icons are expected types."""
-    icon, icon_hovered = icons
-    assert isinstance(icon, PhotoImage) and isinstance(icon_hovered, PhotoImage)
-
-
 def test_create_icons(
-    # unused tk_app needed to create photo images
-    tk_app: Tk,  # pylint: disable=unused-argument
+    tk: Tk,  # noqa: ARG001
     button_icon_factory: ButtonIconFactory,
 ):
     """Should successfully create all icons as PhotoImages."""
@@ -35,3 +28,9 @@ def test_create_icons(
 
     _assert_icons_type(down_icons)
     _assert_icons_type(up_icons)
+
+
+def _assert_icons_type(icons: IconImages) -> None:
+    """Asserts icons are expected types."""
+    assert isinstance(icons.default, PhotoImage)
+    assert isinstance(icons.hovered, PhotoImage)

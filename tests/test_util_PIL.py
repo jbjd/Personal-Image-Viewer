@@ -1,15 +1,18 @@
+# noqa: N999
 from unittest.mock import MagicMock, patch
 
+import pytest
 from PIL.Image import Image, new
 
-from image_viewer.config import DEFAULT_FONT
-from image_viewer.constants import ImageFormats
+from image_viewer._config import DEFAULT_UI_FONT
 from image_viewer.image.file import ImageName
-from image_viewer.util.PIL import (
+from image_viewer.utils.PIL import (
     _preinit,
     create_dropdown_image,
+    get_mode_info,
     get_placeholder_for_errored_image,
     init_PIL,
+    optimize_image_mode,
     resize,
 )
 
@@ -26,12 +29,12 @@ def test_image_path():
     assert example_image_path.suffix == ""
 
 
-def test_init_PIL():  # pylint: disable=invalid-name
+def test_init_PIL():  # noqa: N802
     """Should remove all values from _plugins and set default font"""
     from PIL import Image as _Image
     from PIL.ImageDraw import ImageDraw
 
-    init_PIL(DEFAULT_FONT, 20)
+    init_PIL(DEFAULT_UI_FONT, 20)
     assert len(_Image._plugins) == 0
     assert ImageDraw.font is not None
 
@@ -39,7 +42,7 @@ def test_init_PIL():  # pylint: disable=invalid-name
 
 
 def test_create_images():
-    init_PIL(DEFAULT_FONT, 20)
+    init_PIL(DEFAULT_UI_FONT, 20)
 
     dropdown = create_dropdown_image("test\ntest")
     assert isinstance(dropdown, Image)
@@ -57,21 +60,81 @@ def test_resize():
 
     same_size_image = resize(example_image, (10, 10))
 
-    # Will not resize to the same dimensions
-    assert same_size_image == example_image
+    assert same_size_image is not example_image
 
     new_image = resize(example_image, (20, 20))
 
     assert new_image.size == (20, 20)
-    assert new_image.mode == "RGB"  # P or 1 type images should convert to RGB
 
     new_image = resize(new_image.convert("RGBA"), (15, 15))
 
     assert new_image.size == (15, 15)
 
 
+@pytest.mark.parametrize(
+    ("mode", "pixel_data", "expected_mode"),
+    [
+        ("RGBA", [(i, i + 1, i, 255) for i in range(100)], "RGB"),
+        ("RGBA", [(i, i, i, 255) for i in range(100)], "L"),
+        ("RGB", [(i, i + 1, i) for i in range(100)], "RGB"),
+        ("LA", [(i, i) for i in range(100)], "LA"),
+        ("LA", [(i, 255) for i in range(100)], "L"),
+        ("RGB", [(i, i, i) for i in range(100)], "L"),
+    ],
+)
+def test_optimize_image_mode(mode: str, pixel_data: list[tuple], expected_mode: str):
+    """Should reduce pixel depth if visually equivalent"""
+
+    image = new(mode, (10, 10))
+    image.putdata(pixel_data)
+
+    new_image = optimize_image_mode(image)
+
+    assert new_image.mode == expected_mode
+
+    if mode == expected_mode:
+        assert new_image is image
+
+
+@pytest.mark.parametrize(
+    ("mode", "expected_readable_mode", "expected_bpp"),
+    [
+        ("RGB", "RGB", 24),
+        ("RGBA", "RGBA", 32),
+        ("I", "Signed Integer Pixels", 32),
+        ("L", "Grayscale", 8),
+        ("LA", "Grayscale With Alpha", 16),
+        ("P", "Palette", 8),
+        ("PA", "Palette With Alpha", 16),
+        ("1", "Black And White", 1),
+    ],
+)
+def test_get_mode_info(mode: str, expected_readable_mode: str, expected_bpp: int):
+    readable_mode, bpp = get_mode_info(mode)
+
+    assert readable_mode == expected_readable_mode
+    assert bpp == expected_bpp
+
+
 def test_preinit():
     """Should import supported formats and set PIL as initialized"""
+
+    mock_import = MagicMock()
+    mock_register_open = MagicMock()
+    mock_image_module = MagicMock()
+    mock_image_module._initialized = 0
+
+    with (
+        patch("builtins.__import__", mock_import),
+        patch("image_viewer.utils.PIL._Image", mock_image_module),
+        patch("image_viewer.utils.PIL.register_open", mock_register_open),
+    ):
+        _preinit()
+
+    mock_register_open.assert_called_once()
+
+    # 2 is PIL's marker for everything initialized
+    assert mock_image_module._initialized == 2
 
     supported_formats: set[str] = {
         "PIL.AvifImagePlugin",
@@ -82,33 +145,12 @@ def test_preinit():
         "PIL.DdsImagePlugin",
     }
 
-    assert len(supported_formats) == len(
-        ImageFormats
-    ), "Test not accounting for all supported formats"
-
-    mock_import = MagicMock()
-    mock_register_open = MagicMock()
-    mock_image_module = MagicMock()
-    mock_image_module._initialized = 0
-
-    with (
-        patch("builtins.__import__", mock_import),
-        patch("image_viewer.util.PIL._Image", mock_image_module),
-        patch("image_viewer.util.PIL.register_open", mock_register_open),
-    ):
-        _preinit()
-
-    mock_register_open.assert_called_once()
-
-    # 2 is PIL's marker for everything initialized
-    assert mock_image_module._initialized == 2
-
     # Throw out irrelevant imports since some others happen during the call
-    imported_formats: set[str] = set(
+    imported_formats: set[str] = {
         imported_format
         for inputs in mock_import.call_args_list
         if (imported_format := inputs[0][0]) in supported_formats
-    )
+    }
 
     assert supported_formats == imported_formats
 
@@ -121,8 +163,8 @@ def test_preinit_already_initialized():
     mock_image_module._initialized = 2
 
     with (
-        patch("image_viewer.util.PIL._Image", mock_image_module),
-        patch("image_viewer.util.PIL.register_open", mock_register_open),
+        patch("image_viewer.utils.PIL._Image", mock_image_module),
+        patch("image_viewer.utils.PIL.register_open", mock_register_open),
     ):
         _preinit()
 

@@ -1,22 +1,26 @@
-"""Argument definition and parsing for compilation"""
+"""Argument definitions and parsing."""
 
+import os
+import shutil
 from argparse import ArgumentParser, Namespace
 from enum import StrEnum
+from typing import Literal
 
-from compile_utils.code_to_skip import data_files_to_exclude, dlls_to_exclude
+from compile_utils.code_to_skip import data_files_to_exclude, dlls_to_include
 from compile_utils.constants import BUILD_INFO_FILE, REPORT_FILE
+from compile_utils.exceptions import InvalidEnvironmentError
 from compile_utils.module_dependencies import modules_to_include
 
 
 class ConsoleMode(StrEnum):
-    """Options for console mode in nuitka"""
+    """Options for console mode in nuitka."""
 
     FORCE = "force"
     DISABLE = "disable"
 
 
 class NuitkaArgs(StrEnum):
-    """Nuitka arguments that are used as part of compilation"""
+    """Nuitka arguments that are used as part of compilation."""
 
     DEPLOYMENT = "--deployment"
     STANDALONE = "--standalone"
@@ -26,6 +30,7 @@ class NuitkaArgs(StrEnum):
     INCLUDE_DATA_FILES = "--include-data-files"
     NO_INCLUDE_DATA_FILES = "--noinclude-data-files"
     INCLUDE_MODULE = "--include-module"
+    INCLUDE_DLLS = "--include-data-files"
     NO_INCLUDE_DLLS = "--noinclude-dlls"
     WINDOWS_ICON_FROM_ICO = "--windows-icon-from-ico"
     WINDOWS_CONSOLE_MODE = "--windows-console-mode"
@@ -44,35 +49,42 @@ class NuitkaArgs(StrEnum):
 
 
 class CompileNamespace(Namespace):
-    """Namespace for compilation flags"""
+    """Namespace for compilation flags."""
 
     install_path: str
     report: bool
     debug: bool
+    assume_this_machine: bool
     strip: bool
+    distribution: bool
     skip_nuitka: bool
-    no_cleanup: bool
+    extra_checks: bool
+    no_cache: bool
     build_info_file: bool
     user_nuitka_args: list[str]
 
+    if os.name == "nt":
+        include_dlls: bool
+
+
+_VALID_NUITKA_ARGS: list[str] = [
+    NuitkaArgs.QUIET.value,
+    NuitkaArgs.VERBOSE.value,
+    NuitkaArgs.SHOW_SCONS.value,
+    NuitkaArgs.SHOW_MEMORY.value,
+    NuitkaArgs.WINDOWS_CONSOLE_MODE.value,
+]
+
 
 class CompileArgumentParser(ArgumentParser):
-    """Argument Parser for compilation flags"""
+    """Argument Parser for compilation flags."""
 
     __slots__ = ()
-
-    VALID_NUITKA_ARGS: list[str] = [
-        NuitkaArgs.QUIET.value,
-        NuitkaArgs.VERBOSE.value,
-        NuitkaArgs.SHOW_SCONS.value,
-        NuitkaArgs.SHOW_MEMORY.value,
-        NuitkaArgs.WINDOWS_CONSOLE_MODE.value,
-    ]
 
     def __init__(self, install_path: str) -> None:
         super().__init__(
             description="Compiles Personal Image Viewer to an executable",
-            epilog=f"Some nuitka arguments are also accepted: {self.VALID_NUITKA_ARGS}",
+            epilog=f"Some nuitka arguments are also accepted: {_VALID_NUITKA_ARGS}",
         )
 
         self.add_argument_ext(
@@ -85,7 +97,15 @@ class CompileArgumentParser(ArgumentParser):
             f"Adds {NuitkaArgs.REPORT.with_value(REPORT_FILE)} flag to nuitka.",
         )
         self.add_argument_ext(
-            "--build-info-file", f"Includes {BUILD_INFO_FILE} with distribution."
+            "--build-info-file", f"Includes {BUILD_INFO_FILE} in the build."
+        )
+        self.add_argument_ext(
+            "--assume-this-machine",
+            (
+                "Allows optimizations for this specific machine. "
+                "Enables CFLAGS -march=native and -mtune=native and "
+                " removal of some code that will be unused on this machine."
+            ),
         )
         self.add_argument_ext(
             "--strip",
@@ -94,16 +114,35 @@ class CompileArgumentParser(ArgumentParser):
                 "Requires strip being installed and on PATH."
             ),
         )
+        self.add_argument_ext("--distribution", "Includes licenses.")
+        if os.name == "nt":
+            self.add_argument_ext(
+                "--include-dlls",
+                "Finds used DLLs on system and include them in the build.",
+                affected_os="Windows",
+            )
+        self.add_argument_ext(
+            "--extra-checks",
+            "Adds extra checks during build. Only useful for development"
+            "Should be unnecessary unless doing development.",
+            is_development=True,
+        )
+        self.add_argument_ext(
+            "--no-cache",
+            "Removes cached parts of build process. "
+            "Should be unnecessary unless doing development.",
+            is_development=True,
+        )
         self.add_argument_ext(
             "--debug",
             (
                 "Doesn't move compiled code to install path, doesn't check for root, "
-                "assumes --no-cleanup and --report, adds "
+                "assumes --report and --extra_checks, adds "
                 f"{NuitkaArgs.WARN_IMPLICIT_EXCEPTIONS}, {NuitkaArgs.WARN_UNUSUAL_CODE}"
                 f", and {NuitkaArgs.WINDOWS_CONSOLE_MODE}={ConsoleMode.FORCE} "
                 f"flags to nuitka."
             ),
-            is_debug=True,
+            is_development=True,
         )
         self.add_argument_ext(
             "--skip-nuitka",
@@ -113,12 +152,7 @@ class CompileArgumentParser(ArgumentParser):
                 "Assumes --no-cleanup however nuitka's build folder is never made "
                 "so only the tmp folder is not cleaned up."
             ),
-            is_debug=True,
-        )
-        self.add_argument_ext(
-            "--no-cleanup",
-            "Does not delete temporary files used for compilation/installation.",
-            is_debug=True,
+            is_development=True,
         )
 
     def add_argument_ext(
@@ -126,24 +160,28 @@ class CompileArgumentParser(ArgumentParser):
         name: str,
         help_text: str,
         default: str | bool = False,
-        is_debug: bool = False,
+        is_development: bool = False,
+        affected_os: Literal["Windows"] | None = None,
     ) -> None:
         """Extension of add_argument to simplify repeated patterns.
 
         :param name: The name of the argument.
         :param: help_text: A description of what the argument does.
         :param default: The default value. Bools use store_true and strings use store.
-        :param is_debug: Adds to help text that this is intended for debugging."""
+        :param is_development: Adds to help text that flag is for dev purposes."""
 
-        if is_debug:
-            help_text += " This option is exposed for debugging."
+        if is_development:
+            help_text += " This option is exposed for development."
+
+        if affected_os is not None:
+            help_text = f"({affected_os} only) " + help_text
 
         action: str = "store_true" if isinstance(default, bool) else "store"
 
         super().add_argument(name, help=help_text, action=action, default=default)
 
     # Override the args of the super class
-    def parse_known_args(  # type: ignore # pylint: disable=arguments-differ
+    def parse_known_args(  # type: ignore[override]
         self, modules_to_skip: list[str]
     ) -> tuple[CompileNamespace, list[str]]:
         """Returns CompileNamespace of user args and list of args to pass to nuitka"""
@@ -164,7 +202,7 @@ class CompileArgumentParser(ArgumentParser):
         :raises ValueError: If any argument isn't part of that subset."""
 
         for extra_arg in nuitka_args:
-            if extra_arg.split("=")[0] not in self.VALID_NUITKA_ARGS:
+            if extra_arg.split("=")[0] not in _VALID_NUITKA_ARGS:
                 raise ValueError(f"Unknown argument {extra_arg}")
 
     @staticmethod
@@ -175,19 +213,20 @@ class CompileArgumentParser(ArgumentParser):
         to be passed to nuitka."""
         nuitka_args.append(NuitkaArgs.STANDALONE)
 
-        if args.report or args.debug:
+        if args.debug:
+            args.report = True
+            args.extra_checks = True
+        else:
+            nuitka_args.append(NuitkaArgs.DEPLOYMENT)
+            nuitka_args.append(NuitkaArgs.REMOVE_OUTPUT)
+
+        if args.report:
             nuitka_args.append(NuitkaArgs.REPORT.with_value(REPORT_FILE))
             if args.debug:
                 nuitka_args += [
                     NuitkaArgs.WARN_IMPLICIT_EXCEPTIONS,
                     NuitkaArgs.WARN_UNUSUAL_CODE,
                 ]
-
-        if not args.debug:
-            nuitka_args.append(NuitkaArgs.DEPLOYMENT)
-
-            if not args.no_cleanup:
-                nuitka_args.append(NuitkaArgs.REMOVE_OUTPUT)
 
         nuitka_args.append(NuitkaArgs.ENABLE_PLUGIN.with_value("tk-inter"))
 
@@ -198,13 +237,22 @@ class CompileArgumentParser(ArgumentParser):
             NuitkaArgs.NO_INCLUDE_DATA_FILES.with_value(glob)
             for glob in data_files_to_exclude
         ]
+        if not args.distribution:
+            nuitka_args.append(
+                NuitkaArgs.NO_INCLUDE_DATA_FILES.with_value("tk/license.terms")
+            )
+
         nuitka_args += [
             NuitkaArgs.INCLUDE_MODULE.with_value(module)
             for module in modules_to_include
         ]
-        nuitka_args += [
-            NuitkaArgs.NO_INCLUDE_DLLS.with_value(glob) for glob in dlls_to_exclude
-        ]
+
+        if os.name == "nt" and args.include_dlls:
+            nuitka_args += [
+                NuitkaArgs.INCLUDE_DATA_FILES.with_value(get_full_path_to_dll(file))
+                + f"={file}"
+                for file in (dlls_to_include)
+            ]
 
         if not any(
             arg.startswith(NuitkaArgs.WINDOWS_CONSOLE_MODE) for arg in nuitka_args
@@ -214,3 +262,27 @@ class CompileArgumentParser(ArgumentParser):
                     ConsoleMode.FORCE if args.debug else ConsoleMode.DISABLE
                 )
             )
+
+
+def get_full_path_to_dll(dll_file: str) -> str:
+    """Finds required dll on $PATH.
+
+    :param dll_file: File name to search for.
+    :returns: Full path to dll file."""
+
+    # Stupid hack since shutil uses this os env to filter its results
+    old_path_ext: str | None = os.environ.get("PATHEXT")
+    os.environ["PATHEXT"] = ".dll"
+
+    try:
+        which: str | None = shutil.which(dll_file)
+        if which is None:
+            raise InvalidEnvironmentError(f"Can't find {dll_file} on $PATH")
+
+    finally:
+        if old_path_ext is not None:
+            os.environ["PATHEXT"] = old_path_ext
+        else:
+            del os.environ["PATHEXT"]
+
+    return which

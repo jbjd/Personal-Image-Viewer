@@ -1,33 +1,43 @@
 """C extensions that interact with image files."""
 
-class CMemoryViewBuffer:
+PNG: str = "PNG"
+JPEG: str = "JPEG"
+GIF: str = "GIF"
+WEBP: str = "WEBP"
+AVIF: str = "AVIF"
+DDS: str = "DDS"
+
+class CRawImageView:
     """Can't be instantiated in Python.
 
     Contains a memoryview object to malloc'ed C data."""
 
-    __slots__ = ("byte_size", "view")
+    __slots__ = ("byte_size", "format", "view")
 
     byte_size: int
+    format: str
     view: memoryview
 
-class CMemoryViewBufferJpeg(CMemoryViewBuffer):
+class CDecodedJpegView:
     """Can't be instantiated in Python.
 
     Contains a memoryview object to malloc'ed C data containing a JPEG."""
 
-    __slots__ = ("dimensions",)
+    __slots__ = ("byte_size", "dimensions", "view")
 
+    byte_size: int
     dimensions: tuple[int, int]
+    view: memoryview
 
-def read_image_into_buffer(image_path: str, /) -> CMemoryViewBuffer | None:
+def read_image_into_buffer(image_path: str, /) -> CRawImageView | None:
     """Reads an image file path and stores it in a buffer.
 
     :param image_path: A path to a file containing an image.
     :returns: A buffer containing the image data or None on failure."""
 
 def decode_scaled_jpeg(
-    image_buffer: CMemoryViewBuffer, scale_factor: tuple[int, int], /
-) -> CMemoryViewBufferJpeg:
+    image_view: CRawImageView, scale_factor: tuple[int, int], /
+) -> CDecodedJpegView:
     """Given an image buffer, decode it as a jpeg and return a new scaled buffer.
 
     :param image_buffer: An image to decode and scale.

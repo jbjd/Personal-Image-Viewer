@@ -1,0 +1,75 @@
+"""
+Mocks that are commonly used within the tests.
+These are an alternative to MagicMock when certain ones are used often
+"""
+
+from __future__ import annotations
+
+from tkinter import Event, Misc
+from typing import Any, Self
+from unittest.mock import MagicMock
+
+from PIL.Image import Image
+
+
+class MockStatResult:
+    """Mocks OS's stat_result"""
+
+    st_birthtime: int = 1649709119
+    st_ctime: int = 1649709119
+    st_mtime: int = 1649709119
+
+    def __init__(self, st_size: int) -> None:
+        self.st_size: int = st_size
+
+
+class MockEvent(Event):
+    """Mocks Tk Event"""
+
+    def __init__(
+        self, widget: Misc | None = None, keysym_num: int = 0, x: int = 0, y: int = 0
+    ) -> None:
+        super().__init__()
+
+        self.widget: Misc = widget if widget is not None else MagicMock()
+        self.keysym_num: int = keysym_num
+        self.x: int = x
+        self.y: int = y
+
+
+class MockImage(Image):
+    """Mocks PIL Image for testing"""
+
+    info: dict = {}  # noqa: RUF012
+    _size: tuple[int, int] = (0, 0)
+
+    def __init__(
+        self, n_frames: int = 1, image_format: str | None = None, mode: str = "P"
+    ) -> None:
+        super().__init__()
+
+        self.format: str | None = image_format
+        self.n_frames: int = n_frames
+        self._mode: str = mode
+        self.closed: bool = False
+
+        if n_frames > 1:  # Like PIL, only set for animations
+            self.is_animated: bool = True
+
+    def convert(self, mode: str) -> Image:  # type: ignore[override]
+        return MockImage(self.n_frames, self.format, mode)
+
+    def save(self, *_: list[Any], **kwargs: dict[str, Any]) -> None:  # type: ignore[override]
+        pass
+
+    def close(self) -> None:
+        self.closed = True
+
+    def copy(self) -> MockImage:
+        return MockImage(self.n_frames, self.format, self.mode)
+
+    def __enter__(self) -> Self:
+        return self
+
+    def __exit__(self, *args: object) -> None:
+        self.close()

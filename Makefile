@@ -35,37 +35,39 @@ else
 	PYTHON_INCLUDES := $(PYTHON_BASE_PREFIX)/include/python3.13/
 endif
 
-C_SOURCE = image_viewer/c_extensions
-C_FLAGS_SHARED = -L$(PYTHON_LIBS) -I$(PYTHON_INCLUDES) -l$(PYTHON_DLL) -march=native -mtune=native -O3 -fno-signed-zeros -s -shared -Wall -Werror $(OS_FLAGS)
+OPTIMIZATION_FLAG=-O3
+C_SOURCE=image_viewer/c_extensions
+C_PYTHON_MODULES=$(C_SOURCE)/python_modules
+C_FLAGS_SHARED=-L$(PYTHON_LIBS) -I$(PYTHON_INCLUDES) -l$(PYTHON_DLL) $(OPTIMIZATION_FLAG) -march=native -mtune=native -ffinite-math-only -fgcse-las -fgcse-sm -fisolate-erroneous-paths-attribute -fno-signed-zeros -frename-registers -fsched-pressure -s -shared -Wall -Werror $(OS_FLAGS)
+
+build-config:
+	gcc $(C_PYTHON_MODULES)/config/config.c $(C_PYTHON_MODULES)/config/_utils.c $(C_FLAGS_SHARED) -I$(C_SOURCE) -o image_viewer/_config.$(COMPILED_EXT)
+	gcc $(C_PYTHON_MODULES)/config/test_utils.c $(C_PYTHON_MODULES)/config/_utils.c $(C_FLAGS_SHARED) -I$(C_SOURCE) -o tests/utils/_config.$(COMPILED_EXT)
+
+build-image-read:
+	gcc $(C_PYTHON_MODULES)/image/read.c $(C_FLAGS_SHARED) -I$(C_SOURCE) -o image_viewer/image/_read.$(COMPILED_EXT) -lturbojpeg
 
 build-util-os-nt:
 ifeq ($(OS),Windows_NT)
-	gcc $(C_SOURCE)/util/os_nt.c $(C_SOURCE)/b64/cencode.c -I$(C_SOURCE) -lshlwapi -loleaut32 -lole32 $(C_FLAGS_SHARED) -o image_viewer/util/_os_nt.$(COMPILED_EXT)
-else
-	@echo "Nothing to do for build-util-os-nt:"
+	gcc $(C_PYTHON_MODULES)/utils/os_nt.c $(C_SOURCE)/b64/cencode.c -I$(C_SOURCE) -lshlwapi -loleaut32 -lole32 $(C_FLAGS_SHARED) -o image_viewer/utils/_os_nt.$(COMPILED_EXT)
 endif
 
-# To call tre_regerror, need to add -lintl -liconv
-build-util-generic:
-	gcc $(C_SOURCE)/util/generic.c $(C_FLAGS_SHARED) -o image_viewer/util/_generic.$(COMPILED_EXT) -Wl,-Bstatic,-Bsymbolic -ltre -Wl,-Bdynamic
-
-
-ifeq ($(OS),Windows_NT)
-    C_JPEG_FLAGS = -static-libgcc -Wl,-Bstatic,--whole-archive -lwinpthread -Wl,--no-whole-archive -lturbojpeg -Wl,-Bdynamic
-else
-    C_JPEG_FLAGS = -lturbojpeg
-endif
-
-build-image-read:
-	gcc $(C_SOURCE)/image/read.c $(C_FLAGS_SHARED) -o image_viewer/image/_read.$(COMPILED_EXT) $(C_JPEG_FLAGS)
-
-build-all: build-util-os-nt build-util-generic build-image-read
+build-all: build-config build-image-read build-util-os-nt
 
 install:
-	$(PYTHON_FOR_INSTALL_STEP) compile.py --strip --no-cleanup
+	$(PYTHON_FOR_INSTALL_STEP) compile.py --assume-this-machine --strip
 
-clean:
-	rm --preserve-root -Irf */__pycache__/ *.dist/ *.build/ build/ tmp*/ *.egg-info/ .mypy_cache/ .pytest_cache/ */ERROR.log *.exe .coverage compilation-report.xml nuitka-crash-report.xml
+validate:
+	ruff check .
+	ruff format --check
+	mypy . --check-untyped-defs
+	codespell
 
 test:
-	$(PYTHON_FOR_INSTALL_STEP) -m pytest --cov=image_viewer --cov-report term-missing
+	$(PYTHON_FOR_INSTALL_STEP) -m pytest -m "not memory_leak" --cov=image_viewer --cov-report term-missing
+
+PYTHONUNBUFFERED=1
+export PYTHONUNBUFFERED
+
+test-memory-leak:
+	$(PYTHON_FOR_INSTALL_STEP) -m pytest -m "memory_leak"

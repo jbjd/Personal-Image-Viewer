@@ -1,11 +1,13 @@
 """Tests for the ViewerApp class."""
 
+from tkinter import Tk
 from unittest.mock import MagicMock, patch
 
 import pytest
+from PIL.Image import Image
 
 from image_viewer.viewer import ViewerApp
-from tests.test_util.mocks import MockEvent
+from tests.utils.mocks import MockEvent
 
 _MODULE_PATH: str = "image_viewer.viewer"
 
@@ -64,7 +66,7 @@ def test_clear_image(viewer: ViewerApp):
 
     viewer.animation_id = "123"
 
-    with patch(f"{_MODULE_PATH}.ImageLoader.reset_and_setup") as mock_reset:
+    with patch(f"{_MODULE_PATH}.ImageIO.reset_and_setup") as mock_reset:
         viewer.clear_current_image_data()
         mock_after_cancel.assert_called_once()
         mock_reset.assert_called_once()
@@ -110,16 +112,14 @@ def test_minimize(viewer: ViewerApp):
 
 
 @pytest.mark.parametrize(
-    "dropdown_show,dropdown_needs_refresh",
-    [
-        (False, False),
-        (False, True),
-        (True, False),
-        (True, True),
-    ],
+    ("dropdown_show", "dropdown_needs_refresh"),
+    [(False, False), (False, True), (True, False), (True, True)],
 )
 def test_update_details_dropdown(
-    viewer: ViewerApp, dropdown_show: bool, dropdown_needs_refresh: bool
+    tk: Tk,  # noqa: ARG001
+    viewer: ViewerApp,
+    dropdown_show: bool,
+    dropdown_needs_refresh: bool,
 ):
     """Should correctly update dropdown given provided state."""
     viewer.canvas.itemconfigure = MagicMock()
@@ -127,7 +127,8 @@ def test_update_details_dropdown(
     viewer.dropdown.show = dropdown_show
     viewer.dropdown.need_refresh = dropdown_needs_refresh
     with patch(
-        "image_viewer.viewer.ImageFileManager.get_cached_metadata", return_value=""
+        "image_viewer.viewer.ImageFileManager.get_current_cached_metadata",
+        return_value="",
     ):
         viewer.update_details_dropdown()
 
@@ -147,3 +148,26 @@ def test_update_details_dropdown(
             viewer.dropdown.id, state="hidden"
         )
         assert viewer.dropdown.need_refresh == dropdown_needs_refresh  # Didn't change
+
+
+@pytest.mark.parametrize("user_input", [" ", "something.png"])
+def test_rename_or_convert(tk: Tk, viewer: ViewerApp, user_input: str):  # noqa: ARG001
+    event = MagicMock()
+    image_io = MagicMock()
+    image_io.PIL_image = Image()
+    viewer.image_io = image_io
+    with (
+        patch("image_viewer.viewer.RenameEntry.get", return_value=user_input),
+        patch(
+            "image_viewer.viewer.ImageFileManager.rename_or_convert_current_image"
+        ) as mock_rename_or_convert_current_image,
+    ):
+        viewer.rename_or_convert(event)
+
+        stripped_input: str = user_input.strip()
+        if stripped_input == "":
+            mock_rename_or_convert_current_image.assert_not_called()
+        else:
+            mock_rename_or_convert_current_image.assert_called_once_with(
+                image_io.PIL_image, stripped_input
+            )

@@ -2,13 +2,12 @@ import os
 from collections.abc import Callable
 from time import perf_counter
 from tkinter import Event, Tk
-from typing import NoReturn
+from typing import Never, TypeVar, TypeVarTuple
 
 from PIL.Image import Image
 from PIL.ImageTk import PhotoImage
 
-from image_viewer.animation.frame import Frame
-from image_viewer.config import Config
+from image_viewer._config import Config, parse_config_file
 from image_viewer.constants import (
     ButtonName,
     Key,
@@ -19,24 +18,29 @@ from image_viewer.constants import (
 )
 from image_viewer.files.file_manager import ImageFileManager
 from image_viewer.image.cache import ImageCache
-from image_viewer.image.loader import ImageLoader
+from image_viewer.image.frame import AnimationFrame
+from image_viewer.image.image_io import ImageIO
 from image_viewer.ui.button import HoverableButtonUIElement, ToggleableButtonUIElement
 from image_viewer.ui.button_icon_factory import ButtonIconFactory
 from image_viewer.ui.canvas import CustomCanvas
 from image_viewer.ui.image import DropdownImageUIElement
 from image_viewer.ui.rename_entry import RenameEntry
-from image_viewer.util.convert import read_memory_as_base64
-from image_viewer.util.os import show_info
-from image_viewer.util.PIL import create_dropdown_image, init_PIL
+from image_viewer.utils.convert import read_memory_as_base64
+from image_viewer.utils.os import ask_yes_no, show_info
+from image_viewer.utils.PIL import create_dropdown_image, init_PIL
 
 if os.name == "nt":
-    from image_viewer.util._os_nt import (
+    from image_viewer.utils._os_nt import (
         drop_file_to_clipboard,
+        init_c_utils,
         open_with,
         read_buffer_as_base64_and_copy_to_clipboard,
     )
 else:
     from tkinter import PhotoImage as tkPhotoImage
+
+_Ts = TypeVarTuple("_Ts")
+_R = TypeVar("_R")
 
 
 class ViewerApp:
@@ -50,16 +54,16 @@ class ViewerApp:
         "dropdown",
         "file_manager",
         "height_ratio",
-        "image_loader",
+        "image_io",
         "image_load_id",
         "move_id",
         "rename_entry",
         "width_ratio",
     )
 
-    def __init__(self, first_image_path: str, path_to_exe_folder: str) -> None:
-        config = Config(path_to_exe_folder)
-        image_cache: ImageCache = ImageCache(config.max_items_in_cache)
+    def __init__(self, first_image_path: str) -> None:
+        config: Config = parse_config_file()
+        image_cache: ImageCache = ImageCache(config.cache_size)
         self.file_manager: ImageFileManager = ImageFileManager(
             first_image_path, image_cache
         )
@@ -72,9 +76,13 @@ class ViewerApp:
         self.image_load_id: str = ""
         self.animation_id: str = ""
 
-        self.app: Tk = self._setup_tk_app(path_to_exe_folder)
+        self.app: Tk = self._setup_tk()
         self.app_id: int = self.app.winfo_id()
-        self.canvas = CustomCanvas(self.app, config.background_color)
+
+        if os.name == "nt":
+            init_c_utils(self.app_id)
+
+        self.canvas = CustomCanvas(self.app, config.ui_background_color)
         screen_height: int = self.canvas.screen_height
         screen_width: int = self.canvas.screen_width
 
@@ -83,19 +91,16 @@ class ViewerApp:
 
         self._load_assets(
             self.canvas,
-            config.font_file,
+            config.ui_font,
             self.canvas.screen_width,
             self._scale_pixels_to_height(32),
         )
 
-        self.image_loader: ImageLoader = ImageLoader(
-            screen_width,
-            screen_height,
-            image_cache,
-            self.animation_loop,
+        self.image_io: ImageIO = ImageIO(
+            screen_width, screen_height, image_cache, self.animation_loop
         )
 
-        init_PIL(config.font_file, self._scale_pixels_to_height(23))
+        init_PIL(config.ui_font, self._scale_pixels_to_height(23))
 
         self._init_image_display()
 
@@ -103,18 +108,18 @@ class ViewerApp:
         self._add_binds_to_tk(config)
 
     @staticmethod
-    def _setup_tk_app(path_to_exe_folder: str) -> Tk:
+    def _setup_tk() -> Tk:
         """Creates and setups Tk class"""
         app: Tk = Tk()
         app.attributes("-fullscreen", True)
 
         if os.name == "nt":
             app.state("zoomed")
-            app.wm_iconbitmap(default=os.path.join(path_to_exe_folder, "icon/icon.ico"))
+            app.wm_iconbitmap(default="icon/icon.ico")
         else:
             app.wm_iconphoto(
                 True,
-                tkPhotoImage(file=os.path.join(path_to_exe_folder, "icon/icon.png")),
+                tkPhotoImage(file="icon/icon.png"),
             )
 
         return app
@@ -142,15 +147,16 @@ class ViewerApp:
         app.bind("<Escape>", self.handle_esc)
         app.bind("<KeyRelease>", self.handle_key_release)
         app.bind(
-            config.keybinds.copy_to_clipboard_as_base64,
+            config.kb_copy_to_clipboard_as_base64,
             self.copy_to_clipboard_as_base64,
         )
-        app.bind(config.keybinds.refresh, self.refresh)
-        app.bind(config.keybinds.reload_image, lambda _: self.load_image_unblocking())
-        app.bind(config.keybinds.rename, self.toggle_show_rename_window)
-        app.bind(config.keybinds.show_details, self.show_details)
-        app.bind(config.keybinds.move_to_new_file, self.move_to_new_file)
-        app.bind(config.keybinds.undo_most_recent_action, self.undo_most_recent_action)
+        app.bind(config.kb_refresh, self.refresh)
+        app.bind(config.kb_reload_image, lambda _: self.load_image_unblocking())
+        app.bind(config.kb_rename, self.toggle_show_rename_window)
+        app.bind(config.kb_show_details, self.show_details)
+        app.bind(config.kb_move_to_new_file, self.move_to_new_file)
+        app.bind(config.kb_undo_most_recent_action, self.undo_most_recent_action)
+        app.bind(config.kb_optimize_image, self.optimize_current_image)
         app.bind(
             "<equal>",
             lambda e: self._only_for_this_window(
@@ -174,16 +180,12 @@ class ViewerApp:
 
         if os.name == "nt":
             app.bind(
-                "<Control-b>",
-                lambda _: open_with(self.app_id, self.file_manager.path_to_image),
+                "<Control-b>", lambda _: open_with(self.file_manager.path_to_image)
             )
             app.bind(
                 "<Control-c>",
                 lambda e: self._only_for_this_window(
-                    e,
-                    drop_file_to_clipboard,
-                    self.app_id,
-                    self.file_manager.path_to_image,
+                    e, drop_file_to_clipboard, self.file_manager.path_to_image
                 ),
             )
             app.bind("<MouseWheel>", self.handle_mouse_wheel)
@@ -217,9 +219,7 @@ class ViewerApp:
 
         button_x_offset: int = screen_width - icon_size
         exit_button = HoverableButtonUIElement(
-            canvas,
-            button_icon_factory.make_exit_icons(),
-            self.exit,
+            canvas, button_icon_factory.make_exit_icons(), self.exit
         )
         exit_button.create(ButtonName.EXIT, button_x_offset)
 
@@ -234,10 +234,7 @@ class ViewerApp:
             button_icon_factory.make_dropdown_icons()
         )
         dropdown_button = ToggleableButtonUIElement(
-            canvas,
-            dropdown_icons_down,
-            dropdown_icons_up,
-            self.toggle_show_dropdown,
+            canvas, dropdown_icons_down, dropdown_icons_up, self.toggle_show_dropdown
         )
         dropdown_button.create(ButtonName.DROPDOWN, button_x_offset)
 
@@ -260,11 +257,7 @@ class ViewerApp:
 
         rename_window_width: int = self._scale_pixels_to_width(250)
         rename_id: int = canvas.create_window(
-            0,
-            0,
-            width=rename_window_width,
-            height=int(icon_size * 0.8),
-            anchor="nw",
+            0, 0, width=rename_window_width, height=int(icon_size * 0.8), anchor="nw"
         )
         self.rename_entry: RenameEntry = RenameEntry(
             self.app, canvas, rename_id, rename_window_width, font=font
@@ -283,25 +276,54 @@ class ViewerApp:
         """Starts tkinter main loop"""
         self.app.mainloop()
 
+    def unresponsive_long_running_process(
+        self, function: Callable[[*_Ts], _R], *args: *_Ts
+    ) -> _R:
+        self.app.config(cursor="watch")
+        self.app.update()
+        try:
+            return function(*args)
+        finally:
+            self.app.config(cursor="")
+
     # Functions handling specific user input
+
+    def optimize_current_image(self, _: Event) -> None:
+        """Attempts to optimize the current image's size without affecting quality.
+
+        :param _: Unused tkinter event"""
+
+        if self.image_io.PIL_image.format != "PNG":
+            return
+
+        if ask_yes_no(
+            "Optimize Image",
+            (
+                "Optimize current image size?\nQuality is not affected, "
+                "color depth might reduce if visually equivalent\n"
+                "Program may be unresponsive for a bit."
+            ),
+        ) and self.unresponsive_long_running_process(
+            self.image_io.optimize_png_image, self.file_manager.path_to_image
+        ):
+            self.dropdown.need_refresh = True
+            self.update_details_dropdown()
 
     def handle_mouse_wheel(self, event: Event) -> None:
         """On mouse wheel: either moves between images
         or zooms when right mouse held"""
         right_mouse_held: bool = getattr(event, "state", 0) & 1024 == 1024
+        forward_scroll: bool = event.delta > 0 if os.name == "nt" else event.num == 4
 
         if right_mouse_held:
             self.load_zoomed_or_rotated_image_unblocking(
-                ZoomDirection.IN if event.delta > 0 else ZoomDirection.OUT
+                ZoomDirection.IN if forward_scroll else ZoomDirection.OUT
             )
         else:
-            self.move(Movement.BACKWARD if event.delta > 0 else Movement.FORWARD)
+            self.move(Movement.BACKWARD if forward_scroll else Movement.FORWARD)
 
     def handle_rotate_image(self, event: Event) -> None:
         """Rotates image, saves it to disk, and updates the display"""
-        if self.currently_animating():
-            return
-
         match event.keysym_num:
             case Key.LEFT:
                 rotation = Rotation.LEFT
@@ -322,7 +344,7 @@ class ViewerApp:
             self.show_topbar()
 
     def _only_for_this_window(
-        self, event: Event, function_to_call: Callable[..., None], *args
+        self, event: Event, function_to_call: Callable[[*_Ts], None], *args: *_Ts
     ) -> None:
         """Given a callable that accepts a tkinter Event,
         only call it if self.app is the target"""
@@ -363,14 +385,14 @@ class ViewerApp:
             return
         self.exit()
 
-    def handle_up_arrow(self, _: Event):
+    def handle_up_arrow(self, _: Event) -> None:
         """Hides either dropdown or topbar in that order if either visible"""
         if self.canvas.is_widget_visible(self.dropdown.id):
             self.canvas.mock_button_click(ButtonName.DROPDOWN)
         else:
             self.hide_topbar()
 
-    def handle_down_arrow(self, _: Event):
+    def handle_down_arrow(self, _: Event) -> None:
         """Shows either topbar or dropdown in that order if either not visible"""
         if self.canvas.is_widget_visible(TkTags.TOPBAR):
             if not self.canvas.is_widget_visible(self.dropdown.id):
@@ -388,34 +410,32 @@ class ViewerApp:
         it to the clipboard"""
 
         if os.name == "nt":
-            read_buffer_as_base64_and_copy_to_clipboard(self.image_loader.image_buffer)
+            read_buffer_as_base64_and_copy_to_clipboard(self.image_io.image_view)
         else:
             # TODO: See if I can use memoryview for clipboard_append
             # so conversion can be in C
-            image_base64: str = read_memory_as_base64(
-                self.image_loader.image_buffer.view
-            )
+            image_base64: str = read_memory_as_base64(self.image_io.image_view.view)
 
             self.app.clipboard_clear()
             self.app.clipboard_append(image_base64)
 
     def show_details(self, _: Event | None = None) -> None:
         """Gets details on image and shows it in a UI popup"""
-        details: str | None = self.file_manager.get_image_details(
-            self.image_loader.PIL_image
+        details: str | None = self.file_manager.get_current_image_details(
+            self.image_io.PIL_image
         )
 
         if details is not None:
-            show_info(self.app_id, "Image Details", details)
+            show_info("Image Details", details)
 
     def load_zoomed_or_rotated_image(
         self, direction: ZoomDirection | None, rotation: Rotation | None
     ) -> None:
         """Loads zoomed image and updates display"""
-        if direction is None and rotation is None:
+        if __debug__ and direction is None and rotation is None:
             raise ValueError
 
-        zoomed_image: Image | None = self.image_loader.get_zoomed_or_rotated_image(
+        zoomed_image: Image | None = self.image_io.get_zoomed_or_rotated_image(
             direction, rotation
         )
         if zoomed_image is not None:
@@ -427,7 +447,7 @@ class ViewerApp:
         self, direction: ZoomDirection | None = None, rotation: Rotation | None = None
     ) -> None:
         """Starts new thread for loading zoomed image"""
-        if self.currently_animating():
+        if not self.image_io.zoom_rotate_allowed:
             return
 
         self._start_image_load(self.load_zoomed_or_rotated_image, direction, rotation)
@@ -439,13 +459,13 @@ class ViewerApp:
         if self.file_manager.move_to_new_file():
             self.load_image()
 
-    def exit(self, exit_code: int = 0) -> NoReturn:
+    def exit(self, exit_code: int = 0) -> Never:
         """Safely exits the program"""
         try:
             self.canvas.delete(self.canvas.file_name_text_id)
             self.app.quit()
             self.app.destroy()
-            self.image_loader.reset_and_setup()
+            self.image_io.reset_and_setup()
         except AttributeError:
             pass
 
@@ -547,11 +567,13 @@ class ViewerApp:
     def rename_or_convert(self, _: Event) -> None:
         """Tries to rename or convert current image based on input.
         Makes window flash red if operation failed"""
-        user_input: str = self.rename_entry.get()
+        user_input: str = self.rename_entry.get().strip()
         if user_input == "":
             return
         try:
-            self.file_manager.rename_or_convert_current_image(user_input)
+            self.file_manager.rename_or_convert_current_image(
+                self.image_io.PIL_image, user_input
+            )
         except (OSError, FileExistsError, ValueError):
             self.rename_entry.error_flash()
             return
@@ -580,7 +602,7 @@ class ViewerApp:
 
     def _load_image_at_current_path(self) -> Image | None:
         """Wraps ImageLoader's load call with path from FileManager"""
-        return self.image_loader.load_image(self.file_manager.path_to_image)
+        return self.image_io.load_image(self.file_manager.path_to_image)
 
     def load_image(self, movement_on_failure: Movement = Movement.NONE) -> None:
         """Loads an image and updates the display. On load failure, bad images are
@@ -665,7 +687,7 @@ class ViewerApp:
 
         :param ms_backoff: Milliseconds until next frame should appear."""
         start: float = perf_counter()
-        frame: Frame | None = self.image_loader.get_next_frame()
+        frame: AnimationFrame | None = self.image_io.get_next_frame()
 
         ms_until_next_frame: int
         if frame is None:  # trying to display frame before it is loaded
@@ -674,7 +696,9 @@ class ViewerApp:
         else:
             self._update_existing_image_display(frame.image)
             elapsed: int = round((perf_counter() - start) * 1000)
-            ms_until_next_frame = max(frame.ms_until_next_frame - elapsed, 1)
+
+            # Tkinter handles negative values
+            ms_until_next_frame = frame.ms_until_next_frame - elapsed
 
         self.animation_loop(ms_until_next_frame, ms_backoff)
 
@@ -683,7 +707,7 @@ class ViewerApp:
         if self.currently_animating():
             self.app.after_cancel(self.animation_id)
             self.animation_id = ""
-        self.image_loader.reset_and_setup()
+        self.image_io.reset_and_setup()
 
     def update_details_dropdown(self) -> None:
         """Updates the information and state of dropdown image."""
@@ -691,7 +715,7 @@ class ViewerApp:
         if dropdown.show:
             if dropdown.need_refresh:
                 try:
-                    details: str = self.file_manager.get_cached_metadata(
+                    details: str = self.file_manager.get_current_cached_metadata(
                         get_all_details=False
                     )
                 except KeyError:
@@ -705,7 +729,7 @@ class ViewerApp:
             self.canvas.itemconfigure(dropdown.id, state="hidden")
 
     def _start_image_load(
-        self, image_load_function: Callable[..., None], *args
+        self, image_load_function: Callable[[*_Ts], None], *args: *_Ts
     ) -> None:
         """Cancels any previous image load tkinter thread and starts a new one.
 

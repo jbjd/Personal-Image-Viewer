@@ -1,28 +1,11 @@
 import pytest
 
-from image_viewer.constants import ImageFormats, Movement
-from image_viewer.image.file import ImageName, ImageNameList, magic_number_guess
+from image_viewer.constants import Movement
+from image_viewer.image.file import ImageName, ImageNameList
 
 
 @pytest.mark.parametrize(
-    "magic_bytes,expected_format",
-    [
-        (b"\x89PNG", ImageFormats.PNG),
-        (b"RIFF", ImageFormats.WEBP),
-        (b"GIF8", ImageFormats.GIF),
-        (b"DDS ", ImageFormats.DDS),
-        (b"\xff\xd8\xff\xe0", ImageFormats.JPEG),
-        (b"\xff\xd8\xff\xed", ImageFormats.JPEG),
-        (b"ABCD", ImageFormats.AVIF),  # default to AVIF
-    ],
-)
-def test_magic_number_guess(magic_bytes: bytes, expected_format: ImageFormats):
-    """Ensure correct image type guessed"""
-    assert magic_number_guess(magic_bytes) == expected_format
-
-
-@pytest.mark.parametrize(
-    "index_movement,starting_index,expected_index",
+    ("index_movement", "starting_index", "expected_index"),
     [
         (Movement.BACKWARD, 0, 3),
         (Movement.NONE, 0, 0),
