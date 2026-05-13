@@ -65,7 +65,7 @@ def test_jpeg_fit_to_screen_large_image(image_io: ImageIO, image_resizer: ImageR
     assert read_image_response is not None
 
     scaled_image: Image | None = image_resizer.get_jpeg_fit_to_screen(
-        image, read_image_response.image_buffer
+        image, read_image_response.image_view
     )
 
     # Scaled based on 1920x1080 screen
