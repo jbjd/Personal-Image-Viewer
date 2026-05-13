@@ -53,4 +53,4 @@ def test_get_files_in_folder():
     """Test that get_files_in_folder correctly finds files in dir"""
 
     files = list(get_files_in_folder(IMG_DIR))
-    assert len(files) == 5
+    assert len(files) == 8
