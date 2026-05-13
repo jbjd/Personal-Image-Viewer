@@ -76,7 +76,7 @@ class ViewerApp:
         self.image_load_id: str = ""
         self.animation_id: str = ""
 
-        self.app: Tk = self._setup_tk_app()
+        self.app: Tk = self._setup_tk()
         self.app_id: int = self.app.winfo_id()
 
         if os.name == "nt":
@@ -108,7 +108,7 @@ class ViewerApp:
         self._add_binds_to_tk(config)
 
     @staticmethod
-    def _setup_tk_app() -> Tk:
+    def _setup_tk() -> Tk:
         """Creates and setups Tk class"""
         app: Tk = Tk()
         app.attributes("-fullscreen", True)
@@ -571,7 +571,9 @@ class ViewerApp:
         if user_input == "":
             return
         try:
-            self.file_manager.rename_or_convert_current_image(user_input)
+            self.file_manager.rename_or_convert_current_image(
+                self.image_io.PIL_image, user_input
+            )
         except (OSError, FileExistsError, ValueError):
             self.rename_entry.error_flash()
             return

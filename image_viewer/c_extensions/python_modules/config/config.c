@@ -71,47 +71,47 @@ static inline void Config_SetDefaults(PyObject *self, Config *config)
 {
     if (config->cache_size == NULL)
     {
-        config->cache_size = PyObject_GetAttrString(self, "DEFAULT_CACHE_SIZE");
+        config->cache_size = PyObject_GetAttrString(self, VARIABLE_NAME(DEFAULT_CACHE_SIZE));
     }
     if (config->kb_copy_to_clipboard_as_base64 == NULL)
     {
-        config->kb_copy_to_clipboard_as_base64 = PyObject_GetAttrString(self, "DEFAULT_KB_COPY_TO_CLIPBOARD_AS_BASE64");
+        config->kb_copy_to_clipboard_as_base64 = PyObject_GetAttrString(self, VARIABLE_NAME(DEFAULT_KB_COPY_TO_CLIPBOARD_AS_BASE64));
     }
     if (config->kb_move_to_new_file == NULL)
     {
-        config->kb_move_to_new_file = PyObject_GetAttrString(self, "DEFAULT_KB_MOVE_TO_NEW_FILE");
+        config->kb_move_to_new_file = PyObject_GetAttrString(self, VARIABLE_NAME(DEFAULT_KB_MOVE_TO_NEW_FILE));
     }
     if (config->kb_optimize_image == NULL)
     {
-        config->kb_optimize_image = PyObject_GetAttrString(self, "DEFAULT_KB_OPTIMIZE_IMAGE");
+        config->kb_optimize_image = PyObject_GetAttrString(self, VARIABLE_NAME(DEFAULT_KB_OPTIMIZE_IMAGE));
     }
     if (config->kb_refresh == NULL)
     {
-        config->kb_refresh = PyObject_GetAttrString(self, "DEFAULT_KB_REFRESH");
+        config->kb_refresh = PyObject_GetAttrString(self, VARIABLE_NAME(DEFAULT_KB_REFRESH));
     }
     if (config->kb_reload_image == NULL)
     {
-        config->kb_reload_image = PyObject_GetAttrString(self, "DEFAULT_KB_RELOAD_IMAGE");
+        config->kb_reload_image = PyObject_GetAttrString(self, VARIABLE_NAME(DEFAULT_KB_RELOAD_IMAGE));
     }
     if (config->kb_rename == NULL)
     {
-        config->kb_rename = PyObject_GetAttrString(self, "DEFAULT_KB_RENAME");
+        config->kb_rename = PyObject_GetAttrString(self, VARIABLE_NAME(DEFAULT_KB_RENAME));
     }
     if (config->kb_show_details == NULL)
     {
-        config->kb_show_details = PyObject_GetAttrString(self, "DEFAULT_KB_SHOW_DETAILS");
+        config->kb_show_details = PyObject_GetAttrString(self, VARIABLE_NAME(DEFAULT_KB_SHOW_DETAILS));
     }
     if (config->kb_undo_most_recent_action == NULL)
     {
-        config->kb_undo_most_recent_action = PyObject_GetAttrString(self, "DEFAULT_KB_UNDO_MOST_RECENT_ACTION");
+        config->kb_undo_most_recent_action = PyObject_GetAttrString(self, VARIABLE_NAME(DEFAULT_KB_UNDO_MOST_RECENT_ACTION));
     }
     if (config->ui_background_color == NULL)
     {
-        config->ui_background_color = PyObject_GetAttrString(self, "DEFAULT_UI_BACKGROUND_COLOR");
+        config->ui_background_color = PyObject_GetAttrString(self, VARIABLE_NAME(DEFAULT_UI_BACKGROUND_COLOR));
     }
     if (config->ui_font == NULL)
     {
-        config->ui_font = PyObject_GetAttrString(self, "DEFAULT_UI_FONT");
+        config->ui_font = PyObject_GetAttrString(self, VARIABLE_NAME(DEFAULT_UI_FONT));
     }
 }
 // Config End

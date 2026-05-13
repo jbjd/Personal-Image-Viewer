@@ -4,49 +4,43 @@ import os
 import tempfile
 from unittest.mock import MagicMock, mock_open, patch
 
+import pytest
 from PIL import UnidentifiedImageError
 from PIL.Image import Image, new
 
 from image_viewer.image.cache import ImageCacheEntry
 from image_viewer.image.frame import AnimationFrame
 from image_viewer.image.image_io import ImageIO, ReadImageResponse
-from tests.conftest import EXAMPLE_JPEG_PATH
+from tests.conftest import (
+    EXAMPLE_AVIF_PATH,
+    EXAMPLE_DDS_PATH,
+    EXAMPLE_GIF_PATH,
+    EXAMPLE_JPEG_PATH,
+    EXAMPLE_PNG_PATH,
+    EXAMPLE_WEBP_PATH,
+)
 
 _MODULE_PATH: str = "image_viewer.image.image_io"
 
 
-def test_next_frame(image_io: ImageIO):
-    """Test expected behavior from getting next frame and resetting"""
+@pytest.mark.parametrize(
+    ("input_image_path", "expected_format"),
+    [
+        (EXAMPLE_AVIF_PATH, "AVIF"),
+        (EXAMPLE_DDS_PATH, "DDS"),
+        (EXAMPLE_GIF_PATH, "GIF"),
+        (EXAMPLE_JPEG_PATH, "JPEG"),
+        (EXAMPLE_PNG_PATH, "PNG"),
+        (EXAMPLE_WEBP_PATH, "WEBP"),
+    ],
+)
+def test_load_image(image_io: ImageIO, input_image_path: str, expected_format: str):
+    """When an image of the same name is in cache, don't load from disk"""
 
-    frame1, frame2, frame3 = (
-        AnimationFrame(Image()),
-        AnimationFrame(Image()),
-        AnimationFrame(Image()),
-    )
-    image_io.animation_frames = [frame1, frame2, frame3]
+    image_io.load_image(input_image_path)
 
-    example_frame: AnimationFrame | None = image_io.get_next_frame()
-    assert example_frame is frame2
-    example_frame = image_io.get_next_frame()
-    assert example_frame is frame3
-    example_frame = image_io.get_next_frame()
-    assert example_frame is frame1
-    example_frame = image_io.get_next_frame()
-
-    # if next is None, should return None but not increment internal frame index
-    image_io.animation_frames[2] = None
-    example_frame = image_io.get_next_frame()
-    assert example_frame is None
-    assert image_io.frame_index == 1
-
-    # reset should set all animation variables to defaults
-    image_io.reset_and_setup()
-    assert len(image_io.animation_frames) == 0
-    assert image_io.frame_index == 0
-
-    # program may try to get a frame when the animation frame list is empty
-    example_frame = image_io.get_next_frame()
-    assert example_frame is None
+    assert image_io.PIL_image is not None
+    assert image_io.PIL_image.format == expected_format
 
 
 def test_load_image_error_on_open(image_io: ImageIO):
@@ -80,7 +74,7 @@ def test_load_image_in_cache(image_io: ImageIO):
         patch.object(
             ImageIO,
             "read_image",
-            lambda *_: ReadImageResponse(mock_image_buffer, Image(), image_format),
+            lambda *_: ReadImageResponse(mock_image_buffer, Image()),
         ),
         patch(f"{_MODULE_PATH}.open_image", lambda *_: Image()),
     ):
@@ -103,12 +97,38 @@ def test_load_image_resize_error(image_io: ImageIO):
         assert not image_io._state.zoom_rotate_allowed
 
 
-def test_optimize_png_image_only_pngs(image_io: ImageIO):
-    """Should not run on non-PNGs."""
+def test_get_next_frame(image_io: ImageIO):
+    """Test expected behavior from getting next frame and resetting"""
 
-    image_io.load_image(EXAMPLE_JPEG_PATH)
+    frame1, frame2, frame3 = (
+        AnimationFrame(Image()),
+        AnimationFrame(Image()),
+        AnimationFrame(Image()),
+    )
+    image_io.animation_frames = [frame1, frame2, frame3]
 
-    assert not image_io.optimize_png_image("")
+    example_frame: AnimationFrame | None = image_io.get_next_frame()
+    assert example_frame is frame2
+    example_frame = image_io.get_next_frame()
+    assert example_frame is frame3
+    example_frame = image_io.get_next_frame()
+    assert example_frame is frame1
+    example_frame = image_io.get_next_frame()
+
+    # if next is None, should return None but not increment internal frame index
+    image_io.animation_frames[2] = None
+    example_frame = image_io.get_next_frame()
+    assert example_frame is None
+    assert image_io.frame_index == 1
+
+    # reset should set all animation variables to defaults
+    image_io.reset_and_setup()
+    assert len(image_io.animation_frames) == 0
+    assert image_io.frame_index == 0
+
+    # program may try to get a frame when the animation frame list is empty
+    example_frame = image_io.get_next_frame()
+    assert example_frame is None
 
 
 def test_optimize_png_image(image_io: ImageIO):
@@ -147,3 +167,11 @@ def test_optimize_png_image(image_io: ImageIO):
         image_io.reset_and_setup()
         original_image.close()
         os.remove(original_image.name)
+
+
+def test_optimize_png_image_non_pngs(image_io: ImageIO):
+    """Should not run on non-PNGs."""
+
+    image_io.load_image(EXAMPLE_JPEG_PATH)
+
+    assert not image_io.optimize_png_image("")
