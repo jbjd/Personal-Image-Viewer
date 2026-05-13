@@ -1,77 +1,51 @@
-import tempfile
-from unittest.mock import mock_open, patch
-
 import pytest
 
-from image_viewer.constants import ImageFormats
-from image_viewer.utils.convert import try_convert_file_and_save_new
-from tests.conftest import EXAMPLE_JPEG_PATH, EXAMPLE_PNG_PATH
+from image_viewer.image._read import AVIF, DDS, GIF, JPEG, PNG, WEBP
+from image_viewer.utils.convert import try_convert_image_and_save_new
 from tests.utils.mocks import MockImage
-
-_MODULE_PATH: str = "image_viewer.utils.convert"
-
-
-def _mock_open_image(_: str) -> MockImage:
-    return MockImage()
-
-
-def _mock_open_animated_image(_: str) -> MockImage:
-    return MockImage(8)
 
 
 def test_animated_to_not_animated():
-    with (
-        patch(f"{_MODULE_PATH}.open_image", _mock_open_animated_image),
-        patch(f"{_MODULE_PATH}.magic_number_guess", lambda _: "GIF"),
-        patch("builtins.open", mock_open()),
-        pytest.raises(ValueError),
-    ):
-        try_convert_file_and_save_new("asdf.gif", "hjkl.jpg", "jpg")
+    """Should raise ValueError when converted animated image to a unsupported format."""
+    with pytest.raises(ValueError):
+        try_convert_image_and_save_new(
+            MockImage(n_frames=3, image_format="GIF"), "hjkl.jpg", "jpg"
+        )
 
 
-def test_convert_jpeg():
-    with (
-        patch(f"{_MODULE_PATH}.open_image", _mock_open_image),
-        patch("builtins.open", mock_open()),
-    ):
-        # will not convert if jpeg variant
-        with patch(f"{_MODULE_PATH}.magic_number_guess", lambda _: ImageFormats.JPEG):
-            assert not try_convert_file_and_save_new("old.jpg", "new.jpe", "jpe")
-        # otherwise will succeed
-        with patch(f"{_MODULE_PATH}.magic_number_guess", lambda _: ImageFormats.PNG):
-            assert try_convert_file_and_save_new("old.png", "new.jpg", "jpg")
+def test_jpeg_to_jpeg_variant():
+    """Should return False when converting between jpeg variants like jpg and jpe."""
+    assert not try_convert_image_and_save_new(
+        MockImage(image_format="JPEG"), "new.jpe", "jpe"
+    )
 
 
 def test_convert_to_bad_type():
-    """Should return False if an invalid image extension is passed"""
-    with (
-        patch(f"{_MODULE_PATH}.open_image", _mock_open_image),
-        patch("image_viewer.image.file.magic_number_guess", lambda _: "JPEG"),
-        patch("builtins.open", mock_open()),
-    ):
-        assert not try_convert_file_and_save_new("old.jpg", "new.txt", "txt")
+    """Should return False if an invalid image extension is passed."""
+    assert not try_convert_image_and_save_new(
+        MockImage(image_format="PNG"), "new.txt", "txt"
+    )
+
+    assert not try_convert_image_and_save_new(MockImage(), "new.png", "png")
 
 
 @pytest.mark.parametrize(
-    ("image_file_path", "target_format"),
+    ("true_file_extension", "target_format"),
     [
-        (EXAMPLE_PNG_PATH, ImageFormats.JPEG),
-        (EXAMPLE_PNG_PATH, ImageFormats.WEBP),
-        (EXAMPLE_PNG_PATH, ImageFormats.GIF),
-        (EXAMPLE_PNG_PATH, ImageFormats.DDS),
-        (EXAMPLE_PNG_PATH, ImageFormats.PNG),
-        (EXAMPLE_JPEG_PATH, ImageFormats.PNG),
+        (WEBP, PNG),
+        (PNG, JPEG),
+        (PNG, WEBP),
+        (AVIF, GIF),
+        (PNG, DDS),
+        (PNG, PNG),
+        (JPEG, JPEG),
     ],
 )
-def test_convert_between_types(image_file_path: str, target_format: str):
+def test_convert_between_types(true_file_extension: str, target_format: str):
     """Should attempt conversion unless image is already target format, ignoring
     the file format in the path and using the format in the files magic bytes"""
 
-    with tempfile.TemporaryFile() as temp_file:
-        converted: bool = try_convert_file_and_save_new(
-            image_file_path, temp_file, target_format, quality=50
-        )
-        if image_file_path.endswith(target_format.lower()):
-            assert not converted
-        else:
-            assert converted
+    converted: bool = try_convert_image_and_save_new(
+        MockImage(image_format=true_file_extension.upper()), "new.jpg", target_format
+    )
+    assert converted is (true_file_extension != target_format)

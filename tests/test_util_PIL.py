@@ -5,7 +5,6 @@ import pytest
 from PIL.Image import Image, new
 
 from image_viewer._config import DEFAULT_UI_FONT
-from image_viewer.constants import ImageFormats
 from image_viewer.image.file import ImageName
 from image_viewer.utils.PIL import (
     _preinit,
@@ -120,19 +119,6 @@ def test_get_mode_info(mode: str, expected_readable_mode: str, expected_bpp: int
 def test_preinit():
     """Should import supported formats and set PIL as initialized"""
 
-    supported_formats: set[str] = {
-        "PIL.AvifImagePlugin",
-        "PIL.JpegImagePlugin",
-        "PIL.GifImagePlugin",
-        "PIL.PngImagePlugin",
-        "PIL.WebPImagePlugin",
-        "PIL.DdsImagePlugin",
-    }
-
-    assert len(supported_formats) == len(ImageFormats), (
-        "Test not accounting for all supported formats"
-    )
-
     mock_import = MagicMock()
     mock_register_open = MagicMock()
     mock_image_module = MagicMock()
@@ -149,6 +135,15 @@ def test_preinit():
 
     # 2 is PIL's marker for everything initialized
     assert mock_image_module._initialized == 2
+
+    supported_formats: set[str] = {
+        "PIL.AvifImagePlugin",
+        "PIL.JpegImagePlugin",
+        "PIL.GifImagePlugin",
+        "PIL.PngImagePlugin",
+        "PIL.WebPImagePlugin",
+        "PIL.DdsImagePlugin",
+    }
 
     # Throw out irrelevant imports since some others happen during the call
     imported_formats: set[str] = {
