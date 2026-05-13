@@ -39,7 +39,7 @@ static inline HWND PyLong_AsHWND(PyObject *pyLong)
  * @param data to set to clipboard
  * @return WINBOOL that's true when successful. If it fails, call GetLastError for information.
  */
-static inline WINBOOL set_win_clipboard(const UINT format, void *data)
+static inline WINBOOL _set_win_clipboard(const UINT format, void *data)
 {
     return !OpenClipboard(g_hwnd) || !EmptyClipboard() || SetClipboardData(format, data) == NULL || !CloseClipboard() || 1;
 }
@@ -54,7 +54,7 @@ static inline WINBOOL set_win_clipboard(const UINT format, void *data)
  * @param size Length of provided string
  * @return Newly malloc'ed string
  */
-static inline char *normalize_str_for_file_op(const char *str, const Py_ssize_t size)
+static inline char *_normalize_str_for_file_op(const char *str, const Py_ssize_t size)
 {
     Py_ssize_t i = 0;
     char *buffer = (char *)malloc((size + 2) * sizeof(char));
@@ -76,7 +76,7 @@ static inline char *normalize_str_for_file_op(const char *str, const Py_ssize_t 
  *
  * @param str A string to double null terminate
  */
-static inline void ensure_double_null_terminated(char *str)
+static inline void _ensure_double_null_terminated(char *str)
 {
     size_t strLen = strlen(str);
     str[strLen + 1] = '\0';
@@ -122,19 +122,19 @@ static PyObject *ask_yes_no(PyObject *self, PyObject *args)
 
 static PyObject *trash_file(PyObject *self, PyObject *arg)
 {
-    Py_ssize_t rawPathSize;
-    const char *rawPath = PyUnicode_AsUTF8AndSize(arg, &rawPathSize);
-    if (unlikely(rawPath == NULL))
+    Py_ssize_t path_size;
+    const char *path = PyUnicode_AsUTF8AndSize(arg, &path_size);
+    if (unlikely(path == NULL))
     {
         return NULL;
     }
 
     Py_BEGIN_ALLOW_THREADS;
 
-    char *path = normalize_str_for_file_op(rawPath, rawPathSize);
+    char *path = _normalize_str_for_file_op(path, path_size);
 
-    SHFILEOPSTRUCTA fileOp = {g_hwnd, FO_DELETE, path, NULL, FOF_ALLOWUNDO | FOF_FILESONLY | FOF_NOCONFIRMATION | FOF_NOERRORUI};
-    SHFileOperationA(&fileOp);
+    SHFILEOPSTRUCTA file_op = {g_hwnd, FO_DELETE, path, NULL, FOF_ALLOWUNDO | FOF_FILESONLY | FOF_NOCONFIRMATION | FOF_NOERRORUI};
+    SHFileOperationA(&file_op);
 
     free(path);
 
@@ -145,9 +145,9 @@ static PyObject *trash_file(PyObject *self, PyObject *arg)
 
 static PyObject *restore_file(PyObject *self, PyObject *arg)
 {
-    Py_ssize_t rawOriginalPathSize;
-    const char *rawOriginalPath = PyUnicode_AsUTF8AndSize(arg, &rawOriginalPathSize);
-    if (unlikely(rawOriginalPath == NULL))
+    Py_ssize_t target_path_size;
+    const char *raw_target_path = PyUnicode_AsUTF8AndSize(arg, &target_path_size);
+    if (unlikely(raw_target_path == NULL))
     {
         return NULL;
     }
@@ -158,125 +158,125 @@ static PyObject *restore_file(PyObject *self, PyObject *arg)
 
     CoInitializeEx(NULL, COINIT_APARTMENTTHREADED);
 
-    LPITEMIDLIST pidlRecycleBin;
-    hr = SHGetSpecialFolderLocation(g_hwnd, CSIDL_BITBUCKET, &pidlRecycleBin);
+    LPITEMIDLIST pidl_recycle_bin;
+    hr = SHGetSpecialFolderLocation(g_hwnd, CSIDL_BITBUCKET, &pidl_recycle_bin);
     if (FAILED(hr))
     {
         goto end;
     }
 
-    IShellFolder2 *recycleBinFolder = NULL;
-    hr = SHBindToObject(NULL, pidlRecycleBin, NULL, &IID_IShellFolder2, (void **)&recycleBinFolder);
+    IShellFolder2 *recycle_bin_folder = NULL;
+    hr = SHBindToObject(NULL, pidl_recycle_bin, NULL, &IID_IShellFolder2, (void **)&recycle_bin_folder);
     if (FAILED(hr))
     {
         goto fail_bind;
     }
 
-    IEnumIDList *recycleBinIterator = NULL;
-    hr = recycleBinFolder->lpVtbl->EnumObjects(recycleBinFolder, g_hwnd, SHCONTF_NONFOLDERS, &recycleBinIterator);
+    IEnumIDList *recycle_bin_iterator = NULL;
+    hr = recycle_bin_folder->lpVtbl->EnumObjects(recycle_bin_folder, g_hwnd, SHCONTF_NONFOLDERS, &recycle_bin_iterator);
     if (FAILED(hr))
     {
         goto fail_enum;
     }
 
-    char *originalPath = normalize_str_for_file_op(rawOriginalPath, rawOriginalPathSize);
-    originalPath[0] = tolower(originalPath[0]); // Bin API can return upper or lower case drives so need to normalize on something
-    char *targetToRestore = NULL;
-    DATE targetRecycledTime = 0;
+    char *target_path = _normalize_str_for_file_op(raw_target_path, target_path_size);
+    target_path[0] = tolower(target_path[0]); // Bin API can return upper or lower case drives so need to normalize on something
+    char *to_restore = NULL;
+    DATE to_restore_recycled_time = 0;
 
-    LPITEMIDLIST pidlItem;
-    while (recycleBinIterator->lpVtbl->Next(recycleBinIterator, 1, &pidlItem, NULL) == S_OK)
+    LPITEMIDLIST pidl_item;
+    while (recycle_bin_iterator->lpVtbl->Next(recycle_bin_iterator, 1, &pidl_item, NULL) == S_OK)
     {
-        STRRET displayName;
+        STRRET deleted_file_display_name_ret;
 
-        hr = recycleBinFolder->lpVtbl->GetDisplayNameOf(recycleBinFolder, pidlItem, SHGDN_INFOLDER, &displayName);
+        hr = recycle_bin_folder->lpVtbl->GetDisplayNameOf(recycle_bin_folder, pidl_item, SHGDN_INFOLDER, &deleted_file_display_name_ret);
         if (FAILED(hr))
         {
-            CoTaskMemFree(pidlItem);
+            CoTaskMemFree(pidl_item);
             continue;
         }
 
-        char displayNameBuffer[MAX_PATH];
-        if (StrRetToBufA(&displayName, pidlItem, displayNameBuffer, MAX_PATH) != S_OK)
+        char deleted_file_display_name[MAX_PATH];
+        if (StrRetToBufA(&deleted_file_display_name_ret, pidl_item, deleted_file_display_name, MAX_PATH) != S_OK)
         {
-            CoTaskMemFree(pidlItem);
+            CoTaskMemFree(pidl_item);
             continue;
         }
 
         VARIANT variant;
         const PROPERTYKEY PKey_DisplacedFrom = {FMTID_Displaced, PID_DISPLACED_FROM};
-        hr = recycleBinFolder->lpVtbl->GetDetailsEx(recycleBinFolder, pidlItem, &PKey_DisplacedFrom, &variant);
+        hr = recycle_bin_folder->lpVtbl->GetDetailsEx(recycle_bin_folder, pidl_item, &PKey_DisplacedFrom, &variant);
         if (FAILED(hr))
         {
-            CoTaskMemFree(pidlItem);
+            CoTaskMemFree(pidl_item);
             continue;
         }
 
-        const UINT variantLength = SysStringLen(variant.bstrVal);
-        const UINT bufferLength = variantLength + strlen(displayNameBuffer) + 2;
-        char deletedFileOriginalPath[bufferLength];
-        SHUnicodeToTChar(variant.bstrVal, deletedFileOriginalPath, ARRAYSIZE(deletedFileOriginalPath));
-        deletedFileOriginalPath[variantLength] = '\\';
-        strcpy(deletedFileOriginalPath + variantLength + 1, displayNameBuffer);
-        deletedFileOriginalPath[0] = tolower(deletedFileOriginalPath[0]);
+        const UINT variant_length = SysStringLen(variant.bstrVal);
+        const UINT deleted_file_original_path_size = variant_length + strlen(deleted_file_display_name) + 2;
+        char deleted_file_original_path[deleted_file_original_path_size];
+        SHUnicodeToTChar(variant.bstrVal, deleted_file_original_path, ARRAYSIZE(deleted_file_original_path));
+        deleted_file_original_path[variant_length] = '\\';
+        strcpy(deleted_file_original_path + variant_length + 1, deleted_file_display_name);
+        deleted_file_original_path[0] = tolower(deleted_file_original_path[0]);
 
-        if (strcmp(originalPath, deletedFileOriginalPath))
+        if (strcmp(target_path, deleted_file_original_path))
         {
-            CoTaskMemFree(pidlItem);
+            CoTaskMemFree(pidl_item);
             continue;
         }
 
-        const PROPERTYKEY PKey_DisplacedDate = {FMTID_Displaced, PID_DISPLACED_DATE};
-        hr = recycleBinFolder->lpVtbl->GetDetailsEx(recycleBinFolder, pidlItem, &PKey_DisplacedDate, &variant);
+        const PROPERTYKEY pkey_displaced_date = {FMTID_Displaced, PID_DISPLACED_DATE};
+        hr = recycle_bin_folder->lpVtbl->GetDetailsEx(recycle_bin_folder, pidl_item, &pkey_displaced_date, &variant);
         if (FAILED(hr))
         {
-            CoTaskMemFree(pidlItem);
+            CoTaskMemFree(pidl_item);
             continue;
         }
 
-        const DATE recycledTime = variant.date;
+        const DATE recycled_time = variant.date;
 
         // Restore only the most recently recycled file of this name for consistency
-        if (NULL == targetToRestore || targetRecycledTime < recycledTime)
+        if (NULL == to_restore || to_restore_recycled_time < recycled_time)
         {
             STRRET binDisplayName;
-            hr = recycleBinFolder->lpVtbl->GetDisplayNameOf(recycleBinFolder, pidlItem, SHGDN_FORPARSING, &binDisplayName);
+            hr = recycle_bin_folder->lpVtbl->GetDisplayNameOf(recycle_bin_folder, pidl_item, SHGDN_FORPARSING, &binDisplayName);
             if (FAILED(hr))
             {
-                CoTaskMemFree(pidlItem);
+                CoTaskMemFree(pidl_item);
                 continue;
             }
 
-            CoTaskMemFree(targetToRestore);
-            targetToRestore = CoTaskMemAlloc(MAX_PATH + 1);
+            CoTaskMemFree(to_restore);
+            to_restore = CoTaskMemAlloc(MAX_PATH + 1);
 
-            if (StrRetToBufA(&binDisplayName, pidlItem, targetToRestore, MAX_PATH) != S_OK)
+            if (StrRetToBufA(&binDisplayName, pidl_item, to_restore, MAX_PATH) != S_OK)
             {
-                CoTaskMemFree(pidlItem);
+                CoTaskMemFree(pidl_item);
                 continue;
             }
 
-            ensure_double_null_terminated(targetToRestore);
+            _ensure_double_null_terminated(to_restore);
 
-            targetRecycledTime = recycledTime;
+            to_restore_recycled_time = recycled_time;
         }
 
-        CoTaskMemFree(pidlItem);
+        CoTaskMemFree(pidl_item);
     }
 
-    if (NULL != targetToRestore)
+    if (NULL != to_restore)
     {
-        SHFILEOPSTRUCTA fileOp = {g_hwnd, FO_MOVE, targetToRestore, originalPath, FOF_RENAMEONCOLLISION | FOF_ALLOWUNDO | FOF_FILESONLY | FOF_NOCONFIRMATION | FOF_NOERRORUI};
-        SHFileOperationA(&fileOp);
+        SHFILEOPSTRUCTA file_op = {g_hwnd, FO_MOVE, to_restore, target_path, FOF_RENAMEONCOLLISION | FOF_ALLOWUNDO | FOF_FILESONLY | FOF_NOCONFIRMATION | FOF_NOERRORUI};
+        SHFileOperationA(&file_op);
 
-        CoTaskMemFree(targetToRestore);
+        CoTaskMemFree(to_restore);
     }
 
-    free(originalPath);
+    free(target_path);
 fail_enum:
-    recycleBinFolder->lpVtbl->Release(recycleBinFolder);
+    recycle_bin_folder->lpVtbl->Release(recycle_bin_folder);
 fail_bind:
-    ILFree(pidlRecycleBin);
+    ILFree(pidl_recycle_bin);
 end:
     CoUninitialize();
     Py_END_ALLOW_THREADS;
@@ -285,48 +285,48 @@ end:
 
 static PyObject *get_files_in_folder(PyObject *self, PyObject *arg)
 {
-    Py_ssize_t pathSize;
-    const char *path = PyUnicode_AsUTF8AndSize(arg, &pathSize);
+    Py_ssize_t path_size;
+    const char *path = PyUnicode_AsUTF8AndSize(arg, &path_size);
     if (unlikely(path == NULL))
     {
         return NULL;
     }
 
-    PyObject *pyFiles = PyList_New(0);
-    if (unlikely(pyFiles == NULL))
+    PyObject *py_files = PyList_New(0);
+    if (unlikely(py_files == NULL))
     {
         return NULL;
     }
 
-    char pathWithStar[pathSize + 3];
-    strcpy(pathWithStar, path);
+    char search_query[path_size + 3];
+    strcpy(search_query, path);
 
-    const char pathLastChar = path[pathSize - 1];
-    const char *fuzzySearchEnding = pathLastChar != '/' && pathLastChar != '\\' ? "/*\0" : "*\0";
-    strcat(pathWithStar, fuzzySearchEnding);
+    const char path_last_char = path[path_size - 1];
+    const char *query_end = path_last_char != '/' && path_last_char != '\\' ? "/*\0" : "*\0";
+    strcat(search_query, query_end);
 
-    struct _WIN32_FIND_DATAA dirData;
-    HANDLE fileHandle = FindFirstFileA(pathWithStar, &dirData);
+    struct _WIN32_FIND_DATAA file_data;
+    HANDLE file_handle = FindFirstFileA(search_query, &file_data);
 
-    if (fileHandle == INVALID_HANDLE_VALUE)
+    if (file_handle == INVALID_HANDLE_VALUE)
     {
         goto end;
     }
 
     do
     {
-        if ((dirData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) == 0)
+        if ((file_data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) == 0)
         {
-            PyObject *pyFileName = Py_BuildValue("s", dirData.cFileName);
-            PyList_Append(pyFiles, pyFileName);
-            Py_DECREF(pyFileName);
+            PyObject *py_file_name = Py_BuildValue("s", file_data.cFileName);
+            PyList_Append(py_files, py_file_name);
+            Py_DECREF(py_file_name);
         }
-    } while (FindNextFileA(fileHandle, &dirData));
+    } while (FindNextFileA(file_handle, &file_data));
 
-    FindClose(fileHandle);
+    FindClose(file_handle);
 
 end:
-    return pyFiles;
+    return py_files;
 }
 
 static PyObject *open_with(PyObject *self, PyObject *arg)
@@ -339,8 +339,8 @@ static PyObject *open_with(PyObject *self, PyObject *arg)
 
     Py_BEGIN_ALLOW_THREADS;
 
-    const OPENASINFO openAsInfo = {path, NULL, OAIF_EXEC | OAIF_HIDE_REGISTRATION};
-    SHOpenWithDialog(g_hwnd, &openAsInfo);
+    const OPENASINFO open_as_info = {path, NULL, OAIF_EXEC | OAIF_HIDE_REGISTRATION};
+    SHOpenWithDialog(g_hwnd, &open_as_info);
 
     Py_END_ALLOW_THREADS;
 
@@ -352,8 +352,8 @@ static PyObject *open_with(PyObject *self, PyObject *arg)
 
 static PyObject *drop_file_to_clipboard(PyObject *self, PyObject *arg)
 {
-    Py_ssize_t pathSize;
-    const char *path = PyUnicode_AsUTF8AndSize(arg, &pathSize);
+    Py_ssize_t path_size;
+    const char *path = PyUnicode_AsUTF8AndSize(arg, &path_size);
     if (unlikely(path == NULL))
     {
         return NULL;
@@ -361,7 +361,7 @@ static PyObject *drop_file_to_clipboard(PyObject *self, PyObject *arg)
 
     Py_BEGIN_ALLOW_THREADS;
 
-    size_t sizeToAlloc = sizeof(DROPFILES) + pathSize + 2;
+    size_t sizeToAlloc = sizeof(DROPFILES) + path_size + 2;
 
     HGLOBAL hGlobal = GlobalAlloc(GHND, sizeToAlloc);
     if (unlikely(hGlobal == NULL))
@@ -383,7 +383,7 @@ static PyObject *drop_file_to_clipboard(PyObject *self, PyObject *arg)
 
     GlobalUnlock(hGlobal);
 
-    if (!set_win_clipboard(CF_HDROP, hGlobal))
+    if (!_set_win_clipboard(CF_HDROP, hGlobal))
     {
     error_free_memory:
         GlobalFree(hGlobal);
@@ -396,24 +396,24 @@ end:
 
 static PyObject *read_buffer_as_base64_and_copy_to_clipboard(PyObject *self, PyObject *arg)
 {
-    CMemoryViewBuffer *memoryViewBuffer = (CMemoryViewBuffer *)arg;
-    unsigned long remainingBytesToEncode = memoryViewBuffer->bufferSize;
-    char *originalBufferPosition = memoryViewBuffer->buffer;
+    CRawImageView *raw_image_view = (CRawImageView *)arg;
+    unsigned long remaining_bytes = raw_image_view->buffer_size;
+    char *buffer_start = raw_image_view->buffer;
 
     Py_BEGIN_ALLOW_THREADS;
 
     // encoded data is ~4/3 the size of the original data so make encoded buffer 2x the size.
-    HGLOBAL hGlobal = GlobalAlloc(GHND, 2 * remainingBytesToEncode);
+    HGLOBAL hGlobal = GlobalAlloc(GHND, 2 * remaining_bytes);
     if (unlikely(hGlobal == NULL))
     {
         goto end;
     }
 
     base64_encodestate state;
-    char *encodedBuffer = (char *)GlobalLock(hGlobal);
-    char *encodedBufferPosition = encodedBuffer;
+    char *encoded_buffer = (char *)GlobalLock(hGlobal);
+    char *encoded_buffer_position = encoded_buffer;
 
-    if (unlikely(encodedBuffer == NULL))
+    if (unlikely(encoded_buffer == NULL))
     {
         GlobalFree(hGlobal);
         goto end;
@@ -422,20 +422,20 @@ static PyObject *read_buffer_as_base64_and_copy_to_clipboard(PyObject *self, PyO
     base64_init_encodestate(&state);
 
     const unsigned long MAX_BYTES_TO_ENCODE_AT_ONCE = 1048576;
-    while (remainingBytesToEncode > 0)
+    while (remaining_bytes > 0)
     {
-        unsigned bytesToEncode = (unsigned)(remainingBytesToEncode < MAX_BYTES_TO_ENCODE_AT_ONCE ? remainingBytesToEncode : MAX_BYTES_TO_ENCODE_AT_ONCE);
+        unsigned bytes_to_encode = (unsigned)(remaining_bytes < MAX_BYTES_TO_ENCODE_AT_ONCE ? remaining_bytes : MAX_BYTES_TO_ENCODE_AT_ONCE);
 
-        encodedBufferPosition += base64_encode_block(originalBufferPosition, bytesToEncode, encodedBufferPosition, &state);
-        remainingBytesToEncode -= bytesToEncode;
-        originalBufferPosition += bytesToEncode;
+        encoded_buffer_position += base64_encode_block(buffer_start, bytes_to_encode, encoded_buffer_position, &state);
+        remaining_bytes -= bytes_to_encode;
+        buffer_start += bytes_to_encode;
     }
 
-    base64_encode_blockend(encodedBuffer, &state);
+    base64_encode_blockend(encoded_buffer, &state);
 
     GlobalUnlock(hGlobal);
 
-    set_win_clipboard(CF_TEXT, encodedBuffer);
+    _set_win_clipboard(CF_TEXT, encoded_buffer);
 
 end:
     Py_END_ALLOW_THREADS;
