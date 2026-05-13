@@ -3,7 +3,7 @@
 from enum import IntEnum, StrEnum
 
 
-class ImageFormats(StrEnum):
+class ImageFormats(StrEnum):  # TODO: Remove
     """Image formats that this program supports."""
 
     AVIF = "AVIF"

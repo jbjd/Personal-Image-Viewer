@@ -26,7 +26,11 @@ from tests.utils.mocks import MockEvent, MockImage
 WORKING_DIR: str = os.path.dirname(__file__)
 IMG_DIR: str = os.path.join(WORKING_DIR, "example_images")
 EXAMPLE_PNG_PATH: str = os.path.join(IMG_DIR, "a.png")
+EXAMPLE_WEBP_PATH: str = os.path.join(IMG_DIR, "c.webp")
 EXAMPLE_JPEG_PATH: str = os.path.join(IMG_DIR, "d.jpg")
+EXAMPLE_DDS_PATH: str = os.path.join(IMG_DIR, "e.dds")
+EXAMPLE_AVIF_PATH: str = os.path.join(IMG_DIR, "f.avif")
+EXAMPLE_GIF_PATH: str = os.path.join(IMG_DIR, "g.gif")
 
 
 @pytest.fixture(name="tk", scope="session")
