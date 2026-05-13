@@ -410,11 +410,11 @@ class ViewerApp:
         it to the clipboard"""
 
         if os.name == "nt":
-            read_buffer_as_base64_and_copy_to_clipboard(self.image_io.image_buffer)
+            read_buffer_as_base64_and_copy_to_clipboard(self.image_io.image_view)
         else:
             # TODO: See if I can use memoryview for clipboard_append
             # so conversion can be in C
-            image_base64: str = read_memory_as_base64(self.image_io.image_buffer.view)
+            image_base64: str = read_memory_as_base64(self.image_io.image_view.view)
 
             self.app.clipboard_clear()
             self.app.clipboard_append(image_base64)
