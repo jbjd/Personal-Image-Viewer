@@ -11,7 +11,7 @@ from PIL.Image import Image
 from PIL.Image import open as open_image
 
 from image_viewer.constants import Rotation, ZoomDirection
-from image_viewer.image._read import CMemoryViewBuffer, read_image_into_buffer
+from image_viewer.image._read import CRawImageView, read_image_into_buffer
 from image_viewer.image.cache import ImageCache, ImageCacheEntry
 from image_viewer.image.frame import AnimationFrame
 from image_viewer.image.resizer import ImageResizer
@@ -26,10 +26,10 @@ from image_viewer.utils.PIL import (
 class ReadImageResponse:
     """Response when reading an image from disk"""
 
-    __slots__ = ("image", "image_buffer")
+    __slots__ = ("image", "image_view")
 
-    def __init__(self, image_buffer: CMemoryViewBuffer, image: Image) -> None:
-        self.image_buffer: CMemoryViewBuffer = image_buffer
+    def __init__(self, image_view: CRawImageView, image: Image) -> None:
+        self.image_view: CRawImageView = image_view
         self.image: Image = image
 
 
@@ -44,9 +44,9 @@ class ImageIO:
         "animation_frames",
         "current_load_id",
         "frame_index",
-        "image_buffer",
         "image_cache",
         "image_resizer",
+        "image_view",
         "zoomed_image_cache",
     )
 
@@ -64,7 +64,7 @@ class ImageIO:
 
         self.PIL_image = Image()
         self._image_optimized: bool = False
-        self.image_buffer: CMemoryViewBuffer
+        self.image_view: CRawImageView
         self.current_load_id: int = 0
 
         self.animation_frames: list[AnimationFrame | None] = []
@@ -113,16 +113,14 @@ class ImageIO:
         """Tries to open file on disk as PIL Image
         Returns Image or None on failure"""
         try:
-            image_buffer: CMemoryViewBuffer | None = read_image_into_buffer(
-                path_to_image
-            )
-            if image_buffer is None:
+            image_view: CRawImageView | None = read_image_into_buffer(path_to_image)
+            if image_view is None:
                 return None
 
-            image_bytes_io = BytesIO(image_buffer.view)
-            image: Image = open_image(image_bytes_io, "r", (image_buffer.format,))
+            image_bytes_io = BytesIO(image_view.view)
+            image: Image = open_image(image_bytes_io, "r", (image_view.format,))
 
-            return ReadImageResponse(image_buffer, image)
+            return ReadImageResponse(image_view, image)
         except OSError:
             return None
 
@@ -134,9 +132,9 @@ class ImageIO:
             return None
 
         original_image: Image = read_image_response.image
-        byte_size: int = read_image_response.image_buffer.byte_size
+        byte_size: int = read_image_response.image_view.byte_size
 
-        self.image_buffer = read_image_response.image_buffer
+        self.image_view = read_image_response.image_view
         self.PIL_image = original_image
         self.current_load_id += 1
 
@@ -154,7 +152,7 @@ class ImageIO:
                 original_image.size,
                 byte_size,
                 original_mode,
-                self.image_buffer.format,
+                self.image_view.format,
             )
 
         frame_count: int = getattr(original_image, "n_frames", 1)
@@ -187,7 +185,7 @@ class ImageIO:
             icc_profile=image.info.get("icc_profile"),
         )
 
-        original_size: int = self.image_buffer.byte_size
+        original_size: int = self.image_view.byte_size
 
         buffer: memoryview[int] = optimized_bytes.getbuffer()
         new_size: int = buffer.nbytes
@@ -209,7 +207,7 @@ class ImageIO:
         try:
             if self.PIL_image.format == "JPEG":
                 current_image = self.image_resizer.get_jpeg_fit_to_screen(
-                    self.PIL_image, self.image_buffer
+                    self.PIL_image, self.image_view
                 )
             else:
                 current_image = self.image_resizer.get_image_fit_to_screen(

@@ -7,15 +7,18 @@ typedef struct
 {
     PyObject_HEAD;
     char *buffer;
-    unsigned long bufferSize;
+    unsigned long buffer_size;
     PyObject *view;
     PyObject *format;
-} CMemoryViewBuffer;
+} CRawImageView;
 
 typedef struct
 {
-    CMemoryViewBuffer base;
+    PyObject_HEAD;
+    char *buffer;
+    unsigned long buffer_size;
+    PyObject *view;
     PyObject *dimensions;
-} CMemoryViewBufferJpeg;
+} CDecodedJpegView;
 
 #endif /* PIV_IMAGE_READ */

@@ -5,8 +5,8 @@ from math import ceil, log, log2
 from PIL.Image import Image, Resampling, frombytes
 
 from image_viewer.image._read import (
-    CMemoryViewBuffer,
-    CMemoryViewBufferJpeg,
+    CDecodedJpegView,
+    CRawImageView,
     decode_scaled_jpeg,
 )
 from image_viewer.utils.PIL import resize
@@ -90,9 +90,7 @@ class ImageResizer:
             return (1, 2)
         return None
 
-    def get_jpeg_fit_to_screen(
-        self, image: Image, image_bytes: CMemoryViewBuffer
-    ) -> Image:
+    def get_jpeg_fit_to_screen(self, image: Image, image_view: CRawImageView) -> Image:
         """Resizes a JPEG utilizing libjpeg-turbo to shrink very large images"""
         image_width, image_height = image.size
         scale_factor: tuple[int, int] | None = self._get_jpeg_scale_factor(
@@ -102,9 +100,7 @@ class ImageResizer:
         if scale_factor is None:
             return self.get_image_fit_to_screen(image)
 
-        jpeg_result: CMemoryViewBufferJpeg = decode_scaled_jpeg(
-            image_bytes, scale_factor
-        )
+        jpeg_result: CDecodedJpegView = decode_scaled_jpeg(image_view, scale_factor)
         return self.get_image_fit_to_screen(
             frombytes("RGB", jpeg_result.dimensions, jpeg_result.view)
         )

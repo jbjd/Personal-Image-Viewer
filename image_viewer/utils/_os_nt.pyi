@@ -2,7 +2,7 @@
 
 import os
 
-from image_viewer.image._read import CMemoryViewBuffer
+from image_viewer.image._read import CRawImageView
 
 if os.name == "nt":  # noqa: PYI002
     def init_c_utils(hwnd: int, /) -> None:
@@ -52,7 +52,7 @@ if os.name == "nt":  # noqa: PYI002
         :returns: A list of file names."""
 
     def read_buffer_as_base64_and_copy_to_clipboard(
-        image_buffer: CMemoryViewBuffer, /
+        image_view: CRawImageView, /
     ) -> None:
         """Given an image buffer, converts it to base64 and copies it to clipboard.
 
