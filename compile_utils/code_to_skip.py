@@ -472,9 +472,6 @@ _skippable_std_modules = [
     "_markupbase",
     "_pylong",
     "_wmi",
-    "cgi",
-    "cgitb",
-    "chunk",
     "cmd",
     "difflib",
     "filecmp",
@@ -483,12 +480,10 @@ _skippable_std_modules = [
     "html",
     "imaplib",
     "json",
-    "mailcap",
     "mimetypes",
     "netrc",
     "nturl2path",
     "pickletools",
-    "pipes",
     "pkgutil",
     "platform",
     "poplib",
@@ -496,13 +491,11 @@ _skippable_std_modules = [
     "pstats",
     "pyclbr",
     "rlcompleter",
-    "sndhdr",
     "socketserver",
     "sysconfig",
     "timeit",
     "tomllib",
     "trace",
-    "uu",
     "webbrowser",
     "xdrlib",
     "zipimport",
@@ -511,12 +504,6 @@ if sys.platform != "darwin":
     _skippable_std_modules.append("_osx_support")
 if sys.platform != "win32":
     _skippable_std_modules.append("configparser")
-
-if sys.version_info >= (3, 13):
-    raise NotImplementedError(
-        "cgi, cgitb, chunk, mailcap, sndhdr, pipes, and uu "
-        "need to be removed from _skippable_std_modules"
-    )
 
 custom_nuitka_regex: dict[str, list[RegexReplacement]] = {
     "__main__.py": [
