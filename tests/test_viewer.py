@@ -4,6 +4,7 @@ from tkinter import Tk
 from unittest.mock import MagicMock, patch
 
 import pytest
+from PIL.Image import Image
 
 from image_viewer.viewer import ViewerApp
 from tests.utils.mocks import MockEvent
@@ -115,7 +116,7 @@ def test_minimize(viewer: ViewerApp):
     [(False, False), (False, True), (True, False), (True, True)],
 )
 def test_update_details_dropdown(
-    tk_app: Tk,  # noqa: ARG001
+    tk: Tk,  # noqa: ARG001
     viewer: ViewerApp,
     dropdown_show: bool,
     dropdown_needs_refresh: bool,
@@ -150,8 +151,11 @@ def test_update_details_dropdown(
 
 
 @pytest.mark.parametrize("user_input", [" ", "something.png"])
-def test_rename_or_convert(viewer: ViewerApp, user_input: str):
+def test_rename_or_convert(tk: Tk, viewer: ViewerApp, user_input: str):  # noqa: ARG001
     event = MagicMock()
+    image_io = MagicMock()
+    image_io.PIL_image = Image()
+    viewer.image_io = image_io
     with (
         patch("image_viewer.viewer.RenameEntry.get", return_value=user_input),
         patch(
@@ -164,4 +168,6 @@ def test_rename_or_convert(viewer: ViewerApp, user_input: str):
         if stripped_input == "":
             mock_rename_or_convert_current_image.assert_not_called()
         else:
-            mock_rename_or_convert_current_image.assert_called_once_with(stripped_input)
+            mock_rename_or_convert_current_image.assert_called_once_with(
+                image_io.PIL_image, stripped_input
+            )
