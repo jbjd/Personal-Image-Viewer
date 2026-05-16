@@ -13,7 +13,7 @@ from tests.conftest import IMG_DIR
 
 
 @pytest.mark.parametrize("os_name", ["nt", "linux"])
-def test_get_byte_display(os_name: str):
+def test_get_byte_display(os_name: str) -> None:
     """Should take bytes and return correct string representing kb/mb on given OS"""
     kb_size: int = 1024 if os_name == "nt" else 1000
     expected_display_999kb: str = "999kb"
@@ -31,7 +31,7 @@ def test_get_byte_display(os_name: str):
         ("0123456789" * 10 + ".png", "0123456789" * 4 + "(…).png"),
     ],
 )
-def test_truncate_long_name(name: str, expected_name: str):
+def test_truncate_long_name(name: str, expected_name: str) -> None:
     """Should truncate names longer than 40 characters"""
     assert maybe_truncate_long_name(name) == expected_name
 
@@ -42,14 +42,14 @@ def test_truncate_long_name(name: str, expected_name: str):
 )
 def test_split_name_and_suffix(
     name_and_suffix: str, expected_name: str, expected_suffix: str
-):
+) -> None:
     name, suffix = split_name_and_suffix(name_and_suffix)
 
     assert name == expected_name
     assert suffix == expected_suffix
 
 
-def test_get_files_in_folder():
+def test_get_files_in_folder() -> None:
     """Test that get_files_in_folder correctly finds files in dir"""
 
     files = list(get_files_in_folder(IMG_DIR))

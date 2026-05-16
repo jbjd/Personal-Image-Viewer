@@ -101,8 +101,8 @@ class ImageResizer:
             return self.get_image_fit_to_screen(image)
 
         jpeg_result: CDecodedJpegView = decode_scaled_jpeg(image_view, scale_factor)
-        return self.get_image_fit_to_screen(
-            frombytes("RGB", jpeg_result.dimensions, jpeg_result.view)
+        return self.get_image_fit_to_screen(  # TODO: Remove ignore after https://github.com/python-pillow/Pillow/pull/9410
+            frombytes("RGB", jpeg_result.dimensions, jpeg_result.view)  # type: ignore[arg-type]
         )
 
     def get_image_fit_to_screen(self, image: Image) -> Image:
