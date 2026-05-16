@@ -9,32 +9,34 @@ def test_try_update_state():
     state = ImageState()
     state.zoom_level_max = 1
 
-    updated = state.try_update(ZoomDirection.OUT, None)
+    assert not state.try_update(ZoomDirection.OUT, None)
     assert state.zoom_level == 0
-    assert not updated
 
-    updated = state.try_update(ZoomDirection.IN, Rotation.DOWN)
+    assert state.try_update(ZoomDirection.IN, Rotation.DOWN)
     assert state.zoom_level == 1
     assert state.orientation == Rotation.DOWN
-    assert updated
 
-    updated = state.try_update(ZoomDirection.IN, None)
+    assert not state.try_update(ZoomDirection.IN, None)
     assert state.zoom_level == 1
-    assert not updated
 
-    updated = state.try_update(ZoomDirection.OUT, None)
+    assert state.try_update(ZoomDirection.OUT, None)
     assert state.zoom_level == 0
-    assert updated
 
-    updated = state.try_update(None, Rotation.LEFT)
+    # Mypy bug? 'Literal[Rotation.DOWN]' non-overlaps 'Literal[Rotation.LEFT]'
+    assert state.try_update(None, Rotation.LEFT)
+    assert state.orientation == Rotation.LEFT  # type: ignore[comparison-overlap]
+
+    assert not state.try_update(ZoomDirection.OUT, Rotation.LEFT)
     assert state.orientation == Rotation.LEFT
-    assert updated
 
-    updated = state.try_update(ZoomDirection.OUT, Rotation.LEFT)
-    assert state.orientation == Rotation.LEFT
-    assert not updated
 
-    state.zoom_rotate_allowed = False
+def test_reset():
+    state = ImageState()
+    state.zoom_level += 1
+    state.zoom_level_max += 2
+    state.orientation = Rotation.RIGHT
+    state.zoom_rotate_allowed = not state.zoom_rotate_allowed
+
     state.reset()
 
     default_state = ImageState()

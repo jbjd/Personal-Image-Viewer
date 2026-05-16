@@ -22,7 +22,7 @@ def test_image_cache_full():
     cache["entry3"] = entry3
 
     assert len(cache) == 2
-    assert entry1 not in cache
+    assert "entry1" not in cache
 
 
 def test_zero_length_cache():

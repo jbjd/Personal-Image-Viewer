@@ -15,15 +15,21 @@ omit = ["__init__.py", "main.py"]
 
 [tool.mypy]
 python_version = "3.12"
+exclude = "build/|test.py"
 disallow_subclassing_any = true
 disallow_untyped_defs = true
-check_untyped_defs=true
+disallow_incomplete_defs = true
+check_untyped_defs = true
+disallow_untyped_decorators = true
+warn_redundant_casts = true
+no_implicit_reexport = false
+strict_equality  = true
 ignore_missing_imports = true
-exclude = "build/|test.py"
 
 [[tool.mypy.overrides]]
 module = "tests.*"
 disallow_subclassing_any = false
+disallow_incomplete_defs = false
 disallow_untyped_defs = false
 
 [tool.pytest]
