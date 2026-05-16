@@ -21,7 +21,7 @@ from image_viewer.image.state import ZOOM_UNSET
 from image_viewer.ui.rename_entry import _ERROR_COLOR, _MAX_ENTRY_SIZE
 
 # Increment when edits to this file or module_dependencies are merged into main
-SKIP_ITERATION: int = 7
+SKIP_ITERATION: int = 0
 
 # Module independent skips
 
@@ -363,8 +363,8 @@ regex_to_apply_py: dict[str, list[RegexReplacement]] = {
 if os.name == "nt":
     regex_to_apply_py["PIL.AvifImagePlugin"].append(
         RegexReplacement(
-            r"def _get_default_max_threads\(\).*?or 1",
-            f"def _get_default_max_threads():return {os.cpu_count() or 1}",
+            r"def _get_default_max_threads\(\).*?return os\.",
+            "def _get_default_max_threads():return os.",
             flags=re.DOTALL,
         )
     )
