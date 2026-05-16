@@ -34,7 +34,9 @@ _MODULE_PATH: str = "image_viewer.image.image_io"
         (EXAMPLE_WEBP_PATH, "WEBP"),
     ],
 )
-def test_load_image(image_io: ImageIO, input_image_path: str, expected_format: str):
+def test_load_image(
+    image_io: ImageIO, input_image_path: str, expected_format: str
+) -> None:
     """When an image of the same name is in cache, don't load from disk"""
 
     image_io.load_image(input_image_path)
@@ -43,7 +45,7 @@ def test_load_image(image_io: ImageIO, input_image_path: str, expected_format: s
     assert image_io.PIL_image.format == expected_format
 
 
-def test_load_image_error_on_open(image_io: ImageIO):
+def test_load_image_error_on_open(image_io: ImageIO) -> None:
     """An image might error on open when its not a valid image or not found"""
 
     with patch("builtins.open", side_effect=FileNotFoundError):
@@ -56,7 +58,7 @@ def test_load_image_error_on_open(image_io: ImageIO):
         assert image_io.load_image("") is None
 
 
-def test_load_image_in_cache(image_io: ImageIO):
+def test_load_image_in_cache(image_io: ImageIO) -> None:
     """When an image of the same name is in cache, don't load from disk"""
 
     # setup cache for test
@@ -81,7 +83,7 @@ def test_load_image_in_cache(image_io: ImageIO):
         assert image_io.load_image("some/path") is cached_image
 
 
-def test_load_image_resize_error(image_io: ImageIO):
+def test_load_image_resize_error(image_io: ImageIO) -> None:
     """Should get placeholder image when resize errors"""
     with (
         patch(
@@ -97,7 +99,7 @@ def test_load_image_resize_error(image_io: ImageIO):
         assert not image_io._state.zoom_rotate_allowed
 
 
-def test_get_next_frame(image_io: ImageIO):
+def test_get_next_frame(image_io: ImageIO) -> None:
     """Test expected behavior from getting next frame and resetting"""
 
     frame1, frame2, frame3 = (
@@ -131,7 +133,7 @@ def test_get_next_frame(image_io: ImageIO):
     assert example_frame is None
 
 
-def test_optimize_png_image(image_io: ImageIO):
+def test_optimize_png_image(image_io: ImageIO) -> None:
     """Should saved optimized PNG."""
 
     original_image = tempfile.NamedTemporaryFile(delete=False)  # noqa: SIM115
@@ -169,7 +171,7 @@ def test_optimize_png_image(image_io: ImageIO):
         os.remove(original_image.name)
 
 
-def test_optimize_png_image_non_pngs(image_io: ImageIO):
+def test_optimize_png_image_non_pngs(image_io: ImageIO) -> None:
     """Should not run on non-PNGs."""
 
     image_io.load_image(EXAMPLE_JPEG_PATH)

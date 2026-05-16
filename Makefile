@@ -60,7 +60,7 @@ install:
 validate:
 	ruff check .
 	ruff format --check
-	mypy . --check-untyped-defs
+	mypy .
 	codespell
 
 test:

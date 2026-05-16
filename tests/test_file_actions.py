@@ -24,7 +24,7 @@ _MODULE_PATH = "image_viewer.files.actions"
         ),
     ],
 )
-def test_undo_action(action: FileAction, expected_message: str):
+def test_undo_action(action: FileAction, expected_message: str) -> None:
     """Should call correct functions based on action to undo"""
 
     assert action.get_undo_message() == expected_message
