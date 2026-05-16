@@ -8,7 +8,7 @@ from image_viewer.image.cache import ImageCache, ImageCacheEntry
 from tests.utils.mocks import MockStatResult
 
 
-def test_image_cache_full():
+def test_image_cache_full() -> None:
     """Should respect set value for max items and remove last inserted."""
 
     cache = ImageCache(2)
@@ -25,7 +25,7 @@ def test_image_cache_full():
     assert "entry1" not in cache
 
 
-def test_zero_length_cache():
+def test_zero_length_cache() -> None:
     """Should not try to insert anything when max items is 0."""
 
     cache = ImageCache(0)
@@ -37,7 +37,7 @@ def test_zero_length_cache():
         mock_set_item.assert_not_called()
 
 
-def test_update_key():
+def test_update_key() -> None:
     """Should move value from one key to another."""
 
     cache = ImageCache(1)
@@ -54,7 +54,7 @@ def test_update_key():
     assert new_key in cache
 
 
-def test_image_cache_fresh(image_cache: ImageCache):
+def test_image_cache_fresh(image_cache: ImageCache) -> None:
     """Should say image cache is fresh if cached byte size
     is the same as size on disk."""
 

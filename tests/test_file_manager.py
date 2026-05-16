@@ -15,7 +15,7 @@ from tests.utils.mocks import MockImage, MockStatResult
 _MODULE_PATH = "image_viewer.files.file_manager"
 
 
-def test_image_file_manager(file_manager: ImageFileManager):
+def test_image_file_manager(file_manager: ImageFileManager) -> None:
     """Test various functions of the file manager with empty image files"""
     assert len(file_manager._files) == 1
 
@@ -55,7 +55,7 @@ def test_image_file_manager(file_manager: ImageFileManager):
         file_manager.remove_current_image()
 
 
-def test_bad_path(image_cache: ImageCache):
+def test_bad_path(image_cache: ImageCache) -> None:
     """Should raise ValueError when bad path provided."""
 
     # doesn't exist
@@ -71,13 +71,13 @@ def test_bad_path(image_cache: ImageCache):
         file_manager.validate_current_path()
 
 
-def test_move_index(file_manager: ImageFileManager):
+def test_move_index(file_manager: ImageFileManager) -> None:
     """Test moving to an index that's too large"""
     file_manager.move_index(999)
     assert file_manager._files.display_index == 0
 
 
-def test_delete_file(file_manager: ImageFileManager):
+def test_delete_file(file_manager: ImageFileManager) -> None:
     """Tests deleting a file from disk via file manager"""
 
     # add one extra image so it doesn't error after removing the only file
@@ -111,7 +111,7 @@ def test_add_new_image_adjusts_index(
     preserve_index: _ShouldPreserveIndex,
     insertion_index: int,
     expected_display_index: int,
-):
+) -> None:
     """Should stay on current image by moving one forward
     when respective preserve_index value passed"""
 
@@ -122,7 +122,7 @@ def test_add_new_image_adjusts_index(
     assert file_manager_with_3_images._files.display_index == expected_display_index
 
 
-def test_undo(file_manager: ImageFileManager):
+def test_undo(file_manager: ImageFileManager) -> None:
     """Test correct behavior adding/removing with undo"""
 
     # Empty action queue
@@ -149,7 +149,7 @@ def test_undo(file_manager: ImageFileManager):
 
 
 # TODO: Clean test up
-def test_get_and_show_details(file_manager: ImageFileManager):
+def test_get_and_show_details(file_manager: ImageFileManager) -> None:
     """Should return a string containing details on current cached image and show it"""
 
     # Will exit if no details in cache
@@ -188,7 +188,7 @@ def test_get_and_show_details(file_manager: ImageFileManager):
         assert "Created" not in details
 
 
-def test_split_with_weird_names(file_manager: ImageFileManager):
+def test_split_with_weird_names(file_manager: ImageFileManager) -> None:
     """Should notice that . and .. are not file names, but part of path"""
 
     # use join over static var so test works on all OS
@@ -200,7 +200,7 @@ def test_split_with_weird_names(file_manager: ImageFileManager):
     assert file_manager._split_dir_and_name("C:/example/...") == expected_split
 
 
-def test_move_to_new_file(file_manager: ImageFileManager):
+def test_move_to_new_file(file_manager: ImageFileManager) -> None:
     """When user chooses a file in file dialog, should move to selected file"""
     chosen_path: str = os.path.join(IMG_DIR, "d.jpg")
     file_manager.image_folder = "some/path"
@@ -214,7 +214,7 @@ def test_move_to_new_file(file_manager: ImageFileManager):
         assert file_manager.image_folder == IMG_DIR
 
 
-def test_move_to_new_file_cancelled(file_manager: ImageFileManager):
+def test_move_to_new_file_cancelled(file_manager: ImageFileManager) -> None:
     """When user closes file dialog, function exits immediately"""
     with patch(
         "image_viewer.files.file_manager.askopenfilename",
@@ -223,7 +223,7 @@ def test_move_to_new_file_cancelled(file_manager: ImageFileManager):
         assert not file_manager.move_to_new_file()
 
 
-def test_current_image_cache_still_fresh(file_manager: ImageFileManager):
+def test_current_image_cache_still_fresh(file_manager: ImageFileManager) -> None:
     """Should call ImageCache function with current path"""
     with patch.object(
         ImageCache, "image_cache_still_fresh"
