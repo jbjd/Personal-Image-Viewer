@@ -2,7 +2,7 @@ import os
 from collections.abc import Callable
 from time import perf_counter
 from tkinter import Event, Tk
-from typing import Never, TypeVar, TypeVarTuple
+from typing import Never
 
 from PIL.Image import Image
 from PIL.ImageTk import PhotoImage
@@ -38,9 +38,6 @@ if os.name == "nt":
     )
 else:
     from tkinter import PhotoImage as tkPhotoImage
-
-_Ts = TypeVarTuple("_Ts")
-_R = TypeVar("_R")
 
 
 class ViewerApp:
@@ -276,9 +273,9 @@ class ViewerApp:
         """Starts tkinter main loop"""
         self.app.mainloop()
 
-    def unresponsive_long_running_process(
-        self, function: Callable[[*_Ts], _R], *args: *_Ts
-    ) -> _R:
+    def unresponsive_long_running_process[*Ts, R](
+        self, function: Callable[[*Ts], R], *args: *Ts
+    ) -> R:
         self.app.config(cursor="watch")
         self.app.update()
         try:
@@ -343,8 +340,8 @@ class ViewerApp:
         else:
             self.show_topbar()
 
-    def _only_for_this_window(
-        self, event: Event, function_to_call: Callable[[*_Ts], None], *args: *_Ts
+    def _only_for_this_window[*Ts](
+        self, event: Event, function_to_call: Callable[[*Ts], None], *args: *Ts
     ) -> None:
         """Given a callable that accepts a tkinter Event,
         only call it if self.app is the target"""
@@ -728,8 +725,8 @@ class ViewerApp:
         else:
             self.canvas.itemconfigure(dropdown.id, state="hidden")
 
-    def _start_image_load(
-        self, image_load_function: Callable[[*_Ts], None], *args: *_Ts
+    def _start_image_load[*Ts](
+        self, image_load_function: Callable[[*Ts], None], *args: *Ts
     ) -> None:
         """Cancels any previous image load tkinter thread and starts a new one.
 
