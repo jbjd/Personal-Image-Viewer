@@ -39,13 +39,13 @@ class TestLeaks(MemoryLeakTestCase):
         else:
             del os.environ["PYTHONMALLOC"]
 
-    def test_parse_config_file_defaults(self):
+    def test_parse_config_file_defaults(self) -> None:
         self.execute(parse_config_file, "some bad path")
 
-    def test_read_image_into_buffer(self):
+    def test_read_image_into_buffer(self) -> None:
         self.execute(read_image_into_buffer, EXAMPLE_JPEG_PATH)
 
-    def test_decode_scaled_jpeg(self):
+    def test_decode_scaled_jpeg(self) -> None:
         image_buffer = read_image_into_buffer(EXAMPLE_JPEG_PATH)
         if image_buffer is None:
             raise RuntimeError("Failed to setup test_decode_scaled_jpeg")
@@ -57,7 +57,7 @@ class TestLeaks(MemoryLeakTestCase):
         self.execute(decode_scaled_jpeg, image_buffer, (1, 2))
 
     @pytest.mark.skipif(os.name != "nt", reason="Only available on Windows")
-    def test_read_buffer_as_base64_and_copy_to_clipboard(self):
+    def test_read_buffer_as_base64_and_copy_to_clipboard(self) -> None:
         image_view: CRawImageView | None = read_image_into_buffer(EXAMPLE_JPEG_PATH)
 
         assert image_view is not None
