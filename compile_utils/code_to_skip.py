@@ -196,9 +196,6 @@ classes_to_skip: dict[str, set[str]] = {
     "PIL.PngImagePlugin": {"PngInfo"},
 }
 
-dict_keys_to_skip: dict[str, set[str]] = {}
-
-decorators_to_skip: dict[str, set[str]] = {}
 
 imports_to_skip: dict[str, set[str]] = {"PIL.Image": {"defusedxml"}}
 
