@@ -32,8 +32,6 @@ from personal_simple_tcl_minifier.parse import tcl_minify
 from compile_utils.code_to_skip import (
     classes_to_skip,
     decorators_to_always_skip,
-    decorators_to_skip,
-    dict_keys_to_skip,
     functions_to_always_skip,
     functions_to_skip,
     imports_to_skip,
@@ -185,8 +183,6 @@ def warn_unused_code_skips(modules_no_warn_unused_skips: list[str]) -> None:
 
     for skips, friendly_name in (
         (classes_to_skip, "skip classes"),
-        (decorators_to_skip, "skip decorators"),
-        (dict_keys_to_skip, "skip dictionary Keys"),
         (imports_to_skip, "skip module imports"),
         (functions_to_skip, "skip functions"),
         (vars_to_fold, "fold variables"),
@@ -244,19 +240,15 @@ def strip_files(compile_dir: str) -> None:
 
 def _get_tokens_to_skip_config(module_import_path: str) -> TokensConfig:
     classes: set[str] = classes_to_skip.pop(module_import_path, set())
-    decorators: set[str] = decorators_to_skip.pop(module_import_path, set())
-    dict_keys: set[str] = dict_keys_to_skip.pop(module_import_path, set())
     module_imports: set[str] = imports_to_skip.pop(module_import_path, set())
     functions: set[str] = functions_to_skip.pop(module_import_path, set())
     variables: set[str] = vars_to_skip.pop(module_import_path, set())
 
-    decorators |= decorators.union(decorators_to_always_skip)
     functions |= functions.union(functions_to_always_skip)
 
     return TokensConfig(
         classes_to_skip=classes,
-        decorators_to_skip=decorators,
-        dict_keys_to_skip=dict_keys,
+        decorators_to_skip=decorators_to_always_skip,
         module_imports_to_skip=module_imports,
         functions_to_skip=functions,
         variables_to_skip=variables,
