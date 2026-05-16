@@ -176,7 +176,6 @@ vars_to_skip: dict[str, set[str]] = {
     "PIL.PngImagePlugin": {"format_description"},
     "PIL.ImageText": {"Font"},
     "PIL.WebPImagePlugin": {"format_description"},
-    f"{IMAGE_VIEWER_NAME}.viewer": {"_R", "_Ts"},
 }
 
 if os.name == "nt":
