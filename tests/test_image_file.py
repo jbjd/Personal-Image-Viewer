@@ -20,7 +20,7 @@ from image_viewer.image.file import ImageName, ImageNameList
 )
 def test_remove_current_image(
     index_movement: Movement, starting_index: int, expected_index: int
-):
+) -> None:
     image_names = ImageNameList(
         [
             ImageName("a.png"),
