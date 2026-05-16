@@ -14,8 +14,17 @@ skip = "build,minifier_failure.py.example"
 omit = ["__init__.py", "main.py"]
 
 [tool.mypy]
-ignore_missing_imports = "True"
+python_version = "3.12"
+disallow_subclassing_any = true
+disallow_untyped_defs = true
+check_untyped_defs=true
+ignore_missing_imports = true
 exclude = "build/|test.py"
+
+[[tool.mypy.overrides]]
+module = "tests.*"
+disallow_subclassing_any = false
+disallow_untyped_defs = false
 
 [tool.pytest]
 pythonpath = ["image_viewer"]
