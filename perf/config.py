@@ -36,7 +36,7 @@ def run() -> None:
     )
 
     perf_test.run("Empty Config", 5, _assert_configs, "some bad path")
-    perf_test.run("Default Config", 5, _assert_configs)  # type: ignore[call-arg]
+    perf_test.run("Default Config", 5, _assert_configs)
 
     with tempfile.NamedTemporaryFile("w") as tmp_file:
         for letter in string.ascii_lowercase:
