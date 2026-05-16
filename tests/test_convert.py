@@ -5,7 +5,7 @@ from image_viewer.utils.convert import try_convert_image_and_save_new
 from tests.utils.mocks import MockImage
 
 
-def test_animated_to_not_animated():
+def test_animated_to_not_animated() -> None:
     """Should raise ValueError when converted animated image to a unsupported format."""
     with pytest.raises(ValueError):
         try_convert_image_and_save_new(
@@ -13,14 +13,14 @@ def test_animated_to_not_animated():
         )
 
 
-def test_jpeg_to_jpeg_variant():
+def test_jpeg_to_jpeg_variant() -> None:
     """Should return False when converting between jpeg variants like jpg and jpe."""
     assert not try_convert_image_and_save_new(
         MockImage(image_format="JPEG"), "new.jpe", "jpe"
     )
 
 
-def test_convert_to_bad_type():
+def test_convert_to_bad_type() -> None:
     """Should return False if an invalid image extension is passed."""
     assert not try_convert_image_and_save_new(
         MockImage(image_format="PNG"), "new.txt", "txt"
@@ -41,7 +41,7 @@ def test_convert_to_bad_type():
         (JPEG, JPEG),
     ],
 )
-def test_convert_between_types(true_file_extension: str, target_format: str):
+def test_convert_between_types(true_file_extension: str, target_format: str) -> None:
     """Should attempt conversion unless image is already target format, ignoring
     the file format in the path and using the format in the files magic bytes"""
 

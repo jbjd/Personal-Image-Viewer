@@ -59,7 +59,7 @@ schema: dict[str, dict[str, Callable[[str], bool]]] = {
 config_parser = ConfigParser()
 config_parser.read("image_viewer/config.ini")
 
-config: dict = {
+config: dict[str, dict[str, str]] = {
     section: {
         option: config_parser.get(section, option)
         for option in config_parser.options(section)

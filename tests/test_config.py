@@ -18,7 +18,7 @@ from image_viewer._config import (
 from tests.utils._config import is_valid_hex_color, is_valid_keybind
 
 
-def test_config_reader():
+def test_config_reader() -> None:
     """Should return all specified values"""
     config: Config = parse_config_file("tests/data/config.ini")
 
@@ -37,7 +37,7 @@ def test_config_reader():
     assert config.ui_font == "test"
 
 
-def test_config_reader_defaults():
+def test_config_reader_defaults() -> None:
     """Should return all default values"""
     config: Config = parse_config_file("tests/data/config_empty.ini")
 
@@ -55,7 +55,7 @@ def test_config_reader_defaults():
     assert is_valid_hex_color(config.ui_background_color)
 
 
-def test_config_reader_int_fallback():
+def test_config_reader_int_fallback() -> None:
     """Should return default when"""
     config: Config = parse_config_file("tests/data/config_bad_values.ini")
 
@@ -78,7 +78,7 @@ def test_config_reader_int_fallback():
         ("<K>", True),
     ],
 )
-def test_validate_keybind(keybind: str, expected: bool):
+def test_validate_keybind(keybind: str, expected: bool) -> None:
     """Should correctly identify valid keybinds."""
     assert is_valid_keybind(keybind) is expected
 
@@ -93,7 +93,7 @@ def test_validate_keybind(keybind: str, expected: bool):
         ("#01", False),
     ],
 )
-def test_validate_hex(hex_color: str, expected: bool):
+def test_validate_hex(hex_color: str, expected: bool) -> None:
     """Should correctly identify valid hexs."""
     assert is_valid_hex_color(hex_color) is expected
 

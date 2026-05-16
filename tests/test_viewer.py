@@ -14,7 +14,7 @@ _MODULE_PATH: str = "image_viewer.viewer"
 # mypy: disable-error-code="method-assign"
 
 
-def test_pixel_scaling(viewer: ViewerApp):
+def test_pixel_scaling(viewer: ViewerApp) -> None:
     """Should correctly scale sizes to the screen."""
 
     viewer.height_ratio = 1
@@ -30,7 +30,7 @@ def test_pixel_scaling(viewer: ViewerApp):
 
 def test_redraw(
     viewer: ViewerApp, focused_event: MockEvent, unfocused_event: MockEvent
-):
+) -> None:
     """Should only redraw the current image when necessary."""
 
     with patch(f"{_MODULE_PATH}.ViewerApp.load_image_unblocking") as mock_refresh:
@@ -56,7 +56,7 @@ def test_redraw(
             mock_refresh.assert_called_once()
 
 
-def test_clear_image(viewer: ViewerApp):
+def test_clear_image(viewer: ViewerApp) -> None:
     """Should stop animations and reset image loader."""
     mock_after_cancel = MagicMock()
     viewer.app.after_cancel = mock_after_cancel
@@ -72,7 +72,7 @@ def test_clear_image(viewer: ViewerApp):
         mock_reset.assert_called_once()
 
 
-def test_exit(viewer: ViewerApp):
+def test_exit(viewer: ViewerApp) -> None:
     """Should clean up and exit tkinter."""
 
     del viewer.canvas
@@ -93,7 +93,7 @@ def test_exit(viewer: ViewerApp):
     mock_destroy.assert_called_once()
 
 
-def test_minimize(viewer: ViewerApp):
+def test_minimize(viewer: ViewerApp) -> None:
     """Should iconify the app and cancel scheduled movements."""
 
     mock_after_cancel = MagicMock()
@@ -120,7 +120,7 @@ def test_update_details_dropdown(
     viewer: ViewerApp,
     dropdown_show: bool,
     dropdown_needs_refresh: bool,
-):
+) -> None:
     """Should correctly update dropdown given provided state."""
     viewer.canvas.itemconfigure = MagicMock()
 
@@ -151,7 +151,7 @@ def test_update_details_dropdown(
 
 
 @pytest.mark.parametrize("user_input", [" ", "something.png"])
-def test_rename_or_convert(tk: Tk, viewer: ViewerApp, user_input: str):  # noqa: ARG001
+def test_rename_or_convert(tk: Tk, viewer: ViewerApp, user_input: str) -> None:  # noqa: ARG001
     event = MagicMock()
     image_io = MagicMock()
     image_io.PIL_image = Image()

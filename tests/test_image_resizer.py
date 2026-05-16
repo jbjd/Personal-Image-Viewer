@@ -11,7 +11,7 @@ from tests.conftest import IMG_DIR
 _MODULE_PATH: str = "image_viewer.image.resizer"
 
 
-def test_jpeg_scale_factor(image_resizer: ImageResizer):
+def test_jpeg_scale_factor(image_resizer: ImageResizer) -> None:
     """Should return correct ratios for a 1080x1920 screen"""
     assert image_resizer._get_jpeg_scale_factor(9999, 9999) == (1, 8)
     assert image_resizer._get_jpeg_scale_factor(6666, 6666) == (1, 4)
@@ -32,7 +32,7 @@ def test_fit_dimensions_to_screen_and_get_interpolation(
     dimensions: tuple[int, int],
     expected_dimensions: tuple[int, int],
     expected_interpolation: Resampling,
-):
+) -> None:
     """Should return correct dimensions and interpolation for a 1920x1080 screen"""
     width, height = dimensions
     dimensions = image_resizer.fit_dimensions_to_screen(width, height)
@@ -41,7 +41,7 @@ def test_fit_dimensions_to_screen_and_get_interpolation(
     assert dimensions == expected_dimensions
 
 
-def test_jpeg_fit_to_screen_small_image(image_resizer: ImageResizer):
+def test_jpeg_fit_to_screen_small_image(image_resizer: ImageResizer) -> None:
     """When fitting a small jpeg, should fallback to generic fit function"""
     image: Image = new_image("RGB", (1000, 1000))  # smaller than screen
 
@@ -53,7 +53,9 @@ def test_jpeg_fit_to_screen_small_image(image_resizer: ImageResizer):
         mock_decode_scaled_jpeg.assert_not_called()
 
 
-def test_jpeg_fit_to_screen_large_image(image_io: ImageIO, image_resizer: ImageResizer):
+def test_jpeg_fit_to_screen_large_image(
+    image_io: ImageIO, image_resizer: ImageResizer
+) -> None:
     """When fitting a large jpeg, should call turbojpeg and scale it down"""
 
     image: Image = new_image("RGB", (1000, 4000))
@@ -74,7 +76,7 @@ def test_jpeg_fit_to_screen_large_image(image_io: ImageIO, image_resizer: ImageR
     assert scaled_image.height == 1080
 
 
-def test_get_image_fit_to_screen(image_resizer: ImageResizer):
+def test_get_image_fit_to_screen(image_resizer: ImageResizer) -> None:
     """Should resize and return PIL image"""
 
     resized_image: Image = image_resizer.get_image_fit_to_screen(
@@ -90,12 +92,12 @@ def test_get_image_fit_to_screen(image_resizer: ImageResizer):
     assert resized_image.mode == "LA"
 
 
-def test_scale_dimensions(image_resizer: ImageResizer):
+def test_scale_dimensions(image_resizer: ImageResizer) -> None:
     """Should scale a tuple of width height by provided ratio"""
     assert image_resizer._scale_dimensions((1920, 1080), 1.5) == (2880, 1620)
 
 
-def test_get_max_zoom(image_resizer: ImageResizer):
+def test_get_max_zoom(image_resizer: ImageResizer) -> None:
     """Should get correct max zoom value for 1920x1080 screen"""
     assert image_resizer.get_max_zoom(400, 400) == MIN_ZOOM_LEVEL
 
