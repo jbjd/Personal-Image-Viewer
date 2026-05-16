@@ -102,6 +102,7 @@ def clean_file_and_copy(
                 tokens_config=_get_tokens_to_skip_config(module_import_path),
                 token_types_config=TokenTypesConfig(
                     skip_type_hints=TypeHintsToSkip.ALL,
+                    skip_generics=True,
                     skip_asserts=True,
                     skip_overload_functions=True,
                 ),
