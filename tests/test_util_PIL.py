@@ -17,7 +17,7 @@ from image_viewer.utils.PIL import (
 )
 
 
-def test_image_path():
+def test_image_path() -> None:
     """Check that ImageName correctly finds image suffixes"""
     example_image_path = ImageName("some_image.1.PNG")
     assert example_image_path.suffix == "png"
@@ -29,7 +29,7 @@ def test_image_path():
     assert example_image_path.suffix == ""
 
 
-def test_init_PIL():  # noqa: N802
+def test_init_PIL() -> None:  # noqa: N802
     """Should remove all values from _plugins and set default font"""
     from PIL import Image as _Image
     from PIL.ImageDraw import ImageDraw
@@ -41,7 +41,7 @@ def test_init_PIL():  # noqa: N802
     del _Image, ImageDraw
 
 
-def test_create_images():
+def test_create_images() -> None:
     init_PIL(DEFAULT_UI_FONT, 20)
 
     dropdown = create_dropdown_image("test\ntest")
@@ -53,7 +53,7 @@ def test_create_images():
     assert isinstance(placeholder, Image)
 
 
-def test_resize():
+def test_resize() -> None:
     """Test a variety of PIL Image resize scenarios"""
 
     example_image = new("P", (10, 10))
@@ -82,7 +82,9 @@ def test_resize():
         ("RGB", [(i, i, i) for i in range(100)], "L"),
     ],
 )
-def test_optimize_image_mode(mode: str, pixel_data: list[tuple], expected_mode: str):
+def test_optimize_image_mode(
+    mode: str, pixel_data: list[tuple], expected_mode: str
+) -> None:
     """Should reduce pixel depth if visually equivalent"""
 
     image = new(mode, (10, 10))
@@ -109,14 +111,16 @@ def test_optimize_image_mode(mode: str, pixel_data: list[tuple], expected_mode: 
         ("1", "Black And White", 1),
     ],
 )
-def test_get_mode_info(mode: str, expected_readable_mode: str, expected_bpp: int):
+def test_get_mode_info(
+    mode: str, expected_readable_mode: str, expected_bpp: int
+) -> None:
     readable_mode, bpp = get_mode_info(mode)
 
     assert readable_mode == expected_readable_mode
     assert bpp == expected_bpp
 
 
-def test_preinit():
+def test_preinit() -> None:
     """Should import supported formats and set PIL as initialized"""
 
     mock_import = MagicMock()
@@ -155,7 +159,7 @@ def test_preinit():
     assert supported_formats == imported_formats
 
 
-def test_preinit_already_initialized():
+def test_preinit_already_initialized() -> None:
     """Should do nothing since already initialized"""
 
     mock_register_open = MagicMock()

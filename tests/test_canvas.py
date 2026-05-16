@@ -10,7 +10,7 @@ from image_viewer.ui.canvas import CustomCanvas
 from tests.utils.mocks import MockEvent
 
 
-def test_create_assets(canvas: CustomCanvas, example_image: Image):
+def test_create_assets(canvas: CustomCanvas, example_image: Image) -> None:
     """Should successfully create buttons, text, and topbar."""
 
     # Should store id after creation
@@ -25,7 +25,7 @@ def test_create_assets(canvas: CustomCanvas, example_image: Image):
     assert canvas._topbar is display_image
 
 
-def test_update_image_display(canvas: CustomCanvas, example_image: Image):
+def test_update_image_display(canvas: CustomCanvas, example_image: Image) -> None:
     """Should center images on update_image_display and
     preserve coords on update_existing_image_display"""
     display_image = PhotoImage(example_image)
@@ -48,7 +48,7 @@ def test_update_image_display(canvas: CustomCanvas, example_image: Image):
     assert original_coords != canvas.coords(image_id)
 
 
-def test_widget_visible(canvas: CustomCanvas):
+def test_widget_visible(canvas: CustomCanvas) -> None:
     """Is widget visible function should be accurate"""
     widget_id: int = canvas.create_rectangle(0, 0, 10, 10)
     assert canvas.is_widget_visible(widget_id)
@@ -71,7 +71,7 @@ def test_drag(
     start_coords: tuple[int, int],
     end_coords: tuple[int, int],
     expected_move_amount: tuple[int, int],
-):
+) -> None:
     """Should move image amount dragged"""
     canvas.screen_width = 1920
     canvas.screen_height = 1080
@@ -92,7 +92,7 @@ def test_drag(
         )
 
 
-def test_get_button_id(canvas: CustomCanvas, example_image: Image):
+def test_get_button_id(canvas: CustomCanvas, example_image: Image) -> None:
     """Should keep track of buttons and correctly return their id"""
 
     mock_button = MagicMock()
@@ -104,7 +104,7 @@ def test_get_button_id(canvas: CustomCanvas, example_image: Image):
     assert canvas.get_button_id(button_name) == mock_button.id
 
 
-def test_mock_button_click(canvas: CustomCanvas, example_image: Image):
+def test_mock_button_click(canvas: CustomCanvas, example_image: Image) -> None:
     """Should call on_click and on_leave functions of button"""
 
     mock_button = MagicMock()

@@ -11,7 +11,7 @@ from image_viewer.ui.button_icon_factory import ButtonIconFactory
 def test_create_icons(
     tk: Tk,  # noqa: ARG001
     button_icon_factory: ButtonIconFactory,
-):
+) -> None:
     """Should successfully create all icons as PhotoImages."""
     topbar: PhotoImage = button_icon_factory.make_topbar_image(1920)
     assert isinstance(topbar, PhotoImage)

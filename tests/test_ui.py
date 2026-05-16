@@ -10,7 +10,7 @@ from image_viewer.ui.canvas import CustomCanvas
 from image_viewer.ui.image import DropdownImageUIElement
 
 
-def test_show_dropdown_image():
+def test_show_dropdown_image() -> None:
     """Should toggle between being shown and not"""
     dropdown = DropdownImageUIElement(123)
     assert not dropdown.show
@@ -18,7 +18,7 @@ def test_show_dropdown_image():
     assert dropdown.show
 
 
-def test_button(canvas: CustomCanvas, button_icons: IconImages):
+def test_button(canvas: CustomCanvas, button_icons: IconImages) -> None:
     """Ensure buttons can add themselves to canvas and
     on click/enter/leave events work as expected"""
     on_click_function = MagicMock()
@@ -42,7 +42,7 @@ def test_button(canvas: CustomCanvas, button_icons: IconImages):
 
 
 # TODO: add checks for using different images in active/inactive states
-def test_toggleable_button(canvas: CustomCanvas, button_icons: IconImages):
+def test_toggleable_button(canvas: CustomCanvas, button_icons: IconImages) -> None:
     """Ensure toggleable button goes between active/inactive states"""
     on_click_function = MagicMock()
     button = ToggleableButtonUIElement(
