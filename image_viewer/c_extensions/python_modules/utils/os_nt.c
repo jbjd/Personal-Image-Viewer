@@ -131,12 +131,12 @@ static PyObject *trash_file(PyObject *self, PyObject *arg)
 
     Py_BEGIN_ALLOW_THREADS;
 
-    char *path = _normalize_str_for_file_op(path, path_size);
+    char *normalized_path = _normalize_str_for_file_op(path, path_size);
 
-    SHFILEOPSTRUCTA file_op = {g_hwnd, FO_DELETE, path, NULL, FOF_ALLOWUNDO | FOF_FILESONLY | FOF_NOCONFIRMATION | FOF_NOERRORUI};
+    SHFILEOPSTRUCTA file_op = {g_hwnd, FO_DELETE, normalized_path, NULL, FOF_ALLOWUNDO | FOF_FILESONLY | FOF_NOCONFIRMATION | FOF_NOERRORUI};
     SHFileOperationA(&file_op);
 
-    free(path);
+    free(normalized_path);
 
     Py_END_ALLOW_THREADS;
 
