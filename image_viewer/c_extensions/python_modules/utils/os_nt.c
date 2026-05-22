@@ -342,10 +342,9 @@ static PyObject *open_with(PyObject *self, PyObject *arg)
     const OPENASINFO open_as_info = {path, NULL, OAIF_EXEC | OAIF_HIDE_REGISTRATION};
     SHOpenWithDialog(g_hwnd, &open_as_info);
 
-    Py_END_ALLOW_THREADS;
-
-    // Unlike PyUnicode_AsUTF8, PyUnicode_AsWideCharString needs to be freed
     PyMem_Free(path);
+
+    Py_END_ALLOW_THREADS;
 
     return Py_None;
 }
