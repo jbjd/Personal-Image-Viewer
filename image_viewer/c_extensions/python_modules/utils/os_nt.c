@@ -84,9 +84,7 @@ static inline void _ensure_double_null_terminated(char *str)
 
 static PyObject *init_c_utils(PyObject *self, PyObject *arg)
 {
-    printf("Was %p ", g_hwnd);
     g_hwnd = PyLong_AsHWND(arg);
-    printf("Is %p\n", g_hwnd);
     SetProcessDPIAware();
 
     return Py_None;
@@ -463,7 +461,7 @@ static int os_exec(PyObject *Py_UNUSED(module))
 
 static PyModuleDef_Slot os_slots[] = {
     {Py_mod_exec, os_exec},
-    {Py_mod_multiple_interpreters, Py_MOD_PER_INTERPRETER_GIL_SUPPORTED},
+    {Py_mod_multiple_interpreters, Py_MOD_MULTIPLE_INTERPRETERS_NOT_SUPPORTED},
 #ifdef Py_GIL_DISABLED
     {Py_mod_gil, Py_MOD_GIL_NOT_USED},
 #endif
