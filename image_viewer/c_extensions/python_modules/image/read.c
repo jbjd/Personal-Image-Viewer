@@ -249,27 +249,13 @@ static PyMethodDef image_read_methods[] = {
     {"decode_scaled_jpeg", (PyCFunction)decode_scaled_jpeg, METH_FASTCALL, NULL},
     {NULL, NULL, 0, NULL}};
 
-static struct PyModuleDef image_read_module = {
-    PyModuleDef_HEAD_INIT,
-    "_read",
-    NULL,
-    -1,
-    image_read_methods};
-
-PyMODINIT_FUNC PyInit__read(void)
+static int image_read_exec(PyObject *module)
 {
     if (unlikely(
-            PyType_Ready(&CRawImageView_Type) < 0 ||
-            PyType_Ready(&CDecodedJpegView_Type) < 0))
-    {
-        return NULL;
-    }
-
-    PyObject *module = PyModule_Create(&image_read_module);
-
-    if (unlikely(
-            PyModule_AddObjectRef(module, VARIABLE_NAME(CRawImageView), (PyObject *)&CRawImageView_Type) < 0 ||
-            PyModule_AddObjectRef(module, VARIABLE_NAME(CDecodedJpegView), (PyObject *)&CDecodedJpegView_Type) < 0 ||
+            PyType_Ready(&CRawImageView_Type) ||
+            PyType_Ready(&CDecodedJpegView_Type) ||
+            PyModule_AddObjectRef(module, VARIABLE_NAME(CRawImageView), (PyObject *)&CRawImageView_Type) ||
+            PyModule_AddObjectRef(module, VARIABLE_NAME(CDecodedJpegView), (PyObject *)&CDecodedJpegView_Type) ||
             PyModule_AddStringConstant(module, VARIABLE_NAME(PNG), PNG) ||
             PyModule_AddStringConstant(module, VARIABLE_NAME(JPEG), JPEG) ||
             PyModule_AddStringConstant(module, VARIABLE_NAME(GIF), GIF) ||
@@ -278,8 +264,28 @@ PyMODINIT_FUNC PyInit__read(void)
             PyModule_AddStringConstant(module, VARIABLE_NAME(DDS), DDS)))
     {
         Py_DECREF(module);
-        return NULL;
+        return -1;
     }
 
-    return module;
+    return 0;
+}
+
+static PyModuleDef_Slot image_read_slots[] = {
+    {Py_mod_exec, image_read_exec},
+    {Py_mod_multiple_interpreters, Py_MOD_MULTIPLE_INTERPRETERS_NOT_SUPPORTED},
+#ifdef Py_GIL_DISABLED
+    {Py_mod_gil, Py_MOD_GIL_NOT_USED},
+#endif
+    {0, NULL}};
+
+static struct PyModuleDef image_read_module = {
+    PyModuleDef_HEAD_INIT,
+    .m_name = "_read",
+    .m_size = 0,
+    .m_methods = image_read_methods,
+    .m_slots = image_read_slots};
+
+PyMODINIT_FUNC PyInit__read(void)
+{
+    return PyModuleDef_Init(&image_read_module);
 }
