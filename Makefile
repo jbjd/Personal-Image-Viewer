@@ -1,13 +1,13 @@
 ifeq ($(OS),Windows_NT)
-    PYTHON = python
-	PYTHON_DLL = python312
-	COMPILED_EXT = pyd
-	OS_FLAGS =
+    PYTHON := python
+	PYTHON_DLL := python312
+	override COMPILED_EXT := pyd
+	OS_FLAGS :=
 else
-    PYTHON = python3.12
-	PYTHON_DLL = python3.12
-	COMPILED_EXT = so
-	OS_FLAGS = -fPIC
+    PYTHON := python3.12
+	PYTHON_DLL := python3.12
+	override COMPILED_EXT := so
+	OS_FLAGS := -fPIC
 endif
 
 # Base prefix ignores venv
@@ -15,9 +15,9 @@ PYTHON_BASE_PREFIX := $(shell $(PYTHON) -c "import sys;print(sys.base_prefix)")
 
 ifneq (,$(wildcard .venv))  # If .venv folder exists, use that
 	ifeq ($(OS),Windows_NT)
-		INSTALL_STEP_PREFIX = .venv/Scripts
+		INSTALL_STEP_PREFIX := .venv/Scripts
 	else
-		INSTALL_STEP_PREFIX = .venv
+		INSTALL_STEP_PREFIX := .venv
 	endif
 else
     INSTALL_STEP_PREFIX := $(PYTHON_BASE_PREFIX)
@@ -35,14 +35,13 @@ else
 	PYTHON_INCLUDES := $(PYTHON_BASE_PREFIX)/include/python3.12/
 endif
 
-OPTIMIZATION_FLAG=-O3
-C_SOURCE=image_viewer/c_extensions
-C_PYTHON_MODULES=$(C_SOURCE)/python_modules
-C_FLAGS_SHARED=-L$(PYTHON_LIBS) -I$(PYTHON_INCLUDES) -l$(PYTHON_DLL) $(OPTIMIZATION_FLAG) -march=native -mtune=native -ffinite-math-only -fgcse-las -fgcse-sm -fisolate-erroneous-paths-attribute -fno-signed-zeros -frename-registers -fsched-pressure -s -shared -Wall -Werror $(OS_FLAGS)
+OPTIMIZATION_FLAG := -O3
+override C_SOURCE := image_viewer/c_extensions
+override C_PYTHON_MODULES := $(C_SOURCE)/python_modules
+C_FLAGS_SHARED := -L$(PYTHON_LIBS) -I$(PYTHON_INCLUDES) -l$(PYTHON_DLL) $(OPTIMIZATION_FLAG) -march=native -mtune=native -ffinite-math-only -fgcse-las -fgcse-sm -fisolate-erroneous-paths-attribute -fno-signed-zeros -frename-registers -fsched-pressure -s -shared -Wall -Werror $(OS_FLAGS)
 
 build-config:
 	gcc $(C_PYTHON_MODULES)/config/config.c $(C_PYTHON_MODULES)/config/_utils.c $(C_FLAGS_SHARED) -I$(C_SOURCE) -o image_viewer/_config.$(COMPILED_EXT)
-	gcc $(C_PYTHON_MODULES)/config/test_utils.c $(C_PYTHON_MODULES)/config/_utils.c $(C_FLAGS_SHARED) -I$(C_SOURCE) -o tests/utils/_config.$(COMPILED_EXT)
 
 build-image-read:
 	gcc $(C_PYTHON_MODULES)/image/read.c $(C_FLAGS_SHARED) -I$(C_SOURCE) -o image_viewer/image/_read.$(COMPILED_EXT) -lturbojpeg
@@ -52,7 +51,10 @@ ifeq ($(OS),Windows_NT)
 	gcc $(C_PYTHON_MODULES)/utils/os_nt.c $(C_SOURCE)/b64/cencode.c -I$(C_SOURCE) -lshlwapi -loleaut32 -lole32 $(C_FLAGS_SHARED) -o image_viewer/utils/_os_nt.$(COMPILED_EXT)
 endif
 
-build-all: build-config build-image-read build-util-os-nt
+build-test:
+	gcc $(C_PYTHON_MODULES)/tests/c_bindings.c $(C_PYTHON_MODULES)/config/_utils.c $(C_FLAGS_SHARED) -I$(C_SOURCE) -o tests/utils/_c_bindings.$(COMPILED_EXT)
+
+build-all: build-config build-image-read build-util-os-nt build-test
 
 install:
 	$(PYTHON_FOR_INSTALL_STEP) compile.py --assume-this-machine --strip

@@ -5,7 +5,7 @@ from collections.abc import Callable
 from configparser import ConfigParser
 from typing import override
 
-from tests.utils._config import is_valid_hex_color, is_valid_keybind
+from tests.utils._c_bindings import is_valid_hex_color, is_valid_keybind
 
 
 def _strip_quotes(value: str) -> str:

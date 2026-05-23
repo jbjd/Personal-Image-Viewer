@@ -237,38 +237,46 @@ static PyMethodDef config_methods[] = {
     {"parse_config_file", (PyCFunction)parse_config_file, METH_VARARGS, NULL},
     {NULL, NULL, 0, NULL}};
 
-static struct PyModuleDef config_test_utils_module = {
+static int config_exec(PyObject *module)
+{
+    if (unlikely(
+            PyType_Ready(&Config_Type) ||
+            PyModule_AddObjectRef(module, VARIABLE_NAME(Config), (PyObject *)&Config_Type) ||
+            PyModule_AddIntConstant(module, VARIABLE_NAME(DEFAULT_CACHE_SIZE), DEFAULT_CACHE_SIZE) ||
+            PyModule_AddStringConstant(module, VARIABLE_NAME(DEFAULT_KB_COPY_TO_CLIPBOARD_AS_BASE64), DEFAULT_KB_COPY_TO_CLIPBOARD_AS_BASE64) ||
+            PyModule_AddStringConstant(module, VARIABLE_NAME(DEFAULT_KB_MOVE_TO_NEW_FILE), DEFAULT_KB_MOVE_TO_NEW_FILE) ||
+            PyModule_AddStringConstant(module, VARIABLE_NAME(DEFAULT_KB_OPTIMIZE_IMAGE), DEFAULT_KB_OPTIMIZE_IMAGE) ||
+            PyModule_AddStringConstant(module, VARIABLE_NAME(DEFAULT_KB_REFRESH), DEFAULT_KB_REFRESH) ||
+            PyModule_AddStringConstant(module, VARIABLE_NAME(DEFAULT_KB_RELOAD_IMAGE), DEFAULT_KB_RELOAD_IMAGE) ||
+            PyModule_AddStringConstant(module, VARIABLE_NAME(DEFAULT_KB_RENAME), DEFAULT_KB_RENAME) ||
+            PyModule_AddStringConstant(module, VARIABLE_NAME(DEFAULT_KB_SHOW_DETAILS), DEFAULT_KB_SHOW_DETAILS) ||
+            PyModule_AddStringConstant(module, VARIABLE_NAME(DEFAULT_KB_UNDO_MOST_RECENT_ACTION), DEFAULT_KB_UNDO_MOST_RECENT_ACTION) ||
+            PyModule_AddStringConstant(module, VARIABLE_NAME(DEFAULT_UI_BACKGROUND_COLOR), DEFAULT_UI_BACKGROUND_COLOR) ||
+            PyModule_AddStringConstant(module, VARIABLE_NAME(DEFAULT_UI_FONT), DEFAULT_UI_FONT)))
+    {
+        Py_DECREF(module);
+        return -1;
+    }
+
+    return 0;
+}
+
+static PyModuleDef_Slot config_slots[] = {
+    {Py_mod_exec, config_exec},
+    {Py_mod_multiple_interpreters, Py_MOD_MULTIPLE_INTERPRETERS_NOT_SUPPORTED},
+#ifdef Py_GIL_DISABLED
+    {Py_mod_gil, Py_MOD_GIL_NOT_USED},
+#endif
+    {0, NULL}};
+
+static struct PyModuleDef config_module = {
     PyModuleDef_HEAD_INIT,
-    "_config",
-    NULL,
-    -1,
-    config_methods};
+    .m_name = "_config",
+    .m_size = 0,
+    .m_methods = config_methods,
+    .m_slots = config_slots};
 
 PyMODINIT_FUNC PyInit__config(void)
 {
-    if (unlikely(PyType_Ready(&Config_Type) < 0))
-    {
-        return NULL;
-    }
-
-    PyObject *module = PyModule_Create(&config_test_utils_module);
-
-    if (unlikely(PyModule_AddObjectRef(module, VARIABLE_NAME(Config), (PyObject *)&Config_Type) < 0 ||
-                 PyModule_AddIntConstant(module, VARIABLE_NAME(DEFAULT_CACHE_SIZE), DEFAULT_CACHE_SIZE) ||
-                 PyModule_AddStringConstant(module, VARIABLE_NAME(DEFAULT_KB_COPY_TO_CLIPBOARD_AS_BASE64), DEFAULT_KB_COPY_TO_CLIPBOARD_AS_BASE64) ||
-                 PyModule_AddStringConstant(module, VARIABLE_NAME(DEFAULT_KB_MOVE_TO_NEW_FILE), DEFAULT_KB_MOVE_TO_NEW_FILE) ||
-                 PyModule_AddStringConstant(module, VARIABLE_NAME(DEFAULT_KB_OPTIMIZE_IMAGE), DEFAULT_KB_OPTIMIZE_IMAGE) ||
-                 PyModule_AddStringConstant(module, VARIABLE_NAME(DEFAULT_KB_REFRESH), DEFAULT_KB_REFRESH) ||
-                 PyModule_AddStringConstant(module, VARIABLE_NAME(DEFAULT_KB_RELOAD_IMAGE), DEFAULT_KB_RELOAD_IMAGE) ||
-                 PyModule_AddStringConstant(module, VARIABLE_NAME(DEFAULT_KB_RENAME), DEFAULT_KB_RENAME) ||
-                 PyModule_AddStringConstant(module, VARIABLE_NAME(DEFAULT_KB_SHOW_DETAILS), DEFAULT_KB_SHOW_DETAILS) ||
-                 PyModule_AddStringConstant(module, VARIABLE_NAME(DEFAULT_KB_UNDO_MOST_RECENT_ACTION), DEFAULT_KB_UNDO_MOST_RECENT_ACTION) ||
-                 PyModule_AddStringConstant(module, VARIABLE_NAME(DEFAULT_UI_BACKGROUND_COLOR), DEFAULT_UI_BACKGROUND_COLOR) ||
-                 PyModule_AddStringConstant(module, VARIABLE_NAME(DEFAULT_UI_FONT), DEFAULT_UI_FONT)))
-    {
-        Py_DECREF(module);
-        return NULL;
-    }
-
-    return module;
+    return PyModuleDef_Init(&config_module);
 }
