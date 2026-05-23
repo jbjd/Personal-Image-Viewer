@@ -43,32 +43,32 @@ static PyObject *Py_is_valid_keybind(PyObject *self, PyObject *arg)
     return PyBool_FromLong(is_valid_keybind(keybind, (size_t)size));
 }
 
-static PyMethodDef test_utils_methods[] = {
+static PyMethodDef c_bindings_methods[] = {
     {"is_valid_hex_color", Py_is_valid_hex_color, METH_O, NULL},
     {"is_valid_keybind", Py_is_valid_keybind, METH_O, NULL},
     {NULL, NULL, 0, NULL}};
 
-static int test_utils_exec(PyObject *Py_UNUSED(module))
+static int c_bindings_exec(PyObject *Py_UNUSED(module))
 {
     return 0;
 }
 
-static PyModuleDef_Slot test_utils_slots[] = {
-    {Py_mod_exec, test_utils_exec},
+static PyModuleDef_Slot c_bindings_slots[] = {
+    {Py_mod_exec, c_bindings_exec},
     {Py_mod_multiple_interpreters, Py_MOD_MULTIPLE_INTERPRETERS_NOT_SUPPORTED},
 #ifdef Py_GIL_DISABLED
     {Py_mod_gil, Py_MOD_GIL_NOT_USED},
 #endif
     {0, NULL}};
 
-static struct PyModuleDef test_utils_module = {
+static struct PyModuleDef c_bindings_module = {
     PyModuleDef_HEAD_INIT,
-    .m_name = "_c_tests",
+    .m_name = "_c_bindings",
     .m_size = 0,
-    .m_methods = test_utils_methods,
-    .m_slots = test_utils_slots};
+    .m_methods = c_bindings_methods,
+    .m_slots = c_bindings_slots};
 
-PyMODINIT_FUNC PyInit__c_tests(void)
+PyMODINIT_FUNC PyInit__c_bindings(void)
 {
-    return PyModuleDef_Init(&test_utils_module);
+    return PyModuleDef_Init(&c_bindings_module);
 }
