@@ -342,10 +342,9 @@ static PyObject *open_with(PyObject *self, PyObject *arg)
     const OPENASINFO open_as_info = {path, NULL, OAIF_EXEC | OAIF_HIDE_REGISTRATION};
     SHOpenWithDialog(g_hwnd, &open_as_info);
 
-    Py_END_ALLOW_THREADS;
-
-    // Unlike PyUnicode_AsUTF8, PyUnicode_AsWideCharString needs to be freed
     PyMem_Free(path);
+
+    Py_END_ALLOW_THREADS;
 
     return Py_None;
 }
@@ -363,30 +362,30 @@ static PyObject *drop_file_to_clipboard(PyObject *self, PyObject *arg)
 
     size_t sizeToAlloc = sizeof(DROPFILES) + path_size + 2;
 
-    HGLOBAL hGlobal = GlobalAlloc(GHND, sizeToAlloc);
-    if (unlikely(hGlobal == NULL))
+    HGLOBAL global = GlobalAlloc(GHND, sizeToAlloc);
+    if (unlikely(global == NULL))
     {
         goto end;
     }
 
-    DROPFILES *pDropFiles = (DROPFILES *)GlobalLock(hGlobal);
-    if (unlikely(pDropFiles == NULL))
+    DROPFILES *dropfiles = (DROPFILES *)GlobalLock(global);
+    if (unlikely(dropfiles == NULL))
     {
         goto error_free_memory;
     }
 
-    pDropFiles->pFiles = sizeof(DROPFILES);
-    pDropFiles->fWide = FALSE;
+    dropfiles->pFiles = sizeof(DROPFILES);
+    dropfiles->fWide = FALSE;
 
-    char *pathDestination = (char *)((BYTE *)pDropFiles + sizeof(DROPFILES));
+    char *pathDestination = (char *)((BYTE *)dropfiles + sizeof(DROPFILES));
     strcpy(pathDestination, path);
 
-    GlobalUnlock(hGlobal);
+    GlobalUnlock(global);
 
-    if (!_set_win_clipboard(CF_HDROP, hGlobal))
+    if (!_set_win_clipboard(CF_HDROP, global))
     {
     error_free_memory:
-        GlobalFree(hGlobal);
+        GlobalFree(global);
     }
 
 end:
@@ -454,14 +453,27 @@ static PyMethodDef os_methods[] = {
     {"read_buffer_as_base64_and_copy_to_clipboard", read_buffer_as_base64_and_copy_to_clipboard, METH_O, NULL},
     {NULL, NULL, 0, NULL}};
 
+static int os_exec(PyObject *Py_UNUSED(module))
+{
+    return 0;
+}
+
+static PyModuleDef_Slot os_slots[] = {
+    {Py_mod_exec, os_exec},
+    {Py_mod_multiple_interpreters, Py_MOD_MULTIPLE_INTERPRETERS_NOT_SUPPORTED},
+#ifdef Py_GIL_DISABLED
+    {Py_mod_gil, Py_MOD_GIL_NOT_USED},
+#endif
+    {0, NULL}};
+
 static struct PyModuleDef os_module = {
     PyModuleDef_HEAD_INIT,
-    "_os_nt",
-    NULL,
-    -1,
-    os_methods};
+    .m_name = "_os_nt",
+    .m_size = 0,
+    .m_methods = os_methods,
+    .m_slots = os_slots};
 
 PyMODINIT_FUNC PyInit__os_nt(void)
 {
-    return PyModule_Create(&os_module);
+    return PyModuleDef_Init(&os_module);
 }
