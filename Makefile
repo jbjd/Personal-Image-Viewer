@@ -42,7 +42,6 @@ C_FLAGS_SHARED=-L$(PYTHON_LIBS) -I$(PYTHON_INCLUDES) -l$(PYTHON_DLL) $(OPTIMIZAT
 
 build-config:
 	gcc $(C_PYTHON_MODULES)/config/config.c $(C_PYTHON_MODULES)/config/_utils.c $(C_FLAGS_SHARED) -I$(C_SOURCE) -o image_viewer/_config.$(COMPILED_EXT)
-	gcc $(C_PYTHON_MODULES)/config/test_utils.c $(C_PYTHON_MODULES)/config/_utils.c $(C_FLAGS_SHARED) -I$(C_SOURCE) -o tests/utils/_config.$(COMPILED_EXT)
 
 build-image-read:
 	gcc $(C_PYTHON_MODULES)/image/read.c $(C_FLAGS_SHARED) -I$(C_SOURCE) -o image_viewer/image/_read.$(COMPILED_EXT) -lturbojpeg
@@ -52,7 +51,10 @@ ifeq ($(OS),Windows_NT)
 	gcc $(C_PYTHON_MODULES)/utils/os_nt.c $(C_SOURCE)/b64/cencode.c -I$(C_SOURCE) -lshlwapi -loleaut32 -lole32 $(C_FLAGS_SHARED) -o image_viewer/utils/_os_nt.$(COMPILED_EXT)
 endif
 
-build-all: build-config build-image-read build-util-os-nt
+build-test:
+	gcc $(C_PYTHON_MODULES)/tests/c_tests.c $(C_PYTHON_MODULES)/config/_utils.c $(C_FLAGS_SHARED) -I$(C_SOURCE) -o tests/utils/_c_tests.$(COMPILED_EXT)
+
+build-all: build-config build-image-read build-util-os-nt build-test
 
 install:
 	$(PYTHON_FOR_INSTALL_STEP) compile.py --assume-this-machine --strip
