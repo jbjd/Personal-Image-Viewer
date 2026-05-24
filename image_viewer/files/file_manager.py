@@ -204,7 +204,7 @@ class ImageFileManager:
         try:
             trash_file(self.path_to_image)
             self.action_queue.append(Delete(self.path_to_image))
-        except (OSError, FileNotFoundError):
+        except OSError:
             pass
 
         self.remove_current_image()
