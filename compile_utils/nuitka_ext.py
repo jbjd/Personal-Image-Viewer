@@ -119,7 +119,7 @@ def _get_nuitka_env(assume_this_machine: bool) -> dict[str, str]:
 
 
 # Incremented when edits are made to the custom nuitka to cache break
-_CUSTOM_NUITKA_VERSION: int = 2
+_CUSTOM_NUITKA_VERSION: int = 3
 
 
 def setup_custom_nuitka_install(custom_nuitka_path: str) -> None:
