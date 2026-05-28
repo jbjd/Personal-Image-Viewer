@@ -3,11 +3,9 @@
 #include <stddef.h>
 #include <stdlib.h>
 
-#include "../../c_optimizations.h"
-
-#include "_defaults.h"
-#include "_utils.h"
-#include "config.h"
+#include "includes/c_optimizations.h"
+#include "includes/config.h"
+#include "includes/config_defaults.h"
 
 // Config Start
 static PyMemberDef Config_members[] = {
