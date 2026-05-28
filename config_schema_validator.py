@@ -30,9 +30,12 @@ def empty_or_valid_int(possible_int: str) -> bool:
     """Returns True if possible_int is an empty string or parsable as an int"""
     possible_int = _strip_quotes(possible_int)
     try:
-        return possible_int == "" or int(possible_int) >= 0
+        int(possible_int)
     except ValueError:
-        return False
+        if possible_int != "":
+            return False
+
+    return True
 
 
 def any_str(_: str) -> bool:
