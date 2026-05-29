@@ -3,8 +3,8 @@
 #include <stddef.h>
 #include <turbojpeg.h>
 
-#include "c_optimizations.h"
-#include "read.h"
+#include "includes/c_optimizations.h"
+#include "includes/read.h"
 
 // CRawImageView Start
 static PyMemberDef CRawImageView_members[] = {
