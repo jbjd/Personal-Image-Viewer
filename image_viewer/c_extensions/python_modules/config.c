@@ -3,11 +3,9 @@
 #include <stddef.h>
 #include <stdlib.h>
 
-#include "../../c_optimizations.h"
-
-#include "_defaults.h"
-#include "_utils.h"
-#include "config.h"
+#include "includes/c_optimizations.h"
+#include "includes/config.h"
+#include "includes/config_defaults.h"
 
 // Config Start
 static PyMemberDef Config_members[] = {
@@ -125,6 +123,7 @@ static void _update_config(Config *config, enum Header header, char *key, char *
         {
             config->cache_size = PyLong_FromLong(str_to_int(value, 0, 100, DEFAULT_CACHE_SIZE));
         }
+        break;
     case KEYBINDS:
         if (!is_valid_keybind(value, strlen(value)))
         {

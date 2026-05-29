@@ -7,7 +7,7 @@ For details, see http://sourceforge.net/projects/libb64
 Taken from https://github.com/BuLogics/libb64/tree/master with slight edits
 */
 
-#include "cencode.h"
+#include "includes/cencode.h"
 
 void base64_init_encodestate(base64_encodestate *state_in)
 {

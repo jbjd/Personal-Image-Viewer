@@ -8,9 +8,9 @@
 #include <shlwapi.h>
 #include <windows.h>
 
-#include "c_optimizations.h"
-#include "b64/cencode.h"
-#include "python_modules/image/read.h"
+#include "includes/c_optimizations.h"
+#include "includes/cencode.h"
+#include "includes/read.h"
 
 #ifdef __MINGW32__
 #include <shlobj.h>
