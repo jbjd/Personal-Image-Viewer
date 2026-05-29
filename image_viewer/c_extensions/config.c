@@ -1,7 +1,7 @@
 #include <ctype.h>
 #include <string.h>
 
-#include "_utils.h"
+#include "includes/config.h"
 
 /**
  * Checks if \p hex is in format "#123ABC".

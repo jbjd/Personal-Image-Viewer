@@ -1,7 +1,7 @@
 #include <Python.h>
 
-#include "c_optimizations.h"
-#include "../config/_utils.h"
+#include "includes/c_optimizations.h"
+#include "includes/config.h"
 
 /**
  * Wraps is_valid_hex_color so it can be called in Python.
