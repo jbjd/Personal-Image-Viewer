@@ -123,6 +123,7 @@ static void _update_config(Config *config, enum Header header, char *key, char *
         {
             config->cache_size = PyLong_FromLong(str_to_int(value, 0, 100, DEFAULT_CACHE_SIZE));
         }
+        break;
     case KEYBINDS:
         if (!is_valid_keybind(value, strlen(value)))
         {
