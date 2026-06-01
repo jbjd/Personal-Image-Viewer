@@ -174,9 +174,9 @@ static inline int get_scaled_dimension(int dimension, int numerator, int denomin
     return (dimension * numerator + denominator - 1) / denominator;
 }
 
-static PyObject *decode_scaled_jpeg(PyObject *self, PyObject *const *args, Py_ssize_t argLen)
+static PyObject *decode_scaled_jpeg(PyObject *self, PyObject *const *args, Py_ssize_t nargs)
 {
-    if (unlikely(argLen != 2))
+    if (unlikely(nargs != 2))
     {
         PyErr_SetString(PyExc_TypeError, "");
         return NULL;
