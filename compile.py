@@ -6,7 +6,6 @@ from importlib.metadata import version as get_module_version
 from subprocess import Popen
 
 from personal_compile_tools.file_operations import (
-    copy_file,
     copy_folder,
     delete_folder,
     get_folder_size,
@@ -14,7 +13,7 @@ from personal_compile_tools.file_operations import (
 from personal_compile_tools.modules import get_module_file_path
 from personal_compile_tools.validation import raise_if_not_root
 
-from compile_utils.args import CompileArgumentParser, CompileNamespace, NuitkaArgs
+from compile_utils.args import CompileArgumentParser, CompileNamespace
 from compile_utils.build_setup import (
     custom_module_version_up_to_date,
     write_custom_module_version,
@@ -44,27 +43,15 @@ from compile_utils.validation import (
     validate_python_version,
 )
 
-EXECUTABLE_EXT: str
-DEFAULT_INSTALL_PATH: str
-ICON_RELATIVE_PATH: str
+working_folder: str = os.path.normpath(os.path.dirname(__file__))
 
-if os.name == "nt":
-    EXECUTABLE_EXT = ".exe"
-    DEFAULT_INSTALL_PATH = "C:/Program Files/Personal Image Viewer/"
-    ICON_RELATIVE_PATH = "icon/icon.ico"
-else:
-    EXECUTABLE_EXT = ".bin"
-    DEFAULT_INSTALL_PATH = "/usr/local/personal-image-viewer/"
-    ICON_RELATIVE_PATH = "icon/icon.png"
+files_to_include: list[str] = ["image_viewer/config.ini"]
 
-EXECUTABLE_NAME: str = "viewer" + EXECUTABLE_EXT
-files_to_include: list[str] = [ICON_RELATIVE_PATH, "image_viewer/config.ini"]
-
-parser = CompileArgumentParser(DEFAULT_INSTALL_PATH)
+parser = CompileArgumentParser()
 
 args: CompileNamespace
 nuitka_args: list[str]
-args, nuitka_args = parser.parse_known_args(modules_to_skip)
+args, nuitka_args = parser.parse_args(working_folder, files_to_include, modules_to_skip)
 
 if not args.debug and not args.skip_nuitka:
     raise_if_not_root("Need root privileges to compile and install")
@@ -72,7 +59,6 @@ if not args.debug and not args.skip_nuitka:
 TARGET_MODULE: str = "main"
 TARGET_FILE: str = f"{TARGET_MODULE}.py"
 
-working_folder: str = os.path.normpath(os.path.dirname(__file__))
 build_folder_path: str = os.path.join(working_folder, "build")
 src_folder_path: str = os.path.join(build_folder_path, "src")
 target_file_path: str = os.path.join(src_folder_path, TARGET_FILE)
@@ -80,14 +66,6 @@ custom_nuitka_folder_path: str = os.path.join(build_folder_path, "nuitka")
 code_folder_path: str = os.path.join(working_folder, IMAGE_VIEWER_NAME)
 nuitka_dist_path: str = os.path.join(build_folder_path, f"{TARGET_MODULE}.dist")
 nuitka_build_path: str = os.path.join(build_folder_path, f"{TARGET_MODULE}.build")
-
-if os.name == "nt":
-    nuitka_args += [
-        NuitkaArgs.MINGW64,
-        NuitkaArgs.WINDOWS_ICON_FROM_ICO.with_value(
-            os.path.join(working_folder, ICON_RELATIVE_PATH)
-        ),
-    ]
 
 setup_custom_nuitka_install(custom_nuitka_folder_path)
 validate_python_version()
@@ -198,12 +176,6 @@ try:
 
     if process.wait():
         sys.exit(1)
-
-    for data_file_path in files_to_include:
-        old_path = os.path.join(working_folder, data_file_path)
-        new_path = os.path.join(nuitka_dist_path, data_file_path)
-        os.makedirs(os.path.dirname(new_path), exist_ok=True)
-        copy_file(old_path, new_path)
 
     if args.build_info_file:
         with open(

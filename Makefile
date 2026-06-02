@@ -57,7 +57,7 @@ build-test:
 build-all: build-config build-image-read build-util-os-nt build-test
 
 install:
-	$(PYTHON_FOR_INSTALL_STEP) compile.py --assume-this-machine --strip
+	$(PYTHON_FOR_INSTALL_STEP) -OO compile.py --assume-this-machine --strip
 
 C_AND_H_FILES = $(shell python -c "from glob import glob;print(' '.join(glob('image_viewer/**/*.[ch]',recursive=True)))")
 
