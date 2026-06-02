@@ -1,0 +1,40 @@
+---
+Language: Cpp
+BasedOnStyle: LLVM
+
+ColumnLimit: 0
+IndentWidth: 4
+ContinuationIndentWidth: 4
+TabWidth: 4
+UseTab: Never
+
+AlignAfterOpenBracket: Align
+AlignEscapedNewlines: Left
+AlignConsecutiveAssignments: false
+AlignConsecutiveMacros : false
+
+BinPackArguments: false
+BinPackParameters: false
+
+BreakBeforeBraces: Custom
+BraceWrapping:
+  AfterClass: true
+  AfterEnum: true
+  AfterStruct: true
+BreakAfterOpenBracketBracedList: true
+Cpp11BracedListStyle: true
+InsertBraces: true
+AllowShortBlocksOnASingleLine: false
+AllowShortFunctionsOnASingleLine: Empty
+AllowShortIfStatementsOnASingleLine: false
+AllowShortLoopsOnASingleLine: false
+
+IncludeBlocks: Regroup
+SortIncludes: true
+
+PointerAlignment: Right
+DerivePointerAlignment: false
+
+SpaceAfterCStyleCast: false
+SpaceAfterLogicalNot: false
+...
