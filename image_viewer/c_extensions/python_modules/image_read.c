@@ -1,10 +1,10 @@
 #define PY_SSIZE_T_CLEAN
 
-#include <stddef.h>
-#include <turbojpeg.h>
-
 #include "includes/c_optimizations.h"
 #include "includes/read.h"
+
+#include <stddef.h>
+#include <turbojpeg.h>
 
 // CRawImageView Start
 static PyMemberDef CRawImageView_members[] = {
@@ -13,8 +13,7 @@ static PyMemberDef CRawImageView_members[] = {
     {"format", Py_T_OBJECT_EX, offsetof(CRawImageView, format), Py_READONLY, 0},
     {NULL}};
 
-static void CRawImageView_dealloc(CRawImageView *self)
-{
+static void CRawImageView_dealloc(CRawImageView *self) {
     free(self->buffer);
     Py_DECREF(self->view);
     Py_DECREF(self->format);
@@ -37,36 +36,23 @@ static const char *WEBP = "WebP";
 static const char *AVIF = "AVIF";
 static const char *DDS = "DDS";
 
-static inline void _magic_number_guess(PyObject *self, CRawImageView *view_buffer)
-{
-    if (strncmp(view_buffer->buffer, "\x89PNG", 4) == 0)
-    {
+static inline void _magic_number_guess(PyObject *self, CRawImageView *view_buffer) {
+    if (strncmp(view_buffer->buffer, "\x89PNG", 4) == 0) {
         view_buffer->format = PyObject_GetAttrString(self, VARIABLE_NAME(PNG));
-    }
-    else if (strncmp(view_buffer->buffer, "\xff\xd8\xff", 3) == 0)
-    {
+    } else if (strncmp(view_buffer->buffer, "\xff\xd8\xff", 3) == 0) {
         view_buffer->format = PyObject_GetAttrString(self, VARIABLE_NAME(JPEG));
-    }
-    else if (strncmp(view_buffer->buffer, "RIFF", 4) == 0)
-    {
+    } else if (strncmp(view_buffer->buffer, "RIFF", 4) == 0) {
         view_buffer->format = PyObject_GetAttrString(self, VARIABLE_NAME(WEBP));
-    }
-    else if (strncmp(view_buffer->buffer, "GIF8", 4) == 0)
-    {
+    } else if (strncmp(view_buffer->buffer, "GIF8", 4) == 0) {
         view_buffer->format = PyObject_GetAttrString(self, VARIABLE_NAME(GIF));
-    }
-    else if (strncmp(view_buffer->buffer, "DDS ", 4) == 0)
-    {
+    } else if (strncmp(view_buffer->buffer, "DDS ", 4) == 0) {
         view_buffer->format = PyObject_GetAttrString(self, VARIABLE_NAME(DDS));
-    }
-    else
-    {
+    } else {
         view_buffer->format = PyObject_GetAttrString(self, VARIABLE_NAME(AVIF));
     }
 }
 
-static inline CRawImageView *CRawImageView_New(PyObject *self, PyObject *py_memory_view, char *buffer, unsigned long buffer_size)
-{
+static inline CRawImageView *CRawImageView_New(PyObject *self, PyObject *py_memory_view, char *buffer, unsigned long buffer_size) {
     CRawImageView *image_view = (CRawImageView *)PyObject_New(CRawImageView, &CRawImageView_Type);
     image_view->view = py_memory_view;
     image_view->buffer = buffer;
@@ -82,8 +68,7 @@ static PyMemberDef CDecodedJpegView_members[] = {
     {"dimensions", Py_T_OBJECT_EX, offsetof(CDecodedJpegView, dimensions), Py_READONLY, 0},
     {NULL}};
 
-static void CDecodedJpegView_dealloc(CDecodedJpegView *self)
-{
+static void CDecodedJpegView_dealloc(CDecodedJpegView *self) {
     free(self->buffer);
     Py_DECREF(self->view);
     Py_XDECREF(self->dimensions);
@@ -100,8 +85,7 @@ static PyTypeObject CDecodedJpegView_Type = {
     .tp_members = CDecodedJpegView_members,
 };
 
-static inline CDecodedJpegView *CDecodedJpegView_New(PyObject *py_memory_view, char *buffer, unsigned long buffer_size, int width, int height)
-{
+static inline CDecodedJpegView *CDecodedJpegView_New(PyObject *py_memory_view, char *buffer, unsigned long buffer_size, int width, int height) {
     CDecodedJpegView *decoded_jpeg_view = (CDecodedJpegView *)PyObject_New(CDecodedJpegView, &CDecodedJpegView_Type);
     decoded_jpeg_view->view = py_memory_view;
     decoded_jpeg_view->buffer = buffer;
@@ -112,17 +96,14 @@ static inline CDecodedJpegView *CDecodedJpegView_New(PyObject *py_memory_view, c
 }
 // CDecodedJpegView End
 
-static PyObject *read_image_into_buffer(PyObject *self, PyObject *arg)
-{
+static PyObject *read_image_into_buffer(PyObject *self, PyObject *arg) {
     const char *path = PyUnicode_AsUTF8(arg);
-    if (unlikely(path == NULL))
-    {
+    if (unlikely(path == NULL)) {
         return NULL;
     }
 
     FILE *file = fopen(path, "rb");
-    if (file == NULL)
-    {
+    if (file == NULL) {
         return Py_None;
     }
 
@@ -130,29 +111,25 @@ static PyObject *read_image_into_buffer(PyObject *self, PyObject *arg)
     const long size = ftell(file);
     fseek(file, 0, SEEK_SET);
 
-    if (unlikely(size < 0))
-    {
+    if (unlikely(size < 0)) {
         fclose(file);
         goto error;
     }
 
     char *buffer = (char *)malloc(size * sizeof(char));
-    if (unlikely(buffer == NULL))
-    {
+    if (unlikely(buffer == NULL)) {
         fclose(file);
         goto error;
     }
 
     const size_t read_bytes = fread(buffer, sizeof(char), size, file);
     fclose(file);
-    if (unlikely(read_bytes != size))
-    {
+    if (unlikely(read_bytes != size)) {
         goto error;
     }
 
     PyObject *py_memory_view = PyMemoryView_FromMemory(buffer, size, PyBUF_READ);
-    if (unlikely(py_memory_view == NULL))
-    {
+    if (unlikely(py_memory_view == NULL)) {
         goto error;
     }
 
@@ -169,15 +146,12 @@ error:
  * @param denominator of ratio to scale by
  * @return Scaled value
  */
-static inline int get_scaled_dimension(int dimension, int numerator, int denominator)
-{
+static inline int get_scaled_dimension(int dimension, int numerator, int denominator) {
     return (dimension * numerator + denominator - 1) / denominator;
 }
 
-static PyObject *decode_scaled_jpeg(PyObject *self, PyObject *const *args, Py_ssize_t nargs)
-{
-    if (unlikely(nargs != 2))
-    {
+static PyObject *decode_scaled_jpeg(PyObject *self, PyObject *const *args, Py_ssize_t nargs) {
+    if (unlikely(nargs != 2)) {
         PyErr_SetString(PyExc_TypeError, "");
         return NULL;
     }
@@ -185,20 +159,17 @@ static PyObject *decode_scaled_jpeg(PyObject *self, PyObject *const *args, Py_ss
     CRawImageView *raw_image_view = (CRawImageView *)args[0];
 
     int scaled_numerator, scaled_denominator;
-    if (unlikely(!PyArg_ParseTuple(args[1], "ii", &scaled_numerator, &scaled_denominator)))
-    {
+    if (unlikely(!PyArg_ParseTuple(args[1], "ii", &scaled_numerator, &scaled_denominator))) {
         return NULL;
     }
 
     tjhandle decompress_handle = tjInitDecompress();
-    if (unlikely(decompress_handle == NULL))
-    {
+    if (unlikely(decompress_handle == NULL)) {
         return NULL;
     }
 
     int width, height;
-    if (unlikely(tjDecompressHeader(decompress_handle, (unsigned char *)raw_image_view->buffer, raw_image_view->buffer_size, &width, &height) < 0))
-    {
+    if (unlikely(tjDecompressHeader(decompress_handle, (unsigned char *)raw_image_view->buffer, raw_image_view->buffer_size, &width, &height) < 0)) {
         goto error_free_handle;
     }
 
@@ -209,8 +180,7 @@ static PyObject *decode_scaled_jpeg(PyObject *self, PyObject *const *args, Py_ss
 
     unsigned long resized_jpeg_buffer_size = scaled_width * scaled_height * pixel_size * sizeof(char);
     char *resized_jpeg_buffer = (char *)malloc(resized_jpeg_buffer_size);
-    if (unlikely(resized_jpeg_buffer == NULL))
-    {
+    if (unlikely(resized_jpeg_buffer == NULL)) {
         goto error_free_handle;
     }
 
@@ -223,14 +193,12 @@ static PyObject *decode_scaled_jpeg(PyObject *self, PyObject *const *args, Py_ss
                      0,
                      scaled_height,
                      pixel_format,
-                     0) < 0))
-    {
+                     0) < 0)) {
         goto error_free_buffer;
     }
 
     PyObject *py_jpeg_memory_view = PyMemoryView_FromMemory(resized_jpeg_buffer, resized_jpeg_buffer_size, PyBUF_READ);
-    if (unlikely(py_jpeg_memory_view == NULL))
-    {
+    if (unlikely(py_jpeg_memory_view == NULL)) {
         goto error_free_buffer;
     }
 
@@ -249,8 +217,7 @@ static PyMethodDef image_read_methods[] = {
     {"decode_scaled_jpeg", (PyCFunction)decode_scaled_jpeg, METH_FASTCALL, NULL},
     {NULL, NULL, 0, NULL}};
 
-static int image_read_exec(PyObject *module)
-{
+static int image_read_exec(PyObject *module) {
     if (unlikely(
             PyType_Ready(&CRawImageView_Type) ||
             PyType_Ready(&CDecodedJpegView_Type) ||
@@ -261,8 +228,7 @@ static int image_read_exec(PyObject *module)
             PyModule_AddStringConstant(module, VARIABLE_NAME(GIF), GIF) ||
             PyModule_AddStringConstant(module, VARIABLE_NAME(WEBP), WEBP) ||
             PyModule_AddStringConstant(module, VARIABLE_NAME(AVIF), AVIF) ||
-            PyModule_AddStringConstant(module, VARIABLE_NAME(DDS), DDS)))
-    {
+            PyModule_AddStringConstant(module, VARIABLE_NAME(DDS), DDS))) {
         Py_DECREF(module);
         return -1;
     }
@@ -285,7 +251,6 @@ static struct PyModuleDef image_read_module = {
     .m_methods = image_read_methods,
     .m_slots = image_read_slots};
 
-PyMODINIT_FUNC PyInit__read(void)
-{
+PyMODINIT_FUNC PyInit__read(void) {
     return PyModuleDef_Init(&image_read_module);
 }

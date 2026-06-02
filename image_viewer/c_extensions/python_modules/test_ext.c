@@ -1,7 +1,7 @@
-#include <Python.h>
-
 #include "includes/c_optimizations.h"
 #include "includes/config.h"
+
+#include <Python.h>
 
 /**
  * Wraps is_valid_hex_color so it can be called in Python.
@@ -10,13 +10,11 @@
  * @param arg A PyUnicode string to check
  * @return PyBool if valid
  */
-static PyObject *Py_is_valid_hex_color(PyObject *self, PyObject *arg)
-{
+static PyObject *Py_is_valid_hex_color(PyObject *self, PyObject *arg) {
     Py_ssize_t size;
     const char *hex = PyUnicode_AsUTF8AndSize(arg, &size);
 
-    if (unlikely(size == -1))
-    {
+    if (unlikely(size == -1)) {
         return NULL;
     }
 
@@ -30,13 +28,11 @@ static PyObject *Py_is_valid_hex_color(PyObject *self, PyObject *arg)
  * @param arg A PyUnicode string to check
  * @return PyBool if valid
  */
-static PyObject *Py_is_valid_keybind(PyObject *self, PyObject *arg)
-{
+static PyObject *Py_is_valid_keybind(PyObject *self, PyObject *arg) {
     Py_ssize_t size;
     const char *keybind = PyUnicode_AsUTF8AndSize(arg, &size);
 
-    if (unlikely(size == -1))
-    {
+    if (unlikely(size == -1)) {
         return NULL;
     }
 
@@ -48,8 +44,7 @@ static PyMethodDef c_bindings_methods[] = {
     {"is_valid_keybind", Py_is_valid_keybind, METH_O, NULL},
     {NULL, NULL, 0, NULL}};
 
-static int c_bindings_exec(PyObject *Py_UNUSED(module))
-{
+static int c_bindings_exec(PyObject *Py_UNUSED(module)) {
     return 0;
 }
 
@@ -68,7 +63,6 @@ static struct PyModuleDef c_bindings_module = {
     .m_methods = c_bindings_methods,
     .m_slots = c_bindings_slots};
 
-PyMODINIT_FUNC PyInit__c_bindings(void)
-{
+PyMODINIT_FUNC PyInit__c_bindings(void) {
     return PyModuleDef_Init(&c_bindings_module);
 }
