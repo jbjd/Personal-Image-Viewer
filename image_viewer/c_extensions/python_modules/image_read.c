@@ -1,7 +1,8 @@
 #define PY_SSIZE_T_CLEAN
 
+#include "includes/image_read.h"
+
 #include "includes/c_optimizations.h"
-#include "includes/read.h"
 
 #include <stddef.h>
 #include <turbojpeg.h>
