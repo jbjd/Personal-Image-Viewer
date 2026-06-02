@@ -1,16 +1,16 @@
 #define INITGUID
 #define PY_SSIZE_T_CLEAN
 
-#include <fileapi.h>
-#include <oleauto.h>
-#include <Python.h>
-#include <shlguid.h>
-#include <shlwapi.h>
-#include <windows.h>
-
 #include "includes/c_optimizations.h"
 #include "includes/cencode.h"
 #include "includes/read.h"
+
+#include <Python.h>
+#include <fileapi.h>
+#include <oleauto.h>
+#include <shlguid.h>
+#include <shlwapi.h>
+#include <windows.h>
 
 #ifdef __MINGW32__
 #include <shlobj.h>
@@ -25,8 +25,7 @@ HWND g_hwnd = 0;
  *
  * @return PyLong casted HWND.
  */
-static inline HWND PyLong_AsHWND(PyObject *pyLong)
-{
+static inline HWND PyLong_AsHWND(PyObject *pyLong) {
 #pragma GCC diagnostic ignored "-Wint-to-pointer-cast"
     return (HWND)PyLong_AsLong(pyLong);
 #pragma GCC diagnostic pop
@@ -39,8 +38,7 @@ static inline HWND PyLong_AsHWND(PyObject *pyLong)
  * @param data to set to clipboard
  * @return WINBOOL that's true when successful. If it fails, call GetLastError for information.
  */
-static inline WINBOOL _set_win_clipboard(const UINT format, void *data)
-{
+static inline WINBOOL _set_win_clipboard(const UINT format, void *data) {
     return !OpenClipboard(g_hwnd) || !EmptyClipboard() || SetClipboardData(format, data) == NULL || !CloseClipboard() || 1;
 }
 
@@ -54,13 +52,11 @@ static inline WINBOOL _set_win_clipboard(const UINT format, void *data)
  * @param size Length of provided string
  * @return Newly malloc'ed string
  */
-static inline char *_normalize_str_for_file_op(const char *str, const Py_ssize_t size)
-{
+static inline char *_normalize_str_for_file_op(const char *str, const Py_ssize_t size) {
     Py_ssize_t i = 0;
     char *buffer = (char *)malloc((size + 2) * sizeof(char));
 
-    for (; i < size; i++)
-    {
+    for (; i < size; i++) {
         buffer[i] = str[i] == '/' ? '\\' : str[i];
     }
     buffer[i] = '\0';
@@ -76,27 +72,23 @@ static inline char *_normalize_str_for_file_op(const char *str, const Py_ssize_t
  *
  * @param str A string to double null terminate
  */
-static inline void _ensure_double_null_terminated(char *str)
-{
+static inline void _ensure_double_null_terminated(char *str) {
     size_t strLen = strlen(str);
     str[strLen + 1] = '\0';
 }
 
-static PyObject *init_c_utils(PyObject *self, PyObject *arg)
-{
+static PyObject *init_c_utils(PyObject *self, PyObject *arg) {
     g_hwnd = PyLong_AsHWND(arg);
     SetProcessDPIAware();
 
     return Py_None;
 }
 
-static PyObject *show_info(PyObject *self, PyObject *args)
-{
+static PyObject *show_info(PyObject *self, PyObject *args) {
     const char *title;
     const char *body;
 
-    if (unlikely(!PyArg_ParseTuple(args, "ss", &title, &body)))
-    {
+    if (unlikely(!PyArg_ParseTuple(args, "ss", &title, &body))) {
         return NULL;
     }
 
@@ -105,13 +97,11 @@ static PyObject *show_info(PyObject *self, PyObject *args)
     return Py_None;
 }
 
-static PyObject *ask_yes_no(PyObject *self, PyObject *args)
-{
+static PyObject *ask_yes_no(PyObject *self, PyObject *args) {
     const char *title;
     const char *body;
 
-    if (unlikely(!PyArg_ParseTuple(args, "ss", &title, &body)))
-    {
+    if (unlikely(!PyArg_ParseTuple(args, "ss", &title, &body))) {
         return NULL;
     }
 
@@ -120,12 +110,10 @@ static PyObject *ask_yes_no(PyObject *self, PyObject *args)
     return PyBool_FromLong(result == IDYES);
 }
 
-static PyObject *trash_file(PyObject *self, PyObject *arg)
-{
+static PyObject *trash_file(PyObject *self, PyObject *arg) {
     Py_ssize_t path_size;
     const char *path = PyUnicode_AsUTF8AndSize(arg, &path_size);
-    if (unlikely(path == NULL))
-    {
+    if (unlikely(path == NULL)) {
         return NULL;
     }
 
@@ -143,12 +131,10 @@ static PyObject *trash_file(PyObject *self, PyObject *arg)
     return Py_None;
 }
 
-static PyObject *restore_file(PyObject *self, PyObject *arg)
-{
+static PyObject *restore_file(PyObject *self, PyObject *arg) {
     Py_ssize_t target_path_size;
     const char *raw_target_path = PyUnicode_AsUTF8AndSize(arg, &target_path_size);
-    if (unlikely(raw_target_path == NULL))
-    {
+    if (unlikely(raw_target_path == NULL)) {
         return NULL;
     }
 
@@ -160,22 +146,19 @@ static PyObject *restore_file(PyObject *self, PyObject *arg)
 
     LPITEMIDLIST pidl_recycle_bin;
     hr = SHGetSpecialFolderLocation(g_hwnd, CSIDL_BITBUCKET, &pidl_recycle_bin);
-    if (FAILED(hr))
-    {
+    if (FAILED(hr)) {
         goto end;
     }
 
     IShellFolder2 *recycle_bin_folder = NULL;
     hr = SHBindToObject(NULL, pidl_recycle_bin, NULL, &IID_IShellFolder2, (void **)&recycle_bin_folder);
-    if (FAILED(hr))
-    {
+    if (FAILED(hr)) {
         goto fail_bind;
     }
 
     IEnumIDList *recycle_bin_iterator = NULL;
     hr = recycle_bin_folder->lpVtbl->EnumObjects(recycle_bin_folder, g_hwnd, SHCONTF_NONFOLDERS, &recycle_bin_iterator);
-    if (FAILED(hr))
-    {
+    if (FAILED(hr)) {
         goto fail_enum;
     }
 
@@ -185,20 +168,17 @@ static PyObject *restore_file(PyObject *self, PyObject *arg)
     DATE to_restore_recycled_time = 0;
 
     LPITEMIDLIST pidl_item;
-    while (recycle_bin_iterator->lpVtbl->Next(recycle_bin_iterator, 1, &pidl_item, NULL) == S_OK)
-    {
+    while (recycle_bin_iterator->lpVtbl->Next(recycle_bin_iterator, 1, &pidl_item, NULL) == S_OK) {
         STRRET deleted_file_display_name_ret;
 
         hr = recycle_bin_folder->lpVtbl->GetDisplayNameOf(recycle_bin_folder, pidl_item, SHGDN_INFOLDER, &deleted_file_display_name_ret);
-        if (FAILED(hr))
-        {
+        if (FAILED(hr)) {
             CoTaskMemFree(pidl_item);
             continue;
         }
 
         char deleted_file_display_name[MAX_PATH];
-        if (StrRetToBufA(&deleted_file_display_name_ret, pidl_item, deleted_file_display_name, MAX_PATH) != S_OK)
-        {
+        if (StrRetToBufA(&deleted_file_display_name_ret, pidl_item, deleted_file_display_name, MAX_PATH) != S_OK) {
             CoTaskMemFree(pidl_item);
             continue;
         }
@@ -206,8 +186,7 @@ static PyObject *restore_file(PyObject *self, PyObject *arg)
         VARIANT variant;
         const PROPERTYKEY PKey_DisplacedFrom = {FMTID_Displaced, PID_DISPLACED_FROM};
         hr = recycle_bin_folder->lpVtbl->GetDetailsEx(recycle_bin_folder, pidl_item, &PKey_DisplacedFrom, &variant);
-        if (FAILED(hr))
-        {
+        if (FAILED(hr)) {
             CoTaskMemFree(pidl_item);
             continue;
         }
@@ -220,16 +199,14 @@ static PyObject *restore_file(PyObject *self, PyObject *arg)
         strcpy(deleted_file_original_path + variant_length + 1, deleted_file_display_name);
         deleted_file_original_path[0] = tolower(deleted_file_original_path[0]);
 
-        if (strcmp(target_path, deleted_file_original_path))
-        {
+        if (strcmp(target_path, deleted_file_original_path)) {
             CoTaskMemFree(pidl_item);
             continue;
         }
 
         const PROPERTYKEY pkey_displaced_date = {FMTID_Displaced, PID_DISPLACED_DATE};
         hr = recycle_bin_folder->lpVtbl->GetDetailsEx(recycle_bin_folder, pidl_item, &pkey_displaced_date, &variant);
-        if (FAILED(hr))
-        {
+        if (FAILED(hr)) {
             CoTaskMemFree(pidl_item);
             continue;
         }
@@ -237,12 +214,10 @@ static PyObject *restore_file(PyObject *self, PyObject *arg)
         const DATE recycled_time = variant.date;
 
         // Restore only the most recently recycled file of this name for consistency
-        if (NULL == to_restore || to_restore_recycled_time < recycled_time)
-        {
+        if (NULL == to_restore || to_restore_recycled_time < recycled_time) {
             STRRET binDisplayName;
             hr = recycle_bin_folder->lpVtbl->GetDisplayNameOf(recycle_bin_folder, pidl_item, SHGDN_FORPARSING, &binDisplayName);
-            if (FAILED(hr))
-            {
+            if (FAILED(hr)) {
                 CoTaskMemFree(pidl_item);
                 continue;
             }
@@ -250,8 +225,7 @@ static PyObject *restore_file(PyObject *self, PyObject *arg)
             CoTaskMemFree(to_restore);
             to_restore = CoTaskMemAlloc(MAX_PATH + 1);
 
-            if (StrRetToBufA(&binDisplayName, pidl_item, to_restore, MAX_PATH) != S_OK)
-            {
+            if (StrRetToBufA(&binDisplayName, pidl_item, to_restore, MAX_PATH) != S_OK) {
                 CoTaskMemFree(pidl_item);
                 continue;
             }
@@ -264,8 +238,7 @@ static PyObject *restore_file(PyObject *self, PyObject *arg)
         CoTaskMemFree(pidl_item);
     }
 
-    if (NULL != to_restore)
-    {
+    if (NULL != to_restore) {
         SHFILEOPSTRUCTA file_op = {g_hwnd, FO_MOVE, to_restore, target_path, FOF_RENAMEONCOLLISION | FOF_ALLOWUNDO | FOF_FILESONLY | FOF_NOCONFIRMATION | FOF_NOERRORUI};
         SHFileOperationA(&file_op);
 
@@ -283,18 +256,15 @@ end:
     return Py_None; // TODO: Could raise OS error for python code to catch
 }
 
-static PyObject *get_files_in_folder(PyObject *self, PyObject *arg)
-{
+static PyObject *get_files_in_folder(PyObject *self, PyObject *arg) {
     Py_ssize_t path_size;
     const char *path = PyUnicode_AsUTF8AndSize(arg, &path_size);
-    if (unlikely(path == NULL))
-    {
+    if (unlikely(path == NULL)) {
         return NULL;
     }
 
     PyObject *py_files = PyList_New(0);
-    if (unlikely(py_files == NULL))
-    {
+    if (unlikely(py_files == NULL)) {
         return NULL;
     }
 
@@ -308,15 +278,12 @@ static PyObject *get_files_in_folder(PyObject *self, PyObject *arg)
     struct _WIN32_FIND_DATAA file_data;
     HANDLE file_handle = FindFirstFileA(search_query, &file_data);
 
-    if (file_handle == INVALID_HANDLE_VALUE)
-    {
+    if (file_handle == INVALID_HANDLE_VALUE) {
         goto end;
     }
 
-    do
-    {
-        if ((file_data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) == 0)
-        {
+    do {
+        if ((file_data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) == 0) {
             PyObject *py_file_name = Py_BuildValue("s", file_data.cFileName);
             PyList_Append(py_files, py_file_name);
             Py_DECREF(py_file_name);
@@ -329,11 +296,9 @@ end:
     return py_files;
 }
 
-static PyObject *open_with(PyObject *self, PyObject *arg)
-{
+static PyObject *open_with(PyObject *self, PyObject *arg) {
     wchar_t *path = PyUnicode_AsWideCharString(arg, 0);
-    if (unlikely(path == NULL))
-    {
+    if (unlikely(path == NULL)) {
         return NULL;
     }
 
@@ -349,12 +314,10 @@ static PyObject *open_with(PyObject *self, PyObject *arg)
     return Py_None;
 }
 
-static PyObject *drop_file_to_clipboard(PyObject *self, PyObject *arg)
-{
+static PyObject *drop_file_to_clipboard(PyObject *self, PyObject *arg) {
     Py_ssize_t path_size;
     const char *path = PyUnicode_AsUTF8AndSize(arg, &path_size);
-    if (unlikely(path == NULL))
-    {
+    if (unlikely(path == NULL)) {
         return NULL;
     }
 
@@ -363,14 +326,12 @@ static PyObject *drop_file_to_clipboard(PyObject *self, PyObject *arg)
     size_t sizeToAlloc = sizeof(DROPFILES) + path_size + 2;
 
     HGLOBAL global = GlobalAlloc(GHND, sizeToAlloc);
-    if (unlikely(global == NULL))
-    {
+    if (unlikely(global == NULL)) {
         goto end;
     }
 
     DROPFILES *dropfiles = (DROPFILES *)GlobalLock(global);
-    if (unlikely(dropfiles == NULL))
-    {
+    if (unlikely(dropfiles == NULL)) {
         goto error_free_memory;
     }
 
@@ -382,8 +343,7 @@ static PyObject *drop_file_to_clipboard(PyObject *self, PyObject *arg)
 
     GlobalUnlock(global);
 
-    if (!_set_win_clipboard(CF_HDROP, global))
-    {
+    if (!_set_win_clipboard(CF_HDROP, global)) {
     error_free_memory:
         GlobalFree(global);
     }
@@ -393,8 +353,7 @@ end:
     return Py_None;
 }
 
-static PyObject *read_buffer_as_base64_and_copy_to_clipboard(PyObject *self, PyObject *arg)
-{
+static PyObject *read_buffer_as_base64_and_copy_to_clipboard(PyObject *self, PyObject *arg) {
     CRawImageView *raw_image_view = (CRawImageView *)arg;
     unsigned long remaining_bytes = raw_image_view->buffer_size;
     char *buffer_start = raw_image_view->buffer;
@@ -403,8 +362,7 @@ static PyObject *read_buffer_as_base64_and_copy_to_clipboard(PyObject *self, PyO
 
     // encoded data is ~4/3 the size of the original data so make encoded buffer 2x the size.
     HGLOBAL hGlobal = GlobalAlloc(GHND, 2 * remaining_bytes);
-    if (unlikely(hGlobal == NULL))
-    {
+    if (unlikely(hGlobal == NULL)) {
         goto end;
     }
 
@@ -412,8 +370,7 @@ static PyObject *read_buffer_as_base64_and_copy_to_clipboard(PyObject *self, PyO
     char *encoded_buffer = (char *)GlobalLock(hGlobal);
     char *encoded_buffer_position = encoded_buffer;
 
-    if (unlikely(encoded_buffer == NULL))
-    {
+    if (unlikely(encoded_buffer == NULL)) {
         GlobalFree(hGlobal);
         goto end;
     }
@@ -421,8 +378,7 @@ static PyObject *read_buffer_as_base64_and_copy_to_clipboard(PyObject *self, PyO
     base64_init_encodestate(&state);
 
     const unsigned long MAX_BYTES_TO_ENCODE_AT_ONCE = 1048576;
-    while (remaining_bytes > 0)
-    {
+    while (remaining_bytes > 0) {
         unsigned bytes_to_encode = (unsigned)(remaining_bytes < MAX_BYTES_TO_ENCODE_AT_ONCE ? remaining_bytes : MAX_BYTES_TO_ENCODE_AT_ONCE);
 
         encoded_buffer_position += base64_encode_block(buffer_start, bytes_to_encode, encoded_buffer_position, &state);
@@ -453,8 +409,7 @@ static PyMethodDef os_methods[] = {
     {"read_buffer_as_base64_and_copy_to_clipboard", read_buffer_as_base64_and_copy_to_clipboard, METH_O, NULL},
     {NULL, NULL, 0, NULL}};
 
-static int os_exec(PyObject *Py_UNUSED(module))
-{
+static int os_exec(PyObject *Py_UNUSED(module)) {
     return 0;
 }
 
@@ -473,7 +428,6 @@ static struct PyModuleDef os_module = {
     .m_methods = os_methods,
     .m_slots = os_slots};
 
-PyMODINIT_FUNC PyInit__os_nt(void)
-{
+PyMODINIT_FUNC PyInit__os_nt(void) {
     return PyModuleDef_Init(&os_module);
 }
