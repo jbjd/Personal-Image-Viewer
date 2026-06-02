@@ -157,15 +157,13 @@ static PyObject *restore_file(PyObject *self, PyObject *arg) {
     }
 
     IShellFolder2 *recycle_bin_folder = NULL;
-    hr = SHBindToObject(
-        NULL, pidl_recycle_bin, NULL, &IID_IShellFolder2, (void **)&recycle_bin_folder);
+    hr = SHBindToObject(NULL, pidl_recycle_bin, NULL, &IID_IShellFolder2, (void **)&recycle_bin_folder);
     if (FAILED(hr)) {
         goto fail_bind;
     }
 
     IEnumIDList *recycle_bin_iterator = NULL;
-    hr = recycle_bin_folder->lpVtbl->EnumObjects(
-        recycle_bin_folder, g_hwnd, SHCONTF_NONFOLDERS, &recycle_bin_iterator);
+    hr = recycle_bin_folder->lpVtbl->EnumObjects(recycle_bin_folder, g_hwnd, SHCONTF_NONFOLDERS, &recycle_bin_iterator);
     if (FAILED(hr)) {
         goto fail_enum;
     }
@@ -188,17 +186,14 @@ static PyObject *restore_file(PyObject *self, PyObject *arg) {
         }
 
         char deleted_file_display_name[MAX_PATH];
-        if (StrRetToBufA(
-                &deleted_file_display_name_ret, pidl_item, deleted_file_display_name, MAX_PATH) !=
-            S_OK) {
+        if (StrRetToBufA(&deleted_file_display_name_ret, pidl_item, deleted_file_display_name, MAX_PATH) != S_OK) {
             CoTaskMemFree(pidl_item);
             continue;
         }
 
         VARIANT variant;
         const PROPERTYKEY PKey_DisplacedFrom = {FMTID_Displaced, PID_DISPLACED_FROM};
-        hr = recycle_bin_folder->lpVtbl->GetDetailsEx(
-            recycle_bin_folder, pidl_item, &PKey_DisplacedFrom, &variant);
+        hr = recycle_bin_folder->lpVtbl->GetDetailsEx(recycle_bin_folder, pidl_item, &PKey_DisplacedFrom, &variant);
         if (FAILED(hr)) {
             CoTaskMemFree(pidl_item);
             continue;
@@ -208,8 +203,7 @@ static PyObject *restore_file(PyObject *self, PyObject *arg) {
         const UINT deleted_file_original_path_size =
             variant_length + strlen(deleted_file_display_name) + 2;
         char deleted_file_original_path[deleted_file_original_path_size];
-        SHUnicodeToTChar(
-            variant.bstrVal, deleted_file_original_path, ARRAYSIZE(deleted_file_original_path));
+        SHUnicodeToTChar(variant.bstrVal, deleted_file_original_path, ARRAYSIZE(deleted_file_original_path));
         deleted_file_original_path[variant_length] = '\\';
         strcpy(deleted_file_original_path + variant_length + 1, deleted_file_display_name);
         deleted_file_original_path[0] = tolower(deleted_file_original_path[0]);
@@ -220,8 +214,7 @@ static PyObject *restore_file(PyObject *self, PyObject *arg) {
         }
 
         const PROPERTYKEY pkey_displaced_date = {FMTID_Displaced, PID_DISPLACED_DATE};
-        hr = recycle_bin_folder->lpVtbl->GetDetailsEx(
-            recycle_bin_folder, pidl_item, &pkey_displaced_date, &variant);
+        hr = recycle_bin_folder->lpVtbl->GetDetailsEx(recycle_bin_folder, pidl_item, &pkey_displaced_date, &variant);
         if (FAILED(hr)) {
             CoTaskMemFree(pidl_item);
             continue;
@@ -232,8 +225,7 @@ static PyObject *restore_file(PyObject *self, PyObject *arg) {
         // Restore only the most recently recycled file of this name for consistency
         if (NULL == to_restore || to_restore_recycled_time < recycled_time) {
             STRRET binDisplayName;
-            hr = recycle_bin_folder->lpVtbl->GetDisplayNameOf(
-                recycle_bin_folder, pidl_item, SHGDN_FORPARSING, &binDisplayName);
+            hr = recycle_bin_folder->lpVtbl->GetDisplayNameOf(recycle_bin_folder, pidl_item, SHGDN_FORPARSING, &binDisplayName);
             if (FAILED(hr)) {
                 CoTaskMemFree(pidl_item);
                 continue;
@@ -261,8 +253,7 @@ static PyObject *restore_file(PyObject *self, PyObject *arg) {
             FO_MOVE,
             to_restore,
             target_path,
-            FOF_RENAMEONCOLLISION | FOF_ALLOWUNDO | FOF_FILESONLY | FOF_NOCONFIRMATION |
-                FOF_NOERRORUI};
+            FOF_RENAMEONCOLLISION | FOF_ALLOWUNDO | FOF_FILESONLY | FOF_NOCONFIRMATION | FOF_NOERRORUI};
         SHFileOperationA(&file_op);
 
         CoTaskMemFree(to_restore);
@@ -432,10 +423,7 @@ static PyMethodDef os_methods[] = {
     {"get_files_in_folder", get_files_in_folder, METH_O, NULL},
     {"open_with", open_with, METH_O, NULL},
     {"drop_file_to_clipboard", drop_file_to_clipboard, METH_O, NULL},
-    {"read_buffer_as_base64_and_copy_to_clipboard",
-     read_buffer_as_base64_and_copy_to_clipboard,
-     METH_O,
-     NULL},
+    {"read_buffer_as_base64_and_copy_to_clipboard", read_buffer_as_base64_and_copy_to_clipboard, METH_O, NULL},
     {NULL, NULL, 0, NULL}};
 
 static int os_exec(PyObject *Py_UNUSED(module)) {
