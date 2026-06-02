@@ -3,7 +3,7 @@
 
 #include "includes/c_optimizations.h"
 #include "includes/cencode.h"
-#include "includes/image_read.h"
+#include "includes/read.h"
 
 #include <Python.h>
 #include <fileapi.h>
@@ -39,8 +39,7 @@ static inline HWND PyLong_AsHWND(PyObject *pyLong) {
  * @return WINBOOL that's true when successful. If it fails, call GetLastError for information.
  */
 static inline WINBOOL _set_win_clipboard(const UINT format, void *data) {
-    return !OpenClipboard(g_hwnd) || !EmptyClipboard() || SetClipboardData(format, data) == NULL ||
-           !CloseClipboard() || 1;
+    return !OpenClipboard(g_hwnd) || !EmptyClipboard() || SetClipboardData(format, data) == NULL || !CloseClipboard() || 1;
 }
 
 /**
@@ -122,12 +121,7 @@ static PyObject *trash_file(PyObject *self, PyObject *arg) {
 
     char *normalized_path = _normalize_str_for_file_op(path, path_size);
 
-    SHFILEOPSTRUCTA file_op = {
-        g_hwnd,
-        FO_DELETE,
-        normalized_path,
-        NULL,
-        FOF_ALLOWUNDO | FOF_FILESONLY | FOF_NOCONFIRMATION | FOF_NOERRORUI};
+    SHFILEOPSTRUCTA file_op = {g_hwnd, FO_DELETE, normalized_path, NULL, FOF_ALLOWUNDO | FOF_FILESONLY | FOF_NOCONFIRMATION | FOF_NOERRORUI};
     SHFileOperationA(&file_op);
 
     free(normalized_path);
@@ -169,8 +163,7 @@ static PyObject *restore_file(PyObject *self, PyObject *arg) {
     }
 
     char *target_path = _normalize_str_for_file_op(raw_target_path, target_path_size);
-    target_path[0] = tolower(target_path[0]); // Bin API can return upper or lower case drives so
-                                              // need to normalize on something
+    target_path[0] = tolower(target_path[0]); // Bin API can return upper or lower case drives so need to normalize on something
     char *to_restore = NULL;
     DATE to_restore_recycled_time = 0;
 
@@ -178,8 +171,7 @@ static PyObject *restore_file(PyObject *self, PyObject *arg) {
     while (recycle_bin_iterator->lpVtbl->Next(recycle_bin_iterator, 1, &pidl_item, NULL) == S_OK) {
         STRRET deleted_file_display_name_ret;
 
-        hr = recycle_bin_folder->lpVtbl->GetDisplayNameOf(
-            recycle_bin_folder, pidl_item, SHGDN_INFOLDER, &deleted_file_display_name_ret);
+        hr = recycle_bin_folder->lpVtbl->GetDisplayNameOf(recycle_bin_folder, pidl_item, SHGDN_INFOLDER, &deleted_file_display_name_ret);
         if (FAILED(hr)) {
             CoTaskMemFree(pidl_item);
             continue;
@@ -200,8 +192,7 @@ static PyObject *restore_file(PyObject *self, PyObject *arg) {
         }
 
         const UINT variant_length = SysStringLen(variant.bstrVal);
-        const UINT deleted_file_original_path_size =
-            variant_length + strlen(deleted_file_display_name) + 2;
+        const UINT deleted_file_original_path_size = variant_length + strlen(deleted_file_display_name) + 2;
         char deleted_file_original_path[deleted_file_original_path_size];
         SHUnicodeToTChar(variant.bstrVal, deleted_file_original_path, ARRAYSIZE(deleted_file_original_path));
         deleted_file_original_path[variant_length] = '\\';
@@ -248,12 +239,7 @@ static PyObject *restore_file(PyObject *self, PyObject *arg) {
     }
 
     if (NULL != to_restore) {
-        SHFILEOPSTRUCTA file_op = {
-            g_hwnd,
-            FO_MOVE,
-            to_restore,
-            target_path,
-            FOF_RENAMEONCOLLISION | FOF_ALLOWUNDO | FOF_FILESONLY | FOF_NOCONFIRMATION | FOF_NOERRORUI};
+        SHFILEOPSTRUCTA file_op = {g_hwnd, FO_MOVE, to_restore, target_path, FOF_RENAMEONCOLLISION | FOF_ALLOWUNDO | FOF_FILESONLY | FOF_NOCONFIRMATION | FOF_NOERRORUI};
         SHFileOperationA(&file_op);
 
         CoTaskMemFree(to_restore);
@@ -393,12 +379,9 @@ static PyObject *read_buffer_as_base64_and_copy_to_clipboard(PyObject *self, PyO
 
     const unsigned long MAX_BYTES_TO_ENCODE_AT_ONCE = 1048576;
     while (remaining_bytes > 0) {
-        unsigned bytes_to_encode =
-            (unsigned)(remaining_bytes < MAX_BYTES_TO_ENCODE_AT_ONCE ? remaining_bytes
-                                                                     : MAX_BYTES_TO_ENCODE_AT_ONCE);
+        unsigned bytes_to_encode = (unsigned)(remaining_bytes < MAX_BYTES_TO_ENCODE_AT_ONCE ? remaining_bytes : MAX_BYTES_TO_ENCODE_AT_ONCE);
 
-        encoded_buffer_position +=
-            base64_encode_block(buffer_start, bytes_to_encode, encoded_buffer_position, &state);
+        encoded_buffer_position += base64_encode_block(buffer_start, bytes_to_encode, encoded_buffer_position, &state);
         remaining_bytes -= bytes_to_encode;
         buffer_start += bytes_to_encode;
     }

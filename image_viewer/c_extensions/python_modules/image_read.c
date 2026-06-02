@@ -1,8 +1,7 @@
 #define PY_SSIZE_T_CLEAN
 
-#include "includes/image_read.h"
-
 #include "includes/c_optimizations.h"
+#include "includes/read.h"
 
 #include <stddef.h>
 #include <turbojpeg.h>
@@ -66,7 +65,8 @@ static inline CRawImageView *CRawImageView_New(PyObject *self, PyObject *py_memo
 
 // CDecodedJpegView Start
 static PyMemberDef CDecodedJpegView_members[] = {
-    {"dimensions", Py_T_OBJECT_EX, offsetof(CDecodedJpegView, dimensions), Py_READONLY, 0}, {NULL}};
+    {"dimensions", Py_T_OBJECT_EX, offsetof(CDecodedJpegView, dimensions), Py_READONLY, 0},
+    {NULL}};
 
 static void CDecodedJpegView_dealloc(CDecodedJpegView *self) {
     free(self->buffer);
@@ -86,8 +86,7 @@ static PyTypeObject CDecodedJpegView_Type = {
 };
 
 static inline CDecodedJpegView *CDecodedJpegView_New(PyObject *py_memory_view, char *buffer, unsigned long buffer_size, int width, int height) {
-    CDecodedJpegView *decoded_jpeg_view =
-        (CDecodedJpegView *)PyObject_New(CDecodedJpegView, &CDecodedJpegView_Type);
+    CDecodedJpegView *decoded_jpeg_view = (CDecodedJpegView *)PyObject_New(CDecodedJpegView, &CDecodedJpegView_Type);
     decoded_jpeg_view->view = py_memory_view;
     decoded_jpeg_view->buffer = buffer;
     decoded_jpeg_view->buffer_size = buffer_size;
@@ -179,19 +178,26 @@ static PyObject *decode_scaled_jpeg(PyObject *self, PyObject *const *args, Py_ss
     const int scaled_width = get_scaled_dimension(width, scaled_numerator, scaled_denominator);
     const int scaled_height = get_scaled_dimension(height, scaled_numerator, scaled_denominator);
 
-    unsigned long resized_jpeg_buffer_size =
-        scaled_width * scaled_height * pixel_size * sizeof(char);
+    unsigned long resized_jpeg_buffer_size = scaled_width * scaled_height * pixel_size * sizeof(char);
     char *resized_jpeg_buffer = (char *)malloc(resized_jpeg_buffer_size);
     if (unlikely(resized_jpeg_buffer == NULL)) {
         goto error_free_handle;
     }
 
-    if (unlikely(tjDecompress2(decompress_handle, (unsigned char *)raw_image_view->buffer, raw_image_view->buffer_size, (unsigned char *)resized_jpeg_buffer, scaled_width, 0, scaled_height, pixel_format, 0) < 0)) {
+    if (unlikely(tjDecompress2(
+                     decompress_handle,
+                     (unsigned char *)raw_image_view->buffer,
+                     raw_image_view->buffer_size,
+                     (unsigned char *)resized_jpeg_buffer,
+                     scaled_width,
+                     0,
+                     scaled_height,
+                     pixel_format,
+                     0) < 0)) {
         goto error_free_buffer;
     }
 
-    PyObject *py_jpeg_memory_view =
-        PyMemoryView_FromMemory(resized_jpeg_buffer, resized_jpeg_buffer_size, PyBUF_READ);
+    PyObject *py_jpeg_memory_view = PyMemoryView_FromMemory(resized_jpeg_buffer, resized_jpeg_buffer_size, PyBUF_READ);
     if (unlikely(py_jpeg_memory_view == NULL)) {
         goto error_free_buffer;
     }
@@ -212,15 +218,17 @@ static PyMethodDef image_read_methods[] = {
     {NULL, NULL, 0, NULL}};
 
 static int image_read_exec(PyObject *module) {
-    if (unlikely(PyType_Ready(&CRawImageView_Type) || PyType_Ready(&CDecodedJpegView_Type) ||
-                 PyModule_AddObjectRef(module, VARIABLE_NAME(CRawImageView), (PyObject *)&CRawImageView_Type) ||
-                 PyModule_AddObjectRef(module, VARIABLE_NAME(CDecodedJpegView), (PyObject *)&CDecodedJpegView_Type) ||
-                 PyModule_AddStringConstant(module, VARIABLE_NAME(PNG), PNG) ||
-                 PyModule_AddStringConstant(module, VARIABLE_NAME(JPEG), JPEG) ||
-                 PyModule_AddStringConstant(module, VARIABLE_NAME(GIF), GIF) ||
-                 PyModule_AddStringConstant(module, VARIABLE_NAME(WEBP), WEBP) ||
-                 PyModule_AddStringConstant(module, VARIABLE_NAME(AVIF), AVIF) ||
-                 PyModule_AddStringConstant(module, VARIABLE_NAME(DDS), DDS))) {
+    if (unlikely(
+            PyType_Ready(&CRawImageView_Type) ||
+            PyType_Ready(&CDecodedJpegView_Type) ||
+            PyModule_AddObjectRef(module, VARIABLE_NAME(CRawImageView), (PyObject *)&CRawImageView_Type) ||
+            PyModule_AddObjectRef(module, VARIABLE_NAME(CDecodedJpegView), (PyObject *)&CDecodedJpegView_Type) ||
+            PyModule_AddStringConstant(module, VARIABLE_NAME(PNG), PNG) ||
+            PyModule_AddStringConstant(module, VARIABLE_NAME(JPEG), JPEG) ||
+            PyModule_AddStringConstant(module, VARIABLE_NAME(GIF), GIF) ||
+            PyModule_AddStringConstant(module, VARIABLE_NAME(WEBP), WEBP) ||
+            PyModule_AddStringConstant(module, VARIABLE_NAME(AVIF), AVIF) ||
+            PyModule_AddStringConstant(module, VARIABLE_NAME(DDS), DDS))) {
         Py_DECREF(module);
         return -1;
     }
