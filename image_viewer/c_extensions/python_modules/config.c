@@ -144,6 +144,8 @@ static void _update_config(Config *config, enum Header header, char *key, char *
             config->ui_font = PyUnicode_FromString(value);
         }
         break;
+    case NONE:
+        break;
     }
 }
 
