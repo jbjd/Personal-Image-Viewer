@@ -3,7 +3,7 @@
 
 #include "includes/c_optimizations.h"
 #include "includes/cencode.h"
-#include "includes/read.h"
+#include "includes/image_read.h"
 
 #include <Python.h>
 #include <fileapi.h>
