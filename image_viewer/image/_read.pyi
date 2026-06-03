@@ -12,9 +12,8 @@ class CRawImageView:
 
     Contains a memoryview object to malloc'ed C data."""
 
-    __slots__ = ("byte_size", "format", "view")
+    __slots__ = ("format", "view")
 
-    byte_size: int
     format: str
     view: memoryview
 
@@ -23,9 +22,8 @@ class CDecodedJpegView:
 
     Contains a memoryview object to malloc'ed C data containing a JPEG."""
 
-    __slots__ = ("byte_size", "dimensions", "view")
+    __slots__ = ("dimensions", "view")
 
-    byte_size: int
     dimensions: tuple[int, int]
     view: memoryview
 

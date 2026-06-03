@@ -71,7 +71,7 @@ def test_load_image_in_cache(image_io: ImageIO) -> None:
     image_io.image_cache["some/path"] = cached_data
 
     mock_image_buffer = MagicMock()
-    mock_image_buffer.byte_size = image_byte_size
+    mock_image_buffer.view.nbytes = image_byte_size
     with (
         patch.object(
             ImageIO,
