@@ -132,7 +132,7 @@ class ImageIO:
             return None
 
         original_image: Image = read_image_response.image
-        byte_size: int = read_image_response.image_view.byte_size
+        byte_size: int = read_image_response.image_view.view.nbytes
 
         self.image_view = read_image_response.image_view
         self.PIL_image = original_image
@@ -185,10 +185,9 @@ class ImageIO:
             icc_profile=image.info.get("icc_profile"),
         )
 
-        original_size: int = self.image_view.byte_size
-
         buffer: memoryview[int] = optimized_bytes.getbuffer()
         new_size: int = buffer.nbytes
+        original_size: int = self.image_view.view.nbytes
 
         size_reduced: bool = new_size > 0 and new_size < original_size
         if size_reduced:
