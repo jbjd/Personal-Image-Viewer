@@ -1,7 +1,6 @@
 """Classes and functions that remove unused code and annotations"""
 
 import os
-import re
 import subprocess
 from collections.abc import Iterator
 from glob import glob
@@ -46,7 +45,7 @@ from compile_utils.code_to_skip import (
 from compile_utils.log import get_logger
 from compile_utils.validation import get_required_python_version
 
-SEPARATORS = r"[\\/]" if os.name == "nt" else r"[/]"
+SEPARATORS = r"\\/" if os.name == "nt" else r"/"
 
 # Ensure this file is git ignored
 MINIFIER_FAILED_FILE_NAME: str = "minifier_failure.py.example"
@@ -65,16 +64,21 @@ def _write_minify_failure(file_name: str, context_message: str, source: str) -> 
 
 
 def clean_file_and_copy(
-    path: str,
-    new_path: str,
+    source_file_path: str,
+    dest_file_path: str,
     module_name: str,
     module_import_path: str,
     assume_this_machine: bool,
 ) -> None:
-    """Given a python file path,
-    applies regexes/skips/minification and writes results to new_path"""
+    """Runs AST optimizer on source_file_path and writes result to dest_file_path.
 
-    source: str = read_file_utf8(path)
+    :param source_file_path: Path to clean
+    :param dest_file_path: Path to write
+    :param module_name: Name of module
+    :param module_import_path: How the module would be imported, e.x. 'PIL.Image'
+    :param assume_this_machine: Argument passed onto minifier"""
+
+    source: str = read_file_utf8(source_file_path)
 
     if module_import_path in regex_to_apply_py:
         regex_replacements: list[RegexReplacement] = regex_to_apply_py.pop(
@@ -119,62 +123,71 @@ def clean_file_and_copy(
         _write_minify_failure(module_import_path, "running ast optimizer", source)
         raise
 
-    write_file_utf8(new_path, source)
+    write_file_utf8(dest_file_path, source)
 
 
-def move_files_to_tmp_and_clean(
-    source_dir: str,
-    tmp_dir: str,
+def clean_module_and_copy(
+    module_folder_path: str,
+    dest_folder_path: str,
     module_name: str,
     assume_this_machine: bool,
     modules_to_skip: set[str] | None = None,
 ) -> None:
-    """Moves python files from source_dir to temp_dir
-    and removes unused/unneeded code"""
-    if modules_to_skip:
-        modules_to_skip_re = rf"^({'|'.join(modules_to_skip)})($|\.)"
-    else:
-        modules_to_skip_re = ""
+    """Copies all Python files of a module to dest_folder_path
+    and runs AST optimizer on .py files.
 
-    for relative_file_path in _get_files_in_folder_with_filter(
-        source_dir, (".py", ".pyd", ".so")
+    :param module_folder_path: Path to python module
+    :param dest_folder_path: Path to write
+    :param module_name: Name of module
+    :param assume_this_machine: Argument passed onto minifier
+    :param modules_to_skip: Submodules to not copy"""
+
+    for file_path in _get_files_in_folder_with_filter(
+        module_folder_path, (".py", ".pyd", ".so")
     ):
-        python_file = os.path.join(source_dir, relative_file_path)
-        relative_path: str = python_file.replace(source_dir, "").strip("/\\")
-        module_import_path: str = sub(SEPARATORS, ".", f"{module_name}.{relative_path}")
-        module_import_path = module_import_path[:-3]  # chops .py
+        relative_file_path: str = os.path.join(
+            module_name, file_path.replace(module_folder_path, "").lstrip(SEPARATORS)
+        )
+        module_import_path: str = sub(f"[{SEPARATORS}]", ".", relative_file_path[:-3])
 
-        relative_path = os.path.join(module_name, relative_path)
+        new_file_path: str = os.path.join(dest_folder_path, relative_file_path)
 
-        new_path: str = os.path.join(tmp_dir, relative_path)
-
-        if modules_to_skip is not None and (
-            skip_match := re.match(modules_to_skip_re, module_import_path)
+        if modules_to_skip is not None and _should_skip_module(
+            module_import_path, modules_to_skip
         ):
-            match: str = skip_match.string[: skip_match.end()]
-            if match[-1:] == ".":
-                match = match[:-1]
-            if match in modules_to_skip:
-                modules_to_skip.remove(match)
             continue
 
-        os.makedirs(os.path.dirname(new_path), exist_ok=True)
-        if python_file.endswith(".py"):
+        os.makedirs(os.path.dirname(new_file_path), exist_ok=True)
+        if file_path.endswith(".py"):
             clean_file_and_copy(
-                python_file,
-                new_path,
+                file_path,
+                new_file_path,
                 module_name,
                 module_import_path,
                 assume_this_machine,
             )
         else:
-            copy_file(python_file, new_path)
+            copy_file(file_path, new_file_path)
 
     if modules_to_skip:
         _logger.warning(
             "Some modules were marked to skip but were not found: %s",
             ", ".join(modules_to_skip),
         )
+
+
+def _should_skip_module(module_import_path: str, modules_to_skip: set[str]) -> bool:
+    """Checks if a module should be skipped.
+
+    :param module_import_path: How the module would be imported, e.x. 'PIL.Image'
+    :param modules_to_skip: Set of modules, submodules will also be considered skipped
+    :returns: True if module_import_path or its parent is in modules_to_skip"""
+    for m in modules_to_skip:
+        if module_import_path.startswith(m):
+            modules_to_skip.remove(m)
+            return True
+
+    return False
 
 
 def warn_unused_code_skips(modules_no_warn_unused_skips: list[str]) -> None:
