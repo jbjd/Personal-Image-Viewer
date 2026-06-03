@@ -269,18 +269,18 @@ static PyObject *get_files_in_folder(PyObject *self, PyObject *arg) {
         return NULL;
     }
 
-    char search_query[path_size + 3];
+    char search_query[path_size + 5];
     memcpy(search_query, path, path_size);
 
     const char path_last_char = path[path_size - 1];
     if (path_last_char != '/' && path_last_char != '\\') {
-        memcpy(search_query + path_size, "\\*", 3);
+        memcpy(search_query + path_size, "\\*.*", 5);
     } else {
-        memcpy(search_query + path_size, "*", 2);
+        memcpy(search_query + path_size, "*.*", 4);
     }
 
     struct _WIN32_FIND_DATAA file_data;
-    HANDLE file_handle = FindFirstFileA(search_query, &file_data);
+    HANDLE file_handle = FindFirstFileExA(search_query, FindExInfoBasic, &file_data, FindExSearchNameMatch, NULL, FIND_FIRST_EX_LARGE_FETCH);
 
     if (file_handle == INVALID_HANDLE_VALUE) {
         goto end;
@@ -301,7 +301,7 @@ end:
 }
 
 static PyObject *open_with(PyObject *self, PyObject *arg) {
-    wchar_t *path = PyUnicode_AsWideCharString(arg, 0);
+    wchar_t *path = PyUnicode_AsWideCharString(arg, NULL);
     if (unlikely(path == NULL)) {
         return NULL;
     }
