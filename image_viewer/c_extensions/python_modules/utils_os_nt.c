@@ -215,8 +215,8 @@ static PyObject *restore_file(PyObject *self, PyObject *arg) {
 
         // Restore only the most recently recycled file of this name for consistency
         if (NULL == to_restore || to_restore_recycled_time < recycled_time) {
-            STRRET binDisplayName;
-            hr = recycle_bin_folder->lpVtbl->GetDisplayNameOf(recycle_bin_folder, pidl_item, SHGDN_FORPARSING, &binDisplayName);
+            STRRET bin_display_name;
+            hr = recycle_bin_folder->lpVtbl->GetDisplayNameOf(recycle_bin_folder, pidl_item, SHGDN_FORPARSING, &bin_display_name);
             if (FAILED(hr)) {
                 CoTaskMemFree(pidl_item);
                 continue;
@@ -225,7 +225,7 @@ static PyObject *restore_file(PyObject *self, PyObject *arg) {
             CoTaskMemFree(to_restore);
             to_restore = CoTaskMemAlloc(MAX_PATH + 1);
 
-            if (StrRetToBufA(&binDisplayName, pidl_item, to_restore, MAX_PATH) != S_OK) {
+            if (StrRetToBufA(&bin_display_name, pidl_item, to_restore, MAX_PATH) != S_OK) {
                 CoTaskMemFree(pidl_item);
                 continue;
             }
@@ -284,7 +284,7 @@ static PyObject *get_files_in_folder(PyObject *self, PyObject *arg) {
 
     do {
         if ((file_data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) == 0) {
-            PyObject *py_file_name = Py_BuildValue("s", file_data.cFileName);
+            PyObject *py_file_name = PyUnicode_FromString(file_data.cFileName);
             PyList_Append(py_files, py_file_name);
             Py_DECREF(py_file_name);
         }
