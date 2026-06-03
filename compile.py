@@ -102,7 +102,7 @@ try:
         module_file: str = os.path.basename(module_file_path)
         module_folder_path: str = os.path.dirname(module_file_path)
 
-        is_one_file: bool = module_folder_path.endswith("site-packages")
+        is_one_file: bool = module_folder_path.rstrip("\\/").endswith("site-packages")
 
         module_version: str = get_module_version(module.name)
         custom_module_path: str = (
@@ -122,7 +122,7 @@ try:
             continue
 
         sub_modules_to_skip: set[str] = {
-            i for i in modules_to_skip if i.startswith(module_import_name)
+            i for i in modules_to_skip if i.startswith(f"{module_import_name}.")
         }
 
         if module_import_name == "PIL" and os.name != "nt":
