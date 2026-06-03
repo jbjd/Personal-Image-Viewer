@@ -9,7 +9,6 @@
 
 // CRawImageView Start
 static PyMemberDef CRawImageView_members[] = {
-    {"byte_size", Py_T_ULONG, offsetof(CRawImageView, buffer_size), Py_READONLY, 0},
     {"view", Py_T_OBJECT_EX, offsetof(CRawImageView, view), Py_READONLY, 0},
     {"format", Py_T_OBJECT_EX, offsetof(CRawImageView, format), Py_READONLY, 0},
     {NULL}};
@@ -67,6 +66,7 @@ static inline CRawImageView *CRawImageView_New(PyObject *self, PyObject *py_memo
 // CDecodedJpegView Start
 static PyMemberDef CDecodedJpegView_members[] = {
     {"dimensions", Py_T_OBJECT_EX, offsetof(CDecodedJpegView, dimensions), Py_READONLY, 0},
+    {"view", Py_T_OBJECT_EX, offsetof(CDecodedJpegView, view), Py_READONLY, 0},
     {NULL}};
 
 static void CDecodedJpegView_dealloc(CDecodedJpegView *self) {
