@@ -27,7 +27,7 @@ from personal_python_ast_optimizer.regex.replace import (
     re_replace,
     re_replace_file,
 )
-from personal_simple_tcl_minifier.parse import tcl_minify
+from personal_simple_tcl_minifier.parse import tcl_minify_file
 
 from compile_utils.code_to_skip import (
     classes_to_skip,
@@ -216,9 +216,7 @@ def clean_tk_files(compile_dir: str) -> None:
         re_replace_file(code_file, regexes, raise_if_not_applied=True)
 
     for code_file in _get_files_in_folder_with_filter(compile_dir, (".tcl", ".tm")):
-        source: str = read_file_utf8(code_file)
-        source = tcl_minify(source)
-        write_file_utf8(code_file, source)
+        tcl_minify_file(code_file)
 
 
 def strip_files(compile_dir: str) -> None:
