@@ -192,11 +192,12 @@ static PyObject *restore_file(PyObject *self, PyObject *arg) {
         }
 
         const UINT variant_length = SysStringLen(variant.bstrVal);
-        const UINT deleted_file_original_path_size = variant_length + strlen(deleted_file_display_name) + 2;
+        const size_t deleted_file_display_name_size = strlen(deleted_file_display_name);
+        const UINT deleted_file_original_path_size = variant_length + deleted_file_display_name_size + 2;
         char deleted_file_original_path[deleted_file_original_path_size];
         SHUnicodeToTChar(variant.bstrVal, deleted_file_original_path, ARRAYSIZE(deleted_file_original_path));
         deleted_file_original_path[variant_length] = '\\';
-        strcpy(deleted_file_original_path + variant_length + 1, deleted_file_display_name);
+        memcpy(deleted_file_original_path + variant_length + 1, deleted_file_display_name, deleted_file_display_name_size + 1);
         deleted_file_original_path[0] = tolower(deleted_file_original_path[0]);
 
         if (strcmp(target_path, deleted_file_original_path)) {
@@ -269,11 +270,14 @@ static PyObject *get_files_in_folder(PyObject *self, PyObject *arg) {
     }
 
     char search_query[path_size + 3];
-    strcpy(search_query, path);
+    memcpy(search_query, path, path_size);
 
     const char path_last_char = path[path_size - 1];
-    const char *query_end = path_last_char != '/' && path_last_char != '\\' ? "/*\0" : "*\0";
-    strcat(search_query, query_end);
+    if (path_last_char != '/' && path_last_char != '\\') {
+        memcpy(search_query + path_size, "\\*", 3);
+    } else {
+        memcpy(search_query + path_size, "*", 2);
+    }
 
     struct _WIN32_FIND_DATAA file_data;
     HANDLE file_handle = FindFirstFileA(search_query, &file_data);
@@ -339,7 +343,7 @@ static PyObject *drop_file_to_clipboard(PyObject *self, PyObject *arg) {
     dropfiles->fWide = FALSE;
 
     char *pathDestination = (char *)((BYTE *)dropfiles + sizeof(DROPFILES));
-    strcpy(pathDestination, path);
+    memcpy(pathDestination, path, path_size + 1);
 
     GlobalUnlock(global);
 
