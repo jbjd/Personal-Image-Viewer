@@ -20,8 +20,8 @@ from compile_utils.build_setup import (
 )
 from compile_utils.cleaner import (
     clean_file_and_copy,
+    clean_module_and_copy,
     clean_tk_files,
-    move_files_to_tmp_and_clean,
     strip_files,
     warn_unused_code_skips,
 )
@@ -84,7 +84,7 @@ try:
         args.assume_this_machine,
     )
     delete_folder(os.path.join(src_folder_path, IMAGE_VIEWER_NAME))
-    move_files_to_tmp_and_clean(
+    clean_module_and_copy(
         code_folder_path, src_folder_path, IMAGE_VIEWER_NAME, args.assume_this_machine
     )
 
@@ -142,7 +142,7 @@ try:
             )
         else:
             delete_folder(custom_module_path)
-            move_files_to_tmp_and_clean(
+            clean_module_and_copy(
                 module_folder_path,
                 src_folder_path,
                 module_import_name,
