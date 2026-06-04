@@ -18,8 +18,7 @@ from image_viewer.constants import (
 )
 from image_viewer.files.file_manager import ImageFileManager
 from image_viewer.image.cache import ImageCache
-from image_viewer.image.frame import AnimationFrame
-from image_viewer.image.image_io import ImageIO
+from image_viewer.image.image_io import AnimationFrame, ImageIO
 from image_viewer.ui.button import HoverableButtonUIElement, ToggleableButtonUIElement
 from image_viewer.ui.button_icon_factory import ButtonIconFactory
 from image_viewer.ui.canvas import CustomCanvas
@@ -671,10 +670,10 @@ class ViewerApp:
         """Returns True when currently in an animation loop"""
         return self.animation_id != ""
 
-    def animation_loop(self, ms_until_next_frame: int, ms_backoff: int) -> None:
+    def animation_loop(self, duration_ms: int, ms_backoff: int) -> None:
         """Handles looping between animation frames"""
         self.animation_id = self.app.after(
-            ms_until_next_frame, self._show_next_frame, ms_backoff
+            duration_ms, self._show_next_frame, ms_backoff
         )
 
     def _show_next_frame(self, ms_backoff: int) -> None:
@@ -686,18 +685,18 @@ class ViewerApp:
         start: float = perf_counter()
         frame: AnimationFrame | None = self.image_io.get_next_frame()
 
-        ms_until_next_frame: int
+        duration_ms: int
         if frame is None:  # trying to display frame before it is loaded
-            ms_until_next_frame = ms_backoff
+            duration_ms = ms_backoff
             ms_backoff = int(ms_backoff * 1.4)
         else:
             self._update_existing_image_display(frame.image)
             elapsed: int = round((perf_counter() - start) * 1000)
 
             # Tkinter handles negative values
-            ms_until_next_frame = frame.ms_until_next_frame - elapsed
+            duration_ms = frame.duration_ms - elapsed
 
-        self.animation_loop(ms_until_next_frame, ms_backoff)
+        self.animation_loop(duration_ms, ms_backoff)
 
     def clear_current_image_data(self) -> None:
         """Clears all stored data about the current image."""
