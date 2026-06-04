@@ -9,8 +9,12 @@ from PIL import UnidentifiedImageError
 from PIL.Image import Image, new
 
 from image_viewer.image.cache import ImageCacheEntry
-from image_viewer.image.frame import AnimationFrame
-from image_viewer.image.image_io import ImageIO, ReadImageResponse
+from image_viewer.image.image_io import (
+    DEFAULT_DURATION_MS,
+    AnimationFrame,
+    ImageIO,
+    ReadImageResponse,
+)
 from tests.conftest import (
     EXAMPLE_AVIF_PATH,
     EXAMPLE_DDS_PATH,
@@ -21,6 +25,15 @@ from tests.conftest import (
 )
 
 _MODULE_PATH: str = "image_viewer.image.image_io"
+
+
+def test_animation_frame() -> None:
+    example_image = Image()
+
+    assert AnimationFrame(example_image).duration_ms == DEFAULT_DURATION_MS
+
+    example_image.info = {"duration": 67}
+    assert AnimationFrame(example_image).duration_ms == 67
 
 
 @pytest.mark.parametrize(
