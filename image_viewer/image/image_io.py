@@ -13,7 +13,6 @@ from PIL.Image import open as open_image
 from image_viewer.constants import Rotation, ZoomDirection
 from image_viewer.image._read import CRawImageView, read_image_into_buffer
 from image_viewer.image.cache import ImageCache, ImageCacheEntry
-from image_viewer.image.frame import AnimationFrame
 from image_viewer.image.resizer import ImageResizer
 from image_viewer.image.state import ZOOM_UNSET, ImageState
 from image_viewer.utils.PIL import (
@@ -21,6 +20,20 @@ from image_viewer.utils.PIL import (
     optimize_image_mode,
     rotate_image,
 )
+
+DEFAULT_DURATION_MS: int = 100
+
+
+class AnimationFrame:
+    """A frame within an animated image"""
+
+    __slots__ = ("duration_ms", "image")
+
+    def __init__(self, image: Image) -> None:
+        self.image: Image = image
+
+        duration: float = image.info.get("duration", DEFAULT_DURATION_MS)
+        self.duration_ms: int = round(duration) if duration > 0 else DEFAULT_DURATION_MS
 
 
 class ReadImageResponse:
@@ -104,9 +117,9 @@ class ImageIO:
             daemon=True,
         ).start()
 
-        ms_until_next_frame: int = first_frame.ms_until_next_frame
-        backoff: int = ms_until_next_frame + 50
-        self.animation_callback(ms_until_next_frame, backoff)
+        duration_ms: int = first_frame.duration_ms
+        backoff: int = duration_ms + 50
+        self.animation_callback(duration_ms, backoff)
 
     @staticmethod
     def read_image(path_to_image: str) -> ReadImageResponse | None:
