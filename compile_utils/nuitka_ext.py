@@ -4,10 +4,6 @@ import os
 import sys
 from subprocess import Popen
 
-from compile_utils.log import get_logger
-
-_logger = get_logger()
-
 
 def start_nuitka_compilation(
     input_file: str, nuitka_args: list[str], working_dir: str, assume_this_machine: bool
@@ -19,20 +15,13 @@ def start_nuitka_compilation(
     :working_dir: The working directory for the new process
     :returns: The new process"""
 
-    default_python: str = "python" if os.name == "nt" else "bin/python3"
-    python_path: str = os.path.join(sys.exec_prefix, default_python)
-
-    _logger.info("Using python install %s for nuitka", python_path)
-
     compile_env: dict[str, str] = _get_nuitka_env(assume_this_machine)
-    command: list[str] = get_nuitka_command(python_path, input_file, nuitka_args)
+    command: list[str] = get_nuitka_command(input_file, nuitka_args)
 
     return Popen(command, cwd=working_dir, env=compile_env)
 
 
-def get_nuitka_command(
-    python: str, input_file: str, nuitka_args: list[str]
-) -> list[str]:
+def get_nuitka_command(input_file: str, nuitka_args: list[str]) -> list[str]:
     """Returns the command to compile with nuitka.
 
     :param python: The name or path of python executable to use
@@ -40,7 +29,7 @@ def get_nuitka_command(
     :param nuita_args: Nuitka arguments to use"""
 
     return [
-        python,
+        sys.executable,
         "-OO",
         "-m",
         "nuitka",
@@ -59,8 +48,6 @@ def _get_nuitka_env(assume_this_machine: bool) -> dict[str, str]:
     :returns: The environment variables to use when starting nuitka"""
 
     compile_env = os.environ.copy()
-
-    compile_env["PYTHONHASHSEED"] = "0"  # Ensures nuitka does not re-execute
 
     # -march=native had a race condition that segfault'ed on startup.
     # Segfaults stop when avx instructions are turned off
