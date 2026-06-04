@@ -2,23 +2,8 @@
 
 import os
 import sys
-from importlib.metadata import version as get_module_version
 from subprocess import Popen
-from sysconfig import get_paths
 
-from personal_compile_tools.file_operations import (
-    delete_folder,
-    read_file_utf8,
-    walk_folder,
-    write_file_utf8,
-)
-from personal_python_ast_optimizer.regex.replace import re_replace
-
-from compile_utils.build_setup import (
-    custom_module_version_up_to_date,
-    write_custom_module_version,
-)
-from compile_utils.code_to_skip import custom_nuitka_regex
 from compile_utils.log import get_logger
 
 _logger = get_logger()
@@ -56,29 +41,26 @@ def get_nuitka_command(
 
     return [
         python,
-        "-X",
-        "frozen_modules=off",
         "-OO",
         "-m",
         "nuitka",
         input_file,
-        "--must-not-re-execute",
         "--python-flag=-OO,no_annotations,no_warnings,static_hashes",
         "--output-filename=viewer",
+        "--user-plugin=C:/Python/Personal-Image-Viewer/compile_utils/piv_plugin.py",
         *nuitka_args,
     ]
 
 
 def _get_nuitka_env(assume_this_machine: bool) -> dict[str, str]:
-    """Modified version of nuitka's reExecuteNuitka function.
-    Sets all the same values plus some additional so nuitka does not need to
-    redundantly spin itself up again, breaking the custom implementation done here.
+    """Gets the environment variables to be used by nuitka.
 
+    :param assume_this_machine: Turns on machine specific compiler optimizations
     :returns: The environment variables to use when starting nuitka"""
 
     compile_env = os.environ.copy()
 
-    compile_env["PYTHONHASHSEED"] = "0"
+    compile_env["PYTHONHASHSEED"] = "0"  # Ensures nuitka does not re-execute
 
     # -march=native had a race condition that segfault'ed on startup.
     # Segfaults stop when avx instructions are turned off
@@ -90,74 +72,4 @@ def _get_nuitka_env(assume_this_machine: bool) -> dict[str, str]:
     if assume_this_machine:
         compile_env["CFLAGS"] += " -march=native -mtune=native"
 
-    # Setup like nuitka would to avoid re-execute
-    os.environ["NUITKA_SYS_PREFIX"] = sys.prefix
-
-    from nuitka.importing.PreloadedPackages import (
-        detectPreLoadedPackagePaths,
-        detectPthImportedPackages,
-    )
-
-    os.environ["NUITKA_NAMESPACES"] = repr(detectPreLoadedPackagePaths())
-
-    site_filename = sys.modules["site"].__file__
-    if site_filename is not None:
-        if site_filename.endswith(".pyc"):
-            site_filename = site_filename[:-4] + ".py"
-
-        os.environ["NUITKA_SITE_FILENAME"] = site_filename
-
-    os.environ["NUITKA_PTH_IMPORTED"] = repr(detectPthImportedPackages())
-
-    user_site = getattr(sys.modules["site"], "USER_SITE", None)
-    if user_site is not None:
-        os.environ["NUITKA_USER_SITE"] = repr(user_site)
-
-    os.environ["NUITKA_PYTHONPATH"] = repr(sys.path)
-
     return compile_env
-
-
-# Incremented when edits are made to the custom nuitka to cache break
-_CUSTOM_NUITKA_VERSION: int = 3
-
-
-def setup_custom_nuitka_install(custom_nuitka_path: str) -> None:
-    """Copies the current nuitka installation into a local folder
-    and applies some regex edits to improve compilation of this program.
-    Does nothing if custom folder has been setup previously on this
-    version of nuitka/version of this implementation.
-
-    :param custom_nuitka_path: Folder path to use"""
-
-    nuitka_version: str = get_module_version("nuitka")
-
-    if custom_module_version_up_to_date(
-        custom_nuitka_path, "nuitka", nuitka_version, _CUSTOM_NUITKA_VERSION
-    ):
-        return
-
-    delete_folder(custom_nuitka_path)
-    os.makedirs(custom_nuitka_path)
-
-    base_nuitka_path: str = os.path.join(get_paths()["purelib"], "nuitka")
-
-    for path in walk_folder(
-        base_nuitka_path, folders_to_ignore=["__pycache__", "testing"]
-    ):
-        source: str = read_file_utf8(path)
-
-        rel_path: str = path.removeprefix(base_nuitka_path)[1:]
-        if os.name == "nt":
-            rel_path = rel_path.replace("\\", "/")
-
-        if rel_path in custom_nuitka_regex:
-            for regex in custom_nuitka_regex[rel_path]:
-                source = re_replace(source, regex, True)
-
-        new_path: str = os.path.join(custom_nuitka_path, rel_path)
-        write_file_utf8(new_path, source, make_folders=True)
-
-    write_custom_module_version(
-        custom_nuitka_path, "nuitka", nuitka_version, _CUSTOM_NUITKA_VERSION
-    )
