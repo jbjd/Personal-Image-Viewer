@@ -90,36 +90,11 @@ def _get_nuitka_env(assume_this_machine: bool) -> dict[str, str]:
     if assume_this_machine:
         compile_env["CFLAGS"] += " -march=native -mtune=native"
 
-    # Setup like nuitka would to avoid re-execute
-    os.environ["NUITKA_SYS_PREFIX"] = sys.prefix
-
-    from nuitka.importing.PreloadedPackages import (
-        detectPreLoadedPackagePaths,
-        detectPthImportedPackages,
-    )
-
-    os.environ["NUITKA_NAMESPACES"] = repr(detectPreLoadedPackagePaths())
-
-    site_filename = sys.modules["site"].__file__
-    if site_filename is not None:
-        if site_filename.endswith(".pyc"):
-            site_filename = site_filename[:-4] + ".py"
-
-        os.environ["NUITKA_SITE_FILENAME"] = site_filename
-
-    os.environ["NUITKA_PTH_IMPORTED"] = repr(detectPthImportedPackages())
-
-    user_site = getattr(sys.modules["site"], "USER_SITE", None)
-    if user_site is not None:
-        os.environ["NUITKA_USER_SITE"] = repr(user_site)
-
-    os.environ["NUITKA_PYTHONPATH"] = repr(sys.path)
-
     return compile_env
 
 
 # Incremented when edits are made to the custom nuitka to cache break
-_CUSTOM_NUITKA_VERSION: int = 3
+_CUSTOM_NUITKA_VERSION: int = 4
 
 
 def setup_custom_nuitka_install(custom_nuitka_path: str) -> None:
