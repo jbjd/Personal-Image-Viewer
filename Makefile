@@ -1,36 +1,34 @@
 ifeq ($(OS),Windows_NT)
-	PYTHON := python
+	override DEFAULT_PYTHON := python
 	PYTHON_DLL := python312
 	override COMPILED_EXT := pyd
 	OS_FLAGS :=
 else
-	PYTHON := python3.12
+	override DEFAULT_PYTHON := python3.12
 	PYTHON_DLL := python3.12
 	override COMPILED_EXT := so
 	OS_FLAGS := -fPIC
 endif
 
-# Base prefix ignores venv
-PYTHON_BASE_PREFIX := $(shell $(PYTHON) -c "import sys;print(sys.base_prefix)")
-
 ifneq (,$(wildcard .venv))  # If .venv folder exists, use that
 	ifeq ($(OS),Windows_NT)
-		INSTALL_STEP_PREFIX := .venv/Scripts
+		PYTHON_EXECUTABLE = .\\.venv\\Scripts\\$(DEFAULT_PYTHON).exe
 	else
-		INSTALL_STEP_PREFIX := .venv
+		PYTHON_EXECUTABLE = .venv/bin/$(DEFAULT_PYTHON)
 	endif
 else
-	INSTALL_STEP_PREFIX := $(PYTHON_BASE_PREFIX)
+	PYTHON_EXECUTABLE = $(DEFAULT_PYTHON)
 endif
+
+# Base prefix ignores venv
+override PYTHON_BASE_PREFIX := $(shell $(PYTHON_EXECUTABLE) -sSc "import sys;print(sys.base_prefix)")
 
 # Install step python may be venv or not
 # But for compiling C we need to use the real python installation
 ifeq ($(OS),Windows_NT)
-	PYTHON_EXECUTABLE := $(INSTALL_STEP_PREFIX)/$(PYTHON)
 	PYTHON_LIBS := $(PYTHON_BASE_PREFIX)/libs/
 	PYTHON_INCLUDES := $(PYTHON_BASE_PREFIX)/include/
 else
-	PYTHON_EXECUTABLE := $(INSTALL_STEP_PREFIX)/bin/$(PYTHON)
 	PYTHON_LIBS := $(PYTHON_BASE_PREFIX)/libs/python3.12/
 	PYTHON_INCLUDES := $(PYTHON_BASE_PREFIX)/include/python3.12/
 endif
