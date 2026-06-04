@@ -515,12 +515,6 @@ if sys.version_info >= (3, 13):
     )
 
 custom_nuitka_regex: dict[str, list[RegexReplacement]] = {
-    "__main__.py": [
-        RegexReplacement(  # This is handled in nuitka_ext.py
-            """if sys.flags.no_site == 0:
-        needs_re_execution = True""",
-        )
-    ],
     "importing/Recursion.py": [
         RegexReplacement(
             r"if is_stdlib and module_name in detectStdlibAutoInclusionModules\(\) and not no_case:",  # noqa: E501

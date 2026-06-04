@@ -60,6 +60,7 @@ def get_nuitka_command(
         "-X",
         "frozen_modules=off",
         "-OO",
+        "-S",
         "-m",
         "nuitka",
         input_file,
@@ -95,7 +96,7 @@ def _get_nuitka_env(assume_this_machine: bool) -> dict[str, str]:
 
 
 # Incremented when edits are made to the custom nuitka to cache break
-_CUSTOM_NUITKA_VERSION: int = 5
+_CUSTOM_NUITKA_VERSION: int = 6
 
 
 def setup_custom_nuitka_install(custom_nuitka_path: str) -> None:
