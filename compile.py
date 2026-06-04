@@ -33,10 +33,7 @@ from compile_utils.module_dependencies import (
     module_dependencies,
     modules_to_skip,
 )
-from compile_utils.nuitka_ext import (
-    setup_custom_nuitka_install,
-    start_nuitka_compilation,
-)
+from compile_utils.nuitka_ext import start_nuitka_compilation
 from compile_utils.validation import (
     validate_module_requirements,
     validate_PIL,
@@ -67,7 +64,6 @@ code_folder_path: str = os.path.join(working_folder, IMAGE_VIEWER_NAME)
 nuitka_dist_path: str = os.path.join(build_folder_path, f"{TARGET_MODULE}.dist")
 nuitka_build_path: str = os.path.join(build_folder_path, f"{TARGET_MODULE}.build")
 
-setup_custom_nuitka_install(custom_nuitka_folder_path)
 validate_python_version()
 validate_module_requirements()
 validate_PIL()

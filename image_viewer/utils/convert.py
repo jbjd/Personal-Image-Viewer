@@ -7,7 +7,7 @@ from PIL.ImageSequence import Iterator as ImageIterator
 from PIL.JpegImagePlugin import RAWMODE as VALID_JPEG_MODES
 
 from image_viewer.constants import VALID_FILE_TYPES
-from image_viewer.image.frame import DEFAULT_ANIMATION_SPEED_MS
+from image_viewer.image.image_io import DEFAULT_DURATION_MS
 from image_viewer.utils.PIL import image_is_animated
 
 
@@ -51,7 +51,7 @@ def try_convert_image_and_save_new(
         save_kwargs["loop"] = original_image.info.get("loop", 0)
 
         save_kwargs["duration"] = [
-            frame.info.get("duration", DEFAULT_ANIMATION_SPEED_MS)
+            frame.info.get("duration", DEFAULT_DURATION_MS)
             for frame in ImageIterator(original_image)
         ]
 

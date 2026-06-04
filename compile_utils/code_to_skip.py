@@ -15,7 +15,7 @@ from PIL.ImageFont import MAX_STRING_LENGTH
 
 from compile_utils.constants import IMAGE_VIEWER_NAME
 from image_viewer.constants import TEXT_RGB
-from image_viewer.image.frame import DEFAULT_ANIMATION_SPEED_MS
+from image_viewer.image.image_io import DEFAULT_DURATION_MS
 from image_viewer.image.resizer import JPEG_MAX_DIMENSION, MIN_ZOOM_LEVEL, ZOOM_AMOUNT
 from image_viewer.image.state import ZOOM_UNSET
 from image_viewer.ui.rename_entry import _ERROR_COLOR, _MAX_ENTRY_SIZE
@@ -217,7 +217,7 @@ module_vars_to_fold: dict[
         "__name__": "__main__",
         "_ERROR_COLOR": _ERROR_COLOR,
         "_MAX_ENTRY_SIZE": _MAX_ENTRY_SIZE,
-        "DEFAULT_ANIMATION_SPEED_MS": DEFAULT_ANIMATION_SPEED_MS,
+        "DEFAULT_DURATION_MS": DEFAULT_DURATION_MS,
         "JPEG_MAX_DIMENSION": JPEG_MAX_DIMENSION,
         "MIN_ZOOM_LEVEL": MIN_ZOOM_LEVEL,
         "TEXT_RGB": TEXT_RGB,
@@ -457,76 +457,5 @@ if sys.platform != "darwin":
     # These are Mac specific encodings
     data_files_to_exclude.append("tcl/encoding/mac*.enc")
 
+
 dlls_to_include: list[str] = ["libturbojpeg.dll"]
-
-
-# Custom nuitka implementation
-_skippable_std_modules = [
-    "__hello__",
-    "__phello__",
-    "_aix_support",
-    "_markupbase",
-    "_pylong",
-    "_wmi",
-    "cgi",
-    "cgitb",
-    "chunk",
-    "cmd",
-    "difflib",
-    "filecmp",
-    "fileinput",
-    "ftplib",
-    "html",
-    "imaplib",
-    "json",
-    "mailcap",
-    "mimetypes",
-    "netrc",
-    "nturl2path",
-    "pickletools",
-    "pipes",
-    "pkgutil",
-    "platform",
-    "poplib",
-    "pprint",
-    "pstats",
-    "pyclbr",
-    "rlcompleter",
-    "sndhdr",
-    "socketserver",
-    "sysconfig",
-    "timeit",
-    "tomllib",
-    "trace",
-    "uu",
-    "webbrowser",
-    "xdrlib",
-    "zipimport",
-]
-if sys.platform != "darwin":
-    _skippable_std_modules.append("_osx_support")
-    if sys.platform == "win32":
-        _skippable_std_modules.append("configparser")
-
-if sys.version_info >= (3, 13):
-    raise NotImplementedError(
-        "cgi, cgitb, chunk, mailcap, sndhdr, pipes, and uu "
-        "need to be removed from _skippable_std_modules"
-    )
-
-custom_nuitka_regex: dict[str, list[RegexReplacement]] = {
-    "__main__.py": [
-        RegexReplacement(  # This is handled in nuitka_ext.py
-            """if sys.flags.no_site == 0:
-        needs_re_execution = True""",
-        )
-    ],
-    "importing/Recursion.py": [
-        RegexReplacement(
-            r"if is_stdlib and module_name in detectStdlibAutoInclusionModules\(\) and not no_case:",  # noqa: E501
-            f"""if is_stdlib and module_name in detectStdlibAutoInclusionModules() and not no_case:
-        if module_name in {_skippable_std_modules}:
-            return False, 'Excluding unnecessary parts of standard library.'""",  # noqa: E501
-        )
-    ],
-}
