@@ -26,11 +26,11 @@ endif
 # Install step python may be venv or not
 # But for compiling C we need to use the real python installation
 ifeq ($(OS),Windows_NT)
-	PYTHON_FOR_INSTALL_STEP := $(INSTALL_STEP_PREFIX)/$(PYTHON)
+	PYTHON_EXECUTABLE := $(INSTALL_STEP_PREFIX)/$(PYTHON)
 	PYTHON_LIBS := $(PYTHON_BASE_PREFIX)/libs/
 	PYTHON_INCLUDES := $(PYTHON_BASE_PREFIX)/include/
 else
-	PYTHON_FOR_INSTALL_STEP := $(INSTALL_STEP_PREFIX)/bin/$(PYTHON)
+	PYTHON_EXECUTABLE := $(INSTALL_STEP_PREFIX)/bin/$(PYTHON)
 	PYTHON_LIBS := $(PYTHON_BASE_PREFIX)/libs/python3.12/
 	PYTHON_INCLUDES := $(PYTHON_BASE_PREFIX)/include/python3.12/
 endif
@@ -57,13 +57,13 @@ build-test:
 build-all: build-config build-image-read build-util-os-nt build-test
 
 install:
-	$(PYTHON_FOR_INSTALL_STEP) -OO compile.py --assume-this-machine --extra-checks --strip
+	$(PYTHON_EXECUTABLE) -OO compile.py --assume-this-machine --extra-checks --strip
 
 install-debug:
-	$(PYTHON_FOR_INSTALL_STEP) -OO compile.py --assume-this-machine --extra-checks --strip --debug
+	$(PYTHON_EXECUTABLE) -OO compile.py --assume-this-machine --extra-checks --strip --debug
 
 install-debug-setup:
-	$(PYTHON_FOR_INSTALL_STEP) -OO compile.py --assume-this-machine --extra-checks --debug --skip-nuitka
+	$(PYTHON_EXECUTABLE) -OO compile.py --assume-this-machine --extra-checks --debug --skip-nuitka
 
 C_AND_H_FILES = $(shell python -csS "from glob import glob;print(' '.join(glob('image_viewer/**/*.[ch]',recursive=True)))")
 
@@ -79,10 +79,10 @@ validate:
 	codespell
 
 test:
-	$(PYTHON_FOR_INSTALL_STEP) -m pytest -m "not memory_leak" --cov=image_viewer --cov-report term-missing
+	$(PYTHON_EXECUTABLE) -m pytest -m "not memory_leak" --cov=image_viewer --cov-report term-missing
 
 PYTHONUNBUFFERED=1
 export PYTHONUNBUFFERED
 
 test-memory-leak:
-	$(PYTHON_FOR_INSTALL_STEP) -m pytest -m "memory_leak"
+	$(PYTHON_EXECUTABLE) -m pytest -m "memory_leak"
