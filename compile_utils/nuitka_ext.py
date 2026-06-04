@@ -60,7 +60,7 @@ def get_nuitka_command(
         "-X",
         "frozen_modules=off",
         "-OO",
-        "-S",
+        "-S",  # Ensures nuitka does not re-execute
         "-m",
         "nuitka",
         input_file,
@@ -72,15 +72,14 @@ def get_nuitka_command(
 
 
 def _get_nuitka_env(assume_this_machine: bool) -> dict[str, str]:
-    """Modified version of nuitka's reExecuteNuitka function.
-    Sets all the same values plus some additional so nuitka does not need to
-    redundantly spin itself up again, breaking the custom implementation done here.
+    """Gets the environment variables to be used by nuitka.
 
+    :param assume_this_machine: Turns on machine specific compiler optimizations
     :returns: The environment variables to use when starting nuitka"""
 
     compile_env = os.environ.copy()
 
-    compile_env["PYTHONHASHSEED"] = "0"
+    compile_env["PYTHONHASHSEED"] = "0"  # Ensures nuitka does not re-execute
 
     # -march=native had a race condition that segfault'ed on startup.
     # Segfaults stop when avx instructions are turned off
