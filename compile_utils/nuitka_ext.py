@@ -7,6 +7,7 @@ from subprocess import Popen
 from sysconfig import get_paths
 
 from personal_compile_tools.file_operations import (
+    copy_file,
     delete_folder,
     read_file_utf8,
     walk_folder,
@@ -94,7 +95,7 @@ def _get_nuitka_env(assume_this_machine: bool) -> dict[str, str]:
 
 
 # Incremented when edits are made to the custom nuitka to cache break
-_CUSTOM_NUITKA_VERSION: int = 4
+_CUSTOM_NUITKA_VERSION: int = 5
 
 
 def setup_custom_nuitka_install(custom_nuitka_path: str) -> None:
@@ -120,18 +121,20 @@ def setup_custom_nuitka_install(custom_nuitka_path: str) -> None:
     for path in walk_folder(
         base_nuitka_path, folders_to_ignore=["__pycache__", "testing"]
     ):
-        source: str = read_file_utf8(path)
-
         rel_path: str = path.removeprefix(base_nuitka_path)[1:]
         if os.name == "nt":
             rel_path = rel_path.replace("\\", "/")
 
+        new_path: str = os.path.join(custom_nuitka_path, rel_path)
+
         if rel_path in custom_nuitka_regex:
+            source: str = read_file_utf8(path)
             for regex in custom_nuitka_regex[rel_path]:
                 source = re_replace(source, regex, True)
-
-        new_path: str = os.path.join(custom_nuitka_path, rel_path)
-        write_file_utf8(new_path, source, make_folders=True)
+            write_file_utf8(new_path, source, make_folders=True)
+        else:
+            os.makedirs(os.path.dirname(new_path), exist_ok=True)
+            copy_file(path, new_path)
 
     write_custom_module_version(
         custom_nuitka_path, "nuitka", nuitka_version, _CUSTOM_NUITKA_VERSION
