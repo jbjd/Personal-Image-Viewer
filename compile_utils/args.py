@@ -4,7 +4,6 @@ import os
 import shutil
 from argparse import ArgumentParser, Namespace
 from enum import StrEnum
-from typing import Literal
 
 from compile_utils.code_to_skip import data_files_to_exclude, dlls_to_include
 from compile_utils.constants import BUILD_INFO_FILE, REPORT_FILE
@@ -46,6 +45,21 @@ class NuitkaArgs(StrEnum):
         return f"{self}={value}"
 
 
+class PivArgs(StrEnum):
+    INSTALL_PATH = "--install-path"
+    REPORT = "--report"
+    BUILD_INFO_FILE = "--build-info-file"
+    ASSUME_THIS_MACHINE = "--assume-this-machine"
+    STRIP = "--strip"
+    DISTRIBUTION = "--distribution"
+    QUIET = "--quiet"
+    VERBOSE = "--verbose"
+    EXTRA_CHECKS = "--extra-checks"
+    NO_CACHE = "--no-cache"
+    DEBUG = "--debug"
+    SKIP_NUITKA = "--skip-nuitka"
+
+
 class CompileNamespace(Namespace):
     """Namespace for compilation flags."""
 
@@ -82,52 +96,51 @@ class CompileArgumentParser:
             else "/usr/local/personal-image-viewer/"
         )
 
-        self.add_argument("--install-path", "Path to install to", default_install_path)
         self.add_argument(
-            "--report",
+            PivArgs.INSTALL_PATH, "Path to install to", default_install_path
+        )
+        self.add_argument(
+            PivArgs.REPORT,
             f"Adds {NuitkaArgs.REPORT.with_value(REPORT_FILE)} flag to nuitka.",
         )
         self.add_argument(
-            "--build-info-file", f"Includes {BUILD_INFO_FILE} in the build."
+            PivArgs.BUILD_INFO_FILE, f"Includes {BUILD_INFO_FILE} in the build."
         )
         self.add_argument(
-            "--assume-this-machine",
+            PivArgs.ASSUME_THIS_MACHINE,
             "Allows optimizations for this specific machine. "
             "Enables CFLAGS -march=native and -mtune=native and "
             "removal of some code that will be unused on this machine.",
         )
         self.add_argument(
-            "--strip",
+            PivArgs.STRIP,
             "Calls strip on all .exe/.dll/.pyd files after compilation. "
             "Requires strip being installed and on PATH.",
         )
-        self.add_argument("--distribution", "Includes licenses.")
-        if os.name == "nt":
-            self.add_argument(
-                "--include-dlls",
-                "Finds used DLLs on system and include them in the build.",
-                affected_os="Windows",
-            )
         self.add_argument(
-            "--quiet", "Adds --quiet flag to nuitka.", is_development=True
+            PivArgs.DISTRIBUTION,
+            "Includes licenses. Also includes needed dlls if on Windows.",
         )
         self.add_argument(
-            "--verbose", "Adds --quiet flag to nuitka.", is_development=True
+            PivArgs.QUIET, "Adds --quiet flag to nuitka.", is_development=True
         )
         self.add_argument(
-            "--extra-checks",
+            PivArgs.VERBOSE, "Adds --quiet flag to nuitka.", is_development=True
+        )
+        self.add_argument(
+            PivArgs.EXTRA_CHECKS,
             "Adds extra checks during build. Only useful for development"
             "Should be unnecessary unless doing development.",
             is_development=True,
         )
         self.add_argument(
-            "--no-cache",
+            PivArgs.NO_CACHE,
             "Removes cached parts of build process. "
             "Should be unnecessary unless doing development.",
             is_development=True,
         )
         self.add_argument(
-            "--debug",
+            PivArgs.DEBUG,
             (
                 "Doesn't move compiled code to install path, doesn't check for root, "
                 "assumes --report and --extra_checks, adds "
@@ -138,7 +151,7 @@ class CompileArgumentParser:
             is_development=True,
         )
         self.add_argument(
-            "--skip-nuitka",
+            PivArgs.SKIP_NUITKA,
             (
                 "Skips running nuitka so no compilation takes place. "
                 "Only creates the tmp folder as it would be before compilation."
@@ -154,7 +167,6 @@ class CompileArgumentParser:
         help_text: str,
         default: str | bool = False,
         is_development: bool = False,
-        affected_os: Literal["Windows"] | None = None,
     ) -> None:
         """Extension of add_argument to simplify repeated patterns.
 
@@ -168,9 +180,6 @@ class CompileArgumentParser:
 
         if default:
             help_text += f" Defaults to {default}."
-
-        if affected_os is not None:
-            help_text = f"({affected_os} only) " + help_text
 
         action: str = "store_true" if isinstance(default, bool) else "store"
 
@@ -190,6 +199,10 @@ class CompileArgumentParser:
         )
 
         nuitka_args: list[str] = [NuitkaArgs.STANDALONE]
+
+        # PivPlugin args
+        if args.extra_checks:
+            nuitka_args.append(PivArgs.EXTRA_CHECKS)
 
         if args.debug:
             args.report = True
@@ -262,7 +275,7 @@ class CompileArgumentParser:
                     )
                 )
 
-            if args.include_dlls:
+            if args.distribution:
                 nuitka_args += [
                     NuitkaArgs.INCLUDE_DATA_FILES.with_value(
                         self.get_full_path_to_dll(file)

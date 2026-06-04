@@ -57,9 +57,15 @@ build-test:
 build-all: build-config build-image-read build-util-os-nt build-test
 
 install:
-	$(PYTHON_FOR_INSTALL_STEP) -OO compile.py --assume-this-machine --strip
+	$(PYTHON_FOR_INSTALL_STEP) -OO compile.py --assume-this-machine --extra-checks --strip
 
-C_AND_H_FILES = $(shell python -c "from glob import glob;print(' '.join(glob('image_viewer/**/*.[ch]',recursive=True)))")
+install-debug:
+	$(PYTHON_FOR_INSTALL_STEP) -OO compile.py --assume-this-machine --extra-checks --strip --debug
+
+install-debug-setup:
+	$(PYTHON_FOR_INSTALL_STEP) -OO compile.py --assume-this-machine --extra-checks --debug --skip-nuitka
+
+C_AND_H_FILES = $(shell python -csS "from glob import glob;print(' '.join(glob('image_viewer/**/*.[ch]',recursive=True)))")
 
 format:
 	ruff check . --fix
