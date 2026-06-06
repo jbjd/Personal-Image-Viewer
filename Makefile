@@ -1,13 +1,13 @@
 ifeq ($(OS),Windows_NT)
 	override DEFAULT_PYTHON := python
-	PYTHON_DLL := python312
+	override PYTHON_DLL := python312
 	override COMPILED_EXT := pyd
-	OS_FLAGS :=
+	override OS_FLAGS :=
 else
 	override DEFAULT_PYTHON := python3.12
-	PYTHON_DLL := python3.12
+	override PYTHON_DLL := python3.12
 	override COMPILED_EXT := so
-	OS_FLAGS := -fPIC
+	override OS_FLAGS := -fPIC
 endif
 
 ifneq (,$(wildcard .venv))  # If .venv folder exists, use that
@@ -34,9 +34,10 @@ else
 endif
 
 OPTIMIZATION_FLAG := -O3
+EXTRA_C_FLAGS := -march=native -mtune=native -ffinite-math-only -fgcse-las -fgcse-sm -fisolate-erroneous-paths-attribute -fno-signed-zeros -frename-registers -fsched-pressure -s -Wall -Werror
 override C_SOURCE := image_viewer/c_extensions
 override C_PYTHON_MODULES := $(C_SOURCE)/python_modules
-C_FLAGS := -L$(PYTHON_LIBS) -I$(PYTHON_INCLUDES) -l$(PYTHON_DLL) $(OPTIMIZATION_FLAG) -march=native -mtune=native -ffinite-math-only -fgcse-las -fgcse-sm -fisolate-erroneous-paths-attribute -fno-signed-zeros -frename-registers -fsched-pressure -s -shared -Wall -Werror $(OS_FLAGS)
+override C_FLAGS := -L$(PYTHON_LIBS) -I$(PYTHON_INCLUDES) -l$(PYTHON_DLL) $(OPTIMIZATION_FLAG) $(EXTRA_C_FLAGS) -shared $(OS_FLAGS)
 
 build-config:
 	gcc $(C_PYTHON_MODULES)/config.c $(C_SOURCE)/config.c $(C_FLAGS) -I$(C_SOURCE) -o image_viewer/_config.$(COMPILED_EXT)
@@ -79,7 +80,7 @@ validate:
 test:
 	$(PYTHON_EXECUTABLE) -m pytest -m "not memory_leak" --cov=image_viewer --cov-report term-missing
 
-PYTHONUNBUFFERED=1
+override PYTHONUNBUFFERED=1
 export PYTHONUNBUFFERED
 
 test-memory-leak:
