@@ -2,7 +2,13 @@
 
 import os
 import sys
+import xml.etree.ElementTree as ET
+from collections.abc import Callable
 from subprocess import Popen
+
+from compile_utils.log import get_logger
+
+_logger = get_logger()
 
 
 def start_nuitka_compilation(
@@ -60,3 +66,86 @@ def _get_nuitka_env(assume_this_machine: bool) -> dict[str, str]:
         compile_env["CFLAGS"] += " -march=native -mtune=native"
 
     return compile_env
+
+
+def clean_compilation_report(report_path: str, warn_on_failure: bool) -> None:
+    """The internal PivPlugin for nuitka truncates std modules and removed some dlls.
+    They are still included in the report which can make it harder to determine future
+    updates to the plugin. This removes those modules/dlls.
+
+    :param report_path: Path to the report file
+    :param warn_on_failure: Warns on faliure such as no data on what was removed"""
+
+    tree: ET.ElementTree = ET.parse(report_path)  # noqa: S314
+    root: ET.Element | None = tree.getroot()
+
+    piv_node: ET.Element | None = (
+        root.find("./plugins/plugin[@name='PivPlugin']") if root is not None else None
+    )
+
+    if piv_node is None:
+        if warn_on_failure:
+            _logger.warning(
+                "Can't clean compilation report due to not finding PivPlugin tag,"
+                " report may be somewhat misleading"
+            )
+
+        return
+
+    try:
+        removed_std_modules: list[str] = piv_node.attrib["removed_std_modules"].split(
+            ","
+        )
+        removed_std_extensions: list[str] = piv_node.attrib[
+            "removed_std_extensions"
+        ].split(",")
+        removed_dlls: list[str] = piv_node.attrib["removed_dlls"].split(",")
+
+        # Extensions are modules so need to combine
+        removed_std_modules += [
+            ".".join(m.split(".")[:-1]) for m in removed_std_extensions
+        ]
+
+        def __std_module_name_or_package_removed(module_name: str | None) -> bool:
+            nonlocal removed_std_modules
+            return module_name is not None and (
+                module_name in removed_std_modules
+                or module_name.split(".")[0] in removed_std_modules
+            )
+
+        def __cleaning_pass(
+            root: ET.Element,
+            condition: str,
+            remove_if: Callable[[str | None], bool],
+        ) -> None:
+            for e in root.findall(condition):
+                if remove_if(e.attrib.get("name")):
+                    root.remove(e)
+
+        if removed_std_modules:
+            __cleaning_pass(root, "./module", __std_module_name_or_package_removed)
+            main_usage_root: ET.Element | None = root.find(
+                "./module[@name='__main__']/module_usages"
+            )
+            if main_usage_root is not None:
+                __cleaning_pass(
+                    main_usage_root,
+                    "module_usage",
+                    __std_module_name_or_package_removed,
+                )
+
+        if removed_std_extensions:
+            __cleaning_pass(
+                root,
+                "./included_extension",
+                lambda name: name in removed_std_extensions,
+            )
+
+        if removed_dlls:
+            __cleaning_pass(root, "./included_dll", lambda name: name in removed_dlls)
+
+        with open(report_path, "wb") as fp:
+            tree.write(fp)
+    except Exception:
+        if warn_on_failure:
+            _logger.exception("Failed to parse report file")

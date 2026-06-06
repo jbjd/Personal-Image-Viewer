@@ -21,9 +21,11 @@ _removable_std_modules = {
     "ftplib",
     "html",
     "imaplib",
+    "imghdr",
     "json",
     "mailcap",
     "mimetypes",
+    "modulefinder",
     "netrc",
     "nturl2path",
     "pickletools",
@@ -35,6 +37,8 @@ _removable_std_modules = {
     "pstats",
     "pyclbr",
     "rlcompleter",
+    "sched",
+    "shlex",
     "sndhdr",
     "socketserver",
     "sysconfig",
@@ -53,15 +57,15 @@ if sys.platform != "darwin":
 
 if sys.version_info >= (3, 13):
     raise NotImplementedError(
-        "cgi, cgitb, chunk, mailcap, sndhdr, pipes, and uu "
+        "cgi, cgitb, chunk, imghdr, mailcap, sndhdr, pipes, and uu "
         "need to be removed from _removable_std_modules"
     )
 
 
-_removable_extensions: set[str] = set()
+_removable_std_extensions: set[str] = set()
 
 if sys.platform == "win32":
-    _removable_extensions.add("_wmi.pyd")
+    _removable_std_extensions.add("_wmi.pyd")
 
 _removable_dlls: set[str] = set()
 
@@ -73,11 +77,20 @@ if sys.platform == "win32":
 class PivNuitkaPlugin(NuitkaPluginBase):
     plugin_name: str = "PivPlugin"
 
-    __slots__ = ("_removed_std_modules", "extra_checks")
+    __slots__ = (
+        "_removed_dlls",
+        "_removed_std_extensions",
+        "_removed_std_modules",
+        "extra_checks",
+        "piv_arguments",
+    )
 
-    def __init__(self, extra_checks: bool) -> None:
+    def __init__(self, extra_checks: bool, piv_arguments: str) -> None:
         self.extra_checks: bool = extra_checks
+        self.piv_arguments: str = piv_arguments
         self._removed_std_modules: set[str] = set()
+        self._removed_std_extensions: set[str] = set()
+        self._removed_dlls: set[str] = set()
 
     @classmethod
     def addPluginCommandLineOptions(cls, group) -> None:  # noqa: ANN001
@@ -86,7 +99,14 @@ class PivNuitkaPlugin(NuitkaPluginBase):
             action="store_true",
             dest="extra_checks",
             default=False,
-            help="",
+            help="Adds extra warning logs",
+        )
+        group.add_option(
+            "--piv-arguments",
+            action="store",
+            dest="piv_arguments",
+            default="",
+            help="Adds arguments passed to PIV to the compilation report",
         )
 
     def onModuleSourceCode(
@@ -111,21 +131,17 @@ class PivNuitkaPlugin(NuitkaPluginBase):
 
     def onStandaloneDistributionFinished(self, dist_dir: str) -> None:
 
-        removed_extensions: set[str] = set()
-
-        for extension in _removable_extensions:
+        for extension in _removable_std_extensions:
             path: str = os.path.join(dist_dir, extension)
             if os.path.exists(path):
                 os.remove(path)
-                removed_extensions.add(extension)
-
-        removed_dlls: set[str] = set()
+                self._removed_std_extensions.add(extension)
 
         for dll in _removable_dlls:
             path: str = os.path.join(dist_dir, dll)
             if os.path.exists(path):
                 os.remove(path)
-                removed_dlls.add(dll)
+                self._removed_dlls.add(dll)
 
         if self.extra_checks:
             prefix: str = self.plugin_name + " unable to find"
@@ -139,16 +155,28 @@ class PivNuitkaPlugin(NuitkaPluginBase):
                     stacklevel=1,
                 )
 
-            not_found_extensions: set[str] = _removable_extensions ^ removed_extensions
+            not_found_extensions: set[str] = (
+                _removable_std_extensions ^ self._removed_std_extensions
+            )
             if not_found_extensions:
                 warnings.warn(
                     f"{prefix} extension modules to remove: {not_found_extensions}",
                     stacklevel=1,
                 )
 
-            not_found_dlls: set[str] = _removable_dlls ^ removed_dlls
+            not_found_dlls: set[str] = _removable_dlls ^ self._removed_dlls
             if not_found_dlls:
                 warnings.warn(
                     f"{prefix} dlls to remove: {not_found_dlls}",
                     stacklevel=1,
                 )
+
+    def getReportData(self) -> set[tuple[str, str]]:
+        """Provide dictionary of data for reporting purposes."""
+        # Virtual method, pylint: disable=no-self-use
+        return {
+            ("piv_arguments", self.piv_arguments),
+            ("removed_std_modules", ",".join(self._removed_std_modules)),
+            ("removed_std_extensions", ",".join(self._removed_std_extensions)),
+            ("removed_dlls", ",".join(self._removed_dlls)),
+        }

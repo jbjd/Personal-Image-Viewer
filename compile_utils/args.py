@@ -6,7 +6,7 @@ from argparse import ArgumentParser, Namespace
 from enum import StrEnum
 
 from compile_utils.code_to_skip import data_files_to_exclude, dlls_to_include
-from compile_utils.constants import BUILD_INFO_FILE, REPORT_FILE
+from compile_utils.constants import REPORT_FILE
 from compile_utils.exceptions import InvalidEnvironmentError
 from compile_utils.module_dependencies import modules_to_include
 
@@ -48,7 +48,6 @@ class NuitkaArgs(StrEnum):
 class PivArgs(StrEnum):
     INSTALL_PATH = "--install-path"
     REPORT = "--report"
-    BUILD_INFO_FILE = "--build-info-file"
     ASSUME_THIS_MACHINE = "--assume-this-machine"
     STRIP = "--strip"
     DISTRIBUTION = "--distribution"
@@ -58,6 +57,11 @@ class PivArgs(StrEnum):
     NO_CACHE = "--no-cache"
     DEBUG = "--debug"
     SKIP_NUITKA = "--skip-nuitka"
+
+
+class PivPluginArgs(StrEnum):
+    EXTRA_CHECKS = "--extra-checks"
+    PIV_ARGS = "--piv-arguments"
 
 
 class CompileNamespace(Namespace):
@@ -74,10 +78,14 @@ class CompileNamespace(Namespace):
     verbose: bool
     extra_checks: bool
     no_cache: bool
-    build_info_file: bool
 
     if os.name == "nt":
         include_dlls: bool
+
+    def __str__(self) -> str:
+        return ", ".join(
+            f"{k}={v}" for k, v in self.__dict__.items() if isinstance(v, bool)
+        )
 
 
 class CompileArgumentParser:
@@ -102,9 +110,6 @@ class CompileArgumentParser:
         self.add_argument(
             PivArgs.REPORT,
             f"Adds {NuitkaArgs.REPORT.with_value(REPORT_FILE)} flag to nuitka.",
-        )
-        self.add_argument(
-            PivArgs.BUILD_INFO_FILE, f"Includes {BUILD_INFO_FILE} in the build."
         )
         self.add_argument(
             PivArgs.ASSUME_THIS_MACHINE,
@@ -198,11 +203,14 @@ class CompileArgumentParser:
             namespace=CompileNamespace()
         )
 
-        nuitka_args: list[str] = [NuitkaArgs.STANDALONE]
+        nuitka_args: list[str] = [
+            f"{PivPluginArgs.PIV_ARGS}={args}",
+            NuitkaArgs.STANDALONE,
+        ]
 
         # PivPlugin args
         if args.extra_checks:
-            nuitka_args.append(PivArgs.EXTRA_CHECKS)
+            nuitka_args.append(PivPluginArgs.EXTRA_CHECKS)
 
         if args.debug:
             args.report = True
