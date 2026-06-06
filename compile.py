@@ -26,14 +26,14 @@ from compile_utils.cleaner import (
     warn_unused_code_skips,
 )
 from compile_utils.code_to_skip import SKIP_ITERATION
-from compile_utils.constants import BUILD_INFO_FILE, IMAGE_VIEWER_NAME
+from compile_utils.constants import BUILD_INFO_FILE, IMAGE_VIEWER_NAME, REPORT_FILE
 from compile_utils.log import get_logger
 from compile_utils.module_dependencies import (
     get_normalized_module_name,
     module_dependencies,
     modules_to_skip,
 )
-from compile_utils.nuitka_ext import start_nuitka_compilation
+from compile_utils.nuitka_ext import clean_compilation_report, start_nuitka_compilation
 from compile_utils.validation import (
     validate_module_requirements,
     validate_PIL,
@@ -172,6 +172,11 @@ try:
 
     if process.wait():
         sys.exit(1)
+
+    if args.report:
+        clean_compilation_report(
+            os.path.join(build_folder_path, REPORT_FILE), args.extra_checks
+        )
 
     if args.build_info_file:
         with open(
