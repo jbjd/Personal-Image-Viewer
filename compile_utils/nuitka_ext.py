@@ -147,4 +147,5 @@ def clean_compilation_report(report_path: str, warn_on_failure: bool) -> None:
         with open(report_path, "wb") as fp:
             tree.write(fp)
     except Exception:
-        _logger.exception("Failed to parse report file")
+        if warn_on_failure:
+            _logger.exception("Failed to parse report file")
