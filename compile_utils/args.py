@@ -266,14 +266,11 @@ class CompileArgumentParser:
                 NuitkaArgs.WINDOWS_ICON_FROM_ICO.with_value(icon_path),
             ]
 
-            if not any(
-                arg.startswith(NuitkaArgs.WINDOWS_CONSOLE_MODE) for arg in nuitka_args
-            ):
-                nuitka_args.append(
-                    NuitkaArgs.WINDOWS_CONSOLE_MODE.with_value(
-                        ConsoleMode.FORCE if args.debug else ConsoleMode.DISABLE
-                    )
+            nuitka_args.append(
+                NuitkaArgs.WINDOWS_CONSOLE_MODE.with_value(
+                    ConsoleMode.FORCE if args.debug else ConsoleMode.DISABLE
                 )
+            )
 
             if args.distribution:
                 nuitka_args += [
