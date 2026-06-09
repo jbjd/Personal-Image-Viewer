@@ -169,47 +169,49 @@ static PyObject *restore_file(PyObject *self, PyObject *arg) {
 
     LPITEMIDLIST pidl_item;
     while (recycle_bin_iterator->lpVtbl->Next(recycle_bin_iterator, 1, &pidl_item, NULL) == S_OK) {
-        STRRET deleted_file_display_name_ret;
+        STRRET df_display_name_ret;
 
-        hr = recycle_bin_folder->lpVtbl->GetDisplayNameOf(recycle_bin_folder, pidl_item, SHGDN_INFOLDER, &deleted_file_display_name_ret);
+        hr = recycle_bin_folder->lpVtbl->GetDisplayNameOf(recycle_bin_folder, pidl_item, SHGDN_INFOLDER, &df_display_name_ret);
         if (FAILED(hr)) {
-            CoTaskMemFree(pidl_item);
-            continue;
+            goto end_loop;
         }
 
-        char deleted_file_display_name[MAX_PATH];
-        if (StrRetToBufA(&deleted_file_display_name_ret, pidl_item, deleted_file_display_name, MAX_PATH) != S_OK) {
-            CoTaskMemFree(pidl_item);
-            continue;
+        char df_display_name[MAX_PATH];
+        if (StrRetToBufA(&df_display_name_ret, pidl_item, df_display_name, MAX_PATH) != S_OK) {
+            goto end_loop;
         }
 
         VARIANT variant;
         const PROPERTYKEY PKey_DisplacedFrom = {FMTID_Displaced, PID_DISPLACED_FROM};
         hr = recycle_bin_folder->lpVtbl->GetDetailsEx(recycle_bin_folder, pidl_item, &PKey_DisplacedFrom, &variant);
         if (FAILED(hr)) {
-            CoTaskMemFree(pidl_item);
-            continue;
+            goto end_loop;
         }
 
         const UINT variant_length = SysStringLen(variant.bstrVal);
-        const size_t deleted_file_display_name_size = strlen(deleted_file_display_name);
-        const UINT deleted_file_original_path_size = variant_length + deleted_file_display_name_size + 2;
-        char deleted_file_original_path[deleted_file_original_path_size];
-        SHUnicodeToTChar(variant.bstrVal, deleted_file_original_path, ARRAYSIZE(deleted_file_original_path));
-        deleted_file_original_path[variant_length] = '\\';
-        memcpy(deleted_file_original_path + variant_length + 1, deleted_file_display_name, deleted_file_display_name_size + 1);
-        deleted_file_original_path[0] = tolower(deleted_file_original_path[0]);
+        const size_t df_display_name_size = strlen(df_display_name);
+        const size_t df_original_path_size_with_terminiator = variant_length + df_display_name_size + 2;
 
-        if (strcmp(target_path, deleted_file_original_path)) {
-            CoTaskMemFree(pidl_item);
-            continue;
+        if (target_path_size + 1 != df_original_path_size_with_terminiator) {
+            goto end_loop;
+        }
+
+        {
+            char df_original_path[df_original_path_size_with_terminiator];
+            SHUnicodeToTChar(variant.bstrVal, df_original_path, ARRAYSIZE(df_original_path));
+            df_original_path[variant_length] = '\\';
+            memcpy(df_original_path + variant_length + 1, df_display_name, df_display_name_size + 1);
+            df_original_path[0] = tolower(df_original_path[0]);
+
+            if (memcmp(target_path, df_original_path, df_original_path_size_with_terminiator)) {
+                goto end_loop;
+            }
         }
 
         const PROPERTYKEY pkey_displaced_date = {FMTID_Displaced, PID_DISPLACED_DATE};
         hr = recycle_bin_folder->lpVtbl->GetDetailsEx(recycle_bin_folder, pidl_item, &pkey_displaced_date, &variant);
         if (FAILED(hr)) {
-            CoTaskMemFree(pidl_item);
-            continue;
+            goto end_loop;
         }
 
         const DATE recycled_time = variant.date;
@@ -219,23 +221,21 @@ static PyObject *restore_file(PyObject *self, PyObject *arg) {
             STRRET bin_display_name;
             hr = recycle_bin_folder->lpVtbl->GetDisplayNameOf(recycle_bin_folder, pidl_item, SHGDN_FORPARSING, &bin_display_name);
             if (FAILED(hr)) {
-                CoTaskMemFree(pidl_item);
-                continue;
+                goto end_loop;
             }
 
             CoTaskMemFree(to_restore);
             to_restore = CoTaskMemAlloc(MAX_PATH + 1);
 
             if (StrRetToBufA(&bin_display_name, pidl_item, to_restore, MAX_PATH) != S_OK) {
-                CoTaskMemFree(pidl_item);
-                continue;
+                goto end_loop;
             }
 
             _ensure_double_null_terminated(to_restore);
 
             to_restore_recycled_time = recycled_time;
         }
-
+    end_loop:
         CoTaskMemFree(pidl_item);
     }
 
@@ -274,10 +274,10 @@ static PyObject *get_files_in_folder(PyObject *self, PyObject *arg) {
 
     const char path_last_char = path[path_size - 1];
     if (path_last_char != '/' && path_last_char != '\\') {
-        memcpy(search_query + path_size, "\\*.*", 5);
-    } else {
-        memcpy(search_query + path_size, "*.*", 4);
+        search_query[path_size++] = '\\';
     }
+
+    memcpy(search_query + path_size, "*.*", 4);
 
     struct _WIN32_FIND_DATAA file_data;
     HANDLE file_handle = FindFirstFileExA(search_query, FindExInfoBasic, &file_data, FindExSearchNameMatch, NULL, FIND_FIRST_EX_LARGE_FETCH);
