@@ -21,7 +21,7 @@ from image_viewer.image.state import ZOOM_UNSET
 from image_viewer.ui.rename_entry import _ERROR_COLOR, _MAX_ENTRY_SIZE
 
 # Increment when edits to this file or module_dependencies are merged into main
-SKIP_ITERATION: int = 0
+SKIP_ITERATION: int = 1
 
 # Module independent skips
 
@@ -42,6 +42,7 @@ functions_to_skip: dict[str, set[str]] = {
         "__setstate__",
         "_apply_env_variables",
         "_dump",
+        "_reload_exif",
         "_repr_image",
         "_repr_jpeg_",
         "_repr_pretty_",
@@ -52,12 +53,16 @@ functions_to_skip: dict[str, set[str]] = {
         "composite",
         "deprecate",
         "effect_mandelbrot",
+        "effect_noise",
         "entropy",
+        "eval",
+        "fromarray",
         "fromarrow",
         "fromqimage",
         "fromqpixmap",
         "get_child_images",
         "getexif",
+        "getextrema",
         "getLogger",
         "getmodebandnames",
         "getxmp",
@@ -67,6 +72,7 @@ functions_to_skip: dict[str, set[str]] = {
         "radial_gradient",
         "register_mime",
         "show",
+        "thumbnail",
         "toqimage",
         "toqpixmap",
         "verify",
@@ -167,7 +173,7 @@ functions_to_skip: dict[str, set[str]] = {
 
 
 vars_to_skip: dict[str, set[str]] = {
-    "PIL.Image": {"MIME"},
+    "PIL.Image": {"MIME", "_fromarray_typemap"},
     "PIL.ImageDraw": {"Outline"},
     "PIL.ImageFile": {"logger"},
     "PIL.ImagePalette": {"tostring"},
