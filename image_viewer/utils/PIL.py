@@ -118,7 +118,7 @@ def _has_useless_alpha_channel(image: Image) -> bool:
 
     :param image: PIL Image to check
     :returns: If alpha channel is useless"""
-    band: int | None
+    band: int
     match image.mode:
         case "RGBA":
             band = 3
