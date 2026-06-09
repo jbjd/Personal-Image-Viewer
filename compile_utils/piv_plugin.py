@@ -23,6 +23,7 @@ _removable_std_modules = {
     "html",
     "imaplib",
     "imghdr",
+    "ipaddress",
     "json",
     "mailcap",
     "mimetypes",
@@ -58,9 +59,12 @@ if sys.platform != "darwin":
 
 if sys.version_info >= (3, 13):
     raise NotImplementedError(
-        "cgi, cgitb, chunk, imghdr, mailcap, sndhdr, pipes, and uu "
-        "need to be removed from _removable_std_modules"
+        "Remove from _removable_std_modules: "
+        "cgi, cgitb, chunk, imghdr, mailcap, sndhdr, pipes, and uu"
     )
+
+if sys.version_info >= (3, 19):
+    raise NotImplementedError("Remove from _removable_std_modules: nturl2path")
 
 
 _removable_std_extensions: set[str] = set()
