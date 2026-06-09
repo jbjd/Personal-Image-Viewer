@@ -194,7 +194,7 @@ class ImageIO:
         image.save(
             optimized_bytes,
             "PNG",
-            quality=100,
+            optimize=True,
             icc_profile=image.info.get("icc_profile"),
         )
 

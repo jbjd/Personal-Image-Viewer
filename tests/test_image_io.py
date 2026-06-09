@@ -158,14 +158,14 @@ def test_optimize_png_image(image_io: ImageIO) -> None:
             image.save(original_image, "PNG", optimize=False, compress_level=0)
 
         starting_size: int = os.stat(original_image.name).st_size
+        assert starting_size == 478, "Unexpected starting size for test image"
 
         image_io.load_image(original_image.name)
         image_io.optimize_png_image(original_image.name)
 
         ending_size: int = os.stat(original_image.name).st_size
 
-        assert ending_size > 0
-        assert ending_size < starting_size
+        assert ending_size == 79
 
         # Doing it again does nothing
         with patch(f"{_MODULE_PATH}.optimize_image_mode") as mock_optimize_image_mode:
