@@ -74,23 +74,18 @@ def clean_compilation_report(report_path: str, warn_on_failure: bool) -> None:
     updates to the plugin. This removes those modules/dlls.
 
     :param report_path: Path to the report file
-    :param warn_on_failure: Warns on faliure such as no data on what was removed"""
+    :param warn_on_failure: Warns on failure such as no data on what was removed"""
 
-    tree: ET.ElementTree = ET.parse(report_path)  # noqa: S314
+    tree: ET.ElementTree[ET.Element[str]] = ET.parse(report_path)  # noqa: S314
     root: ET.Element | None = tree.getroot()
 
-    piv_node: ET.Element | None = (
-        root.find("./plugins/plugin[@name='PivPlugin']") if root is not None else None
-    )
+    if root is None:
+        return _warn_cannot_clean_report("Can't find root", warn_on_failure)
+
+    piv_node: ET.Element | None = root.find("./plugins/plugin[@name='PivPlugin']")
 
     if piv_node is None:
-        if warn_on_failure:
-            _logger.warning(
-                "Can't clean compilation report due to not finding PivPlugin tag,"
-                " report may be somewhat misleading"
-            )
-
-        return
+        return _warn_cannot_clean_report("Can't find PivPlugin node", warn_on_failure)
 
     try:
         removed_std_modules: list[str] = piv_node.attrib["removed_std_modules"].split(
@@ -146,6 +141,10 @@ def clean_compilation_report(report_path: str, warn_on_failure: bool) -> None:
 
         with open(report_path, "wb") as fp:
             tree.write(fp)
-    except Exception:
-        if warn_on_failure:
-            _logger.exception("Failed to parse report file")
+    except Exception as e:  # noqa: BLE001
+        _warn_cannot_clean_report(str(e), warn_on_failure)
+
+
+def _warn_cannot_clean_report(message: str, warn_on_failure: bool) -> None:
+    if warn_on_failure:
+        _logger.warning("Can't clean compilation report: %s", message)

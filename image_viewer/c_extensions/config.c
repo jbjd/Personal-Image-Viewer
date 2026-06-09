@@ -159,8 +159,8 @@ void parse_line(char *restrict line, int line_len, char *restrict value_out) {
     return;
 
 has_equals:
-    char *value_start = &line[index + 1];
-    while (isspace(*value_start)) {
+    size_t value_start = index + 1;
+    while (isspace(line[value_start])) {
         ++value_start;
     }
 
@@ -170,12 +170,12 @@ has_equals:
     line[index + 1] = '\0';
 
     // Handle quotes
-    if ((*value_start == '"' || *value_start == '\'') && *value_start == line[line_len - 1]) {
-        value_start += 1;
+    if ((line[value_start] == '"' || line[value_start] == '\'') && line[value_start] == line[line_len - 1]) {
+        ++value_start;
         line[line_len - 1] = '\0';
     }
 
-    strcpy(value_out, value_start);
+    memcpy(value_out, line + value_start, line_len - value_start + 1);
 }
 
 /**

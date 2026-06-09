@@ -37,15 +37,15 @@ static const char *AVIF = "AVIF";
 static const char *DDS = "DDS";
 
 static inline void _magic_number_guess(PyObject *self, CRawImageView *view_buffer) {
-    if (strncmp(view_buffer->buffer, "\x89PNG", 4) == 0) {
+    if (strcmp(view_buffer->buffer, "\x89PNG") == 0) {
         view_buffer->format = PyObject_GetAttrString(self, VARIABLE_NAME(PNG));
-    } else if (strncmp(view_buffer->buffer, "\xff\xd8\xff", 3) == 0) {
+    } else if (strcmp(view_buffer->buffer, "\xff\xd8\xff") == 0) {
         view_buffer->format = PyObject_GetAttrString(self, VARIABLE_NAME(JPEG));
-    } else if (strncmp(view_buffer->buffer, "RIFF", 4) == 0) {
+    } else if (strcmp(view_buffer->buffer, "RIFF") == 0) {
         view_buffer->format = PyObject_GetAttrString(self, VARIABLE_NAME(WEBP));
-    } else if (strncmp(view_buffer->buffer, "GIF8", 4) == 0) {
+    } else if (strcmp(view_buffer->buffer, "GIF8") == 0) {
         view_buffer->format = PyObject_GetAttrString(self, VARIABLE_NAME(GIF));
-    } else if (strncmp(view_buffer->buffer, "DDS ", 4) == 0) {
+    } else if (strcmp(view_buffer->buffer, "DDS ") == 0) {
         view_buffer->format = PyObject_GetAttrString(self, VARIABLE_NAME(DDS));
     } else {
         view_buffer->format = PyObject_GetAttrString(self, VARIABLE_NAME(AVIF));

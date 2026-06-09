@@ -2,6 +2,7 @@ import os
 import sys
 import warnings
 
+from nuitka.options.CommandLineOptionsTools import OurOptionGroup
 from nuitka.plugins.PluginBase import NuitkaPluginBase
 from nuitka.utils.ModuleNames import ModuleName
 
@@ -74,7 +75,7 @@ if sys.platform == "win32":
     _removable_dlls.add("vcruntime140_1.dll")
 
 
-class PivNuitkaPlugin(NuitkaPluginBase):
+class PivNuitkaPlugin(NuitkaPluginBase):  # type: ignore[misc]
     plugin_name: str = "PivPlugin"
 
     __slots__ = (
@@ -93,7 +94,7 @@ class PivNuitkaPlugin(NuitkaPluginBase):
         self._removed_dlls: set[str] = set()
 
     @classmethod
-    def addPluginCommandLineOptions(cls, group) -> None:  # noqa: ANN001
+    def addPluginCommandLineOptions(cls, group: OurOptionGroup) -> None:
         group.add_option(
             "--extra-checks",
             action="store_true",
@@ -132,15 +133,15 @@ class PivNuitkaPlugin(NuitkaPluginBase):
     def onStandaloneDistributionFinished(self, dist_dir: str) -> None:
 
         for extension in _removable_std_extensions:
-            path: str = os.path.join(dist_dir, extension)
-            if os.path.exists(path):
-                os.remove(path)
+            extension_path: str = os.path.join(dist_dir, extension)
+            if os.path.exists(extension_path):
+                os.remove(extension_path)
                 self._removed_std_extensions.add(extension)
 
         for dll in _removable_dlls:
-            path: str = os.path.join(dist_dir, dll)
-            if os.path.exists(path):
-                os.remove(path)
+            dll_path: str = os.path.join(dist_dir, dll)
+            if os.path.exists(dll_path):
+                os.remove(dll_path)
                 self._removed_dlls.add(dll)
 
         if self.extra_checks:

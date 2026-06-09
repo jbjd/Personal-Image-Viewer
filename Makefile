@@ -64,7 +64,7 @@ install-debug:
 install-debug-setup:
 	$(PYTHON_EXECUTABLE) -OO compile.py --assume-this-machine --extra-checks --debug --skip-nuitka
 
-C_AND_H_FILES = $(shell python -csS "from glob import glob;print(' '.join(glob('image_viewer/**/*.[ch]',recursive=True)))")
+C_AND_H_FILES = $(shell $(PYTHON_EXECUTABLE) -sSc "from glob import glob;print(' '.join(glob('image_viewer/**/*.[ch]',recursive=True)))")
 
 format:
 	ruff check . --fix
