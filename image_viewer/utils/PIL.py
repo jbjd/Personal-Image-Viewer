@@ -118,10 +118,16 @@ def _has_useless_alpha_channel(image: Image) -> bool:
 
     :param image: PIL Image to check
     :returns: If alpha channel is useless"""
-    if image.mode not in _alpha_to_precomputed:
-        return False
+    band: int | None
+    match image.mode:
+        case "RGBA":
+            band = 3
+        case "LA":
+            band = 1
+        case _:
+            return False
 
-    return image.im.split()[-1].getextrema() == (255, 255)
+    return image.im.getband(band).getextrema() == (255, 255)
 
 
 def _should_be_grayscale(image: Image) -> bool:
