@@ -5,37 +5,11 @@ from collections.abc import Callable
 from configparser import ConfigParser
 from typing import override
 
-from tests.utils._c_bindings import is_valid_hex_color, is_valid_keybind
-
-
-def _strip_quotes(value: str) -> str:
-    """Values from .ini may be wrapped in quotes, return value without quotes"""
-    return value.strip("'\"")
-
-
-def empty_or_valid_hex_color(hex_color: str) -> bool:
-    """Returns True if hex_color is in valid format '#abC123'"""
-    hex_color = _strip_quotes(hex_color)
-    return hex_color == "" or is_valid_hex_color(hex_color)
-
-
-def empty_or_valid_keybind(keybind: str) -> bool:
-    """Returns True if keybind is a valid subset of keybinds used for tkinter
-    that this program accepts"""
-    keybind = _strip_quotes(keybind)
-    return keybind == "" or is_valid_keybind(keybind)
-
-
-def empty_or_valid_int(possible_int: str) -> bool:
-    """Returns True if possible_int is an empty string or parsable as an int"""
-    possible_int = _strip_quotes(possible_int)
-    try:
-        int(possible_int)
-    except ValueError:
-        if possible_int != "":
-            return False
-
-    return True
+from tests.utils._c_bindings import (
+    is_empty_or_valid_hex_color,
+    is_empty_or_valid_int,
+    is_empty_or_valid_keybind,
+)
 
 
 def any_str(_: str) -> bool:
@@ -44,18 +18,18 @@ def any_str(_: str) -> bool:
 
 
 schema: dict[str, dict[str, Callable[[str], bool]]] = {
-    "CACHE": {"size": empty_or_valid_int},
+    "CACHE": {"size": is_empty_or_valid_int},
     "KEYBINDS": {
-        "copy_to_clipboard_as_base64": empty_or_valid_keybind,
-        "move_to_new_file": empty_or_valid_keybind,
-        "optimize_image": empty_or_valid_keybind,
-        "refresh": empty_or_valid_keybind,
-        "reload_image": empty_or_valid_keybind,
-        "rename": empty_or_valid_keybind,
-        "show_details": empty_or_valid_keybind,
-        "undo_most_recent_action": empty_or_valid_keybind,
+        "copy_to_clipboard_as_base64": is_empty_or_valid_keybind,
+        "move_to_new_file": is_empty_or_valid_keybind,
+        "optimize_image": is_empty_or_valid_keybind,
+        "refresh": is_empty_or_valid_keybind,
+        "reload_image": is_empty_or_valid_keybind,
+        "rename": is_empty_or_valid_keybind,
+        "show_details": is_empty_or_valid_keybind,
+        "undo_most_recent_action": is_empty_or_valid_keybind,
     },
-    "UI": {"background_color": empty_or_valid_hex_color, "font": any_str},
+    "UI": {"background_color": is_empty_or_valid_hex_color, "font": any_str},
 }
 
 
