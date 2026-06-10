@@ -34,6 +34,8 @@ typedef struct
     PyObject *ui_font;             // str
 } Config;
 
+extern const int LINE_MAX_SIZE;
+
 bool is_valid_hex_color(const char *hex);
 
 bool is_valid_keybind(const char *keybind, size_t keybind_len);
