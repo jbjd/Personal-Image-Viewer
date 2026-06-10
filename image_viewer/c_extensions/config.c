@@ -3,6 +3,8 @@
 #include <ctype.h>
 #include <string.h>
 
+const int LINE_MAX_SIZE = 512;
+
 /**
  * Checks if \p hex is in format "#123ABC".
  *

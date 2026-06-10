@@ -164,7 +164,6 @@ PyObject *parse_config_file(PyObject *self, PyObject *args) {
 
     enum Header header = NONE;
 
-    const int LINE_MAX_SIZE = 512;
     char *raw_line = (char *)malloc(LINE_MAX_SIZE * sizeof(char));
     while (fgets(raw_line, LINE_MAX_SIZE, file)) {
         char *line = str_strip(raw_line);
