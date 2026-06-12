@@ -78,7 +78,8 @@ validate:
 	codespell
 
 test:
-	$(PYTHON_EXECUTABLE) -m pytest -m "not memory_leak" --cov=image_viewer --cov-report term-missing
+	$(PYTHON_EXECUTABLE) -m coverage run --source=image_viewer -m pytest -m "not memory_leak"
+	@coverage report -m
 
 override PYTHONUNBUFFERED=1
 export PYTHONUNBUFFERED
