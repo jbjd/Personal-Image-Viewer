@@ -77,6 +77,9 @@ validate:
 	mypy .
 	codespell
 
+override PYTEST_DISABLE_PLUGIN_AUTOLOAD=1
+export PYTEST_DISABLE_PLUGIN_AUTOLOAD
+
 test:
 	$(PYTHON_EXECUTABLE) -m coverage run --source=image_viewer -m pytest -m "not memory_leak"
 	@coverage report -m
