@@ -40,6 +40,10 @@ from compile_utils.validation import (
     validate_python_version,
 )
 
+validate_python_version()
+validate_module_requirements()
+validate_PIL()
+
 working_folder: str = os.path.normpath(os.path.dirname(__file__))
 
 files_to_include: list[str] = ["image_viewer/config.ini"]
@@ -59,14 +63,9 @@ TARGET_FILE: str = f"{TARGET_MODULE}.py"
 build_folder_path: str = os.path.join(working_folder, "build")
 src_folder_path: str = os.path.join(build_folder_path, "src")
 target_file_path: str = os.path.join(src_folder_path, TARGET_FILE)
-custom_nuitka_folder_path: str = os.path.join(build_folder_path, "nuitka")
 code_folder_path: str = os.path.join(working_folder, IMAGE_VIEWER_NAME)
 nuitka_dist_path: str = os.path.join(build_folder_path, f"{TARGET_MODULE}.dist")
-nuitka_build_path: str = os.path.join(build_folder_path, f"{TARGET_MODULE}.build")
 
-validate_python_version()
-validate_module_requirements()
-validate_PIL()
 
 _logger = get_logger()
 
