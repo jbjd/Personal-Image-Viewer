@@ -36,6 +36,7 @@ disallow_subclassing_any = false
 [tool.pytest]
 pythonpath = ["image_viewer"]
 testpaths = ["tests"]
+python_files = ["test_*.py"]
 markers = [
     "memory_leak: Tests that check if compiled C extensions leak memory"
 ]
