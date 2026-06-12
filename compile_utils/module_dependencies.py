@@ -26,9 +26,7 @@ modules_to_skip: list[str] = [
     "email",
     "email.message",
     "email.parser",
-    "hashlib",
     "lzma",
-    "packaging",
     "PIL.__main__",
     "PIL._deprecate",
     "PIL._typing",
@@ -101,10 +99,7 @@ modules_to_skip: list[str] = [
     "py_compile",
     "pydoc",
     "select",
-    "socket",
     "statistics",
-    "urllib.error",
-    "urllib.request",
 ]
 
 
