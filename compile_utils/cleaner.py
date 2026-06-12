@@ -142,6 +142,8 @@ def clean_module_and_copy(
     :param assume_this_machine: Argument passed onto minifier
     :param modules_to_skip: Submodules to not copy"""
 
+    skipped_modules: set[str] = set()
+
     for file_path in _get_files_in_folder_with_filter(
         module_folder_path, (".py", ".pyd", ".so")
     ):
@@ -153,7 +155,7 @@ def clean_module_and_copy(
         new_file_path: str = os.path.join(dest_folder_path, relative_file_path)
 
         if modules_to_skip is not None and _should_skip_module(
-            module_import_path, modules_to_skip
+            module_import_path, modules_to_skip, skipped_modules
         ):
             continue
 
@@ -169,14 +171,18 @@ def clean_module_and_copy(
         else:
             copy_file(file_path, new_file_path)
 
-    if modules_to_skip:
-        _logger.warning(
-            "Some modules were marked to skip but were not found: %s",
-            ", ".join(modules_to_skip),
-        )
+    if modules_to_skip is not None:
+        unused_module_skips: set[str] = skipped_modules ^ modules_to_skip
+        if unused_module_skips:
+            _logger.warning(
+                "Some modules were marked to skip but were not found: %s",
+                ", ".join(unused_module_skips),
+            )
 
 
-def _should_skip_module(module_import_path: str, modules_to_skip: set[str]) -> bool:
+def _should_skip_module(
+    module_import_path: str, modules_to_skip: set[str], skipped_modules: set[str]
+) -> bool:
     """Checks if a module should be skipped.
 
     :param module_import_path: How the module would be imported, e.x. 'PIL.Image'
@@ -184,7 +190,7 @@ def _should_skip_module(module_import_path: str, modules_to_skip: set[str]) -> b
     :returns: True if module_import_path or its parent is in modules_to_skip"""
     for m in modules_to_skip:
         if module_import_path.startswith(m):
-            modules_to_skip.remove(m)
+            skipped_modules.add(m)
             return True
 
     return False
@@ -225,8 +231,7 @@ def clean_tk_files(compile_dir: str) -> None:
         if len(glob_result) > 1:
             _logger.warning("Glob %s found multiple files", path_or_glob)
 
-        code_file: str = glob_result[0]
-        re_replace_file(code_file, regexes, raise_if_not_applied=True)
+        re_replace_file(glob_result[0], regexes, raise_if_not_applied=True)
 
     for code_file in _get_files_in_folder_with_filter(compile_dir, (".tcl", ".tm")):
         tcl_minify_file(code_file)
