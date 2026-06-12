@@ -114,26 +114,19 @@ static void _update_config(Config *config, enum Header header, char *key, char *
         }
         if (strcmp(key, "COPY_TO_CLIPBOARD_AS_BASE64") == 0) {
             config->kb_copy_to_clipboard_as_base64 = PyUnicode_FromString(value);
-        }
-        if (strcmp(key, "MOVE_TO_NEW_FILE") == 0) {
+        } else if (strcmp(key, "MOVE_TO_NEW_FILE") == 0) {
             config->kb_move_to_new_file = PyUnicode_FromString(value);
-        }
-        if (strcmp(key, "OPTIMIZE_IMAGE") == 0) {
+        } else if (strcmp(key, "OPTIMIZE_IMAGE") == 0) {
             config->kb_optimize_image = PyUnicode_FromString(value);
-        }
-        if (strcmp(key, "REFRESH") == 0) {
+        } else if (strcmp(key, "REFRESH") == 0) {
             config->kb_refresh = PyUnicode_FromString(value);
-        }
-        if (strcmp(key, "RELOAD_IMAGE") == 0) {
+        } else if (strcmp(key, "RELOAD_IMAGE") == 0) {
             config->kb_reload_image = PyUnicode_FromString(value);
-        }
-        if (strcmp(key, "RENAME") == 0) {
+        } else if (strcmp(key, "RENAME") == 0) {
             config->kb_rename = PyUnicode_FromString(value);
-        }
-        if (strcmp(key, "SHOW_DETAILS") == 0) {
+        } else if (strcmp(key, "SHOW_DETAILS") == 0) {
             config->kb_show_details = PyUnicode_FromString(value);
-        }
-        if (strcmp(key, "UNDO_MOST_RECENT_ACTION") == 0) {
+        } else if (strcmp(key, "UNDO_MOST_RECENT_ACTION") == 0) {
             config->kb_undo_most_recent_action = PyUnicode_FromString(value);
         }
         break;
