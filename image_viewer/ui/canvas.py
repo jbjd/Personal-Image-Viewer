@@ -14,6 +14,7 @@ class CustomCanvas(Canvas):
     """Extended version of tkinter's canvas to support internal methods"""
 
     __slots__ = (
+        "_motion_schedule",
         "_topbar",
         "button_name_to_object",
         "drag_start_x",
@@ -29,6 +30,8 @@ class CustomCanvas(Canvas):
         self.pack(anchor="nw", fill="both", expand=1)
 
         master.update()  # updates winfo width and height to the current size
+        self._motion_schedule: str = ""
+        self._topbar: PhotoImage
         self.button_name_to_object: dict[str, ButtonUIElementBase] = {}
         self.file_name_text_id: int = -1
         self.image_display = ImageUIElement(None, -1)
@@ -36,7 +39,6 @@ class CustomCanvas(Canvas):
         self.screen_height: int = master.winfo_height()
         self.drag_start_x: int
         self.drag_start_y: int
-        self._topbar: PhotoImage
 
         self.create_rectangle(
             0,
@@ -55,25 +57,32 @@ class CustomCanvas(Canvas):
         self.drag_start_y = event.y
 
     def _move_to(self, event: Event) -> None:
+        if self._motion_schedule:
+            return
+
+        self._motion_schedule = self.after(15, self._drag_image, event)
+
+    def _drag_image(self, event: Event) -> None:
         drag_x: int = event.x - self.drag_start_x
         drag_y: int = event.y - self.drag_start_y
-        self.drag_start_x += drag_x
-        self.drag_start_y += drag_y
+        self.drag_start_x = event.x
+        self.drag_start_y = event.y
 
         bbox: tuple[int, int, int, int] = self.bbox(self.image_display.id)
         # Keep in bounds horizontally
-        if drag_x < 0 and bbox[2] + drag_x <= 0:
+        if bbox[2] + drag_x <= 0:
             drag_x = -bbox[2]
-        elif drag_x > 0 and bbox[0] + drag_x >= self.screen_width:
+        elif bbox[0] + drag_x >= self.screen_width:
             drag_x = self.screen_width - bbox[0]
 
         # Keep in bounds vertically
-        if drag_y < 0 and bbox[3] + drag_y <= 0:
+        if bbox[3] + drag_y <= 0:
             drag_y = -bbox[3]
-        elif drag_y > 0 and bbox[1] + drag_y >= self.screen_height:
+        elif bbox[1] + drag_y >= self.screen_height:
             drag_y = self.screen_height - bbox[1]
 
         self.move(self.image_display.id, drag_x, drag_y)
+        self._motion_schedule = ""
 
     def create_button(
         self,
@@ -113,7 +122,7 @@ class CustomCanvas(Canvas):
         """Puts a new image on screen"""
         self.delete(self.image_display.id)
 
-        new_id: int = self.create_image(
+        self.image_display.id = self.create_image(
             self.screen_width >> 1,
             self.screen_height >> 1,
             anchor="center",
@@ -121,7 +130,6 @@ class CustomCanvas(Canvas):
             image=new_image,
         )
         self.image_display.image = new_image
-        self.image_display.id = new_id
         self.tag_raise(TkTags.TOPBAR)
         self.master.update_idletasks()
 

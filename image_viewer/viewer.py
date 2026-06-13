@@ -45,7 +45,6 @@ class ViewerApp:
     __slots__ = (
         "animation_id",
         "app",
-        "app_id",
         "canvas",
         "dropdown",
         "file_manager",
@@ -73,10 +72,9 @@ class ViewerApp:
         self.animation_id: str = ""
 
         self.app: Tk = self._setup_tk()
-        self.app_id: int = self.app.winfo_id()
 
         if os.name == "nt":
-            init_c_utils(self.app_id)
+            init_c_utils(self.app.winfo_id())
 
         self.canvas = CustomCanvas(self.app, config.ui_background_color)
         screen_height: int = self.canvas.screen_height

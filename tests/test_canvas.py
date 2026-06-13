@@ -85,7 +85,7 @@ def test_drag(
     canvas.moveto(canvas.image_display.id, 0, 0)
     with patch.object(CustomCanvas, "move") as mock_move:
         canvas._move_from(event_origin)
-        canvas._move_to(event_end)
+        canvas._drag_image(event_end)
 
         mock_move.assert_called_once_with(
             canvas.image_display.id, *expected_move_amount
