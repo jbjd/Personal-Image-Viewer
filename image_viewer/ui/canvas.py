@@ -1,5 +1,6 @@
 """Classes representing a canvas UI element"""
 
+from time import time
 from tkinter import Canvas, Event, Tk
 
 from PIL.ImageTk import PhotoImage
@@ -20,6 +21,7 @@ class CustomCanvas(Canvas):
         "drag_start_y",
         "file_name_text_id",
         "image_display",
+        "last_move_time",
         "screen_height",
         "screen_width",
     )
@@ -32,6 +34,7 @@ class CustomCanvas(Canvas):
         self.button_name_to_object: dict[str, ButtonUIElementBase] = {}
         self.file_name_text_id: int = -1
         self.image_display = ImageUIElement(None, -1)
+        self.last_move_time: float = 0
         self.screen_width: int = master.winfo_width()
         self.screen_height: int = master.winfo_height()
         self.drag_start_x: int
@@ -55,6 +58,13 @@ class CustomCanvas(Canvas):
         self.drag_start_y = event.y
 
     def _move_to(self, event: Event) -> None:
+        current_time: float = time()
+
+        if current_time - self.last_move_time < 0.03:
+            return
+
+        self.last_move_time = current_time
+
         drag_x: int = event.x - self.drag_start_x
         drag_y: int = event.y - self.drag_start_y
         self.drag_start_x += drag_x
@@ -113,7 +123,7 @@ class CustomCanvas(Canvas):
         """Puts a new image on screen"""
         self.delete(self.image_display.id)
 
-        new_id: int = self.create_image(
+        self.image_display.id = self.create_image(
             self.screen_width >> 1,
             self.screen_height >> 1,
             anchor="center",
@@ -121,7 +131,6 @@ class CustomCanvas(Canvas):
             image=new_image,
         )
         self.image_display.image = new_image
-        self.image_display.id = new_id
         self.tag_raise(TkTags.TOPBAR)
         self.master.update_idletasks()
 
