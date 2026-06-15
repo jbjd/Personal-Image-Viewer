@@ -6,12 +6,12 @@ from textwrap import wrap
 from typing import IO
 
 from PIL import Image as _Image  # avoid name conflicts
-from PIL.Image import Image, Resampling, Transpose, new, register_open
+from PIL.Image import Image, Resampling, new, register_open
 from PIL.ImageDraw import ImageDraw
 from PIL.ImageFont import FreeTypeFont
 from PIL.JpegImagePlugin import JpegImageFile
 
-from image_viewer.constants import TEXT_RGB, Rotation
+from image_viewer.constants import TEXT_RGB
 
 if os.name == "nt":
     from image_viewer.utils._os_nt import get_files_in_folder
@@ -46,19 +46,6 @@ def get_mode_info(mode: str) -> tuple[str, int]:
         if mode in _mode_info_special_cases
         else (mode, len(mode) * 8)
     )
-
-
-def rotate_image(image: Image, angle: Rotation) -> Image:
-    """Rotates an image with the highest quality"""
-    match angle:
-        case Rotation.DOWN:
-            return image.transpose(Transpose.ROTATE_180)
-        case Rotation.RIGHT:
-            return image.transpose(Transpose.ROTATE_270)
-        case Rotation.LEFT:
-            return image.transpose(Transpose.ROTATE_90)
-        case _:
-            return image
 
 
 def image_is_animated(image: Image) -> bool:

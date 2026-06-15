@@ -11,15 +11,6 @@ class Key(IntEnum):
     DOWN = 65364
 
 
-class Rotation(IntEnum):
-    """Angles the image can be rotated."""
-
-    UP = 0
-    LEFT = 90
-    DOWN = 180
-    RIGHT = 270
-
-
 class ZoomDirection(IntEnum):
     """Direction for the zoom movement."""
 

@@ -109,7 +109,7 @@ def test_load_image_resize_error(image_io: ImageIO) -> None:
         image_io._resize_or_get_placeholder()
         mock_get_placeholder.assert_called_once()
 
-        assert not image_io._state.zoom_rotate_allowed
+        assert not image_io._state.zoom_allowed
 
 
 def test_get_next_frame(image_io: ImageIO) -> None:
