@@ -233,7 +233,7 @@ class ImageIO:
         return current_image
 
     def get_zoomed_image(self, direction: ZoomDirection) -> Image | None:
-        """Gets current image with orientation changes like zoom and rotation"""
+        """Gets current image resized for zoom."""
         if __debug__ and not self._state.zoom_allowed:
             return None
 

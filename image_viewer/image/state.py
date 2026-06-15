@@ -23,12 +23,11 @@ class ImageState:
         """Tries to zoom in or out. Returns True if zoom level changed"""
         updated: bool = False
 
-        if direction is not None:
-            if direction == ZoomDirection.IN and self.zoom_level < self.zoom_level_max:
-                self.zoom_level += 1
-                updated = True
-            elif direction == ZoomDirection.OUT and self.zoom_level > 0:
-                self.zoom_level -= 1
-                updated = True
+        if direction == ZoomDirection.IN and self.zoom_level < self.zoom_level_max:
+            self.zoom_level += 1
+            updated = True
+        elif direction == ZoomDirection.OUT and self.zoom_level > 0:
+            self.zoom_level -= 1
+            updated = True
 
         return updated

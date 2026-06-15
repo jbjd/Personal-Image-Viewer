@@ -408,7 +408,7 @@ class ViewerApp:
 
     def load_zoomed_image_unblocking(self, direction: ZoomDirection) -> None:
         """Starts new thread for loading zoomed image"""
-        if not self.image_io.zoom_allowed:  # TODO: Move zoom state to this class
+        if not self.image_io.zoom_allowed:
             return
 
         self._start_image_load(self.load_zoomed_image, direction)
