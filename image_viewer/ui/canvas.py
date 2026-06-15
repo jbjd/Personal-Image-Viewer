@@ -60,7 +60,7 @@ class CustomCanvas(Canvas):
         if self._motion_schedule:
             return
 
-        self._motion_schedule = self.after(0, self._drag_image, event)
+        self._motion_schedule = self.after(15, self._drag_image, event)
 
     def _drag_image(self, event: Event) -> None:
         drag_x: int = event.x - self.drag_start_x
