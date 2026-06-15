@@ -8,14 +8,7 @@ from PIL.Image import Image
 from PIL.ImageTk import PhotoImage
 
 from image_viewer._config import Config, parse_config_file
-from image_viewer.constants import (
-    ButtonName,
-    Key,
-    Movement,
-    Rotation,
-    TkTags,
-    ZoomDirection,
-)
+from image_viewer.constants import ButtonName, Key, Movement, TkTags, ZoomDirection
 from image_viewer.files.file_manager import ImageFileManager
 from image_viewer.image.cache import ImageCache
 from image_viewer.image.image_io import AnimationFrame, ImageIO
@@ -154,23 +147,19 @@ class ViewerApp:
         app.bind(
             "<equal>",
             lambda e: self._only_for_this_window(
-                e, self.load_zoomed_or_rotated_image_unblocking, ZoomDirection.IN
+                e, self.load_zoomed_image_unblocking, ZoomDirection.IN
             ),
         )
         app.bind(
             "<minus>",
             lambda e: self._only_for_this_window(
-                e, self.load_zoomed_or_rotated_image_unblocking, ZoomDirection.OUT
+                e, self.load_zoomed_image_unblocking, ZoomDirection.OUT
             ),
         )
         app.bind("<Left>", self.handle_lr_arrow)
         app.bind("<Right>", self.handle_lr_arrow)
         app.bind("<Up>", self.handle_up_arrow)
         app.bind("<Down>", self.handle_down_arrow)
-        app.bind("<Alt-Left>", self.handle_rotate_image)
-        app.bind("<Alt-Right>", self.handle_rotate_image)
-        app.bind("<Alt-Up>", self.handle_rotate_image)
-        app.bind("<Alt-Down>", self.handle_rotate_image)
 
         if os.name == "nt":
             app.bind(
@@ -310,25 +299,11 @@ class ViewerApp:
         forward_scroll: bool = event.delta > 0 if os.name == "nt" else event.num == 4
 
         if right_mouse_held:
-            self.load_zoomed_or_rotated_image_unblocking(
+            self.load_zoomed_image_unblocking(
                 ZoomDirection.IN if forward_scroll else ZoomDirection.OUT
             )
         else:
             self.move(Movement.BACKWARD if forward_scroll else Movement.FORWARD)
-
-    def handle_rotate_image(self, event: Event) -> None:
-        """Rotates image, saves it to disk, and updates the display"""
-        match event.keysym_num:
-            case Key.LEFT:
-                rotation = Rotation.LEFT
-            case Key.RIGHT:
-                rotation = Rotation.RIGHT
-            case Key.DOWN:
-                rotation = Rotation.DOWN
-            case _:
-                rotation = Rotation.UP
-
-        self.load_zoomed_or_rotated_image_unblocking(rotation=rotation)
 
     def handle_canvas_click(self, _: Event) -> None:
         """Toggles the display of topbar when non-topbar area clicked"""
@@ -422,29 +397,21 @@ class ViewerApp:
         if details is not None:
             show_info("Image Details", details)
 
-    def load_zoomed_or_rotated_image(
-        self, direction: ZoomDirection | None, rotation: Rotation | None
-    ) -> None:
+    def load_zoomed_image(self, direction: ZoomDirection) -> None:
         """Loads zoomed image and updates display"""
-        if __debug__ and direction is None and rotation is None:
-            raise ValueError
 
-        zoomed_image: Image | None = self.image_io.get_zoomed_or_rotated_image(
-            direction, rotation
-        )
+        zoomed_image: Image | None = self.image_io.get_zoomed_image(direction)
         if zoomed_image is not None:
             self._update_existing_image_display(zoomed_image)
 
         self._end_image_load()
 
-    def load_zoomed_or_rotated_image_unblocking(
-        self, direction: ZoomDirection | None = None, rotation: Rotation | None = None
-    ) -> None:
+    def load_zoomed_image_unblocking(self, direction: ZoomDirection) -> None:
         """Starts new thread for loading zoomed image"""
-        if not self.image_io.zoom_rotate_allowed:
+        if not self.image_io.zoom_allowed:  # TODO: Move zoom state to this class
             return
 
-        self._start_image_load(self.load_zoomed_or_rotated_image, direction, rotation)
+        self._start_image_load(self.load_zoomed_image, direction)
 
     # End functions handling specific user input
 
