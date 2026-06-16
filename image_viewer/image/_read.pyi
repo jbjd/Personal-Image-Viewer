@@ -30,14 +30,14 @@ class CDecodedJpegView:
 def read_image_into_buffer(image_path: str, /) -> CRawImageView | None:
     """Reads an image file path and stores it in a buffer.
 
-    :param image_path: A path to a file containing an image.
-    :returns: A buffer containing the image data or None on failure."""
+    :param image_path: A path to a file containing an image
+    :returns: A buffer containing the image data or None on failure"""
 
-def decode_scaled_jpeg(
-    image_view: CRawImageView, scale_factor: tuple[int, int], /
+def decode_jpeg_downscaled(
+    image_view: CRawImageView, scale_factor: int, /
 ) -> CDecodedJpegView:
-    """Given an image buffer, decode it as a jpeg and return a new scaled buffer.
+    """Decodes an image buffer as a jpeg and returns a new downscaled buffer.
 
-    :param image_buffer: An image to decode and scale.
-    :param scale_factor: A ratio to scale the image dimensions by.
-    :returns: A new buffer containing the scaled and decoded jpeg."""
+    :param image_view: View to a buffer
+    :param scale_factor: Factor to downscale by
+    :returns: A new view to a buffer containing the decoded and downscaled jpeg"""

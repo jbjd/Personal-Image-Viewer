@@ -216,14 +216,9 @@ class ImageIO:
         """Resizes PIL image or returns placeholder if corrupted in some way"""
         current_image: Image
         try:
-            if self.PIL_image.format == "JPEG":
-                current_image = self.image_resizer.get_jpeg_fit_to_screen(
-                    self.PIL_image, self.image_view
-                )
-            else:
-                current_image = self.image_resizer.get_image_fit_to_screen(
-                    self.PIL_image
-                )
+            current_image = self.image_resizer.get_image_fit_to_screen(
+                self.PIL_image, self.image_view
+            )
         except OSError as e:
             current_image = get_placeholder_for_errored_image(
                 e, self.image_resizer.screen_width, self.image_resizer.screen_height
@@ -275,7 +270,7 @@ class ImageIO:
             try:
                 original_image.seek(i)
                 frame_image: Image = self.image_resizer.get_image_fit_to_screen(
-                    original_image
+                    original_image, self.image_view
                 )
 
                 self.animation_frames[i] = AnimationFrame(frame_image)
