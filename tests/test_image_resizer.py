@@ -9,15 +9,13 @@ from image_viewer.image.image_io import ImageIO, ReadImageResponse
 from image_viewer.image.resizer import MIN_ZOOM_LEVEL, ImageResizer
 from tests.conftest import IMG_DIR
 
-_MODULE_PATH: str = "image_viewer.image.resizer"
-
 
 def test_jpeg_scale_factor(image_resizer: ImageResizer) -> None:
     """Should return correct ratios for a 1080x1920 screen"""
-    assert image_resizer._get_jpeg_scale_factor(9999, 9999) == 8
-    assert image_resizer._get_jpeg_scale_factor(6666, 6666) == 4
-    assert image_resizer._get_jpeg_scale_factor(3000, 3000) == 2
-    assert image_resizer._get_jpeg_scale_factor(1, 1) is None
+    assert image_resizer._get_jpeg_fit_to_screen_downscale_factor(9999, 9999) == 8
+    assert image_resizer._get_jpeg_fit_to_screen_downscale_factor(6666, 6666) == 4
+    assert image_resizer._get_jpeg_fit_to_screen_downscale_factor(3000, 3000) == 2
+    assert image_resizer._get_jpeg_fit_to_screen_downscale_factor(1, 1) == 1
 
 
 @pytest.mark.parametrize(

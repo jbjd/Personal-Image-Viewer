@@ -99,30 +99,37 @@ class ImageResizer:
     def _get_jpeg_fit_to_screen(self, image: Image, image_view: CRawImageView) -> Image:
         """Resizes a JPEG utilizing libjpeg-turbo to shrink very large images"""
         image_width, image_height = image.size
-        scale_factor: int | None = self._get_jpeg_scale_factor(
+        scale_factor: int = self._get_jpeg_fit_to_screen_downscale_factor(
             image_width, image_height
         )
+
         # if small do a normal resize, otherwise utilize libJpegTurbo
-        if scale_factor is None:
+        if scale_factor < 2:
             return self._get_generic_fit_to_screen(image)
 
         return self._get_generic_fit_to_screen(
             self._get_jpeg_downscaled(image_view, scale_factor)
         )
 
-    def _get_jpeg_scale_factor(self, image_width: int, image_height: int) -> int | None:
-        """Gets Turbo JPEG scaling factor for images larger than screen"""
-        ratio_to_screen: float = max(
-            image_width / self.screen_width, image_height / self.screen_height
+    def _get_jpeg_fit_to_screen_downscale_factor(
+        self, image_width: int, image_height: int
+    ) -> int:
+        """Gets power of 2 downscaling for libturbojpeg to best fit it to the screen.
+
+        :param image_width: Width of image
+        :param image_height: Height of image
+        :returns: A power of 2 (minimum 1) downscale to use"""
+
+        width_ratio: float = image_width / self.screen_width
+        height_ratio: float = image_height / self.screen_height
+        ratio_to_screen: int = int(
+            width_ratio if width_ratio > height_ratio else height_ratio
         )
 
-        if ratio_to_screen >= 8:
-            return 8
-        if ratio_to_screen >= 4:
-            return 4
-        if ratio_to_screen >= 2:
-            return 2
-        return None
+        # Gets nearest power of 2 of ratio_to_screen rounded down
+        return (
+            1 if ratio_to_screen <= 1 else 1 << (int(ratio_to_screen).bit_length() - 1)
+        )
 
     def _get_generic_fit_to_screen(self, image: Image) -> Image:
         image_width, image_height = image.size

@@ -43,8 +43,8 @@ def tk_fixture() -> Tk:
 @pytest.fixture(name="canvas")
 def canvas_fixture(tk: Tk) -> CustomCanvas:
     custom_canvas = CustomCanvas(tk, "#000000")
+    custom_canvas.screen_width = 1920
     custom_canvas.screen_height = 1080
-    custom_canvas.screen_width = 1080
     return custom_canvas
 
 
