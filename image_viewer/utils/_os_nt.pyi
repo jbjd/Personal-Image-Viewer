@@ -1,6 +1,7 @@
 """C extensions that interact with the Windows API."""
 
 import os
+from collections.abc import Iterable
 
 from image_viewer.image._read import CRawImageView
 
@@ -45,11 +46,11 @@ if os.name == "nt":  # noqa: PYI002
 
         :param file_path: The file path to drop to clipboard."""
 
-    def get_files_in_folder(folder_path: str, /) -> list[str]:
+    def get_files_in_folder(folder_path: str, /) -> Iterable[str]:
         """Gets all files in a folder, not checking subfolders.
 
         :param folder_path: The folder path to check.
-        :returns: A list of file names."""
+        :returns: An Iterable of file names."""
 
     def read_buffer_as_base64_and_copy_to_clipboard(
         image_view: CRawImageView, /
