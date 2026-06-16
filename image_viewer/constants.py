@@ -8,7 +8,6 @@ class Key(IntEnum):
 
     LEFT = 65361
     RIGHT = 65363
-    DOWN = 65364
 
 
 class ZoomDirection(IntEnum):

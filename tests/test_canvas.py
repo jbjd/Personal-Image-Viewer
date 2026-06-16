@@ -73,8 +73,6 @@ def test_drag(
     expected_move_amount: tuple[int, int],
 ) -> None:
     """Should move image amount dragged"""
-    canvas.screen_width = 1920
-    canvas.screen_height = 1080
     canvas.update_image_display(PhotoImage(example_image))
 
     start_x, start_y = start_coords
