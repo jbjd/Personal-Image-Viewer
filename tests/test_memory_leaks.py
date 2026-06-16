@@ -9,7 +9,7 @@ from compile_utils.exceptions import InvalidEnvironmentError
 from image_viewer._config import parse_config_file
 from image_viewer.image._read import (
     CRawImageView,
-    decode_scaled_jpeg,
+    decode_jpeg_downscaled,
     read_image_into_buffer,
 )
 from tests.conftest import EXAMPLE_JPEG_PATH, IMG_DIR
@@ -48,16 +48,16 @@ class TestLeaks(MemoryLeakTestCase):
     def test_read_image_into_buffer(self) -> None:
         self.execute(read_image_into_buffer, EXAMPLE_JPEG_PATH)
 
-    def test_decode_scaled_jpeg(self) -> None:
+    def test_decode_jpeg_downscaled(self) -> None:
         image_buffer = read_image_into_buffer(EXAMPLE_JPEG_PATH)
         if image_buffer is None:
-            raise RuntimeError("Failed to setup test_decode_scaled_jpeg")
+            raise RuntimeError("Failed to setup test_decode_jpeg_downscaled")
 
         # Need to call this once before, or psleak gets false flags.
         # I assume this is something with libjpegturbo initialization.
-        decode_scaled_jpeg(image_buffer, (1, 2))
+        decode_jpeg_downscaled(image_buffer, 2)
 
-        self.execute(decode_scaled_jpeg, image_buffer, (1, 2))
+        self.execute(decode_jpeg_downscaled, image_buffer, 2)
 
     @pytest.mark.skipif(os.name != "nt", reason="Only available on Windows")
     def test_get_files_in_folder(self) -> None:

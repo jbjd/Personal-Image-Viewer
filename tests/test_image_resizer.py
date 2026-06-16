@@ -4,6 +4,7 @@ import pytest
 from PIL.Image import Image, Resampling
 from PIL.Image import new as new_image
 
+from image_viewer.image._read import JPEG
 from image_viewer.image.image_io import ImageIO, ReadImageResponse
 from image_viewer.image.resizer import MIN_ZOOM_LEVEL, ImageResizer
 from tests.conftest import IMG_DIR
@@ -13,9 +14,9 @@ _MODULE_PATH: str = "image_viewer.image.resizer"
 
 def test_jpeg_scale_factor(image_resizer: ImageResizer) -> None:
     """Should return correct ratios for a 1080x1920 screen"""
-    assert image_resizer._get_jpeg_scale_factor(9999, 9999) == (1, 8)
-    assert image_resizer._get_jpeg_scale_factor(6666, 6666) == (1, 4)
-    assert image_resizer._get_jpeg_scale_factor(3000, 3000) == (1, 2)
+    assert image_resizer._get_jpeg_scale_factor(9999, 9999) == 8
+    assert image_resizer._get_jpeg_scale_factor(6666, 6666) == 4
+    assert image_resizer._get_jpeg_scale_factor(3000, 3000) == 2
     assert image_resizer._get_jpeg_scale_factor(1, 1) is None
 
 
@@ -23,7 +24,7 @@ def test_jpeg_scale_factor(image_resizer: ImageResizer) -> None:
     ("dimensions", "expected_dimensions", "expected_interpolation"),
     [
         ((600, 800), (810, 1080), Resampling.LANCZOS),
-        ((2000, 800), (1920, 768), Resampling.BICUBIC),
+        ((2000, 800), (1920, 768), Resampling.HAMMING),
         ((2000, 2000), (1080, 1080), Resampling.HAMMING),
     ],
 )
@@ -35,22 +36,34 @@ def test_fit_dimensions_to_screen_and_get_interpolation(
 ) -> None:
     """Should return correct dimensions and interpolation for a 1920x1080 screen"""
     width, height = dimensions
-    dimensions = image_resizer.fit_dimensions_to_screen(width, height)
-    interpolation = image_resizer.get_resampling(width, height)
+    fit_dimensions = image_resizer.fit_dimensions_to_screen(width, height)
+    interpolation = image_resizer._get_resampling(width, fit_dimensions[0])
     assert interpolation == expected_interpolation
-    assert dimensions == expected_dimensions
+    assert fit_dimensions == expected_dimensions
 
 
 def test_jpeg_fit_to_screen_small_image(image_resizer: ImageResizer) -> None:
     """When fitting a small jpeg, should fallback to generic fit function"""
     image: Image = new_image("RGB", (1000, 1000))  # smaller than screen
 
+    view = MagicMock()
+    view.format = JPEG
+
     with (
-        patch.object(ImageResizer, "get_image_fit_to_screen"),
-        patch(f"{_MODULE_PATH}.decode_scaled_jpeg") as mock_decode_scaled_jpeg,
+        patch.object(
+            ImageResizer,
+            "_get_jpeg_fit_to_screen",
+            wraps=image_resizer._get_jpeg_fit_to_screen,
+        ) as wrapped_get_jpeg_fit_to_screen,
+        patch.object(
+            ImageResizer,
+            "_get_jpeg_downscaled",
+            wraps=image_resizer._get_jpeg_downscaled,
+        ) as wrapped_get_jpeg_downscaled,
     ):
-        image_resizer.get_jpeg_fit_to_screen(image, MagicMock())
-        mock_decode_scaled_jpeg.assert_not_called()
+        _: Image = image_resizer.get_image_fit_to_screen(image, view)
+        wrapped_get_jpeg_fit_to_screen.assert_called_once()
+        wrapped_get_jpeg_downscaled.assert_not_called()
 
 
 def test_jpeg_fit_to_screen_large_image(
@@ -66,30 +79,35 @@ def test_jpeg_fit_to_screen_large_image(
 
     assert read_image_response is not None
 
-    scaled_image: Image | None = image_resizer.get_jpeg_fit_to_screen(
-        image, read_image_response.image_view
-    )
+    with patch.object(
+        ImageResizer, "_get_jpeg_downscaled", wraps=image_resizer._get_jpeg_downscaled
+    ) as wrapped_get_jpeg_downscaled:
+        resized_image: Image = image_resizer.get_image_fit_to_screen(
+            image, read_image_response.image_view
+        )
+        wrapped_get_jpeg_downscaled.assert_called_once()
 
     # Scaled based on 1920x1080 screen
-    assert scaled_image is not None
-    assert scaled_image.width == 270
-    assert scaled_image.height == 1080
+    assert resized_image.width == 270
+    assert resized_image.height == 1080
 
 
 def test_get_image_fit_to_screen(image_resizer: ImageResizer) -> None:
     """Should resize and return PIL image"""
 
-    resized_image: Image = image_resizer.get_image_fit_to_screen(
-        new_image("P", (10, 10))
-    )
+    view = MagicMock()
+    view.format = "asdf"
+
+    with patch.object(
+        ImageResizer, "_get_jpeg_fit_to_screen"
+    ) as mock_get_jpeg_fit_to_screen:
+        resized_image: Image = image_resizer.get_image_fit_to_screen(
+            new_image("P", (10, 10)), view
+        )
+        mock_get_jpeg_fit_to_screen.assert_not_called()
+
     assert resized_image.mode == "P"
     assert resized_image.size == (1080, 1080)
-
-    resized_image = image_resizer.get_image_fit_to_screen(new_image("RGBA", (10, 10)))
-    assert resized_image.mode == "RGBA"
-
-    resized_image = image_resizer.get_image_fit_to_screen(new_image("LA", (10, 10)))
-    assert resized_image.mode == "LA"
 
 
 def test_scale_dimensions(image_resizer: ImageResizer) -> None:

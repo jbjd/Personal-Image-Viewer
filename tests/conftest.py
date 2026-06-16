@@ -79,6 +79,7 @@ def image_resizer_fixture() -> ImageResizer:
 def image_io_fixture(image_cache: ImageCache) -> ImageIO:
     image_io = ImageIO(1920, 1080, image_cache, lambda *_: None)
     image_io.PIL_image = MockImage()
+    image_io.image_view = MagicMock()
     return image_io
 
 
