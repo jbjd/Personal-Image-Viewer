@@ -1,7 +1,7 @@
 """Utilities that are OS generic."""
 
 import os
-from collections.abc import Iterator
+from collections.abc import Iterable
 
 FILE_NAME_MAX_LEN: int = 40
 
@@ -10,15 +10,11 @@ if os.name == "nt":
 
     from image_viewer.utils._os_nt import (
         ask_yes_no,
+        get_files_in_folder,
         restore_file,
         show_info,
         trash_file,
     )
-    from image_viewer.utils._os_nt import get_files_in_folder as _get_files_in_folder_nt
-
-    def get_files_in_folder(folder_path: str) -> Iterator[str]:
-        files: list[str] = _get_files_in_folder_nt(folder_path)
-        return iter(files)
 
 else:  # assume linux for now
     import re
@@ -100,7 +96,7 @@ else:  # assume linux for now
         suffix_start: int = file_name.find(".")
         return _split_str_at_index(file_name, suffix_start)
 
-    def get_files_in_folder(folder_path: str) -> Iterator[str]:
+    def get_files_in_folder(folder_path: str, /) -> Iterable[str]:
         """Yields each file in a folder. Edited version of OS module implementation.
 
         :params folder_path: A path to a folder.
