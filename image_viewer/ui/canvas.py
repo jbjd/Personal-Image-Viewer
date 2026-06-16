@@ -1,6 +1,7 @@
 """Classes representing a canvas UI element"""
 
 from tkinter import Canvas, Event, Tk
+from tkinter.font import Font  # noqa: TC003
 
 from PIL.ImageTk import PhotoImage
 
@@ -20,6 +21,7 @@ class CustomCanvas(Canvas):
         "drag_start_x",
         "drag_start_y",
         "file_name_text_id",
+        "font",
         "image_display",
         "screen_height",
         "screen_width",
@@ -34,6 +36,7 @@ class CustomCanvas(Canvas):
         self._topbar: PhotoImage
         self.button_name_to_object: dict[str, ButtonUIElementBase] = {}
         self.file_name_text_id: int = -1
+        self.font: Font
         self.image_display = ImageUIElement(None, -1)
         self.screen_width: int = master.winfo_width()
         self.screen_height: int = master.winfo_height()
@@ -112,10 +115,10 @@ class CustomCanvas(Canvas):
             0, 0, image=topbar_img, anchor="nw", tag=TkTags.TOPBAR, state="hidden"
         )
 
-    def create_name_text(self, x: int, y: int, font: str) -> None:
+    def create_name_text(self, x: int, y: int) -> None:
         """Creates text object used to display file name"""
         self.file_name_text_id = self.create_text(
-            x, y, fill=TEXT_RGB, anchor="w", font=font, tags=TkTags.TOPBAR
+            x, y, fill=TEXT_RGB, anchor="w", font=self.font, tags=TkTags.TOPBAR
         )
 
     def update_image_display(self, new_image: PhotoImage) -> None:
@@ -141,7 +144,10 @@ class CustomCanvas(Canvas):
 
     def update_file_name(self, new_name: str) -> int:
         """Updates file name. Returns width of new name"""
-        new_name = maybe_truncate_long_name(new_name)
+        expected_width: int = self.font.measure(new_name)
+        max_width: int = self.screen_width // 3
+        if expected_width > max_width:
+            new_name = maybe_truncate_long_name(new_name, expected_width, max_width)
         self.itemconfigure(self.file_name_text_id, text=new_name)
         return self.bbox(self.file_name_text_id)[2]
 

@@ -3,8 +3,6 @@
 import os
 from collections.abc import Iterable
 
-FILE_NAME_MAX_LEN: int = 40
-
 if os.name == "nt":
     from ctypes import windll  # type: ignore[attr-defined]
 
@@ -145,18 +143,19 @@ def get_normalized_folder_name(path: str) -> str:
     return os.path.normpath(dir_name) if dir_name != "" else ""
 
 
-def maybe_truncate_long_name(file_name: str) -> str:
+def maybe_truncate_long_name(file_name: str, size_on_screen: int, max_size: int) -> str:
     """Given a file name, return a truncated version if its too long.
 
     :param file_name: A file name to check.
     :returns: The original file name or a truncated version."""
+    if __debug__ and max_size >= size_on_screen:
+        raise ValueError("Will not truncate name")
+
     name, suffix = split_name_and_suffix(file_name)
 
-    return (
-        file_name
-        if len(name) <= FILE_NAME_MAX_LEN
-        else f"{name[:FILE_NAME_MAX_LEN]}(…){suffix}"
-    )
+    index_to_chop: int = int(len(name) * max_size / size_on_screen)
+
+    return f"{name[:index_to_chop]}(…){suffix}"
 
 
 def split_name_and_suffix(file_name: str) -> tuple[str, str]:
