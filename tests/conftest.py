@@ -43,8 +43,8 @@ def tk_fixture() -> Tk:
 @pytest.fixture(name="canvas")
 def canvas_fixture(tk: Tk) -> CustomCanvas:
     custom_canvas = CustomCanvas(tk, "#000000")
+    custom_canvas.screen_width = 1920
     custom_canvas.screen_height = 1080
-    custom_canvas.screen_width = 1080
     return custom_canvas
 
 
@@ -79,6 +79,7 @@ def image_resizer_fixture() -> ImageResizer:
 def image_io_fixture(image_cache: ImageCache) -> ImageIO:
     image_io = ImageIO(1920, 1080, image_cache, lambda *_: None)
     image_io.PIL_image = MockImage()
+    image_io.image_view = MagicMock()
     return image_io
 
 

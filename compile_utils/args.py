@@ -29,7 +29,6 @@ class NuitkaArgs(StrEnum):
     INCLUDE_DATA_FILES = "--include-data-files"
     NO_INCLUDE_DATA_FILES = "--noinclude-data-files"
     INCLUDE_MODULE = "--include-module"
-    INCLUDE_DLLS = "--include-data-files"
     NO_INCLUDE_DLLS = "--noinclude-dlls"
     WINDOWS_ICON_FROM_ICO = "--windows-icon-from-ico"
     WINDOWS_CONSOLE_MODE = "--windows-console-mode"
@@ -78,9 +77,6 @@ class CompileNamespace(Namespace):
     verbose: bool
     extra_checks: bool
     no_cache: bool
-
-    if os.name == "nt":
-        include_dlls: bool
 
     def __str__(self) -> str:
         return ", ".join(

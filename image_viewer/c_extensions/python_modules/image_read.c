@@ -139,30 +139,13 @@ error:
     return Py_None;
 }
 
-/**
- * Scales dimension by ratio of numerator over denominator.
- *
- * @param dimension int to scale
- * @param numerator of ratio to scale by
- * @param denominator of ratio to scale by
- * @return Scaled value
- */
-static inline int get_scaled_dimension(int dimension, int numerator, int denominator) {
-    return (dimension * numerator + denominator - 1) / denominator;
-}
-
-static PyObject *decode_scaled_jpeg(PyObject *self, PyObject *const *args, Py_ssize_t nargs) {
+static PyObject *decode_jpeg_downscaled(PyObject *self, PyObject *const *args, Py_ssize_t nargs) {
     if (unlikely(nargs != 2)) {
         PyErr_SetString(PyExc_TypeError, "");
         return NULL;
     }
 
     CRawImageView *raw_image_view = (CRawImageView *)args[0];
-
-    int scaled_numerator, scaled_denominator;
-    if (unlikely(!PyArg_ParseTuple(args[1], "ii", &scaled_numerator, &scaled_denominator))) {
-        return NULL;
-    }
 
     tjhandle decompress_handle = tjInitDecompress();
     if (unlikely(decompress_handle == NULL)) {
@@ -176,8 +159,10 @@ static PyObject *decode_scaled_jpeg(PyObject *self, PyObject *const *args, Py_ss
 
     const int pixel_format = TJPF_RGB;
     const int pixel_size = tjPixelSize[pixel_format];
-    const int scaled_width = get_scaled_dimension(width, scaled_numerator, scaled_denominator);
-    const int scaled_height = get_scaled_dimension(height, scaled_numerator, scaled_denominator);
+
+    const long downscale_factor = PyLong_AsLong(args[1]);
+    const int scaled_width = width / downscale_factor;
+    const int scaled_height = height / downscale_factor;
 
     unsigned long resized_jpeg_buffer_size = scaled_width * scaled_height * pixel_size * sizeof(char);
     char *resized_jpeg_buffer = (char *)malloc(resized_jpeg_buffer_size);
@@ -215,7 +200,7 @@ error_free_handle:
 
 static PyMethodDef image_read_methods[] = {
     {"read_image_into_buffer", read_image_into_buffer, METH_O, NULL},
-    {"decode_scaled_jpeg", (PyCFunction)decode_scaled_jpeg, METH_FASTCALL, NULL},
+    {"decode_jpeg_downscaled", (PyCFunction)decode_jpeg_downscaled, METH_FASTCALL, NULL},
     {NULL, NULL, 0, NULL}};
 
 static int image_read_exec(PyObject *module) {

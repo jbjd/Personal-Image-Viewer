@@ -5,9 +5,10 @@ from math import ceil, log, log2
 from PIL.Image import Image, Resampling, frombytes
 
 from image_viewer.image._read import (
+    JPEG,
     CDecodedJpegView,
     CRawImageView,
-    decode_scaled_jpeg,
+    decode_jpeg_downscaled,
 )
 from image_viewer.utils.PIL import resize
 
@@ -34,14 +35,10 @@ class ImageResizer:
         image_width, image_height = image.size
         zoom_factor: float = ZOOM_AMOUNT**zoom_level
 
-        # Pre-scale to determine interpolation since an image we originally shrunk
-        # might now grow
-        scaled_width, scaled_height = self._scale_dimensions(image.size, zoom_factor)
-        interpolation = self.get_resampling(scaled_width, scaled_height)
-
         dimensions = self._scale_dimensions(
             self.fit_dimensions_to_screen(image_width, image_height), zoom_factor
         )
+        interpolation = self._get_resampling(image_width, dimensions[0])
 
         if __debug__ and not self._dimensions_in_bounds(dimensions):
             raise ValueError
@@ -74,74 +71,6 @@ class ImageResizer:
         first, second = t
         return (int(first * scale), int(second * scale))
 
-    def _get_jpeg_scale_factor(
-        self, image_width: int, image_height: int
-    ) -> tuple[int, int] | None:
-        """Gets Turbo JPEG scaling factor for images larger than screen"""
-        ratio_to_screen: float = max(
-            image_width / self.screen_width, image_height / self.screen_height
-        )
-
-        if ratio_to_screen >= 8:
-            return (1, 8)
-        if ratio_to_screen >= 4:
-            return (1, 4)
-        if ratio_to_screen >= 2:
-            return (1, 2)
-        return None
-
-    def get_jpeg_fit_to_screen(self, image: Image, image_view: CRawImageView) -> Image:
-        """Resizes a JPEG utilizing libjpeg-turbo to shrink very large images"""
-        image_width, image_height = image.size
-        scale_factor: tuple[int, int] | None = self._get_jpeg_scale_factor(
-            image_width, image_height
-        )
-        # if small do a normal resize, otherwise utilize libJpegTurbo
-        if scale_factor is None:
-            return self.get_image_fit_to_screen(image)
-
-        jpeg_result: CDecodedJpegView = decode_scaled_jpeg(image_view, scale_factor)
-        return self.get_image_fit_to_screen(  # TODO: Remove ignore after https://github.com/python-pillow/Pillow/pull/9410
-            frombytes("RGB", jpeg_result.dimensions, jpeg_result.view)  # type: ignore[arg-type]
-        )
-
-    def get_image_fit_to_screen(self, image: Image) -> Image:
-        """Resizes image to screen with PIL"""
-        image_width, image_height = image.size
-        interpolation: Resampling = self.get_resampling(image_width, image_height)
-        dimensions: tuple[int, int] = self.fit_dimensions_to_screen(
-            image_width, image_height
-        )
-
-        return resize(image, dimensions, interpolation)
-
-    def fit_dimensions_to_screen(
-        self, image_width: int, image_height: int
-    ) -> tuple[int, int]:
-        """Fits dimensions to height if width within screen,
-        else fit to width and let height go off screen.
-        Returns new width/height, and interpolation to use"""
-        fit_to_height: tuple[int, int] = self._fit_dimensions_to_screen_height(
-            image_width, image_height
-        )
-        return (
-            fit_to_height
-            if fit_to_height[0] <= self.screen_width
-            else self._fit_dimensions_to_screen_width(image_width, image_height)
-        )
-
-    def get_resampling(self, image_width: int, image_height: int) -> Resampling:
-        """Determine resampling to use based on image and screen"""
-        height_is_big: bool = image_height >= self.screen_height
-        width_is_big: bool = image_width >= self.screen_width
-
-        if height_is_big and width_is_big:
-            return Resampling.HAMMING
-        if height_is_big or width_is_big:
-            return Resampling.BICUBIC
-
-        return Resampling.LANCZOS
-
     def get_max_zoom(self, image_width: int, image_height: int) -> int:
         """Gets the max zoom level for given dimensions. Zoom level is calculated
         as the number of times an image can be zoomed in."""
@@ -159,6 +88,83 @@ class ImageResizer:
         upper_limit: int = int(log(JPEG_MAX_DIMENSION / largest_dimension, ZOOM_AMOUNT))
 
         return zoom_level if zoom_level < upper_limit else upper_limit
+
+    def get_image_fit_to_screen(self, image: Image, image_view: CRawImageView) -> Image:
+        """Resizes image to screen with PIL"""
+        if image_view.format == JPEG:
+            return self._get_jpeg_fit_to_screen(image, image_view)
+
+        return self._get_generic_fit_to_screen(image)
+
+    def _get_jpeg_fit_to_screen(self, image: Image, image_view: CRawImageView) -> Image:
+        """Resizes a JPEG utilizing libjpeg-turbo to shrink very large images"""
+        image_width, image_height = image.size
+        scale_factor: int = self._get_jpeg_fit_to_screen_downscale_factor(
+            image_width, image_height
+        )
+
+        # if small do a normal resize, otherwise utilize libJpegTurbo
+        if scale_factor < 2:
+            return self._get_generic_fit_to_screen(image)
+
+        return self._get_generic_fit_to_screen(
+            self._get_jpeg_downscaled(image_view, scale_factor)
+        )
+
+    def _get_jpeg_fit_to_screen_downscale_factor(
+        self, image_width: int, image_height: int
+    ) -> int:
+        """Gets power of 2 downscaling for libturbojpeg to best fit it to the screen.
+
+        :param image_width: Width of image
+        :param image_height: Height of image
+        :returns: A power of 2 (minimum 1) downscale to use"""
+
+        width_ratio: float = image_width / self.screen_width
+        height_ratio: float = image_height / self.screen_height
+        ratio_to_screen: int = int(
+            width_ratio if width_ratio > height_ratio else height_ratio
+        )
+
+        # Gets nearest power of 2 of ratio_to_screen rounded down
+        return (
+            1 if ratio_to_screen <= 1 else 1 << (int(ratio_to_screen).bit_length() - 1)
+        )
+
+    def _get_generic_fit_to_screen(self, image: Image) -> Image:
+        image_width, image_height = image.size
+        dimensions: tuple[int, int] = self.fit_dimensions_to_screen(
+            image_width, image_height
+        )
+        resampling: Resampling = self._get_resampling(image_width, dimensions[0])
+
+        return resize(image, dimensions, resampling)
+
+    @staticmethod
+    def _get_resampling(old_width: int, new_width: int) -> Resampling:
+        return Resampling.HAMMING if new_width < old_width else Resampling.LANCZOS
+
+    def _get_jpeg_downscaled(
+        self, image_view: CRawImageView, scale_factor: int
+    ) -> Image:
+        jpeg_result: CDecodedJpegView = decode_jpeg_downscaled(image_view, scale_factor)
+        # TODO: Remove ignore after https://github.com/python-pillow/Pillow/pull/9410
+        return frombytes("RGB", jpeg_result.dimensions, jpeg_result.view)  # type: ignore[arg-type]
+
+    def fit_dimensions_to_screen(
+        self, image_width: int, image_height: int
+    ) -> tuple[int, int]:
+        """Fits dimensions to height if width within screen,
+        else fit to width and let height go off screen.
+        Returns new width/height to use"""
+        fit_to_height: tuple[int, int] = self._fit_dimensions_to_screen_height(
+            image_width, image_height
+        )
+        return (
+            fit_to_height
+            if fit_to_height[0] <= self.screen_width
+            else self._fit_dimensions_to_screen_width(image_width, image_height)
+        )
 
     def _fit_dimensions_to_screen_height(
         self, image_width: int, image_height: int
