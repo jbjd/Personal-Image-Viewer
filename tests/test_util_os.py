@@ -26,6 +26,8 @@ def test_get_byte_display(os_name: str) -> None:
 
 def test_truncate_long_name() -> None:
     """Should truncate names relative to size passed"""
+    assert maybe_truncate_long_name("abcdefgh.png", 5, 5) == "abcdefgh.png"
+
     assert maybe_truncate_long_name("abcdefgh.png", 10, 5) == "abcd(…).png"
 
 

@@ -146,9 +146,10 @@ class CustomCanvas(Canvas):
         """Updates file name. Returns width of new name"""
         expected_width: int = self.font.measure(new_name)
         max_width: int = self.screen_width // 3
-        if expected_width > max_width:
-            new_name = maybe_truncate_long_name(new_name, expected_width, max_width)
-        self.itemconfigure(self.file_name_text_id, text=new_name)
+        self.itemconfigure(
+            self.file_name_text_id,
+            text=maybe_truncate_long_name(new_name, expected_width, max_width),
+        )
         return self.bbox(self.file_name_text_id)[2]
 
     def is_widget_visible(self, tag_or_id: str | int) -> bool:

@@ -148,8 +148,8 @@ def maybe_truncate_long_name(file_name: str, size_on_screen: int, max_size: int)
 
     :param file_name: A file name to check.
     :returns: The original file name or a truncated version."""
-    if __debug__ and max_size >= size_on_screen:
-        raise ValueError("Will not truncate name")
+    if size_on_screen <= max_size:
+        return file_name
 
     name, suffix = split_name_and_suffix(file_name)
 
