@@ -24,16 +24,9 @@ def test_get_byte_display(os_name: str) -> None:
         assert get_byte_display(1000 * kb_size) == expected_display_1000kb
 
 
-@pytest.mark.parametrize(
-    ("name", "expected_name"),
-    [
-        ("short.png", "short.png"),
-        ("0123456789" * 10 + ".png", "0123456789" * 4 + "(…).png"),
-    ],
-)
-def test_truncate_long_name(name: str, expected_name: str) -> None:
-    """Should truncate names longer than 40 characters"""
-    assert maybe_truncate_long_name(name) == expected_name
+def test_truncate_long_name() -> None:
+    """Should truncate names relative to size passed"""
+    assert maybe_truncate_long_name("abcdefgh.png", 10, 5) == "abcd(…).png"
 
 
 @pytest.mark.parametrize(

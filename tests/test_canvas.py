@@ -10,15 +10,34 @@ from image_viewer.ui.canvas import CustomCanvas
 from tests.utils.mocks import MockEvent
 
 
-def test_create_assets(canvas: CustomCanvas, example_image: Image) -> None:
+def test_create_assets(canvas: CustomCanvas) -> None:
     """Should successfully create buttons, text, and topbar."""
 
     # Should store id after creation
-    canvas.create_name_text(0, 0, "test.png")
+    canvas.create_name_text(0, 0)
     assert canvas.file_name_text_id
 
-    assert canvas.update_file_name("new.png")
+    with patch.object(
+        CustomCanvas, "itemconfigure", wraps=canvas.itemconfigure
+    ) as wrapped_itemconfigure:
+        new_text: str = "new.png"
+        assert canvas.update_file_name(new_text)
+        wrapped_itemconfigure.assert_called_once_with(
+            canvas.file_name_text_id, text=new_text
+        )
 
+    with patch.object(
+        CustomCanvas, "itemconfigure", wraps=canvas.itemconfigure
+    ) as wrapped_itemconfigure:
+        new_text: str = "a" * 80
+        truncated_text: str = ("a" * 64) + "(…)"
+        assert canvas.update_file_name(new_text)
+        wrapped_itemconfigure.assert_called_once_with(
+            canvas.file_name_text_id, text=truncated_text
+        )
+
+
+def test_create_topbar(canvas: CustomCanvas, example_image: Image) -> None:
     # Should store image after creation or garbage collector kills topbar
     display_image = PhotoImage(example_image)
     canvas.create_topbar(display_image)
