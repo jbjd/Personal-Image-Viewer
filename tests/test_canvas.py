@@ -1,6 +1,6 @@
 """Tests for the CustomCanvas class."""
 
-import sys
+from tkinter.font import Font
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -10,17 +10,13 @@ from PIL.ImageTk import PhotoImage
 from image_viewer.ui.canvas import CustomCanvas
 from tests.utils.mocks import MockEvent
 
-# Since there is different fonts for windows vs linux, different size
-# needed for this test
-_MAX_TEXT_SIZE = 64 if sys.platform == "win32" else 58
-
 
 @pytest.mark.parametrize(
-    ("input_text", "displayed_text"),
-    [("new.png", "new.png"), ("a" * 80, ("a" * _MAX_TEXT_SIZE) + "(…)")],
+    ("input_text", "size_on_screen", "displayed_text"),
+    [("new.png", 50, "new.png"), ("a" * 80, 800, ("a" * 64) + "(…)")],
 )
 def test_create_assets(
-    canvas: CustomCanvas, input_text: str, displayed_text: str
+    canvas: CustomCanvas, input_text: str, size_on_screen: int, displayed_text: str
 ) -> None:
     """Should successfully create buttons, text, and topbar."""
 
@@ -28,9 +24,12 @@ def test_create_assets(
     canvas.create_name_text(0, 0)
     assert canvas.file_name_text_id
 
-    with patch.object(
-        CustomCanvas, "itemconfigure", wraps=canvas.itemconfigure
-    ) as wrapped_itemconfigure:
+    with (
+        patch.object(Font, "measure", return_value=size_on_screen),
+        patch.object(
+            CustomCanvas, "itemconfigure", wraps=canvas.itemconfigure
+        ) as wrapped_itemconfigure,
+    ):
         assert canvas.update_file_name(input_text)
         wrapped_itemconfigure.assert_called_once_with(
             canvas.file_name_text_id, text=displayed_text
