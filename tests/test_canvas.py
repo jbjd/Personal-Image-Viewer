@@ -15,7 +15,7 @@ from tests.utils.mocks import MockEvent
     [("new.png", "new.png"), ("a" * 80, ("a" * 64) + "(…)")],
 )
 def test_create_assets(
-    canvas: CustomCanvas, input_text: int, displayed_text: str
+    canvas: CustomCanvas, input_text: str, displayed_text: str
 ) -> None:
     """Should successfully create buttons, text, and topbar."""
 
