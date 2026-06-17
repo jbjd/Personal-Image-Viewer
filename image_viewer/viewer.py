@@ -2,6 +2,7 @@ import os
 from collections.abc import Callable
 from time import perf_counter
 from tkinter import Event, Tk
+from tkinter.font import Font
 from typing import Never
 
 from PIL.Image import Image
@@ -70,9 +71,9 @@ class ViewerApp:
             init_c_utils(self.app.winfo_id())
 
         self.canvas = CustomCanvas(self.app, config.ui_background_color)
+
         screen_height: int = self.canvas.screen_height
         screen_width: int = self.canvas.screen_width
-
         self.height_ratio: float = screen_height / 1080
         self.width_ratio: float = screen_width / 1920
 
@@ -189,7 +190,8 @@ class ViewerApp:
 
         font_family: str = font_file[:-4].lower()  # -4 chops extension .ttf/.otf
         # negative size makes font absolute for consistency with different monitors
-        font: str = f"{font_family} -{self._scale_pixels_to_height(18)}"
+        font = Font(family=font_family, size=-self._scale_pixels_to_height(18))
+        self.canvas.font = font
 
         button_icon_factory = ButtonIconFactory(icon_size)
 
@@ -197,7 +199,7 @@ class ViewerApp:
         # weird case, scale x offset by height, not width, since icon to its left
         # is scaled by height, small screen could overlap otherwise
         canvas.create_name_text(
-            self._scale_pixels_to_height(36), self._scale_pixels_to_height(16), font
+            self._scale_pixels_to_height(36), self._scale_pixels_to_height(16)
         )
 
         button_x_offset: int = screen_width - icon_size
@@ -243,7 +245,7 @@ class ViewerApp:
             0, 0, width=rename_window_width, height=int(icon_size * 0.8), anchor="nw"
         )
         self.rename_entry: RenameEntry = RenameEntry(
-            self.app, canvas, rename_id, rename_window_width, font=font
+            self.app, canvas, rename_id, font, rename_window_width
         )
         self.rename_entry.bind("<Return>", self.rename_or_convert)
 

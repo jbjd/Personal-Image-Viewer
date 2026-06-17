@@ -1,5 +1,6 @@
 """Tests for the CustomCanvas class."""
 
+from tkinter.font import Font
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -10,15 +11,32 @@ from image_viewer.ui.canvas import CustomCanvas
 from tests.utils.mocks import MockEvent
 
 
-def test_create_assets(canvas: CustomCanvas, example_image: Image) -> None:
+@pytest.mark.parametrize(
+    ("input_text", "size_on_screen", "displayed_text"),
+    [("new.png", 50, "new.png"), ("a" * 80, 800, ("a" * 64) + "(…)")],
+)
+def test_create_assets(
+    canvas: CustomCanvas, input_text: str, size_on_screen: int, displayed_text: str
+) -> None:
     """Should successfully create buttons, text, and topbar."""
 
     # Should store id after creation
-    canvas.create_name_text(0, 0, "test.png")
+    canvas.create_name_text(0, 0)
     assert canvas.file_name_text_id
 
-    assert canvas.update_file_name("new.png")
+    with (
+        patch.object(Font, "measure", return_value=size_on_screen),
+        patch.object(
+            CustomCanvas, "itemconfigure", wraps=canvas.itemconfigure
+        ) as wrapped_itemconfigure,
+    ):
+        assert canvas.update_file_name(input_text)
+        wrapped_itemconfigure.assert_called_once_with(
+            canvas.file_name_text_id, text=displayed_text
+        )
 
+
+def test_create_topbar(canvas: CustomCanvas, example_image: Image) -> None:
     # Should store image after creation or garbage collector kills topbar
     display_image = PhotoImage(example_image)
     canvas.create_topbar(display_image)
@@ -83,11 +101,26 @@ def test_drag(
     canvas.moveto(canvas.image_display.id, 0, 0)
     with patch.object(CustomCanvas, "move") as mock_move:
         canvas._move_from(event_origin)
-        canvas._drag_image(event_end)
+        canvas._move_to_inner(event_end)
 
         mock_move.assert_called_once_with(
             canvas.image_display.id, *expected_move_amount
         )
+
+
+def test_drag_frame_limit(canvas: CustomCanvas) -> None:
+    """Should not drag when another drag has occurred recently."""
+
+    canvas._motion_id = "abc"
+    mock_event = MockEvent()
+
+    with patch.object(CustomCanvas, "after") as mock_after:
+        canvas._move_to(mock_event)
+        mock_after.assert_not_called()
+
+        canvas._motion_id = ""
+        canvas._move_to(mock_event)
+        mock_after.assert_called_once()
 
 
 def test_get_button_id(canvas: CustomCanvas, example_image: Image) -> None:
