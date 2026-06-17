@@ -1,4 +1,5 @@
 from tkinter import Canvas, Entry, Event, StringVar, Tk
+from tkinter.font import Font
 from typing import Literal
 
 from image_viewer.constants import TEXT_RGB
@@ -20,7 +21,7 @@ class RenameEntry(Entry, UIElementBase):
     __slots__ = ("_entry_text", "being_resized", "min_width", "text")
 
     def __init__(
-        self, master: Tk, canvas: Canvas, canvas_id: int, min_width: int, font: str
+        self, master: Tk, canvas: Canvas, canvas_id: int, font: Font, min_width: int
     ) -> None:
         UIElementBase.__init__(self, canvas_id)
 

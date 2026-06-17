@@ -3,6 +3,7 @@ define other constants used within tests"""
 
 import os
 from tkinter import Tk
+from tkinter.font import Font
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -33,6 +34,11 @@ EXAMPLE_AVIF_PATH: str = os.path.join(IMG_DIR, "f.avif")
 EXAMPLE_GIF_PATH: str = os.path.join(IMG_DIR, "g.gif")
 
 
+@pytest.fixture(name="font", scope="session")
+def font_fixture() -> Font:
+    return Font(family=DEFAULT_UI_FONT, size=-18)
+
+
 @pytest.fixture(name="tk", scope="session")
 def tk_fixture() -> Tk:
     app = Tk()
@@ -41,10 +47,11 @@ def tk_fixture() -> Tk:
 
 
 @pytest.fixture(name="canvas")
-def canvas_fixture(tk: Tk) -> CustomCanvas:
+def canvas_fixture(tk: Tk, font: Font) -> CustomCanvas:
     custom_canvas = CustomCanvas(tk, "#000000")
     custom_canvas.screen_width = 1920
     custom_canvas.screen_height = 1080
+    custom_canvas.font = font
     return custom_canvas
 
 
@@ -84,9 +91,9 @@ def image_io_fixture(image_cache: ImageCache) -> ImageIO:
 
 
 @pytest.fixture(name="rename_entry")
-def rename_entry_fixture(tk: Tk, canvas: CustomCanvas) -> RenameEntry:
+def rename_entry_fixture(tk: Tk, canvas: CustomCanvas, font: Font) -> RenameEntry:
     rename_id: int = canvas.create_window(0, 0, width=250, height=20, anchor="nw")
-    return RenameEntry(tk, canvas, rename_id, 250, DEFAULT_UI_FONT)
+    return RenameEntry(tk, canvas, rename_id, font, 250)
 
 
 @pytest.fixture(name="viewer")
