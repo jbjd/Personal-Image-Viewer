@@ -15,7 +15,7 @@ class CustomCanvas(Canvas):
     """Extended version of tkinter's canvas to support internal methods"""
 
     __slots__ = (
-        "_motion_schedule",
+        "_motion_id",
         "_topbar",
         "button_name_to_object",
         "drag_start_x",
@@ -32,7 +32,7 @@ class CustomCanvas(Canvas):
         self.pack(anchor="nw", fill="both", expand=1)
 
         master.update()  # updates winfo width and height to the current size
-        self._motion_schedule: str = ""
+        self._motion_id: str = ""
         self._topbar: PhotoImage
         self.button_name_to_object: dict[str, ButtonUIElementBase] = {}
         self.file_name_text_id: int = -1
@@ -56,16 +56,26 @@ class CustomCanvas(Canvas):
         self.bind("<B3-Motion>", self._move_to)
 
     def _move_from(self, event: Event) -> None:
+        """Stores mouse coords for a move.
+
+        :param event: Tkinter event with mouse coords"""
         self.drag_start_x = event.x
         self.drag_start_y = event.y
 
     def _move_to(self, event: Event) -> None:
-        if self._motion_schedule:
+        """Starts move if one hasn't occured recently.
+
+        :param event: Tkinter event with mouse coords"""
+        if self._motion_id:
             return
 
-        self._motion_schedule = self.after(15, self._drag_image, event)
+        self._motion_id = self.after(15, self._move_to_inner, event)
 
-    def _drag_image(self, event: Event) -> None:
+    def _move_to_inner(self, event: Event) -> None:
+        """Moves imagae display the difference from coords in :func:`_move_from`
+        and this event.
+
+        :param event: Tkinter event with mouse coords"""
         drag_x: int = event.x - self.drag_start_x
         drag_y: int = event.y - self.drag_start_y
         self.drag_start_x = event.x
@@ -85,7 +95,7 @@ class CustomCanvas(Canvas):
             drag_y = self.screen_height - bbox[1]
 
         self.move(self.image_display.id, drag_x, drag_y)
-        self._motion_schedule = ""
+        self._motion_id = ""
 
     def create_button(
         self,

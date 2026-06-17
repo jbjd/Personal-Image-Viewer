@@ -1,5 +1,6 @@
 """Tests for the CustomCanvas class."""
 
+import sys
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -9,10 +10,14 @@ from PIL.ImageTk import PhotoImage
 from image_viewer.ui.canvas import CustomCanvas
 from tests.utils.mocks import MockEvent
 
+# Since there is different fonts for windows vs linux, different size
+# needed for this test
+_MAX_TEXT_SIZE = 64 if sys.platform == "win32" else 58
+
 
 @pytest.mark.parametrize(
     ("input_text", "displayed_text"),
-    [("new.png", "new.png"), ("a" * 80, ("a" * 64) + "(…)")],
+    [("new.png", "new.png"), ("a" * 80, ("a" * _MAX_TEXT_SIZE) + "(…)")],
 )
 def test_create_assets(
     canvas: CustomCanvas, input_text: str, displayed_text: str
@@ -97,11 +102,26 @@ def test_drag(
     canvas.moveto(canvas.image_display.id, 0, 0)
     with patch.object(CustomCanvas, "move") as mock_move:
         canvas._move_from(event_origin)
-        canvas._drag_image(event_end)
+        canvas._move_to_inner(event_end)
 
         mock_move.assert_called_once_with(
             canvas.image_display.id, *expected_move_amount
         )
+
+
+def test_drag_frame_limit(canvas: CustomCanvas) -> None:
+    """Should not drag when another has occured recently."""
+
+    canvas._motion_id = "abc"
+    mock_event = MockEvent()
+
+    with patch.object(CustomCanvas, "after") as mock_after:
+        canvas._move_to(mock_event)
+        mock_after.assert_not_called()
+
+        canvas._motion_id = ""
+        canvas._move_to(mock_event)
+        mock_after.assert_called_once()
 
 
 def test_get_button_id(canvas: CustomCanvas, example_image: Image) -> None:
