@@ -10,7 +10,13 @@ from image_viewer.ui.canvas import CustomCanvas
 from tests.utils.mocks import MockEvent
 
 
-def test_create_assets(canvas: CustomCanvas) -> None:
+@pytest.mark.parametrize(
+    ("input_text", "displayed_text"),
+    [("new.png", "new.png"), ("a" * 80, ("a" * 64) + "(…)")],
+)
+def test_create_assets(
+    canvas: CustomCanvas, input_text: int, displayed_text: str
+) -> None:
     """Should successfully create buttons, text, and topbar."""
 
     # Should store id after creation
@@ -20,20 +26,9 @@ def test_create_assets(canvas: CustomCanvas) -> None:
     with patch.object(
         CustomCanvas, "itemconfigure", wraps=canvas.itemconfigure
     ) as wrapped_itemconfigure:
-        new_text: str = "new.png"
-        assert canvas.update_file_name(new_text)
+        assert canvas.update_file_name(input_text)
         wrapped_itemconfigure.assert_called_once_with(
-            canvas.file_name_text_id, text=new_text
-        )
-
-    with patch.object(
-        CustomCanvas, "itemconfigure", wraps=canvas.itemconfigure
-    ) as wrapped_itemconfigure:
-        new_text: str = "a" * 80
-        truncated_text: str = ("a" * 64) + "(…)"
-        assert canvas.update_file_name(new_text)
-        wrapped_itemconfigure.assert_called_once_with(
-            canvas.file_name_text_id, text=truncated_text
+            canvas.file_name_text_id, text=displayed_text
         )
 
 
