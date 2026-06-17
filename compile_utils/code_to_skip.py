@@ -208,6 +208,7 @@ imports_to_skip: dict[str, set[str]] = {"PIL.Image": {"defusedxml"}}
 unused_imports_to_preserve: dict[str, set[str]] = {
     f"{IMAGE_VIEWER_NAME}.utils.os": {
         "ask_yes_no",
+        "get_files_in_folder",
         "restore_file",
         "show_info",
         "trash_file",
