@@ -109,7 +109,7 @@ def test_drag(
 
 
 def test_drag_frame_limit(canvas: CustomCanvas) -> None:
-    """Should not drag when another has occured recently."""
+    """Should not drag when another drag has occurred recently."""
 
     canvas._motion_id = "abc"
     mock_event = MockEvent()

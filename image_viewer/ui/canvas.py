@@ -63,7 +63,7 @@ class CustomCanvas(Canvas):
         self.drag_start_y = event.y
 
     def _move_to(self, event: Event) -> None:
-        """Starts move if one hasn't occured recently.
+        """Starts move if one hasn't occurred recently.
 
         :param event: Tkinter event with mouse coords"""
         if self._motion_id:
