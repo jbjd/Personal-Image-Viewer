@@ -8,6 +8,7 @@ import pytest
 from PIL import UnidentifiedImageError
 from PIL.Image import Image, new
 
+from image_viewer.constants import ZoomDirection
 from image_viewer.image.cache import ImageCacheEntry
 from image_viewer.image.image_io import (
     DEFAULT_DURATION_MS,
@@ -187,6 +188,34 @@ def test_optimize_png_image(image_io: ImageIO) -> None:
 def test_optimize_png_image_non_pngs(image_io: ImageIO) -> None:
     """Should not run on non-PNGs."""
 
-    image_io.load_image(EXAMPLE_JPEG_PATH)
+    assert image_io.load_image(EXAMPLE_JPEG_PATH)
 
     assert not image_io.optimize_png_image("")
+
+
+def test_get_zoomed_image(image_io: ImageIO) -> None:
+    """Should return increasingly sized zoomed images."""
+
+    assert image_io.load_image(EXAMPLE_JPEG_PATH)
+
+    zoom_1: Image | None = image_io.get_zoomed_image(ZoomDirection.IN)
+    assert zoom_1
+    assert zoom_1.size == (1458, 1458)
+
+    zoom_2: Image | None = image_io.get_zoomed_image(ZoomDirection.IN)
+    assert zoom_2
+    assert zoom_2.size == (1968, 1968)
+
+    zoom_3: Image | None = image_io.get_zoomed_image(ZoomDirection.IN)
+    assert zoom_3
+    assert zoom_3.size == (2657, 2657)
+
+    assert not image_io.get_zoomed_image(ZoomDirection.IN)
+
+    image_io._state.zoom_level = 0
+
+    # Caches
+    assert image_io.get_zoomed_image(ZoomDirection.IN) is zoom_1
+    assert image_io.get_zoomed_image(ZoomDirection.IN) is zoom_2
+    assert image_io.get_zoomed_image(ZoomDirection.IN) is zoom_3
+    assert image_io.get_zoomed_image(ZoomDirection.OUT) is zoom_2
