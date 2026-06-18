@@ -14,13 +14,15 @@ from image_viewer.constants import ZoomDirection
 from image_viewer.image._read import CRawImageView, read_image_into_buffer
 from image_viewer.image.cache import ImageCache, ImageCacheEntry
 from image_viewer.image.resizer import ImageResizer
-from image_viewer.image.state import ZOOM_UNSET, ImageState
+from image_viewer.image.state import ImageState
 from image_viewer.utils.PIL import (
     get_placeholder_for_errored_image,
     optimize_image_mode,
 )
 
 DEFAULT_DURATION_MS: int = 100
+ZOOM_AMOUNT: float = 1.35
+MAX_ZOOM_RATIO_TO_SCREEN: float = 2.2
 
 
 class AnimationFrame:
@@ -52,6 +54,7 @@ class ImageIO:
         "PIL_image",
         "_image_optimized",
         "_state",
+        "_zoom_pixel_boundary",
         "animation_callback",
         "animation_frames",
         "current_load_id",
@@ -82,6 +85,7 @@ class ImageIO:
         self.animation_frames: list[AnimationFrame | None] = []
         self.frame_index: int = 0
         self._state = ImageState()
+        self._zoom_pixel_boundary: int
         self.zoomed_image_cache: list[Image] = []
 
     @property
@@ -174,6 +178,14 @@ class ImageIO:
 
         # first zoom level is just the image as is
         self.zoomed_image_cache = [resized_image]
+        self._zoom_pixel_boundary = int(
+            (
+                original_image.width
+                if original_image.width > resized_image.width
+                else resized_image.width
+            )
+            * MAX_ZOOM_RATIO_TO_SCREEN
+        )
 
         return resized_image
 
@@ -232,33 +244,44 @@ class ImageIO:
         if __debug__ and not self._state.zoom_allowed:
             return None
 
-        if self._state.zoom_level_max == ZOOM_UNSET:
-            self._state.zoom_level_max = self.image_resizer.get_max_zoom(
-                *self.PIL_image.size
-            )
-
         if not self._state.try_update(direction):
             return None
 
         zoom_level: int = self._state.zoom_level
-
-        image: Image
         if zoom_level < len(self.zoomed_image_cache):
-            image = self.zoomed_image_cache[zoom_level]
+            return self.zoomed_image_cache[zoom_level]
+
+        zoom_scaling: float = ZOOM_AMOUNT**zoom_level
+
+        width, height = self.zoomed_image_cache[0].size
+        new_width = int(width * zoom_scaling)
+        new_height = int(height * zoom_scaling)
+
+        original_width: int = self.PIL_image.width
+        last_cached_width: int = self.zoomed_image_cache[-1].width
+
+        base_image: Image
+        if new_width < original_width or original_width > last_cached_width:
+            base_image = self.PIL_image
         else:
-            # Not in cache, resize to new zoom
-            try:
-                image = self.image_resizer.get_zoomed_image(
-                    self.PIL_image,
-                    zoom_level,
-                    self._state.zoom_level == self._state.zoom_level_max,
-                )
-            except OSError:
-                return None
+            base_image = self.zoomed_image_cache[-1]
 
-            self.zoomed_image_cache.append(image)
+        if new_width > self._zoom_pixel_boundary:
+            self._state.set_max_zoom()
 
-        return image
+        fit_image: Image | None = self.image_resizer.get_image_zoomed_to(
+            base_image,
+            new_width,
+            new_height,
+            self._state.zoom_level == self._state.zoom_level_max,
+        )
+
+        if fit_image is not None:
+            self.zoomed_image_cache.append(fit_image)
+        else:
+            self._state.decrement_and_set_max_zoom()
+
+        return fit_image
 
     def load_remaining_frames(
         self, original_image: Image, last_frame: int, load_id: int

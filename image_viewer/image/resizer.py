@@ -1,7 +1,5 @@
 """Classes for resizing PIL images"""
 
-from math import ceil, log, log2
-
 from PIL.Image import Image, Resampling, frombytes
 
 from image_viewer.image._read import (
@@ -13,8 +11,6 @@ from image_viewer.image._read import (
 from image_viewer.utils.PIL import resize
 
 JPEG_MAX_DIMENSION: int = 65_535
-ZOOM_AMOUNT: float = 2**0.5
-MIN_ZOOM_LEVEL: int = 3
 
 
 class ImageResizer:
@@ -26,68 +22,42 @@ class ImageResizer:
         self.screen_width: int = screen_width
         self.screen_height: int = screen_height
 
-    def get_zoomed_image(
-        self, image: Image, zoom_level: int, is_max_zoom_level: bool
-    ) -> Image:
-        """Resizes image using the provided zoom_level.
+    def get_image_zoomed_to(  # TODO: Test
+        self, image: Image, new_width: int, new_height: int, snap_if_small: bool
+    ) -> Image | None:
+        """Resizes image to provided dimensions.
 
-        Raises ValueError if resized image would exceed JPEG size max"""
-        image_width, image_height = image.size
-        zoom_factor: float = ZOOM_AMOUNT**zoom_level
+        :param new_width: To resize to
+        :param new_height: To resize to
+        :param snap_if_small: Snaps dimensions to screen edges if not already
+        :returns: Resized Image or None if dimensions too large"""
 
-        dimensions = self._scale_dimensions(
-            self.fit_dimensions_to_screen(image_width, image_height), zoom_factor
-        )
-        interpolation = self._get_resampling(image_width, dimensions[0])
+        if self._too_big(new_width, new_height):
+            return None
 
-        if __debug__ and not self._dimensions_in_bounds(dimensions):
-            raise ValueError
+        if snap_if_small and (
+            new_height < self.screen_height or new_width < self.screen_width
+        ):
+            maybe_width: int
+            maybe_height: int
+            maybe_width, maybe_height = (
+                self._fit_dimensions_to_screen_height(new_width, new_height)
+                if new_height < self.screen_height
+                else self._fit_dimensions_to_screen_width(new_width, new_height)
+            )
+            if not self._too_big(maybe_width, maybe_height):
+                new_width = maybe_width
+                new_height = maybe_height
 
-        if is_max_zoom_level:
-            maybe_dimensions: tuple[int, int]
-            if dimensions[1] < self.screen_height:
-                maybe_dimensions = self._fit_dimensions_to_screen_height(
-                    image_width, image_height
-                )
-                if self._dimensions_in_bounds(maybe_dimensions):
-                    dimensions = maybe_dimensions
-            elif dimensions[0] < self.screen_width:
-                maybe_dimensions = self._fit_dimensions_to_screen_width(
-                    image_width, image_height
-                )
-                if self._dimensions_in_bounds(maybe_dimensions):
-                    dimensions = maybe_dimensions
-
-        return resize(image, dimensions, interpolation)
-
-    @staticmethod
-    def _dimensions_in_bounds(dimensions: tuple[int, int]) -> bool:
-        return (
-            dimensions[0] <= JPEG_MAX_DIMENSION and dimensions[1] <= JPEG_MAX_DIMENSION
+        resampling: Resampling = (
+            Resampling.HAMMING if new_width < image.width else Resampling.BILINEAR
         )
 
-    @staticmethod
-    def _scale_dimensions(t: tuple[int, int], scale: float) -> tuple[int, int]:
-        first, second = t
-        return (int(first * scale), int(second * scale))
+        return resize(image, (new_width, new_height), resampling)
 
-    def get_max_zoom(self, image_width: int, image_height: int) -> int:
-        """Gets the max zoom level for given dimensions. Zoom level is calculated
-        as the number of times an image can be zoomed in."""
-        width_ratio: int = ceil(log2(image_width / self.screen_width))
-        height_ratio: int = ceil(log2(image_height / self.screen_height))
-
-        biggest_ratio: int = width_ratio if width_ratio > height_ratio else height_ratio
-        zoom_level: int = (
-            (biggest_ratio << 1) + 1 if biggest_ratio > 1 else MIN_ZOOM_LEVEL
-        )
-
-        largest_dimension: int = (
-            image_width if image_width > image_height else image_height
-        )
-        upper_limit: int = int(log(JPEG_MAX_DIMENSION / largest_dimension, ZOOM_AMOUNT))
-
-        return zoom_level if zoom_level < upper_limit else upper_limit
+    def _too_big(self, width: int, height: int) -> bool:
+        """Returns if dimenons are too big and Resizer will not accept them."""
+        return width > JPEG_MAX_DIMENSION or height > JPEG_MAX_DIMENSION
 
     def get_image_fit_to_screen(self, image: Image, image_view: CRawImageView) -> Image:
         """Resizes image to screen with PIL"""
@@ -136,13 +106,12 @@ class ImageResizer:
         dimensions: tuple[int, int] = self.fit_dimensions_to_screen(
             image_width, image_height
         )
-        resampling: Resampling = self._get_resampling(image_width, dimensions[0])
+
+        resampling: Resampling = (
+            Resampling.HAMMING if dimensions[0] < image_width else Resampling.LANCZOS
+        )
 
         return resize(image, dimensions, resampling)
-
-    @staticmethod
-    def _get_resampling(old_width: int, new_width: int) -> Resampling:
-        return Resampling.HAMMING if new_width < old_width else Resampling.LANCZOS
 
     def _get_jpeg_downscaled(
         self, image_view: CRawImageView, scale_factor: int

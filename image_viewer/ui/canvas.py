@@ -69,7 +69,7 @@ class CustomCanvas(Canvas):
         if self._motion_id:
             return
 
-        self._motion_id = self.after(0, self._move_to_inner, event)
+        self._motion_id = self.after(2, self._move_to_inner, event)
 
     def _move_to_inner(self, event: Event) -> None:
         """Moves imagae display the difference from coords in :func:`_move_from`
