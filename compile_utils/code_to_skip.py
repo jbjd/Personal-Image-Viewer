@@ -15,9 +15,12 @@ from PIL.ImageFont import MAX_STRING_LENGTH
 
 from compile_utils.constants import IMAGE_VIEWER_NAME
 from image_viewer.constants import TEXT_RGB
-from image_viewer.image.image_io import DEFAULT_DURATION_MS
-from image_viewer.image.resizer import JPEG_MAX_DIMENSION, MIN_ZOOM_LEVEL, ZOOM_AMOUNT
-from image_viewer.image.state import ZOOM_UNSET
+from image_viewer.image.image_io import (
+    DEFAULT_DURATION_MS,
+    MAX_ZOOM_RATIO_TO_SCREEN,
+    ZOOM_AMOUNT,
+)
+from image_viewer.image.resizer import JPEG_MAX_DIMENSION
 from image_viewer.ui.rename_entry import _ERROR_COLOR, _MAX_ENTRY_SIZE
 
 # Increment when edits to this file or module_dependencies are merged into main
@@ -226,10 +229,9 @@ module_vars_to_fold: dict[
         "_MAX_ENTRY_SIZE": _MAX_ENTRY_SIZE,
         "DEFAULT_DURATION_MS": DEFAULT_DURATION_MS,
         "JPEG_MAX_DIMENSION": JPEG_MAX_DIMENSION,
-        "MIN_ZOOM_LEVEL": MIN_ZOOM_LEVEL,
+        "MAX_ZOOM_RATIO_TO_SCREEN": MAX_ZOOM_RATIO_TO_SCREEN,
         "TEXT_RGB": TEXT_RGB,
         "ZOOM_AMOUNT": ZOOM_AMOUNT,
-        "ZOOM_UNSET": ZOOM_UNSET,
     },
     "PIL": {"SUPPORTED": True, "TYPE_CHECKING": False},
 }
