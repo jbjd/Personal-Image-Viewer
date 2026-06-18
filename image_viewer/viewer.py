@@ -92,7 +92,6 @@ class ViewerApp:
 
         self._init_image_display()
 
-        self.canvas.tag_bind(TkTags.BACKGROUND, "<Button-1>", self.handle_canvas_click)
         self._add_binds_to_tk(config)
 
     @staticmethod
@@ -176,6 +175,8 @@ class ViewerApp:
         else:
             app.bind("<Button-4>", self.handle_mouse_wheel)
             app.bind("<Button-5>", self.handle_mouse_wheel)
+
+        self.canvas.tag_bind(TkTags.BACKGROUND, "<Button-1>", self.handle_canvas_click)
 
     def _load_assets(
         self,
