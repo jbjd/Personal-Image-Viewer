@@ -2,8 +2,6 @@
 
 from image_viewer.constants import ZoomDirection
 
-ZOOM_UNSET: int = -1
-
 
 class ImageState:
     """Represents zoom level of image display."""
@@ -12,7 +10,7 @@ class ImageState:
 
     def __init__(self) -> None:
         self.zoom_level: int = 0
-        self.zoom_level_max: int = ZOOM_UNSET
+        self.zoom_level_max: int = 16
         self.zoom_allowed: bool = True
 
     def reset(self) -> None:
@@ -31,3 +29,12 @@ class ImageState:
             updated = True
 
         return updated
+
+    def set_max_zoom(self) -> None:
+        """Sets current :var:`zoom_level` as max zoom."""
+        self.zoom_level_max = self.zoom_level
+
+    def decrement_and_set_max_zoom(self) -> None:
+        """Decrements :var:`zoom_level` and sets its value as max."""
+        self.zoom_level -= 1
+        self.zoom_level_max = self.zoom_level
