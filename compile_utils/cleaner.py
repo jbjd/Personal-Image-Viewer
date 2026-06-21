@@ -116,6 +116,7 @@ def clean_file_and_copy(
                     unused_imports_to_preserve=unused_imports_to_preserve.pop(
                         module_import_path, set()
                     ),
+                    fold_simple_function_locals=True,
                 ),
             ),
         )
