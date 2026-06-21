@@ -22,7 +22,7 @@ class ImageResizer:
         self.screen_width: int = screen_width
         self.screen_height: int = screen_height
 
-    def get_image_zoomed_to(  # TODO: Test
+    def get_image_zoomed_to(
         self, image: Image, new_width: int, new_height: int, snap_if_small: bool
     ) -> Image | None:
         """Resizes image to provided dimensions.

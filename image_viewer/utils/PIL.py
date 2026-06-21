@@ -225,12 +225,12 @@ def _stop_unwanted_PIL_imports() -> None:  # noqa: N802
 
     # Remove calls to "APP" since its only for exif and uses removed Tiff plugin
     # Can't edit APP directly due to PIL storing it in this dict
-    for i in range(0xFFE0, 0xFFF0):
-        # ICC color profile info
-        if i == 0xFFE2:
-            continue
-
-        MARKER[i] = ("", "", Skip)
+    placeholder = ("", "", Skip)
+    MARKER[0xFFE0] = placeholder
+    MARKER[0xFFE1] = placeholder
+    # 0xFFE2 is left for ICC color profile info
+    for i in range(0xFFE3, 0xFFF0):
+        MARKER[i] = placeholder
 
     del MARKER, Skip
 
