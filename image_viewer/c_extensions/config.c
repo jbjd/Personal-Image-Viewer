@@ -6,7 +6,7 @@
 const int LINE_MAX_SIZE = 512;
 
 /**
- * Checks if \p hex is in format "#123ABC".
+ * Checks if `hex` is in format "#123ABC".
  *
  * @param hex Non-null char array to check
  * @return 1 if valid, 0 if not
@@ -26,13 +26,13 @@ bool is_valid_hex_color(const char *hex) {
 }
 
 /**
- * Checks if \p key contains a valid key for tkinter that this program also supports.
+ * Checks if `key` contains a valid key for tkinter that this program also supports.
  * Uppercase, F keys (any case, e.x. f12 or F12) are valid and may be prefixed.
  * Lowercase/numeric are valid only if prefixed.
  *
  * @param key Non-null char array to check
- * @param key_len Length of \p key
- * @param prefixed if \p key was prefixed
+ * @param key_len Length of `key`
+ * @param prefixed if `key` was prefixed
  * @return 1 if valid, 0 if not
  */
 static inline bool is_valid_key(const char *key, size_t key_len, bool prefixed) {
@@ -104,7 +104,7 @@ end:
 }
 
 /**
- * Checks if \p line is a comment in an ini file.
+ * Checks if `line` is a comment in an ini file.
  *
  * @param line Non-null and stripped char array to check
  * @return 1 if comment, 0 if not
@@ -114,7 +114,7 @@ bool is_comment(const char *line) {
 }
 
 /**
- * Checks if \p line is an accepted header in the ini used by this program.
+ * Checks if `line` is an accepted header in the ini used by this program.
  *
  * @param line Non-null and stripped char array to check
  * @return 1 if accepted header, 0 if not
@@ -138,15 +138,15 @@ end:
 }
 
 /**
- * Parses \p line into key and value pair.
+ * Parses `line` into key and value pair.
  *
- * \p line is edited such that the first equals sign becomes the end of the array.
- * \p value_out which must be as least the same length as \p line.
+ * `line` is edited such that the first equals sign becomes the end of the array.
+ * `value_out` which must be as least the same length as `line`.
  * If line is not a valid key-value pair, line is set to 0 length.
  *
  * @param line Non-null and stripped char array to parse
  * @param line_len strlen of line
- * @param value_out where value is written. Must be at least size of \p line
+ * @param value_out where value is written. Must be at least size of `line`
  */
 void parse_line(char *restrict line, int line_len, char *restrict value_out) {
     size_t index = 0;
