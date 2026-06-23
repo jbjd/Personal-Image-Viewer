@@ -93,11 +93,11 @@ def custom_module_version_up_to_date(
         folder_path, module_name
     ) == create_custom_module_version(module_version, custom_version, append)
 
-    message: str = (
+    _logger.info(
         "Found cached version of module: %s"
         if up_to_date
-        else "Can't find cached version of module: %s"
+        else "Can't find cached version of module: %s",
+        module_name,
     )
-    _logger.info(message, module_name)
 
     return up_to_date

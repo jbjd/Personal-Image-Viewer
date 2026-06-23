@@ -31,7 +31,7 @@ class ImageSearchResult:
 
     def __init__(self, index: int, found: bool) -> None:
         self.index: int = index
-        self.found = found
+        self.found: bool = found
 
 
 class ImageNameList(list[ImageName]):
