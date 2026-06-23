@@ -78,6 +78,8 @@ def clean_file_and_copy(
     :param module_import_path: How the module would be imported, e.x. 'PIL.Image'
     :param assume_this_machine: Argument passed onto minifier"""
 
+    _logger.debug("Copying %s to %s", source_file_path, dest_file_path)
+
     source: str = read_file_utf8(source_file_path)
 
     if module_import_path in regex_to_apply_py:
@@ -191,6 +193,7 @@ def _should_skip_module(
     :returns: True if module_import_path or its parent is in modules_to_skip"""
     for m in modules_to_skip:
         if module_import_path.startswith(m):
+            _logger.debug("Not copying module %s", module_import_path)
             skipped_modules.add(m)
             return True
 
