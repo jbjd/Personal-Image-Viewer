@@ -199,6 +199,9 @@ class CompileArgumentParser:
             namespace=CompileNamespace()
         )
 
+        if args.quiet and args.verbose:
+            raise ValueError(f"Can't pass both {PivArgs.QUIET} and {PivArgs.VERBOSE}")
+
         nuitka_args: list[str] = [
             f"{PivPluginArgs.PIV_ARGS}={args}",
             NuitkaArgs.STANDALONE,

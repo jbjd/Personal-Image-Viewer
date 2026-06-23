@@ -12,7 +12,7 @@ const char *DEFAULT_KB_SHOW_DETAILS = "<Control-d>";
 const char *DEFAULT_KB_UNDO_MOST_RECENT_ACTION = "<Control-z>";
 const char *DEFAULT_UI_BACKGROUND_COLOR = "#000000";
 
-#if defined(__WIN32__)
+#ifdef _WIN32
 const char *DEFAULT_UI_FONT = "arial.ttf";
 #else
 const char *DEFAULT_UI_FONT = "LiberationSans-Regular.ttf";

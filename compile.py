@@ -1,5 +1,6 @@
 """A script to compile the image viewer into an executable file via nuitka"""
 
+import logging
 import os
 import sys
 from importlib.metadata import version as get_module_version
@@ -58,16 +59,21 @@ if not args.debug and not args.skip_nuitka:
     raise_if_not_root("Need root privileges to compile and install")
 
 TARGET_MODULE: str = "main"
-TARGET_FILE: str = f"{TARGET_MODULE}.py"
+TARGET_FILE: str = TARGET_MODULE + ".py"
 
 build_folder_path: str = os.path.join(working_folder, "build")
 src_folder_path: str = os.path.join(build_folder_path, "src")
 target_file_path: str = os.path.join(src_folder_path, TARGET_FILE)
 code_folder_path: str = os.path.join(working_folder, IMAGE_VIEWER_NAME)
-nuitka_dist_path: str = os.path.join(build_folder_path, f"{TARGET_MODULE}.dist")
+nuitka_dist_path: str = os.path.join(build_folder_path, TARGET_MODULE + ".dist")
 
 
 _logger = get_logger()
+
+if args.quiet:
+    _logger.setLevel(logging.WARNING)
+elif args.verbose:
+    _logger.setLevel(logging.DEBUG)
 
 os.makedirs(src_folder_path, exist_ok=True)
 try:
@@ -117,7 +123,7 @@ try:
             continue
 
         sub_modules_to_skip: set[str] = {
-            i for i in modules_to_skip if i.startswith(f"{module_import_name}.")
+            i for i in modules_to_skip if i.startswith(module_import_name + ".")
         }
 
         if module_import_name == "PIL" and os.name != "nt":
@@ -177,8 +183,11 @@ try:
             os.path.join(build_folder_path, REPORT_FILE), args.extra_checks
         )
 
+    _logger.debug("Minifying TCL files")
     clean_tk_files(nuitka_dist_path)
+
     if args.strip:
+        _logger.debug("Stripping files")
         strip_files(nuitka_dist_path)
 
     if not args.debug:
@@ -188,8 +197,8 @@ finally:
     if args.no_cache:
         delete_folder(build_folder_path)
 
-_logger.info("\nFinished")
-_logger.info("Installed to %s", install_path)
+_logger.warning("\nFinished")
+_logger.warning("Installed to %s", install_path)
 
 install_byte_size: int = get_folder_size(install_path)
-_logger.info("Install Size: %s bytes", f"{install_byte_size:,}")
+_logger.warning("Install Size: %s bytes", f"{install_byte_size:,}")
