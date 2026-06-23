@@ -34,6 +34,8 @@ def get_nuitka_command(input_file: str, nuitka_args: list[str]) -> list[str]:
     :param input_file: Input file to pass to nuitka
     :param nuita_args: Nuitka arguments to use"""
 
+    plugin_path: str = os.path.join(os.path.dirname(__file__), "piv_plugin.py")
+
     return [
         sys.executable,
         "-OO",
@@ -42,7 +44,7 @@ def get_nuitka_command(input_file: str, nuitka_args: list[str]) -> list[str]:
         input_file,
         "--python-flag=-OO,no_annotations,no_warnings,static_hashes",
         "--output-filename=viewer",
-        "--user-plugin=C:/Python/Personal-Image-Viewer/compile_utils/piv_plugin.py",
+        f"--user-plugin={plugin_path}",
         *nuitka_args,
     ]
 
