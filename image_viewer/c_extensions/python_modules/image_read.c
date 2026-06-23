@@ -139,6 +139,17 @@ error:
     return Py_None;
 }
 
+/**
+ * Downcales dimension by ratio of numerator over `downscale_factor`.
+ *
+ * @param dimension int to scale
+ * @param downscale_factor of ratio to scale by
+ * @return Scaled value
+ */
+static inline int get_downscaled_dimension(int dimension, int downscale_factor) {
+    return (dimension + downscale_factor - 1) / downscale_factor;
+}
+
 static PyObject *decode_jpeg_downscaled(PyObject *self, PyObject *const *args, Py_ssize_t nargs) {
     if (unlikely(nargs != 2)) {
         PyErr_SetString(PyExc_TypeError, "");
@@ -161,8 +172,8 @@ static PyObject *decode_jpeg_downscaled(PyObject *self, PyObject *const *args, P
     const int pixel_size = tjPixelSize[pixel_format];
 
     const long downscale_factor = PyLong_AsLong(args[1]);
-    const int scaled_width = width / downscale_factor;
-    const int scaled_height = height / downscale_factor;
+    const int scaled_width = get_downscaled_dimension(width, downscale_factor);
+    const int scaled_height = get_downscaled_dimension(height, downscale_factor);
 
     unsigned long resized_jpeg_buffer_size = scaled_width * scaled_height * pixel_size * sizeof(char);
     char *resized_jpeg_buffer = (char *)malloc(resized_jpeg_buffer_size);
