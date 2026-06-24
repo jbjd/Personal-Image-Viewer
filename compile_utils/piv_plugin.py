@@ -58,13 +58,30 @@ if sys.platform != "darwin":
         _removable_std_modules.add("configparser")
 
 if sys.version_info >= (3, 13):
-    raise NotImplementedError(
-        "Remove from _removable_std_modules: "
-        "cgi, cgitb, chunk, imghdr, mailcap, sndhdr, pipes, and uu"
-    )
+    deprecated_std_modules: set[str] = {
+        "cgi",
+        "cgitb",
+        "chunk",
+        "imghdr",
+        "mailcap",
+        "pipes",
+        "sndhdr",
+        "uu",
+        "xdrlib",
+    }
+    if deprecated_std_modules & _removable_std_modules:
+        raise NotImplementedError(
+            f"Need to remove deprecated modules: {deprecated_std_modules}"
+        )
 
 if sys.version_info >= (3, 19):
-    raise NotImplementedError("Remove from _removable_std_modules: nturl2path")
+    deprecated_std_modules: set[str] = {
+        "nturl2path",
+    }
+    if deprecated_std_modules & _removable_std_modules:
+        raise NotImplementedError(
+            f"Need to remove deprecated modules: {deprecated_std_modules}"
+        )
 
 
 _removable_std_extensions: set[str] = set()
