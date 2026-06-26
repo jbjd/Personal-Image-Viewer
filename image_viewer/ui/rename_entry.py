@@ -84,4 +84,4 @@ class RenameEntry(Entry, UIElementBase):
     def error_flash(self) -> None:
         """Makes Entry flash red"""
         self.configure(bg=_ERROR_COLOR)
-        self.master.after(400, lambda: self.configure(bg=TEXT_RGB))
+        self.after(400, lambda: self.configure(bg=TEXT_RGB))

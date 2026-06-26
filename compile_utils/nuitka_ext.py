@@ -44,7 +44,7 @@ def get_nuitka_command(input_file: str, nuitka_args: list[str]) -> list[str]:
         input_file,
         "--python-flag=-OO,no_annotations,no_warnings,static_hashes",
         "--output-filename=viewer",
-        f"--user-plugin={plugin_path}",
+        "--user-plugin=" + plugin_path,
         *nuitka_args,
     ]
 
