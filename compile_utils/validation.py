@@ -147,7 +147,7 @@ def _personal_module_matches_installed_version(name: str, url: str) -> bool:
 
     url_version_index: int = url.rfind("@v")
     if url_version_index == -1:
-        raise RuntimeError(f"Can't parse url {url}")
+        raise RuntimeError("Can't parse url: " + url)
 
     url_version: str = url[url_version_index + 2 :]
 
