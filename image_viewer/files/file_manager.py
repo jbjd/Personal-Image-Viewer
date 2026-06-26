@@ -48,7 +48,7 @@ class ImageFileManager:
         # TODO: Make maxlen configurable
         self.action_queue: deque[FileAction] = deque(maxlen=8)
         self._dialog_file_types: list[tuple[str, str]] = [
-            ("", f"*.{file_type}") for file_type in VALID_FILE_TYPES
+            ("", "*." + file_type) for file_type in VALID_FILE_TYPES
         ]
 
         first_image_name = ImageName(os.path.basename(first_image_path))
@@ -235,7 +235,7 @@ class ImageFileManager:
 
         new_image_name: ImageName = ImageName(new_name)
         if new_image_name.suffix not in VALID_FILE_TYPES:
-            new_name += f".{self.current_image.suffix}"
+            new_name += "." + self.current_image.suffix
             new_image_name = ImageName(new_name)
 
         original_path: str = self.path_to_image

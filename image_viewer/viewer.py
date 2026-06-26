@@ -161,6 +161,8 @@ class ViewerApp:
         app.bind("<Up>", self.handle_up_arrow)
         app.bind("<Down>", self.handle_down_arrow)
 
+        app.protocol("WM_DELETE_WINDOW", self.exit)
+
         if os.name == "nt":
             app.bind(
                 "<Control-b>", lambda _: open_with(self.file_manager.path_to_image)
@@ -424,9 +426,14 @@ class ViewerApp:
             self.load_image()
 
     def exit(self, exit_code: int = 0) -> Never:
-        """Safely exits the program"""
-        try:
+        """Safely exits the program.
+
+        :param exit_code: Code returned by program on exit"""
+
+        if hasattr(self, "canvas"):
             self.canvas.delete(self.canvas.file_name_text_id)
+
+        try:
             self.app.quit()
             self.app.destroy()
             self.image_io.reset_and_setup()
