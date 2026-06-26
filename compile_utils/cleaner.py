@@ -90,7 +90,7 @@ def clean_file_and_copy(
             source = re_replace(source, regex_replacements, True)
         except RegexNoMatchException as e:
             _write_minify_failure(module_import_path, "applying regex", source)
-            raise RuntimeError(f"Failed to apply regex to {module_import_path}") from e
+            raise RuntimeError("Failed to apply regex to: " + module_import_path) from e
 
     all_vars_to_fold: dict[str, str | bytes | bool | int | float | complex | None] = (
         module_vars_to_fold.get(module_name, {})
