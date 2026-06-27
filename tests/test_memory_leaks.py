@@ -12,7 +12,7 @@ from image_viewer.image._read import (
     decode_jpeg_downscaled,
     read_image_into_buffer,
 )
-from tests.conftest import EXAMPLE_JPEG_PATH, IMG_DIR
+from tests.conftest import EXAMPLE_JPEG_PATH, IMG_DIR, ONLY_ON_WINDOWS
 
 if os.name == "nt":
     from image_viewer.utils._os_nt import (
@@ -59,11 +59,11 @@ class TestLeaks(MemoryLeakTestCase):
 
         self.execute(decode_jpeg_downscaled, image_buffer, 2)
 
-    @pytest.mark.skipif(os.name != "nt", reason="Only available on Windows")
+    @pytest.mark.skipif(os.name != "nt", reason=ONLY_ON_WINDOWS)
     def test_get_files_in_folder(self) -> None:
         self.execute(get_files_in_folder, IMG_DIR)
 
-    @pytest.mark.skipif(os.name != "nt", reason="Only available on Windows")
+    @pytest.mark.skipif(os.name != "nt", reason=ONLY_ON_WINDOWS)
     def test_read_buffer_as_base64_and_copy_to_clipboard(self) -> None:
         image_view: CRawImageView | None = read_image_into_buffer(EXAMPLE_JPEG_PATH)
 
