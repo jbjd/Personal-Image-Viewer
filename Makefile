@@ -34,7 +34,7 @@ else
 endif
 
 OPTIMIZATION_FLAG := -O3
-EXTRA_C_FLAGS := -march=native -mtune=native -ffinite-math-only -fgcse-las -fgcse-sm -fisolate-erroneous-paths-attribute -fno-signed-zeros -frename-registers -fsched-pressure -s -Wall -Werror
+EXTRA_C_FLAGS := -march=native -mtune=native -flto -ffinite-math-only -fgcse-las -fgcse-sm -fisolate-erroneous-paths-attribute -fno-signed-zeros -frename-registers -fsched-pressure -s -Wall -Werror
 override C_SOURCE := image_viewer/c_extensions
 override C_PYTHON_MODULES := $(C_SOURCE)/python_modules
 override C_FLAGS := -L$(PYTHON_LIBS) -I$(PYTHON_INCLUDES) -l$(PYTHON_DLL) $(OPTIMIZATION_FLAG) $(EXTRA_C_FLAGS) -shared $(OS_FLAGS)
