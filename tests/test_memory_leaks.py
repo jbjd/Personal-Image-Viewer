@@ -1,6 +1,7 @@
 """Tests for memory leaks in C extension modules."""
 
 import os
+import sys
 
 import pytest
 from psleak import MemoryLeakTestCase
@@ -14,7 +15,7 @@ from image_viewer.image._read import (
 )
 from tests.conftest import EXAMPLE_JPEG_PATH, IMG_DIR, ONLY_ON_WINDOWS
 
-if os.name == "nt":
+if sys.platform == "win32":
     from image_viewer.utils._os_nt import (
         get_files_in_folder,
         read_buffer_as_base64_and_copy_to_clipboard,
@@ -59,11 +60,11 @@ class TestLeaks(MemoryLeakTestCase):
 
         self.execute(decode_jpeg_downscaled, image_buffer, 2)
 
-    @pytest.mark.skipif(os.name != "nt", reason=ONLY_ON_WINDOWS)
+    @pytest.mark.skipif(sys.platform != "win32", reason=ONLY_ON_WINDOWS)
     def test_get_files_in_folder(self) -> None:
         self.execute(get_files_in_folder, IMG_DIR)
 
-    @pytest.mark.skipif(os.name != "nt", reason=ONLY_ON_WINDOWS)
+    @pytest.mark.skipif(sys.platform != "win32", reason=ONLY_ON_WINDOWS)
     def test_read_buffer_as_base64_and_copy_to_clipboard(self) -> None:
         image_view: CRawImageView | None = read_image_into_buffer(EXAMPLE_JPEG_PATH)
 
