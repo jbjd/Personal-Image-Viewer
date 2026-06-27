@@ -327,9 +327,7 @@ static PyObject *drop_file_to_clipboard(PyObject *self, PyObject *arg) {
 
     Py_BEGIN_ALLOW_THREADS;
 
-    size_t sizeToAlloc = sizeof(DROPFILES) + path_size + 2;
-
-    HGLOBAL global = GlobalAlloc(GHND, sizeToAlloc);
+    HGLOBAL global = GlobalAlloc(GHND, sizeof(DROPFILES) + path_size + 2);
     if (unlikely(global == NULL)) {
         goto end;
     }
@@ -342,8 +340,8 @@ static PyObject *drop_file_to_clipboard(PyObject *self, PyObject *arg) {
     dropfiles->pFiles = sizeof(DROPFILES);
     dropfiles->fWide = FALSE;
 
-    char *pathDestination = (char *)((BYTE *)dropfiles + sizeof(DROPFILES));
-    memcpy(pathDestination, path, path_size + 1);
+    char *path_dest = (char *)((BYTE *)dropfiles + sizeof(DROPFILES));
+    memcpy(path_dest, path, path_size + 1);
 
     GlobalUnlock(global);
 
@@ -365,7 +363,7 @@ static PyObject *read_buffer_as_base64_and_copy_to_clipboard(PyObject *self, PyO
     Py_BEGIN_ALLOW_THREADS;
 
     // encoded data is ~4/3 the size of the original data so make encoded buffer 2x the size.
-    HGLOBAL hGlobal = GlobalAlloc(GHND, 2 * remaining_bytes);
+    HGLOBAL hGlobal = GlobalAlloc(GMEM_MOVEABLE, 2 * remaining_bytes);
     if (unlikely(hGlobal == NULL)) {
         goto end;
     }
