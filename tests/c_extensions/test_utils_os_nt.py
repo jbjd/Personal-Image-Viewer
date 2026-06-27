@@ -1,10 +1,10 @@
-import os
+import sys
 
 import pytest
 
 from tests.conftest import EXAMPLE_WEBP_PATH, ONLY_ON_WINDOWS
 
-if os.name != "nt":
+if sys.platform != "win32":
     pytest.skip(ONLY_ON_WINDOWS, allow_module_level=True)
 else:
     from image_viewer.image._read import read_image_into_buffer
