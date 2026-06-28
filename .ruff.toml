@@ -57,8 +57,9 @@ ignore = ["C416", "C901", "COM812", "D", "D102", "D105", "D107", "D202", "D203",
 "run_perf_test.py" = ["S101"]
 
 # ANN201: Missing return type
+# E731: lambda
 # PT011: Pytest raises
-"tests/*" = ["ANN201", "PT011", "S101"]
+"tests/*" = ["ANN201", "E731", "PT011", "S101"]
 
 # D104: Missing docstring in public package
 "tests/__init__.py" = ["D104"]

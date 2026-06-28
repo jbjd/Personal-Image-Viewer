@@ -70,7 +70,7 @@ def _get_nuitka_env(assume_this_machine: bool) -> dict[str, str]:
     return compile_env
 
 
-def clean_compilation_report(report_path: str, warn_on_failure: bool) -> None:
+def clean_compilation_report(report_path: str) -> None:
     """The internal PivPlugin for nuitka truncates std modules and removed some dlls.
     They are still included in the report which can make it harder to determine future
     updates to the plugin. This removes those modules/dlls.
@@ -82,12 +82,14 @@ def clean_compilation_report(report_path: str, warn_on_failure: bool) -> None:
     root: ET.Element | None = tree.getroot()
 
     if root is None:
-        return _warn_cannot_clean_report("Can't find root", warn_on_failure)
+        _warn_cannot_clean_report("Can't find root")
+        return
 
     piv_node: ET.Element | None = root.find("./plugins/plugin[@name='PivPlugin']")
 
     if piv_node is None:
-        return _warn_cannot_clean_report("Can't find PivPlugin node", warn_on_failure)
+        _warn_cannot_clean_report("Can't find PivPlugin node")
+        return
 
     try:
         removed_std_modules: list[str] = piv_node.attrib["removed_std_modules"].split(
@@ -130,6 +132,8 @@ def clean_compilation_report(report_path: str, warn_on_failure: bool) -> None:
                     "module_usage",
                     __std_module_name_or_package_removed,
                 )
+            else:
+                _warn_cannot_clean_report("Can't find 'module_usages' node", False)
 
         if removed_std_extensions:
             __cleaning_pass(
@@ -144,9 +148,9 @@ def clean_compilation_report(report_path: str, warn_on_failure: bool) -> None:
         with open(report_path, "wb") as fp:
             tree.write(fp)
     except Exception as e:  # noqa: BLE001
-        _warn_cannot_clean_report(str(e), warn_on_failure)
+        _warn_cannot_clean_report(str(e))
 
 
-def _warn_cannot_clean_report(message: str, warn_on_failure: bool) -> None:
-    if warn_on_failure:
-        _logger.warning("Can't clean compilation report: %s", message)
+def _warn_cannot_clean_report(message: str, fatal: bool = True) -> None:
+    prefix: str = "Can't clean" if fatal else "Issue cleaning"
+    _logger.warning("%s compilation report: %s", prefix, message)

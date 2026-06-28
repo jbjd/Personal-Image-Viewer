@@ -1,13 +1,13 @@
 ifeq ($(OS),Windows_NT)
 	override DEFAULT_PYTHON := python
 	override PYTHON_DLL := python312
-	override COMPILED_EXT := pyd
-	override OS_FLAGS :=
+	override COMPILED_EXT = pyd
+	override OS_FLAGS =
 else
 	override DEFAULT_PYTHON := python3.12
 	override PYTHON_DLL := python3.12
-	override COMPILED_EXT := so
-	override OS_FLAGS := -fPIC
+	override COMPILED_EXT = so
+	override OS_FLAGS = -fPIC
 endif
 
 ifneq (,$(wildcard .venv))  # If .venv folder exists, use that
@@ -26,18 +26,18 @@ override PYTHON_BASE_PREFIX := $(shell $(PYTHON_EXECUTABLE) -sSc "import sys;pri
 # Install step python may be venv or not
 # But for compiling C we need to use the real python installation
 ifeq ($(OS),Windows_NT)
-	PYTHON_LIBS := $(PYTHON_BASE_PREFIX)/libs/
-	PYTHON_INCLUDES := $(PYTHON_BASE_PREFIX)/include/
+	PYTHON_LIBS = $(PYTHON_BASE_PREFIX)/libs/
+	PYTHON_INCLUDES = $(PYTHON_BASE_PREFIX)/include/
 else
-	PYTHON_LIBS := $(PYTHON_BASE_PREFIX)/libs/python3.12/
-	PYTHON_INCLUDES := $(PYTHON_BASE_PREFIX)/include/python3.12/
+	PYTHON_LIBS = $(PYTHON_BASE_PREFIX)/libs/python3.12/
+	PYTHON_INCLUDES = $(PYTHON_BASE_PREFIX)/include/python3.12/
 endif
 
-OPTIMIZATION_FLAG := -O3
-EXTRA_C_FLAGS := -march=native -mtune=native -flto -ffinite-math-only -fgcse-las -fgcse-sm -fisolate-erroneous-paths-attribute -fno-signed-zeros -frename-registers -fsched-pressure -s -Wall -Werror
-override C_SOURCE := image_viewer/c_extensions
-override C_PYTHON_MODULES := $(C_SOURCE)/python_modules
-override C_FLAGS := -L$(PYTHON_LIBS) -I$(PYTHON_INCLUDES) -l$(PYTHON_DLL) $(OPTIMIZATION_FLAG) $(EXTRA_C_FLAGS) -shared $(OS_FLAGS)
+OPTIMIZATION_FLAG = -O3
+EXTRA_C_FLAGS = -march=native -mtune=native -flto -ffinite-math-only -fgcse-las -fgcse-sm -fisolate-erroneous-paths-attribute -fno-signed-zeros -frename-registers -fsched-pressure -s -Wall -Werror
+override C_SOURCE = image_viewer/c_extensions
+override C_PYTHON_MODULES = $(C_SOURCE)/python_modules
+override C_FLAGS = -L$(PYTHON_LIBS) -I$(PYTHON_INCLUDES) -l$(PYTHON_DLL) $(OPTIMIZATION_FLAG) $(EXTRA_C_FLAGS) -shared $(OS_FLAGS)
 
 build-config:
 	gcc $(C_PYTHON_MODULES)/config.c $(C_SOURCE)/config.c $(C_FLAGS) -I$(C_SOURCE) -o image_viewer/_config.$(COMPILED_EXT)
@@ -64,7 +64,7 @@ install-debug:
 install-debug-setup:
 	$(PYTHON_EXECUTABLE) -OO compile.py --assume-this-machine --extra-checks --debug --skip-nuitka
 
-C_AND_H_FILES = $(shell $(PYTHON_EXECUTABLE) -sSc "from glob import glob;print(' '.join(glob('image_viewer/**/*.[ch]',recursive=True)))")
+override C_AND_H_FILES = $(shell $(PYTHON_EXECUTABLE) -sSc "from glob import glob;print(' '.join(glob('image_viewer/**/*.[ch]',recursive=True)))")
 
 format:
 	ruff check . --fix
