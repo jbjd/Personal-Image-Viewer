@@ -33,6 +33,8 @@ EXAMPLE_DDS_PATH: str = os.path.join(IMG_DIR, "e.dds")
 EXAMPLE_AVIF_PATH: str = os.path.join(IMG_DIR, "f.avif")
 EXAMPLE_GIF_PATH: str = os.path.join(IMG_DIR, "g.gif")
 
+ONLY_ON_WINDOWS: str = "Only available on Windows"
+
 
 @pytest.fixture(name="font", scope="session")
 def font_fixture() -> Font:

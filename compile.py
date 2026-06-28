@@ -179,9 +179,7 @@ try:
         sys.exit(1)
 
     if args.report:
-        clean_compilation_report(
-            os.path.join(build_folder_path, REPORT_FILE), args.extra_checks
-        )
+        clean_compilation_report(os.path.join(build_folder_path, REPORT_FILE))
 
     _logger.debug("Minifying TCL files")
     clean_tk_files(nuitka_dist_path)

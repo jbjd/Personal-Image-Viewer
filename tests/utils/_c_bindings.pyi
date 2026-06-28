@@ -1,5 +1,7 @@
 """C functions exposed in python to help with testing."""
 
+import sys
+
 def is_valid_hex_color(hex_color: str, /) -> bool:
     """Checks if a string is a valid hex color in the case-insensitive format '#ABC123'.
 
@@ -34,3 +36,9 @@ def is_empty_or_valid_int(integer: str, /) -> bool:
 
     :param integer: A possible integer.
     :returns: True if all numeric with optional sign."""
+
+if sys.platform == "win32":
+    def read_clipboard() -> str:
+        """Reads window's clipboard and returns as string.
+
+        :returns: String of clipboard contents"""

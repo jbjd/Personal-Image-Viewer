@@ -3,6 +3,10 @@
 
 #include <Python.h>
 
+#ifdef _WIN32
+#include <windows.h>
+#endif
+
 /**
  * Wraps is_valid_hex_color so it can be called in Python.
  *
@@ -153,12 +157,42 @@ static PyObject *Py_is_empty_or_valid_int(PyObject *self, PyObject *arg) {
     return Py_True;
 }
 
+#ifdef _WIN32
+/**
+ * Returns clipboard contents as PyUnicode string
+ *
+ * @param self Instance of this module
+ * @return PyUnicode string of clipboard contents
+ */
+static PyObject *Py_read_clipboard(PyObject *self) {
+    if (!OpenClipboard(0)) {
+        PyErr_SetString(PyExc_OSError, "Failed to open clipboard");
+    }
+
+    HANDLE h_clipboard = GetClipboardData(CF_UNICODETEXT);
+
+    if (h_clipboard == NULL) {
+        PyErr_SetString(PyExc_OSError, "Failed to read clipboard");
+    }
+
+    wchar_t *clipboard_content = (wchar_t *)GlobalLock(h_clipboard);
+    PyObject *as_string = PyUnicode_FromWideChar(clipboard_content, -1);
+    GlobalUnlock(h_clipboard);
+
+    CloseClipboard();
+    return as_string;
+}
+#endif
+
 static PyMethodDef c_bindings_methods[] = {
     {"is_valid_hex_color", Py_is_valid_hex_color, METH_O, NULL},
     {"is_valid_keybind", Py_is_valid_keybind, METH_O, NULL},
     {"is_empty_or_valid_hex_color", Py_is_empty_or_valid_hex_color, METH_O, NULL},
     {"is_empty_or_valid_keybind", Py_is_empty_or_valid_keybind, METH_O, NULL},
     {"is_empty_or_valid_int", Py_is_empty_or_valid_int, METH_O, NULL},
+#ifdef _WIN32
+    {"read_clipboard", (PyCFunction)Py_read_clipboard, METH_NOARGS, NULL},
+#endif
     {NULL, NULL, 0, NULL}};
 
 static int c_bindings_exec(PyObject *Py_UNUSED(module)) {
