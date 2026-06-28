@@ -8,10 +8,14 @@ if sys.platform == "win32":
     from image_viewer.image._read import read_image_into_buffer
     from image_viewer.utils._os_nt import read_buffer_as_base64_and_copy_to_clipboard
     from tests.utils._c_bindings import read_clipboard
+else:
+    pytest.skip(ONLY_ON_WINDOWS, allow_module_level=True)
 
 
-@pytest.mark.skipif(sys.platform != "win32", reason=ONLY_ON_WINDOWS)
 def test_read_buffer_as_base64_and_copy_to_clipboard() -> None:
+    if sys.platform != "win32":  # mypy
+        raise NotImplementedError
+
     image_buffer = read_image_into_buffer(EXAMPLE_WEBP_PATH)
     assert image_buffer is not None, "Failed to setup image buffer"
 

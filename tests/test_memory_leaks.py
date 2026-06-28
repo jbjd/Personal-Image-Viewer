@@ -62,10 +62,16 @@ class TestLeaks(MemoryLeakTestCase):
 
     @pytest.mark.skipif(sys.platform != "win32", reason=ONLY_ON_WINDOWS)
     def test_get_files_in_folder(self) -> None:
+        if sys.platform != "win32":  # mypy
+            raise NotImplementedError
+
         self.execute(get_files_in_folder, IMG_DIR)
 
     @pytest.mark.skipif(sys.platform != "win32", reason=ONLY_ON_WINDOWS)
     def test_read_buffer_as_base64_and_copy_to_clipboard(self) -> None:
+        if sys.platform != "win32":  # mypy
+            raise NotImplementedError
+
         image_view: CRawImageView | None = read_image_into_buffer(EXAMPLE_JPEG_PATH)
 
         assert image_view is not None
