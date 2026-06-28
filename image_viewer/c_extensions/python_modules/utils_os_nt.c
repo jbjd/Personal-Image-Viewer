@@ -390,6 +390,8 @@ static PyObject *read_buffer_as_base64_and_copy_to_clipboard(PyObject *self, PyO
 
     base64_encode_blockend(encoded_buffer, &state);
 
+    *encoded_buffer_position = '\0';
+
     GlobalUnlock(hGlobal);
 
     _set_win_clipboard(CF_TEXT, encoded_buffer);

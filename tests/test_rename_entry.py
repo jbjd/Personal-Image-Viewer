@@ -11,14 +11,14 @@ def test_error_flash(rename_entry: RenameEntry) -> None:
 
     current_background: str
     # If we force no delay for testing, it should go back to white immediately
-    with patch.object(rename_entry.master, "after", lambda _, callback: callback()):
+    with patch.object(rename_entry, "after", lambda _, callback: callback()):
         rename_entry.error_flash()
         current_background = rename_entry.config()["background"][4]  # type: ignore[index]
         assert current_background == TEXT_RGB
 
     # If we disable the callback that error_flash normally calls after a delay,
     # it should be error color
-    with patch.object(rename_entry.master, "after"):
+    with patch.object(rename_entry, "after"):
         rename_entry.error_flash()
         current_background = rename_entry.config()["background"][4]  # type: ignore[index]
         assert current_background == _ERROR_COLOR
