@@ -2,10 +2,10 @@ import sys
 
 import pytest
 
+from image_viewer.image._read import read_image_into_buffer
 from tests.conftest import EXAMPLE_WEBP_PATH, ONLY_ON_WINDOWS
 
 if sys.platform == "win32":
-    from image_viewer.image._read import read_image_into_buffer
     from image_viewer.utils._os_nt import read_buffer_as_base64_and_copy_to_clipboard
     from tests.utils._c_bindings import read_clipboard
 else:
