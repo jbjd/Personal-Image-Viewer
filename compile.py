@@ -3,6 +3,7 @@
 import logging
 import os
 import sys
+import time
 from importlib.metadata import version as get_module_version
 from subprocess import Popen
 
@@ -190,7 +191,15 @@ try:
 
     if not args.debug:
         delete_folder(install_path)
-        os.rename(nuitka_dist_path, install_path)
+
+        # Sometimes the file is randomly blocked by another process and one retry
+        # will pass
+        try:
+            os.rename(nuitka_dist_path, install_path)
+        except PermissionError:
+            _logger.warning("Failed to move to install path, retrying in 2 seconds...")
+            time.sleep(2)
+            os.rename(nuitka_dist_path, install_path)
 finally:
     if args.no_cache:
         delete_folder(build_folder_path)

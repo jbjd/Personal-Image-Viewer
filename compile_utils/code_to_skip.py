@@ -29,7 +29,7 @@ SKIP_ITERATION: int = 1
 # Module independent skips
 
 decorators_to_always_skip: set[str] = {"abstractmethod", "override"}
-functions_to_always_skip: set[str] = {"warn"}
+functions_to_always_skip: set[str] = {"debug", "warn"}
 no_warn_tokens = decorators_to_always_skip | functions_to_always_skip
 
 # Module dependent skips
@@ -176,14 +176,14 @@ functions_to_skip: dict[str, set[str]] = {
 
 
 vars_to_skip: dict[str, set[str]] = {
-    "PIL.Image": {"MIME", "_fromarray_typemap"},
+    "PIL.DdsImagePlugin": {"format_description"},
+    "PIL.GifImagePlugin": {"_Palette", "format_description"},
+    "PIL.Image": {"DecoderInput", "MIME", "_ExifBase", "_fromarray_typemap"},
     "PIL.ImageDraw": {"Outline"},
     "PIL.ImageFile": {"logger"},
     "PIL.ImagePalette": {"tostring"},
-    "PIL.GifImagePlugin": {"_Palette", "format_description"},
     "PIL.JpegImagePlugin": {"format_description"},
     "PIL.PngImagePlugin": {"format_description"},
-    "PIL.ImageText": {"Font"},
     "PIL.WebPImagePlugin": {"format_description"},
 }
 
@@ -280,6 +280,12 @@ regex_to_apply_py: dict[str, list[RegexReplacement]] = {
         RegexReplacement(  # Remove Exif usage to remove Tiff dependency
             pattern=r'exif or b""', replacement='b""'
         ),
+    ],
+    "PIL.DdsImagePlugin": [
+        RegexReplacement(
+            pattern=r"# Backward compatibility layer.*DXGI_FORMAT_BC7_UNORM_SRGB = DXGI_FORMAT.BC7_UNORM_SRGB",  # noqa: E501
+            flags=re.DOTALL,
+        )
     ],
     "PIL.Image": [
         RegexReplacement(
