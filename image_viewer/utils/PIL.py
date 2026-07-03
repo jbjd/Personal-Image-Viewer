@@ -95,7 +95,7 @@ def optimize_image_mode(image: Image) -> Image:
         image = image.convert(image.mode[:-1])
 
     if _should_be_grayscale(image):
-        image = image.convert("L")
+        image = image.convert("L" + image.mode[3:])
 
     return image
 
@@ -122,7 +122,7 @@ def _should_be_grayscale(image: Image) -> bool:
 
     :param image: PIL Image to check
     :returns: If PIL Image should be grayscale"""
-    if image.mode != "RGB":
+    if not image.mode.startswith("RGB"):
         return False
 
     colors: list[tuple[int, tuple[int, int, int]]] | None = image.im.getcolors(256)
