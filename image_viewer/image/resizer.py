@@ -1,4 +1,4 @@
-"""Classes for resizing PIL images"""
+"""Handles resizing of PIL images."""
 
 from PIL.Image import Image, Resampling, frombytes
 
@@ -107,9 +107,13 @@ class ImageResizer:
             image_width, image_height
         )
 
-        resampling: Resampling = (
-            Resampling.HAMMING if dimensions[0] < image_width else Resampling.LANCZOS
-        )
+        resampling: Resampling
+        if image.getcolors(150) is not None:
+            resampling = Resampling.NEAREST
+        elif dimensions[0] < image_width:
+            resampling = Resampling.HAMMING
+        else:
+            resampling = Resampling.LANCZOS
 
         return resize(image, dimensions, resampling)
 
