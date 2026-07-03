@@ -1,7 +1,8 @@
+import os
 from unittest.mock import MagicMock, patch
 
 import pytest
-from PIL.Image import Image, Resampling
+from PIL.Image import Image, Resampling, frombytes
 from PIL.Image import new as new_image
 
 from image_viewer.image._read import JPEG
@@ -89,16 +90,25 @@ def test_jpeg_fit_to_screen_large_image(
 
 
 @pytest.mark.parametrize(
-    ("image", "expected_resampling"),
+    ("mode", "dimension", "expected_resampling"),
     [
-        (new_image("P", (10, 10)), Resampling.LANCZOS),
-        (new_image("RGBA", (3000, 3000)), Resampling.HAMMING),
+        ("LA", 10, Resampling.NEAREST),
+        ("RGB", 1000, Resampling.LANCZOS),
+        ("RGBA", 3000, Resampling.HAMMING),
     ],
 )
 def test_get_image_fit_to_screen(
-    image_resizer: ImageResizer, image: Image, expected_resampling: Resampling
+    image_resizer: ImageResizer,
+    mode: str,
+    dimension: int,
+    expected_resampling: Resampling,
 ) -> None:
     """Should resize and return PIL image"""
+
+    total_bytes = dimension * dimension * len(mode)
+    random_bytes = os.urandom(total_bytes)
+
+    image = frombytes(mode, (dimension, dimension), random_bytes)
 
     view = MagicMock()
     view.format = "asdf"
