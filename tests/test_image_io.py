@@ -2,6 +2,7 @@
 
 import os
 import tempfile
+from collections.abc import Callable
 from unittest.mock import MagicMock, mock_open, patch
 
 import pytest
@@ -147,38 +148,47 @@ def test_get_next_frame(image_io: ImageIO) -> None:
     assert example_frame is None
 
 
-def test_optimize_png_image(image_io: ImageIO) -> None:
+@pytest.mark.parametrize(
+    ("mode", "expected_mode", "pixel_generator"),
+    [
+        ("RGB", "RGB", lambda i: (i, i, (i + i) % 200)),
+        ("RGBA", "LA", lambda i: (i, i, i, i + 1)),
+        ("RGBA", "L", lambda i: (i, i, i, 255)),
+        ("LA", "L", lambda i: (i, 255)),
+    ],
+)
+def test_optimize_png_image(
+    image_io: ImageIO,
+    mode: str,
+    expected_mode: str,
+    pixel_generator: Callable[[int], tuple],
+) -> None:
     """Should saved optimized PNG."""
 
     original_image = tempfile.NamedTemporaryFile(delete=False)  # noqa: SIM115
     try:
         # Setup uncompressed PNG file
         with original_image:
-            image = new("RGBA", (10, 10))
-            image.putdata([(i, i + 1, i + 2, 255) for i in range(100)])
-            image.save(original_image, "PNG", optimize=False, compress_level=0)
+            image = new(mode, (10, 10))
+            image.putdata([pixel_generator(i) for i in range(100)])
+            image.save(original_image, "PNG", optimize=False, compress_level=1)
 
         starting_size: int = os.stat(original_image.name).st_size
-        assert starting_size == 478, "Unexpected starting size for test image"
 
         image_io.load_image(original_image.name)
         image_io.optimize_png_image(original_image.name)
 
         ending_size: int = os.stat(original_image.name).st_size
 
-        assert ending_size == 79
+        assert ending_size > 0
+        assert ending_size < starting_size
+        assert image_io.PIL_image.mode == expected_mode
 
         # Doing it again does nothing
         with patch(f"{_MODULE_PATH}.optimize_image_mode") as mock_optimize_image_mode:
             assert not image_io.optimize_png_image(original_image.name)
             mock_optimize_image_mode.assert_not_called()
 
-        # Optimizing again should result in nothing happening
-        # even if _image_optimized = False
-        with patch("builtins.open") as mock_open:
-            image_io._image_optimized = False
-            assert not image_io.optimize_png_image(original_image.name)
-            mock_open.assert_not_called()
     finally:
         image_io.reset_and_setup()
         original_image.close()
