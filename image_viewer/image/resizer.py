@@ -97,9 +97,7 @@ class ImageResizer:
         )
 
         # Gets nearest power of 2 of ratio_to_screen rounded down
-        return (
-            1 if ratio_to_screen <= 1 else 1 << (int(ratio_to_screen).bit_length() - 1)
-        )
+        return 1 if ratio_to_screen <= 1 else 1 << (ratio_to_screen.bit_length() - 1)
 
     def _get_generic_fit_to_screen(self, image: Image) -> Image:
         image_width, image_height = image.size

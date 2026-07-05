@@ -55,23 +55,17 @@ def try_convert_image_and_save_new(
             for frame in ImageIterator(original_image)
         ]
 
-    image_to_save: Image = original_image.copy()
-
     match target_format:
         case "avif":
             save_kwargs["speed"] = 0
         case "jpg" | "jpeg" | "jif" | "jfif" | "jpe":
             target_format = "jpeg"
-            if image_to_save.mode not in VALID_JPEG_MODES:
-                image_to_save = image_to_save.convert("RGB")
-        case "gif":
-            if original_format == "webp" and "background" in image_to_save.info:
-                # This pop fixes missing bitmap error
-                del image_to_save.info["background"]
+            if original_image.mode not in VALID_JPEG_MODES:
+                original_image = original_image.convert("RGB")
         case "webp":
             save_kwargs["method"] = 6
 
-    image_to_save.save(new_path, target_format, **save_kwargs)
+    original_image.save(new_path, target_format, **save_kwargs)
 
     return True
 
