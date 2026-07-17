@@ -12,20 +12,21 @@ from personal_compile_tools.file_operations import (
     walk_folder,
     write_file_utf8,
 )
-from personal_python_ast_optimizer.parser.config import (
-    OptimizationsConfig,
-    SkipConfig,
-    TokensConfig,
-    TokenTypesConfig,
+from personal_python_ast_optimizer.config import (
+    CodeToSkipConfig,
+    OptimizeConfig,
+    PerfOptimizationsConfig,
+    TokensToSkipConfig,
+    TokenTypesToSkipConfig,
     TypeHintsToSkip,
 )
-from personal_python_ast_optimizer.parser.run import run_unparser
 from personal_python_ast_optimizer.regex.replace import (
-    RegexNoMatchException,
+    RegexNoMatchError,
     RegexReplacement,
     re_replace,
     re_replace_file,
 )
+from personal_python_ast_optimizer.run import optimize_source_and_minify
 from personal_simple_tcl_minifier.parse import tcl_minify_folder
 
 from compile_utils.code_to_skip import (
@@ -43,7 +44,6 @@ from compile_utils.code_to_skip import (
     vars_to_skip,
 )
 from compile_utils.log import get_logger
-from compile_utils.validation import get_required_python_version
 
 SEPARATORS = r"\\/" if os.name == "nt" else r"/"
 
@@ -88,7 +88,7 @@ def clean_file_and_copy(
         )
         try:
             source = re_replace(source, regex_replacements, True)
-        except RegexNoMatchException as e:
+        except RegexNoMatchError as e:
             _write_minify_failure(module_import_path, "applying regex", source)
             raise RuntimeError("Failed to apply regex to: " + module_import_path) from e
 
@@ -98,29 +98,28 @@ def clean_file_and_copy(
     )
 
     try:
-        source = run_unparser(
+        source = optimize_source_and_minify(
             source,
-            skip_config=SkipConfig(
-                module_import_path,
-                target_python_version=get_required_python_version(),
-                tokens_config=_get_tokens_to_skip_config(module_import_path),
-                token_types_config=TokenTypesConfig(
-                    skip_type_hints=TypeHintsToSkip.ALL,
-                    skip_generics=True,
-                    skip_asserts=True,
+            optimize_config=OptimizeConfig(
+                code_to_skip=CodeToSkipConfig(
+                    unused_imports_to_preserve=unused_imports_to_preserve.pop(
+                        module_import_path, None
+                    ),
                     skip_overload_functions=True,
                 ),
-                optimizations_config=OptimizationsConfig(
-                    vars_to_fold=all_vars_to_fold,
-                    collection_concat_to_unpack=True,
-                    assume_this_machine=assume_this_machine,
-                    simplify_named_tuples=True,
-                    unused_imports_to_preserve=unused_imports_to_preserve.pop(
-                        module_import_path, set()
-                    ),
+                tokens_config=_get_tokens_to_skip_config(module_import_path),
+                token_types_config=TokenTypesToSkipConfig(
+                    skip_type_hints=TypeHintsToSkip.ALL,
+                    skip_generics_and_alias=True,
+                    skip_asserts=True,
+                ),
+                perf_optimizations=PerfOptimizationsConfig(  # TODO: Fix names_to_fold
                     fold_simple_function_locals=True,
+                    collection_concat_to_unpack=True,
+                    simplify_named_tuples=True,
                 ),
             ),
+            file_name=module_import_path,
         )
     except Exception:
         _write_minify_failure(module_import_path, "running ast optimizer", source)
@@ -257,7 +256,7 @@ def strip_files(compile_dir: str) -> None:
         _logger.warning("Strip returned non-zero status")
 
 
-def _get_tokens_to_skip_config(module_import_path: str) -> TokensConfig:
+def _get_tokens_to_skip_config(module_import_path: str) -> TokensToSkipConfig:
     classes: set[str] = classes_to_skip.pop(module_import_path, set())
     module_imports: set[str] = imports_to_skip.pop(module_import_path, set())
     functions: set[str] = functions_to_skip.pop(module_import_path, set())
@@ -265,7 +264,7 @@ def _get_tokens_to_skip_config(module_import_path: str) -> TokensConfig:
 
     functions |= functions.union(functions_to_always_skip)
 
-    return TokensConfig(
+    return TokensToSkipConfig(  # TODO: Fix
         classes_to_skip=classes,
         decorators_to_skip=decorators_to_always_skip,
         module_imports_to_skip=module_imports,
