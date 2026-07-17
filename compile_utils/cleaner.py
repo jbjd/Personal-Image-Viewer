@@ -16,6 +16,7 @@ from personal_python_ast_optimizer.config import (
     CodeToSkipConfig,
     OptimizeConfig,
     PerfOptimizationsConfig,
+    TokensToSkip,
     TokensToSkipConfig,
     TokenTypesToSkipConfig,
     TypeHintsToSkip,
@@ -30,18 +31,17 @@ from personal_python_ast_optimizer.run import optimize_source_and_minify
 from personal_simple_tcl_minifier.parse import tcl_minify_folder
 
 from compile_utils.code_to_skip import (
+    assignemnts_to_skip,
     classes_to_skip,
     decorators_to_always_skip,
     functions_to_always_skip,
     functions_to_skip,
     imports_to_skip,
     module_vars_to_fold,
-    no_warn_tokens,
     regex_to_apply_py,
     regex_to_apply_tk,
     unused_imports_to_preserve,
     vars_to_fold,
-    vars_to_skip,
 )
 from compile_utils.log import get_logger
 
@@ -204,11 +204,11 @@ def warn_unused_code_skips(modules_no_warn_unused_skips: list[str]) -> None:
     that they were unused"""
 
     for skips, friendly_name in (
+        (assignemnts_to_skip, "skip assignments"),
         (classes_to_skip, "skip classes"),
         (imports_to_skip, "skip module imports"),
         (functions_to_skip, "skip functions"),
         (vars_to_fold, "fold variables"),
-        (vars_to_skip, "skip variables"),
         (regex_to_apply_py, "apply regex"),
     ):
         for module in skips:
@@ -257,20 +257,43 @@ def strip_files(compile_dir: str) -> None:
 
 
 def _get_tokens_to_skip_config(module_import_path: str) -> TokensToSkipConfig:
-    classes: set[str] = classes_to_skip.pop(module_import_path, set())
-    module_imports: set[str] = imports_to_skip.pop(module_import_path, set())
-    functions: set[str] = functions_to_skip.pop(module_import_path, set())
-    variables: set[str] = vars_to_skip.pop(module_import_path, set())
+    _warn_all: list = []
 
-    functions |= functions.union(functions_to_always_skip)
+    assignemnts: set[str] | None = assignemnts_to_skip.pop(module_import_path, None)
+    assignemnts_input: TokensToSkip[str] | None = (
+        TokensToSkip(assignemnts, _warn_all) if assignemnts is not None else None
+    )
 
-    return TokensToSkipConfig(  # TODO: Fix
-        classes_to_skip=classes,
-        decorators_to_skip=decorators_to_always_skip,
-        module_imports_to_skip=module_imports,
-        functions_to_skip=functions,
-        variables_to_skip=variables,
-        no_warn=no_warn_tokens,
+    classes: set[str] | None = classes_to_skip.pop(module_import_path, None)
+    classes_input: TokensToSkip[str] | None = (
+        TokensToSkip(classes, _warn_all) if classes is not None else None
+    )
+
+    module_imports: set[str] | None = imports_to_skip.pop(module_import_path, None)
+    module_imports_input: TokensToSkip[str] | None = (
+        TokensToSkip(module_imports, _warn_all) if module_imports is not None else None
+    )
+
+    decorators_input = TokensToSkip(decorators_to_always_skip)
+
+    functions: set[str] | None = functions_to_skip.pop(module_import_path, None)
+    functions = (
+        functions_to_always_skip
+        if functions is None
+        else functions.union(functions_to_always_skip)
+    )
+    functions_input: TokensToSkip[str] | None = (
+        TokensToSkip(functions, functions_to_always_skip)
+        if functions is not None
+        else None
+    )
+
+    return TokensToSkipConfig(
+        assignments_to_skip=assignemnts_input,
+        classes_to_skip=classes_input,
+        decorators_to_skip=decorators_input,
+        functions_to_skip=functions_input,
+        module_imports_to_skip=module_imports_input,
     )
 
 

@@ -24,15 +24,44 @@ from image_viewer.image.resizer import JPEG_MAX_DIMENSION
 from image_viewer.ui.rename_entry import _ERROR_COLOR, _MAX_ENTRY_SIZE
 
 # Increment when edits to this file or module_dependencies are merged into main
-SKIP_ITERATION: int = 1
+SKIP_ITERATION: int = 0
 
 # Module independent skips
 
 decorators_to_always_skip: set[str] = {"abstractmethod", "override"}
 functions_to_always_skip: set[str] = {"debug", "warn"}
-no_warn_tokens = decorators_to_always_skip | functions_to_always_skip
 
 # Module dependent skips
+
+assignemnts_to_skip: dict[str, set[str]] = {
+    "PIL.DdsImagePlugin": {"format_description"},
+    "PIL.GifImagePlugin": {"_Palette", "format_description"},
+    "PIL.Image": {"DecoderInput", "MIME", "_ExifBase", "_fromarray_typemap"},
+    "PIL.ImageDraw": {"Outline"},
+    "PIL.ImageFile": {"logger"},
+    "PIL.ImagePalette": {"tostring"},
+    "PIL.JpegImagePlugin": {"format_description"},
+    "PIL.PngImagePlugin": {"format_description"},
+    "PIL.WebPImagePlugin": {"format_description"},
+}
+
+if os.name == "nt":
+    assignemnts_to_skip["PIL.AvifImagePlugin"] = {"DEFAULT_MAX_THREADS"}
+
+classes_to_skip: dict[str, set[str]] = {
+    "PIL.Image": {
+        "Exif",
+        "SupportsArrayInterface",
+        "SupportsArrowArrayInterface",
+        "SupportsGetData",
+    },
+    "PIL.ImageFile": {"Parser", "PyEncoder", "StubHandler", "StubImageFile"},
+    "PIL.ImageFont": {"Axis", "TransposedFont"},
+    "PIL.ImageOps": {"SupportsGetMesh"},
+    "PIL.ImageTk": {"BitmapImage"},
+    "PIL.PngImagePlugin": {"PngInfo"},
+}
+
 
 functions_to_skip: dict[str, set[str]] = {
     "PIL._binary": {"i8", "si16be", "si16le", "si32be", "si32le"},
@@ -172,37 +201,6 @@ functions_to_skip: dict[str, set[str]] = {
         "verify",
     },
     "PIL.WebPImagePlugin": {"register_mime"},
-}
-
-
-vars_to_skip: dict[str, set[str]] = {
-    "PIL.DdsImagePlugin": {"format_description"},
-    "PIL.GifImagePlugin": {"_Palette", "format_description"},
-    "PIL.Image": {"DecoderInput", "MIME", "_ExifBase", "_fromarray_typemap"},
-    "PIL.ImageDraw": {"Outline"},
-    "PIL.ImageFile": {"logger"},
-    "PIL.ImagePalette": {"tostring"},
-    "PIL.JpegImagePlugin": {"format_description"},
-    "PIL.PngImagePlugin": {"format_description"},
-    "PIL.WebPImagePlugin": {"format_description"},
-}
-
-if os.name == "nt":
-    vars_to_skip["PIL.AvifImagePlugin"] = {"DEFAULT_MAX_THREADS"}
-
-
-classes_to_skip: dict[str, set[str]] = {
-    "PIL.Image": {
-        "Exif",
-        "SupportsArrayInterface",
-        "SupportsArrowArrayInterface",
-        "SupportsGetData",
-    },
-    "PIL.ImageFile": {"Parser", "PyEncoder", "StubHandler", "StubImageFile"},
-    "PIL.ImageFont": {"Axis", "TransposedFont"},
-    "PIL.ImageOps": {"SupportsGetMesh"},
-    "PIL.ImageTk": {"BitmapImage"},
-    "PIL.PngImagePlugin": {"PngInfo"},
 }
 
 
