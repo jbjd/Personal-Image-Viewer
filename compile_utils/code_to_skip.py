@@ -5,6 +5,7 @@ import re
 import sys
 
 from personal_python_ast_optimizer.regex.replace import RegexReplacement
+from personal_python_ast_optimizer.typing import FoldableConstant
 from PIL.AvifImagePlugin import DECODE_CODEC_CHOICE
 from PIL.DdsImagePlugin import DDS_MAGIC
 from PIL.GifImagePlugin import _FORCE_OPTIMIZE
@@ -216,9 +217,24 @@ unused_imports_to_preserve: dict[str, set[str]] = {
     }
 }
 
-module_vars_to_fold: dict[
+
+names_and_attrs_to_fold: dict[
     str,
-    dict[str, str | bytes | bool | int | float | complex | None],
+    dict[str, FoldableConstant],
+] = {
+    "PIL.AvifImagePlugin": {"DECODE_CODEC_CHOICE": DECODE_CODEC_CHOICE},
+    "PIL.DdsImagePlugin": {"DDS_MAGIC": DDS_MAGIC},
+    "PIL.GifImagePlugin": {"_FORCE_OPTIMIZE": _FORCE_OPTIMIZE},
+    "PIL.GimpGradientFile": {"EPSILON": EPSILON},
+    "PIL.Image": {"WARN_POSSIBLE_FORMATS": WARN_POSSIBLE_FORMATS},
+    "PIL.ImageFile": {"MAXBLOCK": MAXBLOCK},
+    "PIL.ImageFont": {"MAX_STRING_LENGTH": MAX_STRING_LENGTH // 1000},
+}
+
+
+module_names_and_attrs_to_fold: dict[
+    str,
+    dict[str, FoldableConstant],
 ] = {
     IMAGE_VIEWER_NAME: {
         "__debug__": False,
@@ -234,18 +250,16 @@ module_vars_to_fold: dict[
     "PIL": {"SUPPORTED": True, "TYPE_CHECKING": False},
 }
 
-vars_to_fold: dict[
-    str,
-    dict[str, str | bytes | bool | int | float | complex | None],
-] = {
-    "PIL.AvifImagePlugin": {"DECODE_CODEC_CHOICE": DECODE_CODEC_CHOICE},
-    "PIL.DdsImagePlugin": {"DDS_MAGIC": DDS_MAGIC},
-    "PIL.GifImagePlugin": {"_FORCE_OPTIMIZE": _FORCE_OPTIMIZE},
-    "PIL.GimpGradientFile": {"EPSILON": EPSILON},
-    "PIL.Image": {"WARN_POSSIBLE_FORMATS": WARN_POSSIBLE_FORMATS},
-    "PIL.ImageFile": {"MAXBLOCK": MAXBLOCK},
-    "PIL.ImageFont": {"MAX_STRING_LENGTH": MAX_STRING_LENGTH // 1000},
+machine_specific_folds: dict[str, FoldableConstant] = {
+    "os.name": os.name,
+    "sys.byteorder": sys.byteorder,
+    "sys.platform": sys.platform,
 }
+
+machine_specific_call_folds: dict[str, FoldableConstant] = {
+    "os.cpu_count": os.cpu_count()
+}
+
 
 remove_all_re = RegexReplacement(pattern="^.*$", flags=re.DOTALL)
 regex_to_apply_py: dict[str, list[RegexReplacement]] = {

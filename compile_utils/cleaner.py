@@ -28,6 +28,7 @@ from personal_python_ast_optimizer.regex.replace import (
     re_replace_file,
 )
 from personal_python_ast_optimizer.run import optimize_source_and_minify
+from personal_python_ast_optimizer.typing import FoldableConstant
 from personal_simple_tcl_minifier.parse import tcl_minify_folder
 
 from compile_utils.code_to_skip import (
@@ -37,11 +38,11 @@ from compile_utils.code_to_skip import (
     functions_to_always_skip,
     functions_to_skip,
     imports_to_skip,
-    module_vars_to_fold,
+    module_names_and_attrs_to_fold,
+    names_and_attrs_to_fold,
     regex_to_apply_py,
     regex_to_apply_tk,
     unused_imports_to_preserve,
-    vars_to_fold,
 )
 from compile_utils.log import get_logger
 
@@ -92,10 +93,9 @@ def clean_file_and_copy(
             _write_minify_failure(module_import_path, "applying regex", source)
             raise RuntimeError("Failed to apply regex to: " + module_import_path) from e
 
-    all_vars_to_fold: dict[str, str | bytes | bool | int | float | complex | None] = (
-        module_vars_to_fold.get(module_name, {})
-        | vars_to_fold.pop(module_import_path, {})
-    )
+    names_and_attrs: dict[str, FoldableConstant] = module_names_and_attrs_to_fold.get(
+        module_name, {}
+    ) | names_and_attrs_to_fold.pop(module_import_path, {})
 
     try:
         source = optimize_source_and_minify(
@@ -208,7 +208,7 @@ def warn_unused_code_skips(modules_no_warn_unused_skips: list[str]) -> None:
         (classes_to_skip, "skip classes"),
         (imports_to_skip, "skip module imports"),
         (functions_to_skip, "skip functions"),
-        (vars_to_fold, "fold variables"),
+        (names_and_attrs_to_fold, "fold variables"),
         (regex_to_apply_py, "apply regex"),
     ):
         for module in skips:
