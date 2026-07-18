@@ -2,7 +2,7 @@
 
 import os
 import subprocess
-from collections.abc import Iterator
+from collections.abc import Iterable, Iterator
 from glob import glob
 from re import sub
 
@@ -12,38 +12,42 @@ from personal_compile_tools.file_operations import (
     walk_folder,
     write_file_utf8,
 )
-from personal_python_ast_optimizer.parser.config import (
-    OptimizationsConfig,
-    SkipConfig,
-    TokensConfig,
-    TokenTypesConfig,
+from personal_python_ast_optimizer.config import (
+    CodeToSkipConfig,
+    OptimizeConfig,
+    PerfOptimizationsConfig,
+    TokensToFold,
+    TokensToSkip,
+    TokensToSkipConfig,
+    TokenTypesToSkipConfig,
     TypeHintsToSkip,
 )
-from personal_python_ast_optimizer.parser.run import run_unparser
 from personal_python_ast_optimizer.regex.replace import (
-    RegexNoMatchException,
+    RegexNoMatchError,
     RegexReplacement,
     re_replace,
     re_replace_file,
 )
+from personal_python_ast_optimizer.run import optimize_source_and_minify
+from personal_python_ast_optimizer.typing import FoldableConstant
 from personal_simple_tcl_minifier.parse import tcl_minify_folder
 
 from compile_utils.code_to_skip import (
+    assignments_to_skip,
     classes_to_skip,
     decorators_to_always_skip,
+    foldable_constants,
+    from_imports_to_skip,
     functions_to_always_skip,
     functions_to_skip,
-    imports_to_skip,
-    module_vars_to_fold,
-    no_warn_tokens,
+    machine_specific_call_folds_input,
+    machine_specific_folds,
+    module_foldable_constants,
     regex_to_apply_py,
     regex_to_apply_tk,
     unused_imports_to_preserve,
-    vars_to_fold,
-    vars_to_skip,
 )
 from compile_utils.log import get_logger
-from compile_utils.validation import get_required_python_version
 
 SEPARATORS = r"\\/" if os.name == "nt" else r"/"
 
@@ -88,39 +92,31 @@ def clean_file_and_copy(
         )
         try:
             source = re_replace(source, regex_replacements, True)
-        except RegexNoMatchException as e:
+        except RegexNoMatchError as e:
             _write_minify_failure(module_import_path, "applying regex", source)
             raise RuntimeError("Failed to apply regex to: " + module_import_path) from e
 
-    all_vars_to_fold: dict[str, str | bytes | bool | int | float | complex | None] = (
-        module_vars_to_fold.get(module_name, {})
-        | vars_to_fold.pop(module_import_path, {})
-    )
-
     try:
-        source = run_unparser(
+        source = optimize_source_and_minify(
             source,
-            skip_config=SkipConfig(
-                module_import_path,
-                target_python_version=get_required_python_version(),
-                tokens_config=_get_tokens_to_skip_config(module_import_path),
-                token_types_config=TokenTypesConfig(
-                    skip_type_hints=TypeHintsToSkip.ALL,
-                    skip_generics=True,
-                    skip_asserts=True,
+            optimize_config=OptimizeConfig(
+                code_to_skip=CodeToSkipConfig(
+                    unused_imports_to_preserve=unused_imports_to_preserve.pop(
+                        module_import_path, None
+                    ),
                     skip_overload_functions=True,
                 ),
-                optimizations_config=OptimizationsConfig(
-                    vars_to_fold=all_vars_to_fold,
-                    collection_concat_to_unpack=True,
-                    assume_this_machine=assume_this_machine,
-                    simplify_named_tuples=True,
-                    unused_imports_to_preserve=unused_imports_to_preserve.pop(
-                        module_import_path, set()
-                    ),
-                    fold_simple_function_locals=True,
+                tokens_to_skip=_get_tokens_to_skip_config(module_import_path),
+                token_types_to_skip=TokenTypesToSkipConfig(
+                    skip_type_hints=TypeHintsToSkip.ALL,
+                    skip_generics_and_alias=True,
+                    skip_asserts=True,
+                ),
+                perf_optimizations=_get_perf_optimizations_config(
+                    module_name, module_import_path, assume_this_machine
                 ),
             ),
+            file_name=module_import_path,
         )
     except Exception:
         _write_minify_failure(module_import_path, "running ast optimizer", source)
@@ -205,11 +201,11 @@ def warn_unused_code_skips(modules_no_warn_unused_skips: list[str]) -> None:
     that they were unused"""
 
     for skips, friendly_name in (
+        (assignments_to_skip, "skip assignments"),
         (classes_to_skip, "skip classes"),
-        (imports_to_skip, "skip module imports"),
+        (from_imports_to_skip, "skip from imports"),
         (functions_to_skip, "skip functions"),
-        (vars_to_fold, "fold variables"),
-        (vars_to_skip, "skip variables"),
+        (foldable_constants, "fold variables"),
         (regex_to_apply_py, "apply regex"),
     ):
         for module in skips:
@@ -257,22 +253,82 @@ def strip_files(compile_dir: str) -> None:
         _logger.warning("Strip returned non-zero status")
 
 
-def _get_tokens_to_skip_config(module_import_path: str) -> TokensConfig:
-    classes: set[str] = classes_to_skip.pop(module_import_path, set())
-    module_imports: set[str] = imports_to_skip.pop(module_import_path, set())
-    functions: set[str] = functions_to_skip.pop(module_import_path, set())
-    variables: set[str] = vars_to_skip.pop(module_import_path, set())
+def _get_tokens_to_skip_config(module_import_path: str) -> TokensToSkipConfig:
+    _warn_all: list = []
 
-    functions |= functions.union(functions_to_always_skip)
-
-    return TokensConfig(
-        classes_to_skip=classes,
-        decorators_to_skip=decorators_to_always_skip,
-        module_imports_to_skip=module_imports,
-        functions_to_skip=functions,
-        variables_to_skip=variables,
-        no_warn=no_warn_tokens,
+    assignments: set[str] | None = assignments_to_skip.pop(module_import_path, None)
+    assignments_input: TokensToSkip[str] | None = (
+        TokensToSkip(assignments, _warn_all) if assignments is not None else None
     )
+
+    classes: set[str] | None = classes_to_skip.pop(module_import_path, None)
+    classes_input: TokensToSkip[str] | None = (
+        TokensToSkip(classes, _warn_all) if classes is not None else None
+    )
+
+    from_module_imports: set[tuple[str, str]] | None = from_imports_to_skip.pop(
+        module_import_path, None
+    )
+    from_module_imports_input: TokensToSkip[tuple[str, str]] | None = (
+        TokensToSkip(from_module_imports, _warn_all)
+        if from_module_imports is not None
+        else None
+    )
+
+    decorators_input = TokensToSkip(decorators_to_always_skip)
+
+    functions: set[str] | None = functions_to_skip.pop(module_import_path, None)
+    functions = (
+        functions_to_always_skip
+        if functions is None
+        else functions.union(functions_to_always_skip)
+    )
+    functions_input: TokensToSkip[str] | None = (
+        TokensToSkip(functions, functions_to_always_skip)
+        if functions is not None
+        else None
+    )
+
+    return TokensToSkipConfig(
+        assignments_to_skip=assignments_input,
+        classes_to_skip=classes_input,
+        decorators_to_skip=decorators_input,
+        from_imports_to_skip=from_module_imports_input,
+        functions_to_skip=functions_input,
+    )
+
+
+def _get_perf_optimizations_config(
+    module_name: str, module_import_path: str, assume_this_machine: bool
+) -> PerfOptimizationsConfig:
+    config = PerfOptimizationsConfig(  # TODO: Fix names_to_fold
+        fold_simple_function_locals=True,
+        collection_concat_to_unpack=True,
+        simplify_named_tuple=True,
+    )
+
+    names_and_attrs: dict[str, FoldableConstant] = foldable_constants.pop(
+        module_import_path, {}
+    )
+    no_warn_folds: Iterable[str]
+
+    if module_name in module_foldable_constants:
+        module_folds: dict[str, FoldableConstant] = module_foldable_constants[
+            module_name
+        ]
+        names_and_attrs |= module_folds
+        no_warn_folds = module_folds
+    else:
+        no_warn_folds = {}
+
+    if assume_this_machine:
+        config.calls_to_fold = machine_specific_call_folds_input
+        names_and_attrs |= machine_specific_folds
+        no_warn_folds |= machine_specific_folds
+
+    config.name_or_attr_to_fold = TokensToFold(names_and_attrs, no_warn_folds)
+
+    return config
 
 
 def _get_files_in_folder_with_filter(
