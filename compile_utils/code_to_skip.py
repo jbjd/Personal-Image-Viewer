@@ -354,6 +354,13 @@ regex_to_apply_py: dict[str, list[RegexReplacement]] = {
             flags=re.DOTALL,
         ),
     ],
+    "PIL.ImageTk": [
+        RegexReplacement(pattern="image is None:", replacement="False:", count=0),
+        RegexReplacement(
+            pattern=r"isinstance\(image, str\):",
+            replacement="False:",
+        ),
+    ],
     "PIL.JpegImagePlugin": [
         RegexReplacement(  # Remove .mpo support for now
             r"def jpeg_factory\(.*return im",
