@@ -39,7 +39,7 @@ functions_to_always_skip: set[str] = {"logger.debug", "warnings.warn"}
 
 # Module dependent skips
 
-assignemnts_to_skip: dict[str, set[str]] = {
+assignments_to_skip: dict[str, set[str]] = {
     "PIL.DdsImagePlugin": {"format_description"},
     "PIL.GifImagePlugin": {"_Palette", "format_description"},
     "PIL.Image": {
@@ -58,7 +58,7 @@ assignemnts_to_skip: dict[str, set[str]] = {
 }
 
 if os.name == "nt":
-    assignemnts_to_skip["PIL.AvifImagePlugin"] = {"DEFAULT_MAX_THREADS"}
+    assignments_to_skip["PIL.AvifImagePlugin"] = {"DEFAULT_MAX_THREADS"}
 
 classes_to_skip: dict[str, set[str]] = {
     "PIL.Image": {

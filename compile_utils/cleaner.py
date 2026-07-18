@@ -33,7 +33,7 @@ from personal_python_ast_optimizer.typing import FoldableConstant
 from personal_simple_tcl_minifier.parse import tcl_minify_folder
 
 from compile_utils.code_to_skip import (
-    assignemnts_to_skip,
+    assignments_to_skip,
     classes_to_skip,
     decorators_to_always_skip,
     foldable_constants,
@@ -201,7 +201,7 @@ def warn_unused_code_skips(modules_no_warn_unused_skips: list[str]) -> None:
     that they were unused"""
 
     for skips, friendly_name in (
-        (assignemnts_to_skip, "skip assignments"),
+        (assignments_to_skip, "skip assignments"),
         (classes_to_skip, "skip classes"),
         (from_imports_to_skip, "skip from imports"),
         (functions_to_skip, "skip functions"),
@@ -256,9 +256,9 @@ def strip_files(compile_dir: str) -> None:
 def _get_tokens_to_skip_config(module_import_path: str) -> TokensToSkipConfig:
     _warn_all: list = []
 
-    assignemnts: set[str] | None = assignemnts_to_skip.pop(module_import_path, None)
-    assignemnts_input: TokensToSkip[str] | None = (
-        TokensToSkip(assignemnts, _warn_all) if assignemnts is not None else None
+    assignments: set[str] | None = assignments_to_skip.pop(module_import_path, None)
+    assignments_input: TokensToSkip[str] | None = (
+        TokensToSkip(assignments, _warn_all) if assignments is not None else None
     )
 
     classes: set[str] | None = classes_to_skip.pop(module_import_path, None)
@@ -290,7 +290,7 @@ def _get_tokens_to_skip_config(module_import_path: str) -> TokensToSkipConfig:
     )
 
     return TokensToSkipConfig(
-        assignments_to_skip=assignemnts_input,
+        assignments_to_skip=assignments_input,
         classes_to_skip=classes_input,
         decorators_to_skip=decorators_input,
         from_imports_to_skip=from_module_imports_input,
