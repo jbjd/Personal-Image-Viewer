@@ -2,7 +2,7 @@
 
 import os
 import subprocess
-from collections.abc import Iterator
+from collections.abc import Iterable, Iterator
 from glob import glob
 from re import sub
 
@@ -16,6 +16,7 @@ from personal_python_ast_optimizer.config import (
     CodeToSkipConfig,
     OptimizeConfig,
     PerfOptimizationsConfig,
+    TokensToFold,
     TokensToSkip,
     TokensToSkipConfig,
     TokenTypesToSkipConfig,
@@ -35,11 +36,13 @@ from compile_utils.code_to_skip import (
     assignemnts_to_skip,
     classes_to_skip,
     decorators_to_always_skip,
+    foldable_constants,
     functions_to_always_skip,
     functions_to_skip,
     imports_to_skip,
-    module_names_and_attrs_to_fold,
-    names_and_attrs_to_fold,
+    machine_specific_call_folds_input,
+    machine_specific_folds,
+    module_foldable_constants,
     regex_to_apply_py,
     regex_to_apply_tk,
     unused_imports_to_preserve,
@@ -93,10 +96,6 @@ def clean_file_and_copy(
             _write_minify_failure(module_import_path, "applying regex", source)
             raise RuntimeError("Failed to apply regex to: " + module_import_path) from e
 
-    names_and_attrs: dict[str, FoldableConstant] = module_names_and_attrs_to_fold.get(
-        module_name, {}
-    ) | names_and_attrs_to_fold.pop(module_import_path, {})
-
     try:
         source = optimize_source_and_minify(
             source,
@@ -107,16 +106,14 @@ def clean_file_and_copy(
                     ),
                     skip_overload_functions=True,
                 ),
-                tokens_config=_get_tokens_to_skip_config(module_import_path),
-                token_types_config=TokenTypesToSkipConfig(
+                tokens_to_skip=_get_tokens_to_skip_config(module_import_path),
+                token_types_to_skip=TokenTypesToSkipConfig(
                     skip_type_hints=TypeHintsToSkip.ALL,
                     skip_generics_and_alias=True,
                     skip_asserts=True,
                 ),
-                perf_optimizations=PerfOptimizationsConfig(  # TODO: Fix names_to_fold
-                    fold_simple_function_locals=True,
-                    collection_concat_to_unpack=True,
-                    simplify_named_tuples=True,
+                perf_optimizations=_get_perf_optimizations_config(
+                    module_name, module_import_path, assume_this_machine
                 ),
             ),
             file_name=module_import_path,
@@ -208,7 +205,7 @@ def warn_unused_code_skips(modules_no_warn_unused_skips: list[str]) -> None:
         (classes_to_skip, "skip classes"),
         (imports_to_skip, "skip module imports"),
         (functions_to_skip, "skip functions"),
-        (names_and_attrs_to_fold, "fold variables"),
+        (foldable_constants, "fold variables"),
         (regex_to_apply_py, "apply regex"),
     ):
         for module in skips:
@@ -295,6 +292,39 @@ def _get_tokens_to_skip_config(module_import_path: str) -> TokensToSkipConfig:
         functions_to_skip=functions_input,
         module_imports_to_skip=module_imports_input,
     )
+
+
+def _get_perf_optimizations_config(
+    module_name: str, module_import_path: str, assume_this_machine: bool
+) -> None:
+    config = PerfOptimizationsConfig(  # TODO: Fix names_to_fold
+        fold_simple_function_locals=True,
+        collection_concat_to_unpack=True,
+        simplify_named_tuple=True,
+    )
+
+    names_and_attrs: dict[str, FoldableConstant] = foldable_constants.pop(
+        module_import_path, {}
+    )
+    no_warn_folds: Iterable[str]
+
+    if module_name in module_foldable_constants:
+        module_folds: dict[str, FoldableConstant] = module_foldable_constants[
+            module_name
+        ]
+        names_and_attrs |= module_folds
+        no_warn_folds = module_folds
+    else:
+        no_warn_folds = {}
+
+    if assume_this_machine:
+        config.calls_to_fold = machine_specific_call_folds_input
+        names_and_attrs |= machine_specific_folds
+        no_warn_folds |= machine_specific_folds
+
+    config.name_or_attr_to_fold = TokensToFold(names_and_attrs, no_warn_folds)
+
+    return config
 
 
 def _get_files_in_folder_with_filter(

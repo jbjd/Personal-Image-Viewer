@@ -4,6 +4,7 @@ import os
 import re
 import sys
 
+from personal_python_ast_optimizer.config import TokensToFold
 from personal_python_ast_optimizer.regex.replace import RegexReplacement
 from personal_python_ast_optimizer.typing import FoldableConstant
 from PIL.AvifImagePlugin import DECODE_CODEC_CHOICE
@@ -218,7 +219,7 @@ unused_imports_to_preserve: dict[str, set[str]] = {
 }
 
 
-names_and_attrs_to_fold: dict[
+foldable_constants: dict[
     str,
     dict[str, FoldableConstant],
 ] = {
@@ -232,7 +233,7 @@ names_and_attrs_to_fold: dict[
 }
 
 
-module_names_and_attrs_to_fold: dict[
+module_foldable_constants: dict[
     str,
     dict[str, FoldableConstant],
 ] = {
@@ -256,9 +257,7 @@ machine_specific_folds: dict[str, FoldableConstant] = {
     "sys.platform": sys.platform,
 }
 
-machine_specific_call_folds: dict[str, FoldableConstant] = {
-    "os.cpu_count": os.cpu_count()
-}
+machine_specific_call_folds_input = TokensToFold({"os.cpu_count": os.cpu_count()})
 
 
 remove_all_re = RegexReplacement(pattern="^.*$", flags=re.DOTALL)
