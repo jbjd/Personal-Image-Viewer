@@ -38,12 +38,18 @@ functions_to_always_skip: set[str] = {"debug", "warn"}
 assignemnts_to_skip: dict[str, set[str]] = {
     "PIL.DdsImagePlugin": {"format_description"},
     "PIL.GifImagePlugin": {"_Palette", "format_description"},
-    "PIL.Image": {"DecoderInput", "MIME", "_ExifBase", "_fromarray_typemap"},
+    "PIL.Image": {
+        "DecoderInput",
+        "MIME",
+        "_ExifBase",
+        "_fromarray_typemap",
+        "logger",
+    },
     "PIL.ImageDraw": {"Outline"},
     "PIL.ImageFile": {"logger"},
     "PIL.ImagePalette": {"tostring"},
     "PIL.JpegImagePlugin": {"format_description"},
-    "PIL.PngImagePlugin": {"format_description"},
+    "PIL.PngImagePlugin": {"format_description", "logger"},
     "PIL.WebPImagePlugin": {"format_description"},
 }
 
@@ -68,7 +74,7 @@ classes_to_skip: dict[str, set[str]] = {
 functions_to_skip: dict[str, set[str]] = {
     "PIL._binary": {"i8", "si16be", "si16le", "si32be", "si32le"},
     "PIL._util": {"new"},
-    "PIL.AvifImagePlugin": {"get_codec_version", "Image.register_mime"},
+    "PIL.AvifImagePlugin": {"Image.register_mime", "get_codec_version"},
     "PIL.Image": {
         "__arrow_c_array__",
         "__getstate__",
@@ -97,7 +103,6 @@ functions_to_skip: dict[str, set[str]] = {
         "get_child_images",
         "getexif",
         "getextrema",
-        "getLogger",
         "getmodebandnames",
         "getxmp",
         "init",
@@ -192,21 +197,22 @@ functions_to_skip: dict[str, set[str]] = {
     },
     "PIL.ImageSequence": {"all_frames"},
     "PIL.ImageTk": {"_get_image_from_kw", "getimage"},
-    "PIL.GifImagePlugin": {"_save_netpbm", "getheader", "Image.register_mime"},
-    "PIL.JpegImagePlugin": {"_getexif", "_getmp", "load_djpeg", "Image.register_mime"},
+    "PIL.GifImagePlugin": {"Image.register_mime", "_save_netpbm", "getheader"},
+    "PIL.JpegImagePlugin": {"Image.register_mime", "_getexif", "_getmp", "load_djpeg"},
     "PIL.PngImagePlugin": {
+        "Image.register_mime",
         "debug",
         "deprecate",
-        "getLogger",
         "getchunks",
-        "Image.register_mime",
         "verify",
     },
     "PIL.WebPImagePlugin": {"Image.register_mime"},
 }
 
 
-imports_to_skip: dict[str, set[str]] = {"PIL.Image": {"defusedxml"}}
+from_imports_to_skip: dict[str, set[str]] = {
+    "PIL.Image": {("defusedxml", "ElementTree")}
+}
 
 unused_imports_to_preserve: dict[str, set[str]] = {
     f"{IMAGE_VIEWER_NAME}.utils.os": {

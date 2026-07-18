@@ -37,9 +37,9 @@ from compile_utils.code_to_skip import (
     classes_to_skip,
     decorators_to_always_skip,
     foldable_constants,
+    from_imports_to_skip,
     functions_to_always_skip,
     functions_to_skip,
-    imports_to_skip,
     machine_specific_call_folds_input,
     machine_specific_folds,
     module_foldable_constants,
@@ -203,7 +203,7 @@ def warn_unused_code_skips(modules_no_warn_unused_skips: list[str]) -> None:
     for skips, friendly_name in (
         (assignemnts_to_skip, "skip assignments"),
         (classes_to_skip, "skip classes"),
-        (imports_to_skip, "skip module imports"),
+        (from_imports_to_skip, "skip from imports"),
         (functions_to_skip, "skip functions"),
         (foldable_constants, "fold variables"),
         (regex_to_apply_py, "apply regex"),
@@ -266,9 +266,13 @@ def _get_tokens_to_skip_config(module_import_path: str) -> TokensToSkipConfig:
         TokensToSkip(classes, _warn_all) if classes is not None else None
     )
 
-    module_imports: set[str] | None = imports_to_skip.pop(module_import_path, None)
-    module_imports_input: TokensToSkip[str] | None = (
-        TokensToSkip(module_imports, _warn_all) if module_imports is not None else None
+    from_module_imports: set[str] | None = from_imports_to_skip.pop(
+        module_import_path, None
+    )
+    from_module_imports_input: TokensToSkip[str] | None = (
+        TokensToSkip(from_module_imports, _warn_all)
+        if from_module_imports is not None
+        else None
     )
 
     decorators_input = TokensToSkip(decorators_to_always_skip)
@@ -289,8 +293,8 @@ def _get_tokens_to_skip_config(module_import_path: str) -> TokensToSkipConfig:
         assignments_to_skip=assignemnts_input,
         classes_to_skip=classes_input,
         decorators_to_skip=decorators_input,
+        from_imports_to_skip=from_module_imports_input,
         functions_to_skip=functions_input,
-        module_imports_to_skip=module_imports_input,
     )
 
 
