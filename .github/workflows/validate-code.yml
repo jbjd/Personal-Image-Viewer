@@ -26,7 +26,7 @@ jobs:
           make build-all
 
       - name: Validate Config.ini Schema
-        run: python ./config_schema_validator.py
+        run: python -S -s -c "from image_viewer._config import validate_config_file;validate_config_file('image_viewer/config.ini')"
 
       - name: Validate
         run: make validate

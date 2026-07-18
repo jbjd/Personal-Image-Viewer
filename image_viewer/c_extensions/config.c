@@ -5,14 +5,27 @@
 
 const int LINE_MAX_SIZE = 512;
 
+char *Section_to_string(enum Section section) {
+    switch (section) {
+    case CACHE:
+        return "CACHE";
+    case KEYBINDS:
+        return "KEYBINDS";
+    case UI:
+        return "UI";
+    default:
+        return "Unknown";
+    }
+}
+
 /**
  * Checks if `hex` is in format "#123ABC".
  *
- * @param hex Non-null char array to check
+ * @param hex Non-null, null-terminated char array to check
  * @return 1 if valid, 0 if not
  */
 bool is_valid_hex_color(const char *hex) {
-    if (hex[0] != '#') {
+    if (*hex != '#') {
         return 0;
     }
 
@@ -58,22 +71,27 @@ static inline bool is_valid_key(const char *key, size_t key_len, bool prefixed) 
  * @param keybind Non-null char array to check
  * @return 1 if valid, 0 if not
  */
-bool is_valid_keybind(const char *keybind, size_t keybind_len) {
-    if (keybind[0] != '<' || keybind[keybind_len - 1] != '>') {
+bool is_valid_keybind(const char *keybind) {
+    if (*keybind != '<') {
         return false;
     }
 
-    size_t index = 1;
-    keybind_len -= 2;
+    const char *keybind_start = ++keybind;
 
-    bool prefixed = strncmp(keybind + index, "Control-", 8) == 0;
+    size_t keybind_size = strlen(keybind) - 1;
 
-    if (prefixed) {
-        index += 8;
-        keybind_len -= 8;
+    if (keybind[keybind_size] != '>') {
+        return false;
     }
 
-    return is_valid_key(keybind + index, keybind_len, prefixed);
+    bool prefixed = false;
+    if (keybind_size >= 8 && memcmp(keybind_start, "Control-", 8) == 0) {
+        prefixed = true;
+        keybind_start += 8;
+        keybind_size -= 8;
+    }
+
+    return is_valid_key(keybind_start, keybind_size, prefixed);
 }
 
 /**
@@ -104,37 +122,52 @@ end:
 }
 
 /**
- * Checks if `line` is a comment in an ini file.
+ * Checks if `line` is a comment in an ini file or if line is empty.
  *
  * @param line Non-null and stripped char array to check
  * @return 1 if comment, 0 if not
  */
-bool is_comment(const char *line) {
-    return line[0] == ';' && line[0] == '#';
+bool should_ignore_line(const char *line) {
+    return line[0] == '\0' || line[0] == ';' || line[0] == '#';
 }
 
 /**
- * Checks if `line` is an accepted header in the ini used by this program.
+ * Checks if `line` is contains a section value.
  *
  * @param line Non-null and stripped char array to check
- * @return 1 if accepted header, 0 if not
+ * @param line_size size of `line` input
+ * @return 1 if accepted section, 0 if not
  */
-enum Header parse_header(const char *line)
+inline bool is_section(const char *line, size_t line_size) {
+    return line[0] == '[' && line[line_size - 1] == ']';
+}
+
+/**
+ * Checks if `line` is an accepted section in the ini used by this program.
+ * Assumes the brackets have been removed.
+ *
+ * @param line Non-null and stripped char array to check
+ * @param line_size size of `line` input
+ * @return Header enum containing accepted value or Unknown
+ */
+enum Section parse_section(const char *line, size_t line_size)
 {
-    if (line[0] != '[') {
-        goto end;
+    switch (line_size) {
+    case 2:
+        if (memcmp(line, "UI", 2) == 0) {
+            return UI;
+        }
+    case 5:
+        if (memcmp(line, "CACHE", 5) == 0) {
+            return CACHE;
+        }
+    case 8:
+        if (memcmp(line, "KEYBINDS", 8) == 0) {
+            return KEYBINDS;
+        }
     }
 
-    if (strcmp(line + 1, "CACHE]") == 0) {
-        return CACHE;
-    } else if (strcmp(line + 1, "KEYBINDS]") == 0) {
-        return KEYBINDS;
-    } else if (strcmp(line + 1, "UI]") == 0) {
-        return UI;
-    }
-
-end:
-    return NONE;
+    return UNKNOWN;
 }
 
 /**
@@ -145,10 +178,11 @@ end:
  * If line is not a valid key-value pair, line is set to 0 length.
  *
  * @param line Non-null and stripped char array to parse
- * @param line_len strlen of line
+ * @param line_size strlen of line
  * @param value_out where value is written. Must be at least size of `line`
+ * @returns true if successfully parsed line, false if failed to parse and nothing changed
  */
-void parse_line(char *restrict line, int line_len, char *restrict value_out) {
+bool parse_line(char *restrict line, int line_size, char *restrict value_out) {
     size_t index = 0;
 
     for (; line[index] != '\0'; ++index) {
@@ -157,8 +191,7 @@ void parse_line(char *restrict line, int line_len, char *restrict value_out) {
         }
     }
 
-    line[0] = '\0';
-    return;
+    return false;
 
 has_equals:
     size_t value_start = index + 1;
@@ -172,12 +205,13 @@ has_equals:
     line[index + 1] = '\0';
 
     // Handle quotes
-    if ((line[value_start] == '"' || line[value_start] == '\'') && line[value_start] == line[line_len - 1]) {
+    if ((line[value_start] == '"' || line[value_start] == '\'') && line[value_start] == line[line_size - 1]) {
         ++value_start;
-        line[line_len - 1] = '\0';
+        line[line_size - 1] = '\0';
     }
 
-    memcpy(value_out, line + value_start, line_len - value_start + 1);
+    memcpy(value_out, line + value_start, line_size - value_start + 1);
+    return true;
 }
 
 /**
@@ -187,9 +221,10 @@ has_equals:
  * @param min Minimum value returned
  * @param max Maximum value returned
  * @param default_value Returned when non-integer formatted value passed
+ * @param error_out Set to 0 if value is within min/max, 1 if not or contains invalid values
  * @return parsed value as int
  */
-int str_to_int(char *str, int min, int max, int default_value) {
+int str_to_int(char *str, int min, int max, int default_value, int *error_out) {
     int sign;
     if (*str == '-') {
         sign = -1;
@@ -199,6 +234,7 @@ int str_to_int(char *str, int min, int max, int default_value) {
     }
 
     if (*str == '\0') {
+        *error_out = 1;
         return default_value;
     }
 
@@ -206,18 +242,22 @@ int str_to_int(char *str, int min, int max, int default_value) {
 
     for (; *str != '\0'; ++str) {
         if (!isdigit(*str)) {
+            *error_out = 1;
             return default_value;
         }
 
         converted_value = (converted_value * 10) + (sign * (*str - '0'));
 
         if (converted_value < min) {
+            *error_out = 1;
             return min;
         }
         if (converted_value > max) {
+            *error_out = 1;
             return max;
         }
     }
 
+    *error_out = 0;
     return (int)converted_value;
 }
