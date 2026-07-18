@@ -11,7 +11,8 @@
 static PyMemberDef CRawImageView_members[] = {
     {"view", Py_T_OBJECT_EX, offsetof(CRawImageView, view), Py_READONLY, 0},
     {"format", Py_T_OBJECT_EX, offsetof(CRawImageView, format), Py_READONLY, 0},
-    {NULL}};
+    {NULL}
+};
 
 static void CRawImageView_dealloc(CRawImageView *self) {
     free(self->buffer);
@@ -67,7 +68,8 @@ static inline CRawImageView *CRawImageView_New(PyObject *self, PyObject *py_memo
 static PyMemberDef CDecodedJpegView_members[] = {
     {"dimensions", Py_T_OBJECT_EX, offsetof(CDecodedJpegView, dimensions), Py_READONLY, 0},
     {"view", Py_T_OBJECT_EX, offsetof(CDecodedJpegView, view), Py_READONLY, 0},
-    {NULL}};
+    {NULL}
+};
 
 static void CDecodedJpegView_dealloc(CDecodedJpegView *self) {
     free(self->buffer);
@@ -190,7 +192,8 @@ static PyObject *decode_jpeg_downscaled(PyObject *self, PyObject *const *args, P
                      0,
                      scaled_height,
                      pixel_format,
-                     0) < 0)) {
+                     0
+                 ) < 0)) {
         goto error_free_buffer;
     }
 
@@ -212,7 +215,8 @@ error_free_handle:
 static PyMethodDef image_read_methods[] = {
     {"read_image_into_buffer", read_image_into_buffer, METH_O, NULL},
     {"decode_jpeg_downscaled", (PyCFunction)decode_jpeg_downscaled, METH_FASTCALL, NULL},
-    {NULL, NULL, 0, NULL}};
+    {NULL, NULL, 0, NULL}
+};
 
 static int image_read_exec(PyObject *module) {
     if (unlikely(
@@ -225,7 +229,8 @@ static int image_read_exec(PyObject *module) {
             PyModule_AddStringConstant(module, VARIABLE_NAME(GIF), GIF) ||
             PyModule_AddStringConstant(module, VARIABLE_NAME(WEBP), WEBP) ||
             PyModule_AddStringConstant(module, VARIABLE_NAME(AVIF), AVIF) ||
-            PyModule_AddStringConstant(module, VARIABLE_NAME(DDS), DDS))) {
+            PyModule_AddStringConstant(module, VARIABLE_NAME(DDS), DDS)
+        )) {
         Py_DECREF(module);
         return -1;
     }
@@ -239,14 +244,16 @@ static PyModuleDef_Slot image_read_slots[] = {
 #ifdef Py_GIL_DISABLED
     {Py_mod_gil, Py_MOD_GIL_NOT_USED},
 #endif
-    {0, NULL}};
+    {0, NULL}
+};
 
 static struct PyModuleDef image_read_module = {
     PyModuleDef_HEAD_INIT,
     .m_name = "_read",
     .m_size = 0,
     .m_methods = image_read_methods,
-    .m_slots = image_read_slots};
+    .m_slots = image_read_slots
+};
 
 PyMODINIT_FUNC PyInit__read(void) {
     return PyModuleDef_Init(&image_read_module);

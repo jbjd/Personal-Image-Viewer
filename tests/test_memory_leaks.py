@@ -28,9 +28,9 @@ else:
 
 @pytest.mark.memory_leak
 class TestLeaks(MemoryLeakTestCase):
-    warmup_times = 1
+    warmup_times = 2
 
-    times = 10
+    times = 20
 
     retries = 4
 
@@ -49,6 +49,9 @@ class TestLeaks(MemoryLeakTestCase):
 
     def test_parse_config_file_defaults(self) -> None:
         self.execute(parse_config_file, "some bad path")
+
+    def test_validate_config_file(self) -> None:
+        self.execute(parse_config_file, "image_viewer/config.ini")
 
     def test_read_image_into_buffer(self) -> None:
         self.execute(read_image_into_buffer, EXAMPLE_JPEG_PATH)

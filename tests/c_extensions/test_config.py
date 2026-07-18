@@ -20,7 +20,7 @@ from tests.utils._c_bindings import is_valid_hex_color, is_valid_keybind
 
 def test_config_reader() -> None:
     """Should return all specified values"""
-    config: Config = parse_config_file("tests/data/config.ini")
+    config: Config = parse_config_file(_get_test_file_path("config.ini"))
 
     assert config.cache_size == 100
 
@@ -39,7 +39,7 @@ def test_config_reader() -> None:
 
 def test_config_reader_defaults() -> None:
     """Should return all default values"""
-    config: Config = parse_config_file("tests/data/config_empty.ini")
+    config: Config = parse_config_file(_get_test_file_path("config_empty.ini"))
 
     _assert_defaults(config)
 
@@ -57,9 +57,13 @@ def test_config_reader_defaults() -> None:
 
 def test_config_reader_int_fallback() -> None:
     """Should return default when"""
-    config: Config = parse_config_file("tests/data/config_bad_values.ini")
+    config: Config = parse_config_file(_get_test_file_path("config_bad_values.ini"))
 
     _assert_defaults(config)
+
+
+def _get_test_file_path(file_name: str) -> str:
+    return "tests/data/" + file_name
 
 
 @pytest.mark.parametrize(
