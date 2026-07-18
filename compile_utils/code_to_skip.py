@@ -30,8 +30,12 @@ SKIP_ITERATION: int = 0
 
 # Module independent skips
 
-decorators_to_always_skip: set[str] = {"abstractmethod", "override"}
-functions_to_always_skip: set[str] = {"debug", "warn"}
+decorators_to_always_skip: set[str] = {
+    "abc.abstractmethod",
+    "abstractmethod",
+    "override",
+}
+functions_to_always_skip: set[str] = {"logger.debug", "warnings.warn"}
 
 # Module dependent skips
 
@@ -152,7 +156,7 @@ functions_to_skip: dict[str, set[str]] = {
         "rounded_rectangle",
         "shape",
     },
-    "PIL.ImageFile": {"debug", "get_child_images", "get_format_mimetype", "verify"},
+    "PIL.ImageFile": {"get_child_images", "get_format_mimetype", "verify"},
     "PIL.ImageFont": {
         "__getstate__",
         "__setstate__",
@@ -199,13 +203,7 @@ functions_to_skip: dict[str, set[str]] = {
     "PIL.ImageTk": {"_get_image_from_kw", "getimage"},
     "PIL.GifImagePlugin": {"Image.register_mime", "_save_netpbm", "getheader"},
     "PIL.JpegImagePlugin": {"Image.register_mime", "_getexif", "_getmp", "load_djpeg"},
-    "PIL.PngImagePlugin": {
-        "Image.register_mime",
-        "debug",
-        "deprecate",
-        "getchunks",
-        "verify",
-    },
+    "PIL.PngImagePlugin": {"Image.register_mime", "deprecate", "getchunks", "verify"},
     "PIL.WebPImagePlugin": {"Image.register_mime"},
 }
 
