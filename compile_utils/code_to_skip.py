@@ -4,7 +4,9 @@ import os
 import re
 import sys
 
+from personal_python_ast_optimizer.config import TokensToFold
 from personal_python_ast_optimizer.regex.replace import RegexReplacement
+from personal_python_ast_optimizer.typing import FoldableConstant
 from PIL.AvifImagePlugin import DECODE_CODEC_CHOICE
 from PIL.DdsImagePlugin import DDS_MAGIC
 from PIL.GifImagePlugin import _FORCE_OPTIMIZE
@@ -24,20 +26,59 @@ from image_viewer.image.resizer import JPEG_MAX_DIMENSION
 from image_viewer.ui.rename_entry import _ERROR_COLOR, _MAX_ENTRY_SIZE
 
 # Increment when edits to this file or module_dependencies are merged into main
-SKIP_ITERATION: int = 1
+SKIP_ITERATION: int = 0
 
 # Module independent skips
 
-decorators_to_always_skip: set[str] = {"abstractmethod", "override"}
-functions_to_always_skip: set[str] = {"debug", "warn"}
-no_warn_tokens = decorators_to_always_skip | functions_to_always_skip
+decorators_to_always_skip: set[str] = {
+    "abc.abstractmethod",
+    "abstractmethod",
+    "override",
+}
+functions_to_always_skip: set[str] = {"logger.debug", "warnings.warn"}
 
 # Module dependent skips
+
+assignments_to_skip: dict[str, set[str]] = {
+    "PIL.DdsImagePlugin": {"format_description"},
+    "PIL.GifImagePlugin": {"_Palette", "format_description"},
+    "PIL.Image": {
+        "DecoderInput",
+        "MIME",
+        "_ExifBase",
+        "_fromarray_typemap",
+        "logger",
+    },
+    "PIL.ImageDraw": {"Outline"},
+    "PIL.ImageFile": {"logger"},
+    "PIL.ImagePalette": {"tostring"},
+    "PIL.JpegImagePlugin": {"format_description"},
+    "PIL.PngImagePlugin": {"format_description", "logger"},
+    "PIL.WebPImagePlugin": {"format_description"},
+}
+
+if os.name == "nt":
+    assignments_to_skip["PIL.AvifImagePlugin"] = {"DEFAULT_MAX_THREADS"}
+
+classes_to_skip: dict[str, set[str]] = {
+    "PIL.Image": {
+        "Exif",
+        "SupportsArrayInterface",
+        "SupportsArrowArrayInterface",
+        "SupportsGetData",
+    },
+    "PIL.ImageFile": {"Parser", "PyEncoder", "StubHandler", "StubImageFile"},
+    "PIL.ImageFont": {"Axis", "TransposedFont"},
+    "PIL.ImageOps": {"SupportsGetMesh"},
+    "PIL.ImageTk": {"BitmapImage"},
+    "PIL.PngImagePlugin": {"PngInfo"},
+}
+
 
 functions_to_skip: dict[str, set[str]] = {
     "PIL._binary": {"i8", "si16be", "si16le", "si32be", "si32le"},
     "PIL._util": {"new"},
-    "PIL.AvifImagePlugin": {"get_codec_version", "register_mime"},
+    "PIL.AvifImagePlugin": {"Image.register_mime", "get_codec_version"},
     "PIL.Image": {
         "__arrow_c_array__",
         "__getstate__",
@@ -66,7 +107,6 @@ functions_to_skip: dict[str, set[str]] = {
         "get_child_images",
         "getexif",
         "getextrema",
-        "getLogger",
         "getmodebandnames",
         "getxmp",
         "init",
@@ -116,7 +156,7 @@ functions_to_skip: dict[str, set[str]] = {
         "rounded_rectangle",
         "shape",
     },
-    "PIL.ImageFile": {"debug", "get_child_images", "get_format_mimetype", "verify"},
+    "PIL.ImageFile": {"get_child_images", "get_format_mimetype", "verify"},
     "PIL.ImageFont": {
         "__getstate__",
         "__setstate__",
@@ -161,52 +201,16 @@ functions_to_skip: dict[str, set[str]] = {
     },
     "PIL.ImageSequence": {"all_frames"},
     "PIL.ImageTk": {"_get_image_from_kw", "getimage"},
-    "PIL.GifImagePlugin": {"_save_netpbm", "getheader", "register_mime"},
-    "PIL.JpegImagePlugin": {"_getexif", "_getmp", "load_djpeg", "register_mime"},
-    "PIL.PngImagePlugin": {
-        "debug",
-        "deprecate",
-        "getLogger",
-        "getchunks",
-        "register_mime",
-        "verify",
-    },
-    "PIL.WebPImagePlugin": {"register_mime"},
+    "PIL.GifImagePlugin": {"Image.register_mime", "_save_netpbm", "getheader"},
+    "PIL.JpegImagePlugin": {"Image.register_mime", "_getexif", "_getmp", "load_djpeg"},
+    "PIL.PngImagePlugin": {"Image.register_mime", "deprecate", "getchunks", "verify"},
+    "PIL.WebPImagePlugin": {"Image.register_mime"},
 }
 
 
-vars_to_skip: dict[str, set[str]] = {
-    "PIL.DdsImagePlugin": {"format_description"},
-    "PIL.GifImagePlugin": {"_Palette", "format_description"},
-    "PIL.Image": {"DecoderInput", "MIME", "_ExifBase", "_fromarray_typemap"},
-    "PIL.ImageDraw": {"Outline"},
-    "PIL.ImageFile": {"logger"},
-    "PIL.ImagePalette": {"tostring"},
-    "PIL.JpegImagePlugin": {"format_description"},
-    "PIL.PngImagePlugin": {"format_description"},
-    "PIL.WebPImagePlugin": {"format_description"},
+from_imports_to_skip: dict[str, set[tuple[str, str]]] = {
+    "PIL.Image": {("defusedxml", "ElementTree")}
 }
-
-if os.name == "nt":
-    vars_to_skip["PIL.AvifImagePlugin"] = {"DEFAULT_MAX_THREADS"}
-
-
-classes_to_skip: dict[str, set[str]] = {
-    "PIL.Image": {
-        "Exif",
-        "SupportsArrayInterface",
-        "SupportsArrowArrayInterface",
-        "SupportsGetData",
-    },
-    "PIL.ImageFile": {"Parser", "PyEncoder", "StubHandler", "StubImageFile"},
-    "PIL.ImageFont": {"Axis", "TransposedFont"},
-    "PIL.ImageOps": {"SupportsGetMesh"},
-    "PIL.ImageTk": {"BitmapImage"},
-    "PIL.PngImagePlugin": {"PngInfo"},
-}
-
-
-imports_to_skip: dict[str, set[str]] = {"PIL.Image": {"defusedxml"}}
 
 unused_imports_to_preserve: dict[str, set[str]] = {
     f"{IMAGE_VIEWER_NAME}.utils.os": {
@@ -218,9 +222,24 @@ unused_imports_to_preserve: dict[str, set[str]] = {
     }
 }
 
-module_vars_to_fold: dict[
+
+foldable_constants: dict[
     str,
-    dict[str, str | bytes | bool | int | float | complex | None],
+    dict[str, FoldableConstant],
+] = {
+    "PIL.AvifImagePlugin": {"DECODE_CODEC_CHOICE": DECODE_CODEC_CHOICE},
+    "PIL.DdsImagePlugin": {"DDS_MAGIC": DDS_MAGIC},
+    "PIL.GifImagePlugin": {"_FORCE_OPTIMIZE": _FORCE_OPTIMIZE},
+    "PIL.GimpGradientFile": {"EPSILON": EPSILON},
+    "PIL.Image": {"WARN_POSSIBLE_FORMATS": WARN_POSSIBLE_FORMATS},
+    "PIL.ImageFile": {"MAXBLOCK": MAXBLOCK},
+    "PIL.ImageFont": {"MAX_STRING_LENGTH": MAX_STRING_LENGTH // 1000},
+}
+
+
+module_foldable_constants: dict[
+    str,
+    dict[str, FoldableConstant],
 ] = {
     IMAGE_VIEWER_NAME: {
         "__debug__": False,
@@ -236,18 +255,14 @@ module_vars_to_fold: dict[
     "PIL": {"SUPPORTED": True, "TYPE_CHECKING": False},
 }
 
-vars_to_fold: dict[
-    str,
-    dict[str, str | bytes | bool | int | float | complex | None],
-] = {
-    "PIL.AvifImagePlugin": {"DECODE_CODEC_CHOICE": DECODE_CODEC_CHOICE},
-    "PIL.DdsImagePlugin": {"DDS_MAGIC": DDS_MAGIC},
-    "PIL.GifImagePlugin": {"_FORCE_OPTIMIZE": _FORCE_OPTIMIZE},
-    "PIL.GimpGradientFile": {"EPSILON": EPSILON},
-    "PIL.Image": {"WARN_POSSIBLE_FORMATS": WARN_POSSIBLE_FORMATS},
-    "PIL.ImageFile": {"MAXBLOCK": MAXBLOCK},
-    "PIL.ImageFont": {"MAX_STRING_LENGTH": MAX_STRING_LENGTH // 1000},
+machine_specific_folds: dict[str, FoldableConstant] = {
+    "os.name": os.name,
+    "sys.byteorder": sys.byteorder,
+    "sys.platform": sys.platform,
 }
+
+machine_specific_call_folds_input = TokensToFold({"os.cpu_count": os.cpu_count()})
+
 
 remove_all_re = RegexReplacement(pattern="^.*$", flags=re.DOTALL)
 regex_to_apply_py: dict[str, list[RegexReplacement]] = {
@@ -337,6 +352,13 @@ regex_to_apply_py: dict[str, list[RegexReplacement]] = {
             pattern=r"\(NamedTuple\):.*return self\.mode",
             replacement=r"(namedtuple('ModeDescriptor', ['mode','bands','basemode','basetype','typestr'])):\n\tdef __str__(self):return self.mode",  # noqa: E501
             flags=re.DOTALL,
+        ),
+    ],
+    "PIL.ImageTk": [
+        RegexReplacement(pattern="image is None:", replacement="False:", count=0),
+        RegexReplacement(
+            pattern=r"isinstance\(image, str\):",
+            replacement="False:",
         ),
     ],
     "PIL.JpegImagePlugin": [

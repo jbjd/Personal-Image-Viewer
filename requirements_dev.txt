@@ -1,7 +1,7 @@
-clang-format==22.1.5
+clang-format==22.1.8
 codespell==2.4.2
 coverage>=7.14,<8
-mypy==2.1.0
+mypy==2.3.0
 psleak==0.1.5
 pytest==9.1.1
-ruff==0.15.18
+ruff==0.15.22
