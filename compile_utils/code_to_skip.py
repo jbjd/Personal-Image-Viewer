@@ -68,7 +68,7 @@ classes_to_skip: dict[str, set[str]] = {
 functions_to_skip: dict[str, set[str]] = {
     "PIL._binary": {"i8", "si16be", "si16le", "si32be", "si32le"},
     "PIL._util": {"new"},
-    "PIL.AvifImagePlugin": {"get_codec_version", "register_mime"},
+    "PIL.AvifImagePlugin": {"get_codec_version", "Image.register_mime"},
     "PIL.Image": {
         "__arrow_c_array__",
         "__getstate__",
@@ -192,17 +192,17 @@ functions_to_skip: dict[str, set[str]] = {
     },
     "PIL.ImageSequence": {"all_frames"},
     "PIL.ImageTk": {"_get_image_from_kw", "getimage"},
-    "PIL.GifImagePlugin": {"_save_netpbm", "getheader", "register_mime"},
-    "PIL.JpegImagePlugin": {"_getexif", "_getmp", "load_djpeg", "register_mime"},
+    "PIL.GifImagePlugin": {"_save_netpbm", "getheader", "Image.register_mime"},
+    "PIL.JpegImagePlugin": {"_getexif", "_getmp", "load_djpeg", "Image.register_mime"},
     "PIL.PngImagePlugin": {
         "debug",
         "deprecate",
         "getLogger",
         "getchunks",
-        "register_mime",
+        "Image.register_mime",
         "verify",
     },
-    "PIL.WebPImagePlugin": {"register_mime"},
+    "PIL.WebPImagePlugin": {"Image.register_mime"},
 }
 
 
