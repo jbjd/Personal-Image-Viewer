@@ -208,7 +208,7 @@ functions_to_skip: dict[str, set[str]] = {
 }
 
 
-from_imports_to_skip: dict[str, set[str]] = {
+from_imports_to_skip: dict[str, set[tuple[str, str]]] = {
     "PIL.Image": {("defusedxml", "ElementTree")}
 }
 

@@ -266,10 +266,10 @@ def _get_tokens_to_skip_config(module_import_path: str) -> TokensToSkipConfig:
         TokensToSkip(classes, _warn_all) if classes is not None else None
     )
 
-    from_module_imports: set[str] | None = from_imports_to_skip.pop(
+    from_module_imports: set[tuple[str, str]] | None = from_imports_to_skip.pop(
         module_import_path, None
     )
-    from_module_imports_input: TokensToSkip[str] | None = (
+    from_module_imports_input: TokensToSkip[tuple[str, str]] | None = (
         TokensToSkip(from_module_imports, _warn_all)
         if from_module_imports is not None
         else None
@@ -300,7 +300,7 @@ def _get_tokens_to_skip_config(module_import_path: str) -> TokensToSkipConfig:
 
 def _get_perf_optimizations_config(
     module_name: str, module_import_path: str, assume_this_machine: bool
-) -> None:
+) -> PerfOptimizationsConfig:
     config = PerfOptimizationsConfig(  # TODO: Fix names_to_fold
         fold_simple_function_locals=True,
         collection_concat_to_unpack=True,
