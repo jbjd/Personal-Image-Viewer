@@ -110,31 +110,46 @@ end:
  * @return 1 if comment, 0 if not
  */
 bool is_comment(const char *line) {
-    return line[0] == ';' && line[0] == '#';
+    return line[0] == ';' || line[0] == '#';
+}
+
+/**
+ * Checks if `line` is contains a header value.
+ *
+ * @param line Non-null and stripped char array to check
+ * @param line_size size of `line` input
+ * @return 1 if accepted header, 0 if not
+ */
+inline bool is_header(const char *line, size_t line_size) {
+    return line[0] == '[' && line[line_size - 1] == ']';
 }
 
 /**
  * Checks if `line` is an accepted header in the ini used by this program.
+ * Assumes the brackets have been removed.
  *
  * @param line Non-null and stripped char array to check
- * @return 1 if accepted header, 0 if not
+ * @param line_size size of `line` input
+ * @return Header enum containing accepted value or Unknown
  */
-enum Header parse_header(const char *line)
+enum Header parse_header(const char *line, size_t line_size)
 {
-    if (line[0] != '[') {
-        goto end;
+    switch (line_size) {
+    case 2:
+        if (memcmp(line, "UI", 2) == 0) {
+            return UI;
+        }
+    case 5:
+        if (memcmp(line, "CACHE", 5) == 0) {
+            return CACHE;
+        }
+    case 8:
+        if (memcmp(line, "KEYBINDS", 8) == 0) {
+            return KEYBINDS;
+        }
     }
 
-    if (strcmp(line + 1, "CACHE]") == 0) {
-        return CACHE;
-    } else if (strcmp(line + 1, "KEYBINDS]") == 0) {
-        return KEYBINDS;
-    } else if (strcmp(line + 1, "UI]") == 0) {
-        return UI;
-    }
-
-end:
-    return NONE;
+    return UNKNOWN;
 }
 
 /**

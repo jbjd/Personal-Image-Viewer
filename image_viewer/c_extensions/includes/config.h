@@ -6,7 +6,7 @@
 
 enum Header
 {
-    NONE,
+    UNKNOWN,
     CACHE,
     KEYBINDS,
     UI,
@@ -42,7 +42,9 @@ bool is_valid_keybind(const char *keybind, size_t keybind_len);
 
 bool is_comment(const char *line);
 
-enum Header parse_header(const char *line);
+bool is_header(const char *line, size_t line_size);
+
+enum Header parse_header(const char *line, size_t line_size);
 
 void parse_line(char *restrict line, int line_len, char *restrict value_out);
 

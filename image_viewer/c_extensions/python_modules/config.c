@@ -137,9 +137,38 @@ static void _update_config(Config *config, enum Header header, char *key, char *
             config->ui_font = PyUnicode_FromString(value);
         }
         break;
-    case NONE:
+    case UNKNOWN:
         break;
     }
+}
+
+static void _update_config_from_file(FILE *file, Config *config_out) {
+    enum Header header = UNKNOWN;
+
+    char *raw_line = (char *)malloc(LINE_MAX_SIZE * sizeof(char));
+    while (fgets(raw_line, LINE_MAX_SIZE, file)) {
+        char *line = str_strip(raw_line);
+        size_t line_size = strlen(line);
+
+        if (is_comment(line)) {
+            continue;
+        }
+
+        if (is_header(line, line_size)) {
+            header = parse_header(line + 1, line_size - 2);
+            continue;
+        }
+
+        if (header != UNKNOWN) {
+            char value[LINE_MAX_SIZE];
+            parse_line(line, line_size, value);
+            if (value[0] != '\0') {
+                _update_config(config_out, header, line, value);
+            }
+        }
+        // else is value without header, ignore
+    }
+    free(raw_line);
 }
 
 PyObject *parse_config_file(PyObject *self, PyObject *args) {
@@ -155,32 +184,8 @@ PyObject *parse_config_file(PyObject *self, PyObject *args) {
         goto check_defaults;
     }
 
-    enum Header header = NONE;
-
-    char *raw_line = (char *)malloc(LINE_MAX_SIZE * sizeof(char));
-    while (fgets(raw_line, LINE_MAX_SIZE, file)) {
-        char *line = str_strip(raw_line);
-        size_t line_len = strlen(line);
-
-        if (line_len < 3 || is_comment(line)) {
-            continue;
-        }
-
-        enum Header new_header = parse_header(line);
-        if (new_header != NONE) {
-            header = new_header;
-        } else if (header != NONE) {
-            char value[LINE_MAX_SIZE];
-            parse_line(line, line_len, value);
-            if (value[0] != '\0') {
-                _update_config(config, header, line, value);
-            }
-        }
-        // else is value without header, ignore
-    }
-
+    _update_config_from_file(file, config);
     fclose(file);
-    free(raw_line);
 
 check_defaults:
     Config_SetDefaults(self, config);
