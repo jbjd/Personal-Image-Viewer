@@ -8,6 +8,8 @@
 #include <stddef.h>
 #include <stdlib.h>
 
+#define printf_err(...) fprintf(stderr, __VA_ARGS__)
+
 // Config Start
 static PyMemberDef Config_members[] = {
     {"cache_size", Py_T_OBJECT_EX, offsetof(Config, cache_size), Py_READONLY, 0},
@@ -142,7 +144,19 @@ static void _update_config(Config *config, enum Header header, char *key, char *
     }
 }
 
-static void _update_config_from_file(FILE *file, Config *config_out) {
+PyObject *parse_config_file(PyObject *self, PyObject *args) {
+    char *path = NULL;
+    if (unlikely(!PyArg_ParseTuple(args, "|s", &path))) {
+        return NULL;
+    }
+
+    Config *config = Config_New();
+
+    FILE *file = fopen(path == NULL ? "image_viewer/config.ini" : path, "r");
+    if (file == NULL) {
+        goto check_defaults;
+    }
+
     enum Header header = UNKNOWN;
 
     char *raw_line = (char *)malloc(LINE_MAX_SIZE * sizeof(char));
@@ -163,33 +177,59 @@ static void _update_config_from_file(FILE *file, Config *config_out) {
             char value[LINE_MAX_SIZE];
             parse_line(line, line_size, value);
             if (value[0] != '\0') {
-                _update_config(config_out, header, line, value);
+                _update_config(config, header, line, value);
             }
         }
         // else is value without header, ignore
     }
     free(raw_line);
-}
-
-PyObject *parse_config_file(PyObject *self, PyObject *args) {
-    char *path = NULL;
-    if (unlikely(!PyArg_ParseTuple(args, "|s", &path))) {
-        return NULL;
-    }
-
-    Config *config = Config_New();
-
-    FILE *file = fopen(path == NULL ? "image_viewer/config.ini" : path, "r");
-    if (file == NULL) {
-        goto check_defaults;
-    }
-
-    _update_config_from_file(file, config);
     fclose(file);
 
 check_defaults:
     Config_SetDefaults(self, config);
     return (PyObject *)config;
+}
+
+PyObject *validate_config_file(PyObject *self, PyObject *arg) {
+    const char *path = PyUnicode_AsUTF8(arg);
+
+    FILE *file = fopen(path, "r");
+    if (file == NULL) {
+        PyErr_SetNone(PyExc_FileNotFoundError);
+        return NULL;
+    }
+
+    enum Header header = UNKNOWN;
+
+    char *raw_line = (char *)malloc(LINE_MAX_SIZE * sizeof(char));
+    while (fgets(raw_line, LINE_MAX_SIZE, file)) {
+        char *line = str_strip(raw_line);
+        size_t line_size = strlen(line);
+
+        if (is_comment(line)) {
+            continue;
+        }
+
+        if (is_header(line, line_size)) {
+            header = parse_header(line + 1, line_size - 2);
+            if (header == UNKNOWN) {
+                printf_err("Unknown header: %s", line);
+            }
+            continue;
+        }
+
+        if (header != UNKNOWN) {
+            char value[LINE_MAX_SIZE];
+            parse_line(line, line_size, value);
+            if (value[0] != '\0') {
+                // TODO
+            }
+        }
+    }
+    free(raw_line);
+    fclose(file);
+
+    return Py_None;
 }
 
 static PyMethodDef config_methods[] = {

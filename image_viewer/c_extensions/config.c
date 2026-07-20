@@ -160,10 +160,10 @@ enum Header parse_header(const char *line, size_t line_size)
  * If line is not a valid key-value pair, line is set to 0 length.
  *
  * @param line Non-null and stripped char array to parse
- * @param line_len strlen of line
+ * @param line_size strlen of line
  * @param value_out where value is written. Must be at least size of `line`
  */
-void parse_line(char *restrict line, int line_len, char *restrict value_out) {
+void parse_line(char *restrict line, int line_size, char *restrict value_out) {
     size_t index = 0;
 
     for (; line[index] != '\0'; ++index) {
@@ -187,12 +187,12 @@ has_equals:
     line[index + 1] = '\0';
 
     // Handle quotes
-    if ((line[value_start] == '"' || line[value_start] == '\'') && line[value_start] == line[line_len - 1]) {
+    if ((line[value_start] == '"' || line[value_start] == '\'') && line[value_start] == line[line_size - 1]) {
         ++value_start;
-        line[line_len - 1] = '\0';
+        line[line_size - 1] = '\0';
     }
 
-    memcpy(value_out, line + value_start, line_len - value_start + 1);
+    memcpy(value_out, line + value_start, line_size - value_start + 1);
 }
 
 /**
