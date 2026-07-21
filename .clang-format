@@ -16,6 +16,9 @@ AlignConsecutiveMacros : false
 BinPackArguments: false
 BinPackParameters: false
 
+BreakBeforeCloseBracketBracedList: true
+BreakBeforeCloseBracketFunction: true
+BreakBeforeCloseBracketIf: true
 BreakBeforeBraces: Custom
 BraceWrapping:
   AfterClass: true

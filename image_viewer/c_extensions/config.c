@@ -5,6 +5,19 @@
 
 const int LINE_MAX_SIZE = 512;
 
+char *Section_to_string(enum Section section) {
+    switch (section) {
+    case CACHE:
+        return "CACHE";
+    case KEYBINDS:
+        return "KEYBINDS";
+    case UI:
+        return "UI";
+    default:
+        return "Unknown";
+    }
+}
+
 /**
  * Checks if `hex` is in format "#123ABC".
  *
@@ -104,35 +117,35 @@ end:
 }
 
 /**
- * Checks if `line` is a comment in an ini file.
+ * Checks if `line` is a comment in an ini file or if line is empty.
  *
  * @param line Non-null and stripped char array to check
  * @return 1 if comment, 0 if not
  */
-bool is_comment(const char *line) {
-    return line[0] == ';' || line[0] == '#';
+bool should_ignore_line(const char *line) {
+    return line[0] == '\0' || line[0] == ';' || line[0] == '#';
 }
 
 /**
- * Checks if `line` is contains a header value.
+ * Checks if `line` is contains a section value.
  *
  * @param line Non-null and stripped char array to check
  * @param line_size size of `line` input
- * @return 1 if accepted header, 0 if not
+ * @return 1 if accepted section, 0 if not
  */
-inline bool is_header(const char *line, size_t line_size) {
+inline bool is_section(const char *line, size_t line_size) {
     return line[0] == '[' && line[line_size - 1] == ']';
 }
 
 /**
- * Checks if `line` is an accepted header in the ini used by this program.
+ * Checks if `line` is an accepted section in the ini used by this program.
  * Assumes the brackets have been removed.
  *
  * @param line Non-null and stripped char array to check
  * @param line_size size of `line` input
  * @return Header enum containing accepted value or Unknown
  */
-enum Header parse_header(const char *line, size_t line_size)
+enum Section parse_section(const char *line, size_t line_size)
 {
     switch (line_size) {
     case 2:

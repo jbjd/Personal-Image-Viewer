@@ -4,13 +4,15 @@
 #include <Python.h>
 #include <stdbool.h>
 
-enum Header
+enum Section
 {
     UNKNOWN,
     CACHE,
     KEYBINDS,
     UI,
 };
+
+char *Section_to_string(enum Section header);
 
 typedef struct
 {
@@ -40,11 +42,11 @@ bool is_valid_hex_color(const char *hex);
 
 bool is_valid_keybind(const char *keybind, size_t keybind_len);
 
-bool is_comment(const char *line);
+bool should_ignore_line(const char *line);
 
-bool is_header(const char *line, size_t line_size);
+bool is_section(const char *line, size_t line_size);
 
-enum Header parse_header(const char *line, size_t line_size);
+enum Section parse_section(const char *line, size_t line_size);
 
 void parse_line(char *restrict line, int line_len, char *restrict value_out);
 

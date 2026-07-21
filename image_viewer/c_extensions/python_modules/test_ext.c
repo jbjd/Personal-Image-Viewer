@@ -193,7 +193,8 @@ static PyMethodDef c_bindings_methods[] = {
 #ifdef _WIN32
     {"read_clipboard", (PyCFunction)Py_read_clipboard, METH_NOARGS, NULL},
 #endif
-    {NULL, NULL, 0, NULL}};
+    {NULL, NULL, 0, NULL}
+};
 
 static int c_bindings_exec(PyObject *Py_UNUSED(module)) {
     return 0;
@@ -205,14 +206,16 @@ static PyModuleDef_Slot c_bindings_slots[] = {
 #ifdef Py_GIL_DISABLED
     {Py_mod_gil, Py_MOD_GIL_NOT_USED},
 #endif
-    {0, NULL}};
+    {0, NULL}
+};
 
 static struct PyModuleDef c_bindings_module = {
     PyModuleDef_HEAD_INIT,
     .m_name = "_c_bindings",
     .m_size = 0,
     .m_methods = c_bindings_methods,
-    .m_slots = c_bindings_slots};
+    .m_slots = c_bindings_slots
+};
 
 PyMODINIT_FUNC PyInit__c_bindings(void) {
     return PyModuleDef_Init(&c_bindings_module);

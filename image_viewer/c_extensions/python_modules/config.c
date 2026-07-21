@@ -23,7 +23,8 @@ static PyMemberDef Config_members[] = {
     {"kb_undo_most_recent_action", Py_T_OBJECT_EX, offsetof(Config, kb_undo_most_recent_action), Py_READONLY, 0},
     {"ui_background_color", Py_T_OBJECT_EX, offsetof(Config, ui_background_color), Py_READONLY, 0},
     {"ui_font", Py_T_OBJECT_EX, offsetof(Config, ui_font), Py_READONLY, 0},
-    {NULL}};
+    {NULL}
+};
 
 static void Config_dealloc(Config *self) {
     Py_DECREF(self->ui_font);
@@ -103,45 +104,104 @@ static inline void Config_SetDefaults(PyObject *self, Config *config) {
 }
 // Config End
 
-static void _update_config(Config *config, enum Header header, char *key, char *value) {
-    switch (header) {
+static inline void _print_err_bad_value(const char *key, const char *value, const char *reason) {
+    printf_err("Bad value for key \"%s\" value \"%s\": %s\n", key, value, reason);
+}
+
+static inline void _update_config(Config *config, enum Section section, char *key, char *value, bool validate) {
+    switch (section) {
     case CACHE:
         if (strcmp(key, "SIZE") == 0) {
             config->cache_size = PyLong_FromLong(str_to_int(value, 0, 100, DEFAULT_CACHE_SIZE));
+            return;
         }
         break;
     case KEYBINDS:
         if (!is_valid_keybind(value, strlen(value))) {
-            break;
+            return;
         }
         if (strcmp(key, "COPY_TO_CLIPBOARD_AS_BASE64") == 0) {
             config->kb_copy_to_clipboard_as_base64 = PyUnicode_FromString(value);
+            return;
         } else if (strcmp(key, "MOVE_TO_NEW_FILE") == 0) {
             config->kb_move_to_new_file = PyUnicode_FromString(value);
+            return;
         } else if (strcmp(key, "OPTIMIZE_IMAGE") == 0) {
             config->kb_optimize_image = PyUnicode_FromString(value);
+            return;
         } else if (strcmp(key, "REFRESH") == 0) {
             config->kb_refresh = PyUnicode_FromString(value);
+            return;
         } else if (strcmp(key, "RELOAD_IMAGE") == 0) {
             config->kb_reload_image = PyUnicode_FromString(value);
+            return;
         } else if (strcmp(key, "RENAME") == 0) {
             config->kb_rename = PyUnicode_FromString(value);
+            return;
         } else if (strcmp(key, "SHOW_DETAILS") == 0) {
             config->kb_show_details = PyUnicode_FromString(value);
+            return;
         } else if (strcmp(key, "UNDO_MOST_RECENT_ACTION") == 0) {
             config->kb_undo_most_recent_action = PyUnicode_FromString(value);
+            return;
         }
         break;
     case UI:
-        if (strcmp(key, "BACKGROUND_COLOR") == 0 && is_valid_hex_color(value)) {
+        if (strcmp(key, "BACKGROUND_COLOR") == 0) {
+            if (!is_valid_hex_color(value)) {
+                if (validate) {
+                    _print_err_bad_value(key, value, "Not a valid hex color");
+                }
+                return;
+            }
             config->ui_background_color = PyUnicode_FromString(value);
+            return;
         } else if (strcmp(key, "FONT") == 0) {
             config->ui_font = PyUnicode_FromString(value);
+            return;
         }
         break;
     case UNKNOWN:
         break;
     }
+
+    if (validate) {
+        printf_err("Unknown key \"%s\" in section [%s]\n", key, Section_to_string(section));
+    }
+}
+
+static inline void _parse_file_into_config(FILE *file, Config *config, bool validate) {
+    enum Section section = UNKNOWN;
+
+    char *raw_line = (char *)malloc(LINE_MAX_SIZE * sizeof(char));
+    while (fgets(raw_line, LINE_MAX_SIZE, file)) {
+        char *line = str_strip(raw_line);
+
+        if (should_ignore_line(line)) {
+            continue;
+        }
+
+        size_t line_size = strlen(line);
+
+        if (is_section(line, line_size)) {
+            section = parse_section(line + 1, line_size - 2);
+            if (validate && section == UNKNOWN) {
+                printf_err("Unknown section: %s\n", line);
+            }
+            continue;
+        }
+
+        if (section != UNKNOWN) {
+            char value[LINE_MAX_SIZE];
+            parse_line(line, line_size, value);
+            if (value[0] != '\0') {
+                _update_config(config, section, line, value, validate);
+            }
+        } else if (validate) {
+            printf_err("Unexpected line: \"%s\"\n", line);
+        }
+    }
+    free(raw_line);
 }
 
 PyObject *parse_config_file(PyObject *self, PyObject *args) {
@@ -157,32 +217,7 @@ PyObject *parse_config_file(PyObject *self, PyObject *args) {
         goto check_defaults;
     }
 
-    enum Header header = UNKNOWN;
-
-    char *raw_line = (char *)malloc(LINE_MAX_SIZE * sizeof(char));
-    while (fgets(raw_line, LINE_MAX_SIZE, file)) {
-        char *line = str_strip(raw_line);
-        size_t line_size = strlen(line);
-
-        if (is_comment(line)) {
-            continue;
-        }
-
-        if (is_header(line, line_size)) {
-            header = parse_header(line + 1, line_size - 2);
-            continue;
-        }
-
-        if (header != UNKNOWN) {
-            char value[LINE_MAX_SIZE];
-            parse_line(line, line_size, value);
-            if (value[0] != '\0') {
-                _update_config(config, header, line, value);
-            }
-        }
-        // else is value without header, ignore
-    }
-    free(raw_line);
+    _parse_file_into_config(file, config, false);
     fclose(file);
 
 check_defaults:
@@ -199,34 +234,8 @@ PyObject *validate_config_file(PyObject *self, PyObject *arg) {
         return NULL;
     }
 
-    enum Header header = UNKNOWN;
-
-    char *raw_line = (char *)malloc(LINE_MAX_SIZE * sizeof(char));
-    while (fgets(raw_line, LINE_MAX_SIZE, file)) {
-        char *line = str_strip(raw_line);
-        size_t line_size = strlen(line);
-
-        if (is_comment(line)) {
-            continue;
-        }
-
-        if (is_header(line, line_size)) {
-            header = parse_header(line + 1, line_size - 2);
-            if (header == UNKNOWN) {
-                printf_err("Unknown header: %s", line);
-            }
-            continue;
-        }
-
-        if (header != UNKNOWN) {
-            char value[LINE_MAX_SIZE];
-            parse_line(line, line_size, value);
-            if (value[0] != '\0') {
-                // TODO
-            }
-        }
-    }
-    free(raw_line);
+    Config *config = Config_New();
+    _parse_file_into_config(file, config, true);
     fclose(file);
 
     return Py_None;
@@ -234,7 +243,8 @@ PyObject *validate_config_file(PyObject *self, PyObject *arg) {
 
 static PyMethodDef config_methods[] = {
     {"parse_config_file", (PyCFunction)parse_config_file, METH_VARARGS, NULL},
-    {NULL, NULL, 0, NULL}};
+    {NULL, NULL, 0, NULL}
+};
 
 static int config_exec(PyObject *module) {
     if (unlikely(
@@ -250,7 +260,8 @@ static int config_exec(PyObject *module) {
             PyModule_AddStringConstant(module, VARIABLE_NAME(DEFAULT_KB_SHOW_DETAILS), DEFAULT_KB_SHOW_DETAILS) ||
             PyModule_AddStringConstant(module, VARIABLE_NAME(DEFAULT_KB_UNDO_MOST_RECENT_ACTION), DEFAULT_KB_UNDO_MOST_RECENT_ACTION) ||
             PyModule_AddStringConstant(module, VARIABLE_NAME(DEFAULT_UI_BACKGROUND_COLOR), DEFAULT_UI_BACKGROUND_COLOR) ||
-            PyModule_AddStringConstant(module, VARIABLE_NAME(DEFAULT_UI_FONT), DEFAULT_UI_FONT))) {
+            PyModule_AddStringConstant(module, VARIABLE_NAME(DEFAULT_UI_FONT), DEFAULT_UI_FONT)
+        )) {
         Py_DECREF(module);
         return -1;
     }
@@ -264,14 +275,16 @@ static PyModuleDef_Slot config_slots[] = {
 #ifdef Py_GIL_DISABLED
     {Py_mod_gil, Py_MOD_GIL_NOT_USED},
 #endif
-    {0, NULL}};
+    {0, NULL}
+};
 
 static struct PyModuleDef config_module = {
     PyModuleDef_HEAD_INIT,
     .m_name = "_config",
     .m_size = 0,
     .m_methods = config_methods,
-    .m_slots = config_slots};
+    .m_slots = config_slots
+};
 
 PyMODINIT_FUNC PyInit__config(void) {
     return PyModuleDef_Init(&config_module);

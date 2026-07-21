@@ -411,7 +411,8 @@ static PyMethodDef os_methods[] = {
     {"open_with", open_with, METH_O, NULL},
     {"drop_file_to_clipboard", drop_file_to_clipboard, METH_O, NULL},
     {"read_buffer_as_base64_and_copy_to_clipboard", read_buffer_as_base64_and_copy_to_clipboard, METH_O, NULL},
-    {NULL, NULL, 0, NULL}};
+    {NULL, NULL, 0, NULL}
+};
 
 static int os_exec(PyObject *Py_UNUSED(module)) {
     return 0;
@@ -423,14 +424,16 @@ static PyModuleDef_Slot os_slots[] = {
 #ifdef Py_GIL_DISABLED
     {Py_mod_gil, Py_MOD_GIL_NOT_USED},
 #endif
-    {0, NULL}};
+    {0, NULL}
+};
 
 static struct PyModuleDef os_module = {
     PyModuleDef_HEAD_INIT,
     .m_name = "_os_nt",
     .m_size = 0,
     .m_methods = os_methods,
-    .m_slots = os_slots};
+    .m_slots = os_slots
+};
 
 PyMODINIT_FUNC PyInit__os_nt(void) {
     return PyModuleDef_Init(&os_module);
