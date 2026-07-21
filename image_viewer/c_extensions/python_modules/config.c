@@ -242,6 +242,8 @@ PyObject *validate_config_file(PyObject *self, PyObject *arg) {
     _parse_file_into_config(file, config, true);
     fclose(file);
 
+    // TODO: Need to handle missing values (but not when key present but empty)
+
     return Py_None;
 }
 

@@ -46,6 +46,11 @@ class Config:
     ui_font: str
 
 def parse_config_file(file_path: str = "image_viewer/config.ini") -> Config:
-    """Parsed image_viewer/config.ini and returns provided values or default.
+    """Parses a simplified .ini file and returns provided values or default.
+
+    :param file_path: Path to config ini file"""
+
+def validate_config_file(file_path: str) -> Config:
+    """Validates the configs values of `file_path`.
 
     :param file_path: Path to config ini file"""
