@@ -215,9 +215,10 @@ has_equals:
  * @param min Minimum value returned
  * @param max Maximum value returned
  * @param default_value Returned when non-integer formatted value passed
+ * @param error_out Set to 0 if value is within min/max, 1 if not or contains invalid values
  * @return parsed value as int
  */
-int str_to_int(char *str, int min, int max, int default_value) {
+int str_to_int(char *str, int min, int max, int default_value, int *error_out) {
     int sign;
     if (*str == '-') {
         sign = -1;
@@ -227,6 +228,7 @@ int str_to_int(char *str, int min, int max, int default_value) {
     }
 
     if (*str == '\0') {
+        *error_out = 1;
         return default_value;
     }
 
@@ -234,18 +236,22 @@ int str_to_int(char *str, int min, int max, int default_value) {
 
     for (; *str != '\0'; ++str) {
         if (!isdigit(*str)) {
+            *error_out = 1;
             return default_value;
         }
 
         converted_value = (converted_value * 10) + (sign * (*str - '0'));
 
         if (converted_value < min) {
+            *error_out = 1;
             return min;
         }
         if (converted_value > max) {
+            *error_out = 1;
             return max;
         }
     }
 
+    *error_out = 0;
     return (int)converted_value;
 }

@@ -112,49 +112,53 @@ static inline void _update_config(Config *config, enum Section section, char *ke
     switch (section) {
     case CACHE:
         if (strcmp(key, "SIZE") == 0) {
-            config->cache_size = PyLong_FromLong(str_to_int(value, 0, 100, DEFAULT_CACHE_SIZE));
+            int error;
+            const int as_int = str_to_int(value, 0, 100, DEFAULT_CACHE_SIZE, &error);
+            if (validate && error) {
+                _print_err_bad_value(key, value, "Not an interger in range 0-100");
+            }
+            config->cache_size = PyLong_FromLong(as_int);
             return;
         }
         break;
     case KEYBINDS:
-        if (!is_valid_keybind(value, strlen(value))) {
-            return;
-        }
+        PyObject **target = NULL;
+
         if (strcmp(key, "COPY_TO_CLIPBOARD_AS_BASE64") == 0) {
-            config->kb_copy_to_clipboard_as_base64 = PyUnicode_FromString(value);
-            return;
+            target = &config->kb_copy_to_clipboard_as_base64;
         } else if (strcmp(key, "MOVE_TO_NEW_FILE") == 0) {
-            config->kb_move_to_new_file = PyUnicode_FromString(value);
-            return;
+            target = &config->kb_move_to_new_file;
         } else if (strcmp(key, "OPTIMIZE_IMAGE") == 0) {
-            config->kb_optimize_image = PyUnicode_FromString(value);
-            return;
+            target = &config->kb_optimize_image;
         } else if (strcmp(key, "REFRESH") == 0) {
-            config->kb_refresh = PyUnicode_FromString(value);
-            return;
+            target = &config->kb_refresh;
         } else if (strcmp(key, "RELOAD_IMAGE") == 0) {
-            config->kb_reload_image = PyUnicode_FromString(value);
-            return;
+            target = &config->kb_reload_image;
         } else if (strcmp(key, "RENAME") == 0) {
-            config->kb_rename = PyUnicode_FromString(value);
-            return;
+            target = &config->kb_rename;
         } else if (strcmp(key, "SHOW_DETAILS") == 0) {
-            config->kb_show_details = PyUnicode_FromString(value);
-            return;
+            target = &config->kb_show_details;
         } else if (strcmp(key, "UNDO_MOST_RECENT_ACTION") == 0) {
-            config->kb_undo_most_recent_action = PyUnicode_FromString(value);
+            target = &config->kb_undo_most_recent_action;
+        }
+
+        if (target != NULL) {
+            if (is_valid_keybind(value, strlen(value))) {
+                *target = PyUnicode_FromString(value);
+            } else if (validate) {
+                _print_err_bad_value(key, value, "Not a valid keybind");
+            }
             return;
         }
+
         break;
     case UI:
         if (strcmp(key, "BACKGROUND_COLOR") == 0) {
-            if (!is_valid_hex_color(value)) {
-                if (validate) {
-                    _print_err_bad_value(key, value, "Not a valid hex color");
-                }
-                return;
+            if (is_valid_hex_color(value)) {
+                config->ui_background_color = PyUnicode_FromString(value);
+            } else if (validate) {
+                _print_err_bad_value(key, value, "Not a valid hex color");
             }
-            config->ui_background_color = PyUnicode_FromString(value);
             return;
         } else if (strcmp(key, "FONT") == 0) {
             config->ui_font = PyUnicode_FromString(value);
@@ -243,6 +247,7 @@ PyObject *validate_config_file(PyObject *self, PyObject *arg) {
 
 static PyMethodDef config_methods[] = {
     {"parse_config_file", (PyCFunction)parse_config_file, METH_VARARGS, NULL},
+    {"validate_config_file", validate_config_file, METH_O, NULL},
     {NULL, NULL, 0, NULL}
 };
 
