@@ -48,7 +48,7 @@ bool is_section(const char *line, size_t line_size);
 
 enum Section parse_section(const char *line, size_t line_size);
 
-void parse_line(char *restrict line, int line_len, char *restrict value_out);
+bool parse_line(char *restrict line, int line_len, char *restrict value_out);
 
 int str_to_int(char *str, int min, int max, int default_value, int *error_out);
 

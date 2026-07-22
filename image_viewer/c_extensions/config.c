@@ -175,8 +175,9 @@ enum Section parse_section(const char *line, size_t line_size)
  * @param line Non-null and stripped char array to parse
  * @param line_size strlen of line
  * @param value_out where value is written. Must be at least size of `line`
+ * @returns true if successfully parsed line, false if failed to parse and nothing changed
  */
-void parse_line(char *restrict line, int line_size, char *restrict value_out) {
+bool parse_line(char *restrict line, int line_size, char *restrict value_out) {
     size_t index = 0;
 
     for (; line[index] != '\0'; ++index) {
@@ -185,8 +186,7 @@ void parse_line(char *restrict line, int line_size, char *restrict value_out) {
         }
     }
 
-    line[0] = '\0';
-    return;
+    return false;
 
 has_equals:
     size_t value_start = index + 1;
@@ -206,6 +206,7 @@ has_equals:
     }
 
     memcpy(value_out, line + value_start, line_size - value_start + 1);
+    return true;
 }
 
 /**

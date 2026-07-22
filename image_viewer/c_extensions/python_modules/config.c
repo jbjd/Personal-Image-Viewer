@@ -67,7 +67,7 @@ static inline Config *Config_New() {
     return config;
 }
 
-static inline void Config_SetDefaults(PyObject *self, Config *config) {
+static void Config_SetDefaults(PyObject *self, Config *config) {
     if (config->cache_size == NULL) {
         config->cache_size = PyObject_GetAttrString(self, VARIABLE_NAME(DEFAULT_CACHE_SIZE));
     }
@@ -104,25 +104,35 @@ static inline void Config_SetDefaults(PyObject *self, Config *config) {
 }
 // Config End
 
-static inline void _print_err_bad_value(const char *key, const char *value, const char *reason) {
-    printf_err("Bad value for key \"%s\" value \"%s\": %s\n", key, value, reason);
+static void _print_err_unexpected_line(const char *line) {
+    printf_err("Unexpected line: \"%s\"\n", line);
+}
+
+static void _print_err_bad_value(const char *restrict key, const char *restrict value, enum Section section, const char *restrict reason) {
+    printf_err("Bad value for key \"%s\" value \"%s\" in section [%s]: %s\n", key, value, Section_to_string(section), reason);
+}
+
+static void _print_err_bad_key(const char *restrict key, const char *restrict value, enum Section section, const char *restrict reason) {
+    printf_err("Bad key \"%s\" with value \"%s\" in section [%s]: %s\n", key, value, Section_to_string(section), reason);
 }
 
 static inline void _update_config(Config *config, enum Section section, char *key, char *value, bool validate) {
+    PyObject **target = NULL;
+    PyObject *Py_value = NULL;
+
     switch (section) {
     case CACHE:
         if (strcmp(key, "SIZE") == 0) {
             int error;
             const int as_int = str_to_int(value, 0, 100, DEFAULT_CACHE_SIZE, &error);
             if (validate && error) {
-                _print_err_bad_value(key, value, "Not an interger in range 0-100");
+                _print_err_bad_value(key, value, section, "Not an interger in range 0-100");
             }
-            config->cache_size = PyLong_FromLong(as_int);
-            return;
+            target = &config->cache_size;
+            Py_value = PyLong_FromLong(as_int);
         }
         break;
     case KEYBINDS:
-        PyObject **target = NULL;
 
         if (strcmp(key, "COPY_TO_CLIPBOARD_AS_BASE64") == 0) {
             target = &config->kb_copy_to_clipboard_as_base64;
@@ -144,33 +154,42 @@ static inline void _update_config(Config *config, enum Section section, char *ke
 
         if (target != NULL) {
             if (is_valid_keybind(value, strlen(value))) {
-                *target = PyUnicode_FromString(value);
+                Py_value = PyUnicode_FromString(value);
             } else if (validate) {
-                _print_err_bad_value(key, value, "Not a valid keybind");
+                _print_err_bad_value(key, value, section, "Not a valid keybind");
             }
-            return;
         }
 
         break;
     case UI:
         if (strcmp(key, "BACKGROUND_COLOR") == 0) {
+            target = &config->ui_background_color;
             if (is_valid_hex_color(value)) {
-                config->ui_background_color = PyUnicode_FromString(value);
+                Py_value = PyUnicode_FromString(value);
             } else if (validate) {
-                _print_err_bad_value(key, value, "Not a valid hex color");
+                _print_err_bad_value(key, value, section, "Not a valid hex color");
             }
-            return;
         } else if (strcmp(key, "FONT") == 0) {
-            config->ui_font = PyUnicode_FromString(value);
-            return;
+            target = &config->ui_font;
+            Py_value = PyUnicode_FromString(value);
         }
         break;
     case UNKNOWN:
         break;
     }
 
-    if (validate) {
-        printf_err("Unknown key \"%s\" in section [%s]\n", key, Section_to_string(section));
+    if (target != NULL) {
+        if (validate) {
+            if (*target != NULL) {
+                _print_err_bad_key(key, value, section, "Duplicate");
+            }
+            Py_XDECREF(Py_value);
+            *target = Py_None; // Set to something since real value does not matter
+        } else {
+            *target = Py_value;
+        }
+    } else if (validate) {
+        _print_err_bad_key(key, value, section, "Unknown");
     }
 }
 
@@ -197,12 +216,15 @@ static inline void _parse_file_into_config(FILE *file, Config *config, bool vali
 
         if (section != UNKNOWN) {
             char value[LINE_MAX_SIZE];
-            parse_line(line, line_size, value);
-            if (value[0] != '\0') {
+            bool success = parse_line(line, line_size, value);
+            // TODO: Pass empty value to handle duplicate keys being unset
+            if (!success && validate) {
+                _print_err_unexpected_line(line);
+            } else if (value[0] != '\0') {
                 _update_config(config, section, line, value, validate);
             }
         } else if (validate) {
-            printf_err("Unexpected line: \"%s\"\n", line);
+            _print_err_unexpected_line(line);
         }
     }
     free(raw_line);
@@ -229,6 +251,46 @@ check_defaults:
     return (PyObject *)config;
 }
 
+static void _print_err_missing_key(const char *key, enum Section section) {
+    printf_err("Missing key \"%s\" in section [%s]\n", key, Section_to_string(section));
+}
+
+static void _print_err_missing_keys(Config *config) {
+    if (config->cache_size == NULL) {
+        _print_err_missing_key("cache_size", CACHE);
+    }
+    if (config->kb_copy_to_clipboard_as_base64 == NULL) {
+        _print_err_missing_key("kb_copy_to_clipboard_as_base64", KEYBINDS);
+    }
+    if (config->kb_move_to_new_file == NULL) {
+        _print_err_missing_key("kb_move_to_new_file", KEYBINDS);
+    }
+    if (config->kb_optimize_image == NULL) {
+        _print_err_missing_key("kb_optimize_image", KEYBINDS);
+    }
+    if (config->kb_refresh == NULL) {
+        _print_err_missing_key("kb_refresh", KEYBINDS);
+    }
+    if (config->kb_reload_image == NULL) {
+        _print_err_missing_key("kb_reload_image", KEYBINDS);
+    }
+    if (config->kb_rename == NULL) {
+        _print_err_missing_key("kb_rename", KEYBINDS);
+    }
+    if (config->kb_show_details == NULL) {
+        _print_err_missing_key("kb_show_details", KEYBINDS);
+    }
+    if (config->kb_undo_most_recent_action == NULL) {
+        _print_err_missing_key("kb_undo_most_recent_action", KEYBINDS);
+    }
+    if (config->ui_background_color == NULL) {
+        _print_err_missing_key("ui_background_color", UI);
+    }
+    if (config->ui_font == NULL) {
+        _print_err_missing_key("ui_font", UI);
+    }
+}
+
 PyObject *validate_config_file(PyObject *self, PyObject *arg) {
     const char *path = PyUnicode_AsUTF8(arg);
 
@@ -242,7 +304,7 @@ PyObject *validate_config_file(PyObject *self, PyObject *arg) {
     _parse_file_into_config(file, config, true);
     fclose(file);
 
-    // TODO: Need to handle missing values (but not when key present but empty)
+    _print_err_missing_keys(config);
 
     return Py_None;
 }
