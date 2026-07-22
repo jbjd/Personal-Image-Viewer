@@ -27,17 +27,17 @@ static PyMemberDef Config_members[] = {
 };
 
 static void Config_dealloc(Config *self) {
-    Py_XDECREF(self->ui_font);
-    Py_XDECREF(self->cache_size);
-    Py_XDECREF(self->kb_copy_to_clipboard_as_base64);
-    Py_XDECREF(self->kb_move_to_new_file);
-    Py_XDECREF(self->kb_optimize_image);
-    Py_XDECREF(self->kb_refresh);
-    Py_XDECREF(self->kb_reload_image);
-    Py_XDECREF(self->kb_rename);
-    Py_XDECREF(self->kb_show_details);
-    Py_XDECREF(self->kb_undo_most_recent_action);
-    Py_XDECREF(self->ui_background_color);
+    Py_DECREF(self->ui_font);
+    Py_DECREF(self->cache_size);
+    Py_DECREF(self->kb_copy_to_clipboard_as_base64);
+    Py_DECREF(self->kb_move_to_new_file);
+    Py_DECREF(self->kb_optimize_image);
+    Py_DECREF(self->kb_refresh);
+    Py_DECREF(self->kb_reload_image);
+    Py_DECREF(self->kb_rename);
+    Py_DECREF(self->kb_show_details);
+    Py_DECREF(self->kb_undo_most_recent_action);
+    Py_DECREF(self->ui_background_color);
     Py_TYPE(self)->tp_free((PyObject *)self);
 }
 
@@ -136,9 +136,14 @@ static PyObject *Py_from_string_or_null(char *value) {
     return *value == '\0' ? NULL : PyUnicode_FromString(value);
 }
 
-static PyObject *Py_from_string_or_null_with_validation(char *value, bool (*validator)(const char *), bool *valid_out) {
-    *valid_out = validator(value);
-    if (!(*valid_out)) {
+static PyObject *Py_from_string_or_null_with_validation(char *value, bool (*validator)(const char *), int *error_out) {
+    if (*value == '\0') {
+        *error_out = false;
+        return NULL;
+    }
+
+    *error_out = !validator(value);
+    if (*error_out) {
         return NULL;
     }
 
@@ -147,6 +152,7 @@ static PyObject *Py_from_string_or_null_with_validation(char *value, bool (*vali
 
 static PyObject *Py_from_int_or_null(char *value, int *error_out) {
     if (*value == '\0') {
+        *error_out = false;
         return NULL;
     }
     return PyLong_FromLong(str_to_int(value, 0, 100, DEFAULT_CACHE_SIZE, error_out));
@@ -197,9 +203,9 @@ static inline void _update_config(Config *config, enum Section section, char *re
         }
 
         if (target != NULL) {
-            bool valid;
-            Py_value = Py_from_string_or_null_with_validation(value, is_valid_keybind, &valid);
-            if (validate && !valid) {
+            int error;
+            Py_value = Py_from_string_or_null_with_validation(value, is_valid_keybind, &error);
+            if (validate && error) {
                 _print_err_bad_value_str(key, value, section, "Not a valid keybind", default_value);
             }
         }
@@ -208,17 +214,14 @@ static inline void _update_config(Config *config, enum Section section, char *re
     case UI:
         if (strcmp(key, "BACKGROUND_COLOR") == 0) {
             target = &config->ui_background_color;
-            bool valid;
-            Py_value = Py_from_string_or_null_with_validation(value, is_valid_hex_color, &valid);
-            if (validate && !valid) {
+            int error;
+            Py_value = Py_from_string_or_null_with_validation(value, is_valid_hex_color, &error);
+            if (validate && error) {
                 _print_err_bad_value_str(key, value, section, "Not a valid hex color", DEFAULT_UI_BACKGROUND_COLOR);
             }
         } else if (strcmp(key, "FONT") == 0) {
             target = &config->ui_font;
             Py_value = Py_from_string_or_null(value);
-            if (validate && *value == '\0') {
-                _print_err_bad_value_str(key, value, section, "Empty value", DEFAULT_UI_FONT);
-            }
         }
         break;
     case UNKNOWN:
@@ -226,10 +229,15 @@ static inline void _update_config(Config *config, enum Section section, char *re
     }
 
     if (target != NULL) {
-        if (validate && *target != NULL) {
-            _print_err_bad_key(key, value, section, "Duplicate");
+        if (validate) {
+            if (*target != NULL) {
+                _print_err_bad_key(key, value, section, "Duplicate");
+            }
+            Py_XDECREF(Py_value);
+            *target = Py_None;
+        } else {
+            *target = Py_value;
         }
-        *target = Py_value;
     } else if (validate) {
         _print_err_bad_key(key, value, section, "Unknown key for known header");
     }
