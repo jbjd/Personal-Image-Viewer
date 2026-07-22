@@ -27,17 +27,17 @@ static PyMemberDef Config_members[] = {
 };
 
 static void Config_dealloc(Config *self) {
-    Py_DECREF(self->ui_font);
-    Py_DECREF(self->cache_size);
-    Py_DECREF(self->kb_copy_to_clipboard_as_base64);
-    Py_DECREF(self->kb_move_to_new_file);
-    Py_DECREF(self->kb_optimize_image);
-    Py_DECREF(self->kb_refresh);
-    Py_DECREF(self->kb_reload_image);
-    Py_DECREF(self->kb_rename);
-    Py_DECREF(self->kb_show_details);
-    Py_DECREF(self->kb_undo_most_recent_action);
-    Py_DECREF(self->ui_background_color);
+    Py_XDECREF(self->ui_font);
+    Py_XDECREF(self->cache_size);
+    Py_XDECREF(self->kb_copy_to_clipboard_as_base64);
+    Py_XDECREF(self->kb_move_to_new_file);
+    Py_XDECREF(self->kb_optimize_image);
+    Py_XDECREF(self->kb_refresh);
+    Py_XDECREF(self->kb_reload_image);
+    Py_XDECREF(self->kb_rename);
+    Py_XDECREF(self->kb_show_details);
+    Py_XDECREF(self->kb_undo_most_recent_action);
+    Py_XDECREF(self->ui_background_color);
     Py_TYPE(self)->tp_free((PyObject *)self);
 }
 
@@ -108,25 +108,35 @@ static void _print_err_unexpected_line(const char *line) {
     printf_err("Unexpected line: \"%s\"\n", line);
 }
 
-static void _print_err_bad_value(const char *restrict key, const char *restrict value, enum Section section, const char *restrict reason) {
+static void _print_err_bad_value(
+    const char *restrict key, const char *restrict value, enum Section section, const char *restrict reason
+) {
     printf_err("Bad value for key \"%s\" value \"%s\" in section [%s]: %s\n", key, value, Section_to_string(section), reason);
+}
+
+static void _print_err_bad_value_str(
+    const char *restrict key, const char *restrict value, enum Section section, const char *restrict reason, const char *restrict default_value
+) {
+    _print_err_bad_value(key, value, section, reason);
+    printf_err("-> Defaults to: %s\n", default_value);
+}
+
+static void _print_err_bad_value_int(
+    const char *restrict key, const char *restrict value, enum Section section, const char *restrict reason, int default_value
+) {
+    _print_err_bad_value(key, value, section, reason);
+    printf_err("-> Defaults to: %d\n", default_value);
 }
 
 static void _print_err_bad_key(const char *restrict key, const char *restrict value, enum Section section, const char *restrict reason) {
     printf_err("Bad key \"%s\" with value \"%s\" in section [%s]: %s\n", key, value, Section_to_string(section), reason);
 }
 
-// TODO: Error on empty value and print what default would be
 static PyObject *Py_from_string_or_null(char *value) {
     return *value == '\0' ? NULL : PyUnicode_FromString(value);
 }
 
 static PyObject *Py_from_string_or_null_with_validation(char *value, bool (*validator)(const char *), bool *valid_out) {
-    if (*value == '\0') {
-        *valid_out = true;
-        return NULL;
-    }
-
     *valid_out = validator(value);
     if (!(*valid_out)) {
         return NULL;
@@ -153,35 +163,44 @@ static inline void _update_config(Config *config, enum Section section, char *re
             target = &config->cache_size;
             Py_value = Py_from_int_or_null(value, &error);
             if (validate && error) {
-                _print_err_bad_value(key, value, section, "Not an interger in range 0-100");
+                _print_err_bad_value_int(key, value, section, "Not an interger in range 0-100", DEFAULT_CACHE_SIZE);
             }
         }
         break;
     case KEYBINDS:
+        const char *default_value;
 
         if (strcmp(key, "COPY_TO_CLIPBOARD_AS_BASE64") == 0) {
             target = &config->kb_copy_to_clipboard_as_base64;
+            default_value = DEFAULT_KB_COPY_TO_CLIPBOARD_AS_BASE64;
         } else if (strcmp(key, "MOVE_TO_NEW_FILE") == 0) {
             target = &config->kb_move_to_new_file;
+            default_value = DEFAULT_KB_MOVE_TO_NEW_FILE;
         } else if (strcmp(key, "OPTIMIZE_IMAGE") == 0) {
             target = &config->kb_optimize_image;
+            default_value = DEFAULT_KB_OPTIMIZE_IMAGE;
         } else if (strcmp(key, "REFRESH") == 0) {
             target = &config->kb_refresh;
+            default_value = DEFAULT_KB_REFRESH;
         } else if (strcmp(key, "RELOAD_IMAGE") == 0) {
             target = &config->kb_reload_image;
+            default_value = DEFAULT_KB_RELOAD_IMAGE;
         } else if (strcmp(key, "RENAME") == 0) {
             target = &config->kb_rename;
+            default_value = DEFAULT_KB_RENAME;
         } else if (strcmp(key, "SHOW_DETAILS") == 0) {
             target = &config->kb_show_details;
+            default_value = DEFAULT_KB_SHOW_DETAILS;
         } else if (strcmp(key, "UNDO_MOST_RECENT_ACTION") == 0) {
             target = &config->kb_undo_most_recent_action;
+            default_value = DEFAULT_KB_UNDO_MOST_RECENT_ACTION;
         }
 
         if (target != NULL) {
             bool valid;
             Py_value = Py_from_string_or_null_with_validation(value, is_valid_keybind, &valid);
             if (validate && !valid) {
-                _print_err_bad_value(key, value, section, "Not a valid keybind");
+                _print_err_bad_value_str(key, value, section, "Not a valid keybind", default_value);
             }
         }
 
@@ -192,11 +211,14 @@ static inline void _update_config(Config *config, enum Section section, char *re
             bool valid;
             Py_value = Py_from_string_or_null_with_validation(value, is_valid_hex_color, &valid);
             if (validate && !valid) {
-                _print_err_bad_value(key, value, section, "Not a valid hex color");
+                _print_err_bad_value_str(key, value, section, "Not a valid hex color", DEFAULT_UI_BACKGROUND_COLOR);
             }
         } else if (strcmp(key, "FONT") == 0) {
             target = &config->ui_font;
             Py_value = Py_from_string_or_null(value);
+            if (validate && *value == '\0') {
+                _print_err_bad_value_str(key, value, section, "Empty value", DEFAULT_UI_FONT);
+            }
         }
         break;
     case UNKNOWN:
@@ -204,17 +226,12 @@ static inline void _update_config(Config *config, enum Section section, char *re
     }
 
     if (target != NULL) {
-        if (validate) {
-            if (*target != NULL) {
-                _print_err_bad_key(key, value, section, "Duplicate");
-            }
-            Py_XDECREF(Py_value);
-            *target = Py_None; // Set to something since real value does not matter
-        } else {
-            *target = Py_value;
+        if (validate && *target != NULL) {
+            _print_err_bad_key(key, value, section, "Duplicate");
         }
+        *target = Py_value;
     } else if (validate) {
-        _print_err_bad_key(key, value, section, "Unknown");
+        _print_err_bad_key(key, value, section, "Unknown key for known header");
     }
 }
 
@@ -329,6 +346,7 @@ PyObject *validate_config_file(PyObject *self, PyObject *arg) {
     fclose(file);
 
     _print_err_missing_keys(config);
+    Config_dealloc(config);
 
     return Py_None;
 }
