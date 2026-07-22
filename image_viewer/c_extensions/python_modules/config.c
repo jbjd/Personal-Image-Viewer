@@ -116,7 +116,33 @@ static void _print_err_bad_key(const char *restrict key, const char *restrict va
     printf_err("Bad key \"%s\" with value \"%s\" in section [%s]: %s\n", key, value, Section_to_string(section), reason);
 }
 
-static inline void _update_config(Config *config, enum Section section, char *key, char *value, bool validate) {
+// TODO: Error on empty value and print what default would be
+static PyObject *Py_from_string_or_null(char *value) {
+    return *value == '\0' ? NULL : PyUnicode_FromString(value);
+}
+
+static PyObject *Py_from_string_or_null_with_validation(char *value, bool (*validator)(const char *), bool *valid_out) {
+    if (*value == '\0') {
+        *valid_out = true;
+        return NULL;
+    }
+
+    *valid_out = validator(value);
+    if (!(*valid_out)) {
+        return NULL;
+    }
+
+    return PyUnicode_FromString(value);
+}
+
+static PyObject *Py_from_int_or_null(char *value, int *error_out) {
+    if (*value == '\0') {
+        return NULL;
+    }
+    return PyLong_FromLong(str_to_int(value, 0, 100, DEFAULT_CACHE_SIZE, error_out));
+}
+
+static inline void _update_config(Config *config, enum Section section, char *restrict key, char *restrict value, bool validate) {
     PyObject **target = NULL;
     PyObject *Py_value = NULL;
 
@@ -124,12 +150,11 @@ static inline void _update_config(Config *config, enum Section section, char *ke
     case CACHE:
         if (strcmp(key, "SIZE") == 0) {
             int error;
-            const int as_int = str_to_int(value, 0, 100, DEFAULT_CACHE_SIZE, &error);
+            target = &config->cache_size;
+            Py_value = Py_from_int_or_null(value, &error);
             if (validate && error) {
                 _print_err_bad_value(key, value, section, "Not an interger in range 0-100");
             }
-            target = &config->cache_size;
-            Py_value = PyLong_FromLong(as_int);
         }
         break;
     case KEYBINDS:
@@ -153,9 +178,9 @@ static inline void _update_config(Config *config, enum Section section, char *ke
         }
 
         if (target != NULL) {
-            if (is_valid_keybind(value)) {
-                Py_value = PyUnicode_FromString(value);
-            } else if (validate) {
+            bool valid;
+            Py_value = Py_from_string_or_null_with_validation(value, is_valid_keybind, &valid);
+            if (validate && !valid) {
                 _print_err_bad_value(key, value, section, "Not a valid keybind");
             }
         }
@@ -164,14 +189,14 @@ static inline void _update_config(Config *config, enum Section section, char *ke
     case UI:
         if (strcmp(key, "BACKGROUND_COLOR") == 0) {
             target = &config->ui_background_color;
-            if (is_valid_hex_color(value)) {
-                Py_value = PyUnicode_FromString(value);
-            } else if (validate) {
+            bool valid;
+            Py_value = Py_from_string_or_null_with_validation(value, is_valid_hex_color, &valid);
+            if (validate && !valid) {
                 _print_err_bad_value(key, value, section, "Not a valid hex color");
             }
         } else if (strcmp(key, "FONT") == 0) {
             target = &config->ui_font;
-            Py_value = PyUnicode_FromString(value);
+            Py_value = Py_from_string_or_null(value);
         }
         break;
     case UNKNOWN:
@@ -217,10 +242,9 @@ static inline void _parse_file_into_config(FILE *file, Config *config, bool vali
         if (section != UNKNOWN) {
             char value[LINE_MAX_SIZE];
             bool success = parse_line(line, line_size, value);
-            // TODO: Pass empty value to handle duplicate keys being unset
             if (!success && validate) {
                 _print_err_unexpected_line(line);
-            } else if (value[0] != '\0') {
+            } else if (*value != '\0' || validate) {
                 _update_config(config, section, line, value, validate);
             }
         } else if (validate) {
