@@ -153,7 +153,7 @@ static inline void _update_config(Config *config, enum Section section, char *ke
         }
 
         if (target != NULL) {
-            if (is_valid_keybind(value, strlen(value))) {
+            if (is_valid_keybind(value)) {
                 Py_value = PyUnicode_FromString(value);
             } else if (validate) {
                 _print_err_bad_value(key, value, section, "Not a valid keybind");

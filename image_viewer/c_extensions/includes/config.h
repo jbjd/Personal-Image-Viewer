@@ -40,7 +40,7 @@ extern const int LINE_MAX_SIZE;
 
 bool is_valid_hex_color(const char *hex);
 
-bool is_valid_keybind(const char *keybind, size_t keybind_len);
+bool is_valid_keybind(const char *keybind);
 
 bool should_ignore_line(const char *line);
 
@@ -48,7 +48,7 @@ bool is_section(const char *line, size_t line_size);
 
 enum Section parse_section(const char *line, size_t line_size);
 
-bool parse_line(char *restrict line, int line_len, char *restrict value_out);
+bool parse_line(char *restrict line, int line_size, char *restrict value_out);
 
 int str_to_int(char *str, int min, int max, int default_value, int *error_out);
 

@@ -21,11 +21,11 @@ char *Section_to_string(enum Section section) {
 /**
  * Checks if `hex` is in format "#123ABC".
  *
- * @param hex Non-null char array to check
+ * @param hex Non-null, null-terminated char array to check
  * @return 1 if valid, 0 if not
  */
 bool is_valid_hex_color(const char *hex) {
-    if (hex[0] != '#') {
+    if (*hex != '#') {
         return 0;
     }
 
@@ -71,22 +71,27 @@ static inline bool is_valid_key(const char *key, size_t key_len, bool prefixed) 
  * @param keybind Non-null char array to check
  * @return 1 if valid, 0 if not
  */
-bool is_valid_keybind(const char *keybind, size_t keybind_len) {
-    if (keybind[0] != '<' || keybind[keybind_len - 1] != '>') {
+bool is_valid_keybind(const char *keybind) {
+    if (*keybind != '<') {
         return false;
     }
 
-    size_t index = 1;
-    keybind_len -= 2;
+    const char *keybind_start = ++keybind;
 
-    bool prefixed = strncmp(keybind + index, "Control-", 8) == 0;
+    size_t keybind_size = strlen(keybind) - 1;
 
-    if (prefixed) {
-        index += 8;
-        keybind_len -= 8;
+    if (keybind[keybind_size] != '>') {
+        return false;
     }
 
-    return is_valid_key(keybind + index, keybind_len, prefixed);
+    bool prefixed = false;
+    if (keybind_size >= 8 && memcmp(keybind_start, "Control-", 8) == 0) {
+        prefixed = true;
+        keybind_start += 8;
+        keybind_size -= 8;
+    }
+
+    return is_valid_key(keybind_start, keybind_size, prefixed);
 }
 
 /**
