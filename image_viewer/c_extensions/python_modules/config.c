@@ -27,17 +27,17 @@ static PyMemberDef Config_members[] = {
 };
 
 static void Config_dealloc(Config *self) {
-    Py_DECREF(self->ui_font);
-    Py_DECREF(self->cache_size);
-    Py_DECREF(self->kb_copy_to_clipboard_as_base64);
-    Py_DECREF(self->kb_move_to_new_file);
-    Py_DECREF(self->kb_optimize_image);
-    Py_DECREF(self->kb_refresh);
-    Py_DECREF(self->kb_reload_image);
-    Py_DECREF(self->kb_rename);
-    Py_DECREF(self->kb_show_details);
-    Py_DECREF(self->kb_undo_most_recent_action);
-    Py_DECREF(self->ui_background_color);
+    Py_XDECREF(self->ui_font);
+    Py_XDECREF(self->cache_size);
+    Py_XDECREF(self->kb_copy_to_clipboard_as_base64);
+    Py_XDECREF(self->kb_move_to_new_file);
+    Py_XDECREF(self->kb_optimize_image);
+    Py_XDECREF(self->kb_refresh);
+    Py_XDECREF(self->kb_reload_image);
+    Py_XDECREF(self->kb_rename);
+    Py_XDECREF(self->kb_show_details);
+    Py_XDECREF(self->kb_undo_most_recent_action);
+    Py_XDECREF(self->ui_background_color);
     Py_TYPE(self)->tp_free((PyObject *)self);
 }
 
@@ -355,6 +355,8 @@ PyObject *validate_config_file(PyObject *self, PyObject *arg) {
 
     _print_err_missing_keys(config);
     Config_dealloc(config);
+
+    fflush(stderr);
 
     return Py_None;
 }

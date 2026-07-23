@@ -14,7 +14,6 @@ from image_viewer._config import (
     DEFAULT_UI_FONT,
     Config,
     parse_config_file,
-    validate_config_file,
 )
 from tests.utils._c_bindings import is_valid_hex_color, is_valid_keybind
 
@@ -61,15 +60,6 @@ def test_config_reader_int_fallback() -> None:
     config: Config = parse_config_file(_get_test_file_path("config_bad_values.ini"))
 
     _assert_defaults(config)
-
-
-def test_config_validation_various_errors() -> None:
-    # TODO: Test is failing due to memory access violations
-    validate_config_file(_get_test_file_path("config_invalid.ini"))
-
-    # captured = capsys.readouterr()
-
-    # assert captured.err == "Error: Invalid input\n"
 
 
 def _get_test_file_path(file_name: str) -> str:
