@@ -169,7 +169,7 @@ static inline void _update_config(Config *config, enum Section section, char *re
             target = &config->cache_size;
             Py_value = Py_from_int_or_null(value, &error);
             if (validate && error) {
-                _print_err_bad_value_int(key, value, section, "Not an interger in range 0-100", DEFAULT_CACHE_SIZE);
+                _print_err_bad_value_int(key, value, section, "Not an integer in range 0-100", DEFAULT_CACHE_SIZE);
             }
         }
         break;
