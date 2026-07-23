@@ -3,7 +3,7 @@
 #include "includes/config.h"
 
 #include "includes/c_optimizations.h"
-#include "includes/config_defaults.h"
+#include "includes/config_constants.h"
 
 #include <stddef.h>
 #include <stdlib.h>
@@ -164,7 +164,7 @@ static inline void _update_config(Config *config, enum Section section, char *re
 
     switch (section) {
     case CACHE:
-        if (strcmp(key, "SIZE") == 0) {
+        if (strcmp(key, KEY_CACHE_SIZE) == 0) {
             int error;
             target = &config->cache_size;
             Py_value = Py_from_int_or_null(value, &error);
@@ -176,28 +176,28 @@ static inline void _update_config(Config *config, enum Section section, char *re
     case KEYBINDS:
         const char *default_value;
 
-        if (strcmp(key, "COPY_TO_CLIPBOARD_AS_BASE64") == 0) {
+        if (strcmp(key, KEY_KB_COPY_TO_CLIPBOARD_AS_BASE64) == 0) {
             target = &config->kb_copy_to_clipboard_as_base64;
             default_value = DEFAULT_KB_COPY_TO_CLIPBOARD_AS_BASE64;
-        } else if (strcmp(key, "MOVE_TO_NEW_FILE") == 0) {
+        } else if (strcmp(key, KEY_KB_MOVE_TO_NEW_FILE) == 0) {
             target = &config->kb_move_to_new_file;
             default_value = DEFAULT_KB_MOVE_TO_NEW_FILE;
-        } else if (strcmp(key, "OPTIMIZE_IMAGE") == 0) {
+        } else if (strcmp(key, KEY_KB_OPTIMIZE_IMAGE) == 0) {
             target = &config->kb_optimize_image;
             default_value = DEFAULT_KB_OPTIMIZE_IMAGE;
-        } else if (strcmp(key, "REFRESH") == 0) {
+        } else if (strcmp(key, KEY_KB_REFRESH) == 0) {
             target = &config->kb_refresh;
             default_value = DEFAULT_KB_REFRESH;
-        } else if (strcmp(key, "RELOAD_IMAGE") == 0) {
+        } else if (strcmp(key, KEY_KB_RELOAD_IMAGE) == 0) {
             target = &config->kb_reload_image;
             default_value = DEFAULT_KB_RELOAD_IMAGE;
-        } else if (strcmp(key, "RENAME") == 0) {
+        } else if (strcmp(key, KEY_KB_RENAME) == 0) {
             target = &config->kb_rename;
             default_value = DEFAULT_KB_RENAME;
-        } else if (strcmp(key, "SHOW_DETAILS") == 0) {
+        } else if (strcmp(key, KEY_KB_SHOW_DETAILS) == 0) {
             target = &config->kb_show_details;
             default_value = DEFAULT_KB_SHOW_DETAILS;
-        } else if (strcmp(key, "UNDO_MOST_RECENT_ACTION") == 0) {
+        } else if (strcmp(key, KEY_KB_UNDO_MOST_RECENT_ACTION) == 0) {
             target = &config->kb_undo_most_recent_action;
             default_value = DEFAULT_KB_UNDO_MOST_RECENT_ACTION;
         }
@@ -212,14 +212,14 @@ static inline void _update_config(Config *config, enum Section section, char *re
 
         break;
     case UI:
-        if (strcmp(key, "BACKGROUND_COLOR") == 0) {
+        if (strcmp(key, KEY_UI_BACKGROUND_COLOR) == 0) {
             target = &config->ui_background_color;
             int error;
             Py_value = Py_from_string_or_null_with_validation(value, is_valid_hex_color, &error);
             if (validate && error) {
                 _print_err_bad_value_str(key, value, section, "Not a valid hex color", DEFAULT_UI_BACKGROUND_COLOR);
             }
-        } else if (strcmp(key, "FONT") == 0) {
+        } else if (strcmp(key, KEY_UI_FONT) == 0) {
             target = &config->ui_font;
             Py_value = Py_from_string_or_null(value);
         }
@@ -306,37 +306,37 @@ static void _print_err_missing_key(const char *key, enum Section section) {
 
 static void _print_err_missing_keys(Config *config) {
     if (config->cache_size == NULL) {
-        _print_err_missing_key("cache_size", CACHE);
+        _print_err_missing_key(KEY_CACHE_SIZE, CACHE);
     }
     if (config->kb_copy_to_clipboard_as_base64 == NULL) {
-        _print_err_missing_key("kb_copy_to_clipboard_as_base64", KEYBINDS);
+        _print_err_missing_key(KEY_KB_COPY_TO_CLIPBOARD_AS_BASE64, KEYBINDS);
     }
     if (config->kb_move_to_new_file == NULL) {
-        _print_err_missing_key("kb_move_to_new_file", KEYBINDS);
+        _print_err_missing_key(KEY_KB_MOVE_TO_NEW_FILE, KEYBINDS);
     }
     if (config->kb_optimize_image == NULL) {
-        _print_err_missing_key("kb_optimize_image", KEYBINDS);
+        _print_err_missing_key(KEY_KB_OPTIMIZE_IMAGE, KEYBINDS);
     }
     if (config->kb_refresh == NULL) {
-        _print_err_missing_key("kb_refresh", KEYBINDS);
+        _print_err_missing_key(KEY_KB_REFRESH, KEYBINDS);
     }
     if (config->kb_reload_image == NULL) {
-        _print_err_missing_key("kb_reload_image", KEYBINDS);
+        _print_err_missing_key(KEY_KB_RELOAD_IMAGE, KEYBINDS);
     }
     if (config->kb_rename == NULL) {
-        _print_err_missing_key("kb_rename", KEYBINDS);
+        _print_err_missing_key(KEY_KB_RENAME, KEYBINDS);
     }
     if (config->kb_show_details == NULL) {
-        _print_err_missing_key("kb_show_details", KEYBINDS);
+        _print_err_missing_key(KEY_KB_SHOW_DETAILS, KEYBINDS);
     }
     if (config->kb_undo_most_recent_action == NULL) {
-        _print_err_missing_key("kb_undo_most_recent_action", KEYBINDS);
+        _print_err_missing_key(KEY_KB_UNDO_MOST_RECENT_ACTION, KEYBINDS);
     }
     if (config->ui_background_color == NULL) {
-        _print_err_missing_key("ui_background_color", UI);
+        _print_err_missing_key(KEY_UI_BACKGROUND_COLOR, UI);
     }
     if (config->ui_font == NULL) {
-        _print_err_missing_key("ui_font", UI);
+        _print_err_missing_key(KEY_UI_FONT, UI);
     }
 }
 
