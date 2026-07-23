@@ -40,7 +40,7 @@ static PyObject *Py_is_valid_keybind(PyObject *self, PyObject *arg) {
         return NULL;
     }
 
-    return PyBool_FromLong(is_valid_keybind(keybind, (size_t)size));
+    return PyBool_FromLong(is_valid_keybind(keybind));
 }
 
 #ifdef _WIN32
