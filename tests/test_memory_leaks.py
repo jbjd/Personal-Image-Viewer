@@ -26,7 +26,6 @@ else:
     read_buffer_as_base64_and_copy_to_clipboard = lambda _: ""
 
 
-@pytest.mark.memory_leak
 class TestLeaks(MemoryLeakTestCase):
     warmup_times = 2
 

@@ -81,11 +81,11 @@ override PYTEST_DISABLE_PLUGIN_AUTOLOAD=1
 export PYTEST_DISABLE_PLUGIN_AUTOLOAD
 
 test:
-	$(PYTHON_EXECUTABLE) -m coverage run --source=image_viewer -m pytest -m "not memory_leak"
+	$(PYTHON_EXECUTABLE) -m coverage run --source=image_viewer -m pytest --ignore=tests/test_memory_leaks.py
 	@coverage report -m
 
 override PYTHONUNBUFFERED=1
 export PYTHONUNBUFFERED
 
 test-memory-leak:
-	$(PYTHON_EXECUTABLE) -m pytest -m "memory_leak"
+	$(PYTHON_EXECUTABLE) -m pytest tests/test_memory_leaks.py

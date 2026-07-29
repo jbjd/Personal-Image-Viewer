@@ -50,7 +50,7 @@ enum Section parse_section(const char *line, size_t line_size);
 
 bool parse_line(char *restrict line, int line_size, char *restrict value_out);
 
-int str_to_int(char *str, int min, int max, int default_value, int *error_out);
+int str_to_int(const char *str, int min, int max, int default_value, int *error_out);
 
 char *str_strip(char *str);
 
