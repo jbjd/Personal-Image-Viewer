@@ -58,7 +58,7 @@ _logger = get_logger()
 
 
 def _write_minify_failure(file_name: str, context_message: str, source: str) -> None:
-    _logger.exception(
+    _logger.error(
         "Error when %s on file %s, writing source to %s",
         context_message,
         file_name,
@@ -304,6 +304,7 @@ def _get_perf_optimizations_config(
     config = PerfOptimizationsConfig(  # TODO: Fix names_to_fold
         fold_simple_function_locals=True,
         collection_concat_to_unpack=True,
+        simplify_conditional_bool_return=True,
         simplify_named_tuple=True,
     )
 

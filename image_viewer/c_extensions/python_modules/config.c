@@ -132,11 +132,11 @@ static void _print_err_bad_key(const char *restrict key, const char *restrict va
     printf_err("Bad key \"%s\" with value \"%s\" in section [%s]: %s\n", key, value, Section_to_string(section), reason);
 }
 
-static PyObject *Py_from_string_or_null(char *value) {
+static PyObject *Py_from_string_or_null(const char *value) {
     return *value == '\0' ? NULL : PyUnicode_FromString(value);
 }
 
-static PyObject *Py_from_string_or_null_with_validation(char *value, bool (*validator)(const char *), int *error_out) {
+static PyObject *Py_from_string_or_null_with_validation(const char *value, bool (*validator)(const char *), int *error_out) {
     if (*value == '\0') {
         *error_out = false;
         return NULL;
@@ -150,7 +150,7 @@ static PyObject *Py_from_string_or_null_with_validation(char *value, bool (*vali
     return PyUnicode_FromString(value);
 }
 
-static PyObject *Py_from_int_or_null(char *value, int *error_out) {
+static PyObject *Py_from_int_or_null(const char *value, int *error_out) {
     if (*value == '\0') {
         *error_out = false;
         return NULL;

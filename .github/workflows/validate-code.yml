@@ -5,11 +5,21 @@ on:
     branches:
       - main
   workflow_dispatch:
+    inputs:
+      runs_on:
+        type: choice
+        options:
+          - ubuntu-latest
+          - windows-latest
+      run_memory_leak_test:
+        required: true
+        type: boolean
+        default: false
 
 jobs:
   validate:
     name: Validate Code
-    runs-on: ubuntu-latest
+    runs-on: ${{ inputs.runs_on || 'ubuntu-latest' }}
     steps:
       - name: Checkout
         uses: actions/checkout@v6
@@ -40,4 +50,9 @@ jobs:
           export DISPLAY=:99
           Xvfb :99 &
           make test
+
+      - name: Memory Leak Unit Tests
+        if: ${{ inputs.run_memory_leak_test == true }}
+        run: |
+          pip install -r requirements_memory_leak.txt
           make test-memory-leak

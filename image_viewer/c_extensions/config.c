@@ -224,7 +224,7 @@ has_equals:
  * @param error_out Set to 0 if value is within min/max, 1 if not or contains invalid values
  * @return parsed value as int
  */
-int str_to_int(char *str, int min, int max, int default_value, int *error_out) {
+int str_to_int(const char *str, int min, int max, int default_value, int *error_out) {
     int sign;
     if (*str == '-') {
         sign = -1;
