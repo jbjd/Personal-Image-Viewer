@@ -34,10 +34,11 @@ else
 endif
 
 OPTIMIZATION_FLAG = -O3
-EXTRA_C_FLAGS = -march=native -mtune=native -flto -ffinite-math-only -fgcse-las -fgcse-sm -fisolate-erroneous-paths-attribute -fno-signed-zeros -frename-registers -fsched-pressure -s -Wall -Werror
+EXTRA_C_FLAGS = -Wall -Werror
+override NATIVE_FLAGS := -march=native -mtune=native
 override C_SOURCE = image_viewer/c_extensions
 override C_PYTHON_MODULES = $(C_SOURCE)/python_modules
-override C_FLAGS = -L$(PYTHON_LIBS) -I$(PYTHON_INCLUDES) -l$(PYTHON_DLL) $(OPTIMIZATION_FLAG) $(EXTRA_C_FLAGS) -shared $(OS_FLAGS)
+override C_FLAGS = -L$(PYTHON_LIBS) -I$(PYTHON_INCLUDES) -l$(PYTHON_DLL) $(OPTIMIZATION_FLAG) $(NATIVE_FLAGS) -shared $(OS_FLAGS) -flto -ffinite-math-only -fgcse-las -fgcse-sm -fisolate-erroneous-paths-attribute -fno-signed-zeros -frename-registers -fsched-pressure -s $(EXTRA_C_FLAGS)
 
 build-config:
 	gcc $(C_PYTHON_MODULES)/config.c $(C_SOURCE)/config.c $(C_FLAGS) -I$(C_SOURCE) -o image_viewer/_config.$(COMPILED_EXT)
@@ -55,14 +56,23 @@ build-test:
 
 build-all: build-config build-image-read build-util-os-nt build-test
 
+build-all-dist: NATIVE_FLAGS=
+build-all-dist: build-all
+
 install:
-	$(PYTHON_EXECUTABLE) -OO compile.py --assume-this-machine --extra-checks --strip
+	$(PYTHON_EXECUTABLE) -OO compile.py --extra-checks --strip
+
+install-dist:
+	$(PYTHON_EXECUTABLE) -OO compile.py --extra-checks --strip --distribution
+
+bundle-dist:
+	$(PYTHON_EXECUTABLE) -OO compile.py --extra-checks --strip --distribution --install-path ./dist
 
 install-debug:
-	$(PYTHON_EXECUTABLE) -OO compile.py --assume-this-machine --extra-checks --strip --debug
+	$(PYTHON_EXECUTABLE) -OO compile.py --extra-checks --strip --debug
 
 install-debug-setup:
-	$(PYTHON_EXECUTABLE) -OO compile.py --assume-this-machine --extra-checks --debug --skip-nuitka
+	$(PYTHON_EXECUTABLE) -OO compile.py --extra-checks --debug --skip-nuitka
 
 override C_AND_H_FILES = $(shell $(PYTHON_EXECUTABLE) -sSc "from glob import glob;print(' '.join(glob('image_viewer/**/*.[ch]',recursive=True)))")
 

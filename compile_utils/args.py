@@ -1,7 +1,6 @@
 """Argument definitions and parsing."""
 
 import os
-import shutil
 from argparse import ArgumentParser, Namespace
 from enum import StrEnum
 
@@ -47,7 +46,6 @@ class NuitkaArgs(StrEnum):
 class PivArgs(StrEnum):
     INSTALL_PATH = "--install-path"
     REPORT = "--report"
-    ASSUME_THIS_MACHINE = "--assume-this-machine"
     STRIP = "--strip"
     DISTRIBUTION = "--distribution"
     QUIET = "--quiet"
@@ -69,7 +67,6 @@ class CompileNamespace(Namespace):
     install_path: str
     report: bool
     debug: bool
-    assume_this_machine: bool
     strip: bool
     distribution: bool
     skip_nuitka: bool
@@ -101,17 +98,11 @@ class CompileArgumentParser:
         )
 
         self.add_argument(
-            PivArgs.INSTALL_PATH, "Path to install to", default_install_path
+            PivArgs.INSTALL_PATH, "Path to install to.", default_install_path
         )
         self.add_argument(
             PivArgs.REPORT,
             f"Adds {NuitkaArgs.REPORT.with_value(REPORT_FILE)} flag to nuitka.",
-        )
-        self.add_argument(
-            PivArgs.ASSUME_THIS_MACHINE,
-            "Allows optimizations for this specific machine. "
-            "Enables CFLAGS -march=native and -mtune=native and "
-            "removal of some code that will be unused on this machine.",
         )
         self.add_argument(
             PivArgs.STRIP,
@@ -120,7 +111,9 @@ class CompileArgumentParser:
         )
         self.add_argument(
             PivArgs.DISTRIBUTION,
-            "Includes licenses. Also includes needed dlls if on Windows.",
+            "Includes licenses. Remove CFLAGS -march=native and -mtune=native and "
+            "disables optimization of machine general python code into machine "
+            "specific code. If on Windows, also includes needed dlls.",
         )
         self.add_argument(
             PivArgs.QUIET, "Adds --quiet flag to nuitka.", is_development=True
@@ -130,14 +123,12 @@ class CompileArgumentParser:
         )
         self.add_argument(
             PivArgs.EXTRA_CHECKS,
-            "Adds extra checks during build. Only useful for development"
-            "Should be unnecessary unless doing development.",
+            "Adds extra checks during build.",
             is_development=True,
         )
         self.add_argument(
             PivArgs.NO_CACHE,
-            "Removes cached parts of build process. "
-            "Should be unnecessary unless doing development.",
+            "Removes cached parts of build process.",
             is_development=True,
         )
         self.add_argument(
@@ -155,9 +146,8 @@ class CompileArgumentParser:
             PivArgs.SKIP_NUITKA,
             (
                 "Skips running nuitka so no compilation takes place. "
-                "Only creates the tmp folder as it would be before compilation."
-                "Assumes --no-cleanup however nuitka's build folder is never made "
-                "so only the tmp folder is not cleaned up."
+                "Only creates the tmp folder as it would be before compilation. "
+                f"Disables {PivArgs.NO_CACHE} if also passed."
             ),
             is_development=True,
         )
@@ -205,6 +195,7 @@ class CompileArgumentParser:
         nuitka_args: list[str] = [
             f"{PivPluginArgs.PIV_ARGS}={args}",
             NuitkaArgs.STANDALONE,
+            NuitkaArgs.ENABLE_PLUGIN.with_value("tk-inter"),
         ]
 
         # PivPlugin args
@@ -231,22 +222,14 @@ class CompileArgumentParser:
         elif args.verbose:
             nuitka_args.append(NuitkaArgs.VERBOSE)
 
-        nuitka_args.append(NuitkaArgs.ENABLE_PLUGIN.with_value("tk-inter"))
-
         icon_relative_path: str = (
             "icon/icon.ico" if os.name == "nt" else "icon/icon.png"
         )
         icon_path: str = os.path.join(working_folder, icon_relative_path)
 
-        nuitka_args.append(
-            NuitkaArgs.INCLUDE_DATA_FILES.with_value(
-                f"{icon_path}={icon_relative_path}"
-            )
-        )
+        nuitka_args.append(self._get_data_file_arg(icon_path, icon_relative_path))
         nuitka_args += [
-            NuitkaArgs.INCLUDE_DATA_FILES.with_value(
-                f"{os.path.join(working_folder, f)}={f}"
-            )
+            self._get_data_file_arg(os.path.join(working_folder, f), f)
             for f in files_to_include
         ]
 
@@ -268,48 +251,40 @@ class CompileArgumentParser:
         ]
 
         if os.name == "nt":
+            console_node: str = ConsoleMode.FORCE if args.debug else ConsoleMode.DISABLE
             nuitka_args += [
                 NuitkaArgs.MINGW64,
                 NuitkaArgs.WINDOWS_ICON_FROM_ICO.with_value(icon_path),
+                NuitkaArgs.WINDOWS_CONSOLE_MODE.with_value(console_node),
             ]
-
-            nuitka_args.append(
-                NuitkaArgs.WINDOWS_CONSOLE_MODE.with_value(
-                    ConsoleMode.FORCE if args.debug else ConsoleMode.DISABLE
-                )
-            )
 
             if args.distribution:
                 nuitka_args += [
-                    NuitkaArgs.INCLUDE_DATA_FILES.with_value(
-                        self.get_full_path_to_dll(file)
-                    )
-                    + f"={file}"
+                    self._get_data_file_arg(self._get_full_path_to_file(file), file)
                     for file in (dlls_to_include)
                 ]
 
         return args, nuitka_args
 
     @staticmethod
-    def get_full_path_to_dll(dll_file: str) -> str:
-        """Finds required dll on $PATH.
+    def _get_data_file_arg(abs_path: str, rel_path: str) -> str:
+        return NuitkaArgs.INCLUDE_DATA_FILES.with_value(f"{abs_path}={rel_path}")
 
-        :param dll_file: File name to search for.
-        :returns: Full path to dll file."""
+    @staticmethod
+    def _get_full_path_to_file(file: str) -> str:
+        """Finds required file on $PATH.
 
-        # Stupid hack since shutil uses this os env to filter its results
-        old_path_ext: str | None = os.environ.get("PATHEXT")
-        os.environ["PATHEXT"] = ".dll"
+        :param file: File name to search for.
+        :returns: Full path to file."""
 
-        try:
-            which: str | None = shutil.which(dll_file)
-            if which is None:
-                raise InvalidEnvironmentError(f"Can't find {dll_file} on $PATH")
+        path_env: str = os.environ.get("PATH", "")
 
-        finally:
-            if old_path_ext is not None:
-                os.environ["PATHEXT"] = old_path_ext
-            else:
-                del os.environ["PATHEXT"]
+        for folder in path_env.split(os.pathsep):
+            if not folder:
+                continue
 
-        return which
+            target: str = os.path.join(folder, file)
+            if os.path.isfile(target):
+                return target
+
+        raise InvalidEnvironmentError(f"Can't find {file} on $PATH")

@@ -68,6 +68,7 @@ target_file_path: str = os.path.join(src_folder_path, TARGET_FILE)
 code_folder_path: str = os.path.join(working_folder, IMAGE_VIEWER_NAME)
 nuitka_dist_path: str = os.path.join(build_folder_path, TARGET_MODULE + ".dist")
 
+assume_this_machine: bool = not args.distribution
 
 _logger = get_logger()
 
@@ -83,18 +84,18 @@ try:
         target_file_path,
         IMAGE_VIEWER_NAME,
         f"{IMAGE_VIEWER_NAME}.{TARGET_MODULE}",
-        args.assume_this_machine,
+        assume_this_machine,
     )
     delete_folder(os.path.join(src_folder_path, IMAGE_VIEWER_NAME))
     clean_module_and_copy(
-        code_folder_path, src_folder_path, IMAGE_VIEWER_NAME, args.assume_this_machine
+        code_folder_path, src_folder_path, IMAGE_VIEWER_NAME, assume_this_machine
     )
 
     modules_no_warn_unused_skips: list[str] = []
 
     minifier_version: str = get_module_version("personal_python_ast_optimizer")
     custom_version_flags: str = (
-        f"assume_this_machine={args.assume_this_machine}\n"
+        f"assume_this_machine={assume_this_machine}\n"
         f"minifier_version={minifier_version}"
     )
     for module in module_dependencies:
@@ -140,7 +141,7 @@ try:
                 os.path.join(src_folder_path, module_file),
                 module_import_name,
                 module_import_name,
-                args.assume_this_machine,
+                assume_this_machine,
             )
         else:
             delete_folder(custom_module_path)
@@ -148,7 +149,7 @@ try:
                 module_folder_path,
                 src_folder_path,
                 module_import_name,
-                args.assume_this_machine,
+                assume_this_machine,
                 sub_modules_to_skip,
             )
 
@@ -169,7 +170,7 @@ try:
     delete_folder(nuitka_dist_path)
 
     process: Popen = start_nuitka_compilation(
-        target_file_path, nuitka_args, build_folder_path, args.assume_this_machine
+        target_file_path, nuitka_args, build_folder_path, assume_this_machine
     )
 
     _logger.info("Waiting for nuitka compilation...\n")
@@ -201,7 +202,7 @@ try:
             time.sleep(2)
             os.rename(nuitka_dist_path, install_path)
 finally:
-    if args.no_cache:
+    if args.no_cache and not args.skip_nuitka:
         delete_folder(build_folder_path)
 
 _logger.warning("\nFinished")
