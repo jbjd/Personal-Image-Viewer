@@ -41,9 +41,15 @@ Feel free to take this code and edit it however you like. Please don't use it fo
 
 1. Complete steps in [Instructions To Get It Running](#instructions-to-get-it-running)
 
-1. Run 'pip install -r requirements_compile.txt' to install python dependencies for compilation.
+1. Run 'pip install -r requirements_compile.txt' to install python dependencies for compilation. You will see warnings when compiling if the versions you are using are not what is expected. If you don't want to conflict with global installations of dependencies, use a virtual env.
 
-1. Run 'make install' (recommended) or 'python compile.py' as root. On Linux use sudo or on Windows run your terminal as admin. This will compile the code and install it into a default directory. You can edit the install path, and many other things, with various flags you can pass to compile.py. Run 'python compile.py -h' to list them.
+1. With root privilege, run 'make install' (recommended) or 'python compile.py' if you want to set flags yourself, run 'python compile.py -h' to list all of them. This will compile the code and install it into the default location. You can edit the install path, and many other things, with various flags you can pass to compile.py.
+
+### Instructions To Compile For Distribution
+
+1. Run 'make build-all-dist'. This is the same as 'make build-all', without the *gcc* flags that enable optimizations for the current machine.
+
+1. Run 'make bundle-dist' or 'make install-dist'. Bundle will install a distributable version of the program (includes licenses and no machine-specific Python or *gcc* optimizations) to the folder 'dist', while install while install it to the default location.
 
 ## Development
 

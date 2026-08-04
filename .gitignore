@@ -18,6 +18,7 @@ minifier_failure.py.example
 
 # Image Viewer Compilation
 build/
+dist/
 
 # Nuitka
 *.bin
