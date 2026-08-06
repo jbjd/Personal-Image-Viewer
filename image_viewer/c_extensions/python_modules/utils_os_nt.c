@@ -1,8 +1,8 @@
 #define INITGUID
 #define PY_SSIZE_T_CLEAN
 
+#include "includes/base64.h"
 #include "includes/c_optimizations.h"
-#include "includes/cencode.h"
 #include "includes/image_read.h"
 
 #include <Python.h>
@@ -357,40 +357,25 @@ end:
 
 static PyObject *read_buffer_as_base64_and_copy_to_clipboard(PyObject *self, PyObject *arg) {
     CRawImageView *raw_image_view = (CRawImageView *)arg;
-    unsigned long remaining_bytes = raw_image_view->buffer_size;
+    unsigned long buffer_size = raw_image_view->buffer_size;
     char *buffer_start = raw_image_view->buffer;
 
     Py_BEGIN_ALLOW_THREADS;
 
     // encoded data is ~4/3 the size of the original data so make encoded buffer 2x the size.
-    HGLOBAL hGlobal = GlobalAlloc(GMEM_MOVEABLE, 2 * remaining_bytes);
+    HGLOBAL hGlobal = GlobalAlloc(GMEM_MOVEABLE, 2 * buffer_size);
     if (unlikely(hGlobal == NULL)) {
         goto end;
     }
 
-    base64_encodestate state;
     char *encoded_buffer = (char *)GlobalLock(hGlobal);
-    char *encoded_buffer_position = encoded_buffer;
 
     if (unlikely(encoded_buffer == NULL)) {
         GlobalFree(hGlobal);
         goto end;
     }
 
-    base64_init_encodestate(&state);
-
-    const unsigned long MAX_BYTES_TO_ENCODE_AT_ONCE = 1048576;
-    while (remaining_bytes > 0) {
-        unsigned bytes_to_encode = (unsigned)(remaining_bytes < MAX_BYTES_TO_ENCODE_AT_ONCE ? remaining_bytes : MAX_BYTES_TO_ENCODE_AT_ONCE);
-
-        encoded_buffer_position += base64_encode_block(buffer_start, bytes_to_encode, encoded_buffer_position, &state);
-        remaining_bytes -= bytes_to_encode;
-        buffer_start += bytes_to_encode;
-    }
-
-    base64_encode_blockend(encoded_buffer, &state);
-
-    *encoded_buffer_position = '\0';
+    base64_encode(buffer_start, buffer_size, encoded_buffer);
 
     GlobalUnlock(hGlobal);
 

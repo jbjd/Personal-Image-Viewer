@@ -48,7 +48,7 @@ build-image-read:
 
 build-util-os-nt:
 ifeq ($(OS),Windows_NT)
-	gcc $(C_PYTHON_MODULES)/utils_os_nt.c $(C_SOURCE)/b64/cencode.c -I$(C_SOURCE) -lshlwapi -loleaut32 -lole32 $(C_FLAGS) -o image_viewer/utils/_os_nt.$(COMPILED_EXT)
+	gcc $(C_PYTHON_MODULES)/utils_os_nt.c $(C_SOURCE)/b64/base64.c -I$(C_SOURCE) -lshlwapi -loleaut32 -lole32 $(C_FLAGS) -o image_viewer/utils/_os_nt.$(COMPILED_EXT)
 endif
 
 build-test:
