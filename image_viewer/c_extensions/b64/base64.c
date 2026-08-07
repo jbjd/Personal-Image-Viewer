@@ -66,8 +66,18 @@ void base64_encode_avx2(const char *input, unsigned int input_size, char *encode
         );
         __m256i expanded = _mm256_shuffle_epi8(load, shuffle_mask);
 
+        __m256i mask_0 = _mm256_set1_epi32(0xFC000000);
+        __m256i mask_1 = _mm256_set1_epi32(0x03F00000);
+        __m256i mask_2 = _mm256_set1_epi32(0x00000FC0);
+        __m256i mask_3 = _mm256_set1_epi32(0x0000003F);
+
+        __m256i pre_encoded_byte_0 = _mm256_srli_epi32(_mm256_and_si256(expanded, mask_0), 26);
+        __m256i pre_encoded_byte_1 = _mm256_srli_epi32(_mm256_and_si256(expanded, mask_1), 20);
+        __m256i pre_encoded_byte_2 = _mm256_srli_epi32(_mm256_and_si256(expanded, mask_2), 6);
+        __m256i pre_encoded_byte_3 = _mm256_and_si256(expanded, mask_3);
+
         // alignas(32) int32_t tmp_out[8];
-        // _mm256_storeu_si256((__m256i *)tmp_out, expanded);
+        // _mm256_storeu_si256((__m256i *)tmp_out, pre_encoded_byte_3);
         // for (int j = 0; j < 8; j++) {
         //     printf("%d ", tmp_out[j]);
         // }
@@ -75,4 +85,21 @@ void base64_encode_avx2(const char *input, unsigned int input_size, char *encode
     }
 
     base64_encode(input + i, input_size - i, encoded_out);
+}
+
+// gcc ./image_viewer/c_extensions/b64/base64.c -I./image_viewer/c_extensions/ -o test.exe -mavx2 && ./test.exe
+#include <string.h>
+int main() {
+    const char *input = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
+    const size_t input_size = strlen(input);
+
+    char *dest = malloc(3 * input_size);
+
+    base64_encode_avx2(input, input_size, dest);
+
+    // printf("%s\n", dest);
+
+    free(dest);
+
+    return 0;
 }
