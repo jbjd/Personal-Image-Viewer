@@ -5,7 +5,7 @@ static char _base64_encode_char(char to_encode) {
     return base64_alphabet[(int)to_encode];
 }
 
-void base64_encode(const char *input, unsigned int input_size, char *encoded_out) {
+void _base64_encode(const char *input, unsigned int input_size, char *encoded_out) {
     const char *input_position = input;
     const char *const input_end = input + input_size;
     char current_char;
@@ -46,26 +46,28 @@ void base64_encode(const char *input, unsigned int input_size, char *encoded_out
     *output_position = '\0';
 }
 
-// AVX2
+#ifdef __AVX2__
+
 #include <immintrin.h>
 
 // TMP
 #include <stdint.h>
 #include <stdio.h>
 
-void base64_encode_avx2(const char *input, unsigned int input_size, char *encoded_out) {
+void _base64_encode_avx2(const char *input, unsigned int input_size, char *encoded_out) {
     unsigned int i = 0;
     for (; i + 32 <= input_size; i += 24, encoded_out += 32) {
 
         // Load 32 bytes from input, but only 24 will be used
         __m256i load = _mm256_loadu_si256((const __m256i *)(input + i));
 
-        // [a, b, c, d, e, f] -> [a, b, b, c, d, e, e, f]
+        // [a, b, c, d, e, f, ...] -> [a, b, b, c, d, e, e, f, ...]
         __m256i shuffle_mask = _mm256_setr_epi8(
             0, 1, 1, 2, 3, 4, 4, 5, 6, 7, 7, 8, 9, 10, 10, 11, 12, 13, 13, 14, 15, 16, 16, 17, 18, 19, 19, 20, 21, 22, 22, 23
         );
         __m256i expanded = _mm256_shuffle_epi8(load, shuffle_mask);
 
+        // Get 6 bit masks and turn into 4 bytes in range 0-63 each
         __m256i mask_0 = _mm256_set1_epi32(0xFC000000);
         __m256i mask_1 = _mm256_set1_epi32(0x03F00000);
         __m256i mask_2 = _mm256_set1_epi32(0x00000FC0);
@@ -81,15 +83,30 @@ void base64_encode_avx2(const char *input, unsigned int input_size, char *encode
             _mm256_or_si256(pre_encoded_byte_2, pre_encoded_byte_3)
         );
 
-        // alignas(32) int32_t tmp_out[8];
-        // _mm256_storeu_si256((__m256i *)tmp_out, pre_encoded_bytes_packed);
+        // Now need to turn bytes values into base64
+        // A-Z is ascii 0-25 in base64
+        // a-z is ascii 26-51 in base64
+
+        // _mm256_cmpgt_epi8 will fill byte with 0xFF if true, 0x00 if false
+        __m256i is_AZ = _mm256_cmpgt_epi8(_mm256_set1_epi8(26), pre_encoded_bytes_packed);
+        __m256i is_az = _mm256_andnot_si256(is_AZ, _mm256_cmpgt_epi8(_mm256_set1_epi8(52), pre_encoded_bytes_packed));
+        // TODO 52-63
+
+        __m256i result = _mm256_setzero_si256();
+        result = _mm256_or_si256(result, _mm256_and_si256(is_AZ, _mm256_add_epi8(pre_encoded_bytes_packed, _mm256_set1_epi8('A'))));
+        result = _mm256_or_si256(result, _mm256_and_si256(is_az, _mm256_add_epi8(pre_encoded_bytes_packed, _mm256_set1_epi8('a' - 26))));
+
+        _mm256_storeu_si256((__m256i *)encoded_out, result);
+
+        // alignas(32) uint32_t tmp_out[8];
+        // _mm256_storeu_si256((__m256i *)tmp_out, result);
         // for (int j = 0; j < 8; j++) {
-        //     printf("%d ", tmp_out[j]);
+        //     printf("%x ", tmp_out[j] & 0xffffffff);
         // }
         // puts("");
     }
 
-    base64_encode(input + i, input_size - i, encoded_out);
+    _base64_encode(input + i, input_size - i, encoded_out);
 }
 
 // gcc ./image_viewer/c_extensions/b64/base64.c -I./image_viewer/c_extensions/ -o test.exe -mavx2 && ./test.exe
@@ -100,11 +117,19 @@ int main() {
 
     char *dest = malloc(3 * input_size);
 
-    base64_encode_avx2(input, input_size, dest);
+    _base64_encode_avx2(input, input_size, dest);
 
-    // printf("%s\n", dest);
+    printf("%s\n", dest);
 
     free(dest);
 
     return 0;
 }
+
+#endif /* __AVX2__ */
+
+#ifdef __AVX2__
+#define base64_encode _base64_encode_avx2
+#else
+#define base64_encode _base64_encode
+#endif /* __AVX2__ */
