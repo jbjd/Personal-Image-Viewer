@@ -71,13 +71,18 @@ void base64_encode_avx2(const char *input, unsigned int input_size, char *encode
         __m256i mask_2 = _mm256_set1_epi32(0x00000FC0);
         __m256i mask_3 = _mm256_set1_epi32(0x0000003F);
 
-        __m256i pre_encoded_byte_0 = _mm256_srli_epi32(_mm256_and_si256(expanded, mask_0), 26);
-        __m256i pre_encoded_byte_1 = _mm256_srli_epi32(_mm256_and_si256(expanded, mask_1), 20);
-        __m256i pre_encoded_byte_2 = _mm256_srli_epi32(_mm256_and_si256(expanded, mask_2), 6);
+        __m256i pre_encoded_byte_0 = _mm256_srli_epi32(_mm256_and_si256(expanded, mask_0), 2);
+        __m256i pre_encoded_byte_1 = _mm256_srli_epi32(_mm256_and_si256(expanded, mask_1), 4);
+        __m256i pre_encoded_byte_2 = _mm256_slli_epi32(_mm256_and_si256(expanded, mask_2), 2);
         __m256i pre_encoded_byte_3 = _mm256_and_si256(expanded, mask_3);
 
+        __m256i pre_encoded_bytes_packed = _mm256_or_si256(
+            _mm256_or_si256(pre_encoded_byte_0, pre_encoded_byte_1),
+            _mm256_or_si256(pre_encoded_byte_2, pre_encoded_byte_3)
+        );
+
         // alignas(32) int32_t tmp_out[8];
-        // _mm256_storeu_si256((__m256i *)tmp_out, pre_encoded_byte_3);
+        // _mm256_storeu_si256((__m256i *)tmp_out, pre_encoded_bytes_packed);
         // for (int j = 0; j < 8; j++) {
         //     printf("%d ", tmp_out[j]);
         // }
