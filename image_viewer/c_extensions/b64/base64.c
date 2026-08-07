@@ -100,21 +100,17 @@ void _base64_encode_avx2(const char *input, unsigned int input_size, char *encod
             is_az_case_insensitive,
             _mm256_cmpgt_epi8(_mm256_set1_epi8(62), pre_encoded_bytes_packed)
         );
-        // TODO 62-63
+        __m256i is_plus = _mm256_cmpeq_epi8(_mm256_set1_epi8(62), pre_encoded_bytes_packed);
+        __m256i is_slash = _mm256_cmpeq_epi8(_mm256_set1_epi8(63), pre_encoded_bytes_packed);
 
         __m256i result = _mm256_setzero_si256();
         result = _mm256_or_si256(result, _mm256_and_si256(is_AZ, _mm256_add_epi8(pre_encoded_bytes_packed, _mm256_set1_epi8('A'))));
         result = _mm256_or_si256(result, _mm256_and_si256(is_az, _mm256_add_epi8(pre_encoded_bytes_packed, _mm256_set1_epi8('a' - 26))));
         result = _mm256_or_si256(result, _mm256_and_si256(is_09, _mm256_add_epi8(pre_encoded_bytes_packed, _mm256_set1_epi8('0' - 52))));
+        result = _mm256_or_si256(result, _mm256_and_si256(is_plus, _mm256_set1_epi8('+')));
+        result = _mm256_or_si256(result, _mm256_and_si256(is_slash, _mm256_set1_epi8('/')));
 
         _mm256_storeu_si256((__m256i *)encoded_out, result);
-
-        // alignas(32) uint32_t tmp_out[8];
-        // _mm256_storeu_si256((__m256i *)tmp_out, result);
-        // for (int j = 0; j < 8; j++) {
-        //     printf("%x ", tmp_out[j] & 0xffffffff);
-        // }
-        // puts("");
     }
 
     _base64_encode(input + i, input_size - i, encoded_out);
@@ -123,7 +119,7 @@ void _base64_encode_avx2(const char *input, unsigned int input_size, char *encod
 // gcc ./image_viewer/c_extensions/b64/base64.c -I./image_viewer/c_extensions/ -o test.exe -mavx2 && ./test.exe
 #include <string.h>
 int main() {
-    const char *input = "AAA888aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
+    const char *input = ">>>???AAA888aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
     const size_t input_size = strlen(input);
 
     char *dest = malloc(3 * input_size);
