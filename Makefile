@@ -2,11 +2,13 @@ ifeq ($(OS),Windows_NT)
 	override DEFAULT_PYTHON := python
 	override PYTHON_DLL := python312
 	override COMPILED_EXT = pyd
+	override EXECUTABLE_EXT=exe
 	override OS_FLAGS =
 else
 	override DEFAULT_PYTHON := python3.12
 	override PYTHON_DLL := python3.12
 	override COMPILED_EXT = so
+	override EXECUTABLE_EXT=bin
 	override OS_FLAGS = -fPIC
 endif
 
@@ -58,6 +60,10 @@ build-all: build-config build-image-read build-util-os-nt build-test
 
 build-all-dist: NATIVE_FLAGS=
 build-all-dist: build-all
+
+test-c:
+	gcc $(C_SOURCE)/tests/test_base64.c $(C_SOURCE)/b64/base64.c $(C_SOURCE)/tests/util.c -I$(C_SOURCE) -o test -lcunit
+	./test.$(EXECUTABLE_EXT)
 
 install:
 	$(PYTHON_EXECUTABLE) -OO compile.py --extra-checks --strip
