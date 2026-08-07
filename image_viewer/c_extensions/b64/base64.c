@@ -73,6 +73,7 @@ void _base64_encode_avx2(const char *input, unsigned int input_size, char *encod
         __m256i mask_2 = _mm256_set1_epi32(0x00000FC0);
         __m256i mask_3 = _mm256_set1_epi32(0x0000003F);
 
+        // For some reason, I need to effectively swap the order of the bytes
         __m256i pre_encoded_byte_0 = _mm256_srli_epi32(_mm256_and_si256(shuffled, mask_0), 26);
         __m256i pre_encoded_byte_1 = _mm256_srli_epi32(_mm256_and_si256(shuffled, mask_1), 12);
         __m256i pre_encoded_byte_2 = _mm256_slli_epi32(_mm256_and_si256(shuffled, mask_2), 10);
@@ -84,17 +85,27 @@ void _base64_encode_avx2(const char *input, unsigned int input_size, char *encod
         );
 
         // Now need to turn bytes values into base64
-        // A-Z is ascii 0-25 in base64
-        // a-z is ascii 26-51 in base64
+        // Values 0-25  are A-Z
+        // Values 26-51 are a-z
+        // Values 52-61 are 0-9
+        // Value 62 is +
+        // Value 63 is /
 
         // _mm256_cmpgt_epi8 will fill byte with 0xFF if true, 0x00 if false
+        __m256i is_az_case_insensitive = _mm256_cmpgt_epi8(_mm256_set1_epi8(52), pre_encoded_bytes_packed);
+
         __m256i is_AZ = _mm256_cmpgt_epi8(_mm256_set1_epi8(26), pre_encoded_bytes_packed);
-        __m256i is_az = _mm256_andnot_si256(is_AZ, _mm256_cmpgt_epi8(_mm256_set1_epi8(52), pre_encoded_bytes_packed));
-        // TODO 52-63
+        __m256i is_az = _mm256_andnot_si256(is_AZ, is_az_case_insensitive);
+        __m256i is_09 = _mm256_andnot_si256(
+            is_az_case_insensitive,
+            _mm256_cmpgt_epi8(_mm256_set1_epi8(62), pre_encoded_bytes_packed)
+        );
+        // TODO 62-63
 
         __m256i result = _mm256_setzero_si256();
         result = _mm256_or_si256(result, _mm256_and_si256(is_AZ, _mm256_add_epi8(pre_encoded_bytes_packed, _mm256_set1_epi8('A'))));
         result = _mm256_or_si256(result, _mm256_and_si256(is_az, _mm256_add_epi8(pre_encoded_bytes_packed, _mm256_set1_epi8('a' - 26))));
+        result = _mm256_or_si256(result, _mm256_and_si256(is_09, _mm256_add_epi8(pre_encoded_bytes_packed, _mm256_set1_epi8('0' - 52))));
 
         _mm256_storeu_si256((__m256i *)encoded_out, result);
 
@@ -112,7 +123,7 @@ void _base64_encode_avx2(const char *input, unsigned int input_size, char *encod
 // gcc ./image_viewer/c_extensions/b64/base64.c -I./image_viewer/c_extensions/ -o test.exe -mavx2 && ./test.exe
 #include <string.h>
 int main() {
-    const char *input = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
+    const char *input = "AAA888aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
     const size_t input_size = strlen(input);
 
     char *dest = malloc(3 * input_size);
