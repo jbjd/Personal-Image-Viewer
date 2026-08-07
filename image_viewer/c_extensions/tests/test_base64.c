@@ -27,6 +27,8 @@ void test_encoding() {
     _run_base64_encode_assert_expected("aa", "YWE=", buffer);
     _run_base64_encode_assert_expected("aaa", "YWFh", buffer);
 
+    base64_encode_avx2("abcdabcdabcdabcdabcdabcdabcdabcd", 32, buffer);
+
     free(buffer);
 }
 

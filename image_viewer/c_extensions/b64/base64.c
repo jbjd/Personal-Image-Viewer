@@ -45,3 +45,34 @@ void base64_encode(const char *input, unsigned int input_size, char *encoded_out
 
     *output_position = '\0';
 }
+
+// AVX2
+#include <immintrin.h>
+
+// TMP
+#include <stdint.h>
+#include <stdio.h>
+
+void base64_encode_avx2(const char *input, unsigned int input_size, char *encoded_out) {
+    unsigned int i = 0;
+    for (; i + 32 <= input_size; i += 24, encoded_out += 32) {
+
+        // Load 32 bytes from input, but only 24 will be used
+        __m256i load = _mm256_loadu_si256((const __m256i *)(input + i));
+
+        // [a, b, c, d, e, f] -> [a, b, b, c, d, e, e, f]
+        __m256i shuffle_mask = _mm256_setr_epi8(
+            0, 1, 1, 2, 3, 4, 4, 5, 6, 7, 7, 8, 9, 10, 10, 11, 12, 13, 13, 14, 15, 16, 16, 17, 18, 19, 19, 20, 21, 22, 22, 23
+        );
+        __m256i expanded = _mm256_shuffle_epi8(load, shuffle_mask);
+
+        // alignas(32) int32_t tmp_out[8];
+        // _mm256_storeu_si256((__m256i *)tmp_out, expanded);
+        // for (int j = 0; j < 8; j++) {
+        //     printf("%d ", tmp_out[j]);
+        // }
+        // puts("");
+    }
+
+    base64_encode(input + i, input_size - i, encoded_out);
+}

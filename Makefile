@@ -66,7 +66,7 @@ benchmark-c-base64:
 	./test.$(EXECUTABLE_EXT)
 
 test-c-base64:
-	gcc $(C_SOURCE)/tests/test_base64.c $(C_SOURCE)/b64/base64.c $(C_SOURCE)/tests/util.c -I$(C_SOURCE) -o test -lcunit
+	gcc $(C_SOURCE)/tests/test_base64.c $(C_SOURCE)/b64/base64.c $(C_SOURCE)/tests/util.c -I$(C_SOURCE) -o test -lcunit -mavx2
 	./test.$(EXECUTABLE_EXT)
 
 install:
