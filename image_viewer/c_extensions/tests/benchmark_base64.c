@@ -9,7 +9,6 @@ int main() {
 
     unsigned long input_size = 4194304;
     char *random_input = malloc(sizeof(char) * input_size);
-    memset(random_input, 'a', input_size - 1);
     char *buffer = malloc(sizeof(char) * input_size * 2);
 
     clock_t begin = clock();

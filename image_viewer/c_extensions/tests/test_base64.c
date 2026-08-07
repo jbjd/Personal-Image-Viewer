@@ -26,8 +26,7 @@ void test_encoding() {
     _run_base64_encode_assert_expected("a", "YQ==", buffer);
     _run_base64_encode_assert_expected("aa", "YWE=", buffer);
     _run_base64_encode_assert_expected("aaa", "YWFh", buffer);
-
-    base64_encode_avx2("abcdabcdabcdabcdabcdabcdabcdabcd", 32, buffer);
+    _run_base64_encode_assert_expected(">>>???aaaAAAaaaaaaaaaaaaaaaaaaaaaa", "Pj4+Pz8/YWFhQUFBYWFhYWFhYWFhYWFhYWFhYWFhYWFhYQ==", buffer);
 
     free(buffer);
 }

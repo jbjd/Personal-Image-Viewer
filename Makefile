@@ -61,13 +61,18 @@ build-all: build-config build-image-read build-util-os-nt build-test
 build-all-dist: NATIVE_FLAGS=
 build-all-dist: build-all
 
+override TEST_FLAGS = -I$(C_SOURCE) -o test && test.$(EXECUTABLE_EXT)
+
 benchmark-c-base64:
-	gcc $(C_SOURCE)/tests/benchmark_base64.c $(C_SOURCE)/b64/base64.c -I$(C_SOURCE) -o test
-	./test.$(EXECUTABLE_EXT)
+	gcc $(C_SOURCE)/tests/benchmark_base64.c $(C_SOURCE)/b64/base64.c -mavx2 $(TEST_FLAGS)
+
+override CUNIT_TEST_FLAGS = -lcunit $(TEST_FLAGS)
 
 test-c-base64:
-	gcc $(C_SOURCE)/tests/test_base64.c $(C_SOURCE)/b64/base64.c $(C_SOURCE)/tests/util.c -I$(C_SOURCE) -o test -lcunit -mavx2
-	./test.$(EXECUTABLE_EXT)
+	gcc $(C_SOURCE)/tests/test_base64.c $(C_SOURCE)/b64/base64.c $(C_SOURCE)/tests/util.c $(CUNIT_TEST_FLAGS)
+
+test-c-base64-avx2:
+	gcc $(C_SOURCE)/tests/test_base64.c $(C_SOURCE)/b64/base64.c $(C_SOURCE)/tests/util.c -mavx2 $(CUNIT_TEST_FLAGS)
 
 install:
 	$(PYTHON_EXECUTABLE) -OO compile.py --extra-checks --strip

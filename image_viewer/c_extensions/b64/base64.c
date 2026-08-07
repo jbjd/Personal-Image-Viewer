@@ -5,7 +5,7 @@ static char _base64_encode_char(char to_encode) {
     return base64_alphabet[(int)to_encode];
 }
 
-void _base64_encode(const char *input, unsigned int input_size, char *encoded_out) {
+static inline void _base64_encode(const char *input, unsigned int input_size, char *encoded_out) {
     const char *input_position = input;
     const char *const input_end = input + input_size;
     char current_char;
@@ -50,11 +50,7 @@ void _base64_encode(const char *input, unsigned int input_size, char *encoded_ou
 
 #include <immintrin.h>
 
-// TMP
-#include <stdint.h>
-#include <stdio.h>
-
-void _base64_encode_avx2(const char *input, unsigned int input_size, char *encoded_out) {
+static inline void _base64_encode_avx2(const char *input, unsigned int input_size, char *encoded_out) {
     unsigned int i = 0;
     for (; i + 32 <= input_size; i += 24, encoded_out += 32) {
 
@@ -116,27 +112,14 @@ void _base64_encode_avx2(const char *input, unsigned int input_size, char *encod
     _base64_encode(input + i, input_size - i, encoded_out);
 }
 
-// gcc ./image_viewer/c_extensions/b64/base64.c -I./image_viewer/c_extensions/ -o test.exe -mavx2 && ./test.exe
-#include <string.h>
-int main() {
-    const char *input = ">>>???AAA888aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa";
-    const size_t input_size = strlen(input);
-
-    char *dest = malloc(3 * input_size);
-
-    _base64_encode_avx2(input, input_size, dest);
-
-    printf("%s\n", dest);
-
-    free(dest);
-
-    return 0;
-}
-
 #endif /* __AVX2__ */
 
 #ifdef __AVX2__
-#define base64_encode _base64_encode_avx2
+#define base64_encode_inner _base64_encode_avx2
 #else
-#define base64_encode _base64_encode
+#define base64_encode_inner _base64_encode
 #endif /* __AVX2__ */
+
+void base64_encode(const char *input, unsigned int input_size, char *encoded_out) {
+    base64_encode_inner(input, input_size, encoded_out);
+}
