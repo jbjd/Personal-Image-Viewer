@@ -65,7 +65,7 @@ void _base64_encode_avx2(const char *input, unsigned int input_size, char *encod
         __m256i shuffle_mask = _mm256_setr_epi8(
             0, 1, 1, 2, 3, 4, 4, 5, 6, 7, 7, 8, 9, 10, 10, 11, 12, 13, 13, 14, 15, 16, 16, 17, 18, 19, 19, 20, 21, 22, 22, 23
         );
-        __m256i expanded = _mm256_shuffle_epi8(load, shuffle_mask);
+        __m256i shuffled = _mm256_shuffle_epi8(load, shuffle_mask);
 
         // Get 6 bit masks and turn into 4 bytes in range 0-63 each
         __m256i mask_0 = _mm256_set1_epi32(0xFC000000);
@@ -73,10 +73,10 @@ void _base64_encode_avx2(const char *input, unsigned int input_size, char *encod
         __m256i mask_2 = _mm256_set1_epi32(0x00000FC0);
         __m256i mask_3 = _mm256_set1_epi32(0x0000003F);
 
-        __m256i pre_encoded_byte_0 = _mm256_srli_epi32(_mm256_and_si256(expanded, mask_0), 2);
-        __m256i pre_encoded_byte_1 = _mm256_srli_epi32(_mm256_and_si256(expanded, mask_1), 4);
-        __m256i pre_encoded_byte_2 = _mm256_slli_epi32(_mm256_and_si256(expanded, mask_2), 2);
-        __m256i pre_encoded_byte_3 = _mm256_and_si256(expanded, mask_3);
+        __m256i pre_encoded_byte_0 = _mm256_srli_epi32(_mm256_and_si256(shuffled, mask_0), 26);
+        __m256i pre_encoded_byte_1 = _mm256_srli_epi32(_mm256_and_si256(shuffled, mask_1), 12);
+        __m256i pre_encoded_byte_2 = _mm256_slli_epi32(_mm256_and_si256(shuffled, mask_2), 10);
+        __m256i pre_encoded_byte_3 = _mm256_slli_epi32(_mm256_and_si256(shuffled, mask_3), 24);
 
         __m256i pre_encoded_bytes_packed = _mm256_or_si256(
             _mm256_or_si256(pre_encoded_byte_0, pre_encoded_byte_1),
