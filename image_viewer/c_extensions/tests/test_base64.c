@@ -7,8 +7,17 @@
 #include <time.h>
 
 static inline void _run_base64_encode_assert_expected(const char *input, const char *expected, char *buffer) {
+    printf("\nRunning base64 encode on %s\n", input);
+
     base64_encode(input, strlen(input), buffer);
-    CU_ASSERT_STRING_EQUAL(buffer, expected);
+
+    if (strcmp(buffer, expected) != 0) {
+        printf("Failed\nExpected: %s\nActual: %s\n", expected, buffer);
+        CU_FAIL();
+    } else {
+        puts("Passed");
+        CU_PASS();
+    }
 }
 
 void test_encoding() {

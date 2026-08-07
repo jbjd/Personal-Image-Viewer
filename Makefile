@@ -61,7 +61,11 @@ build-all: build-config build-image-read build-util-os-nt build-test
 build-all-dist: NATIVE_FLAGS=
 build-all-dist: build-all
 
-test-c:
+benchmark-c-base64:
+	gcc $(C_SOURCE)/tests/benchmark_base64.c $(C_SOURCE)/b64/base64.c -I$(C_SOURCE) -o test
+	./test.$(EXECUTABLE_EXT)
+
+test-c-base64:
 	gcc $(C_SOURCE)/tests/test_base64.c $(C_SOURCE)/b64/base64.c $(C_SOURCE)/tests/util.c -I$(C_SOURCE) -o test -lcunit
 	./test.$(EXECUTABLE_EXT)
 
