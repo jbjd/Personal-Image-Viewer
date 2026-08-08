@@ -58,10 +58,13 @@ static inline void _base64_encode_avx2(const char *input, unsigned int input_siz
         __m256i load = _mm256_loadu_si256((const __m256i *)(input + i));
 
         // [a, b, c, d, e, f, ...] -> [a, b, b, c, d, e, e, f, ...]
+        __m256i permute_mask = _mm256_setr_epi32(0, 1, 2, 0, 3, 4, 5, 0);
+        __m256i permuted = _mm256_permutevar8x32_epi32(load, permute_mask);
+
         __m256i shuffle_mask = _mm256_setr_epi8(
-            2, 1, 1, 0, 5, 4, 4, 3, 8, 7, 7, 6, 11, 10, 10, 9, 14, 13, 13, 12, 17, 16, 16, 15, 20, 19, 19, 18, 23, 22, 22, 21
+            2, 1, 1, 0, 5, 4, 4, 3, 8, 7, 7, 6, 11, 10, 10, 9, 2, 1, 1, 0, 5, 4, 4, 3, 8, 7, 7, 6, 11, 10, 10, 9
         );
-        __m256i shuffled = _mm256_shuffle_epi8(load, shuffle_mask);
+        __m256i shuffled = _mm256_shuffle_epi8(permuted, shuffle_mask);
 
         // Get 6 bit masks and turn into 4 bytes in range 0-63 each
         __m256i mask_0 = _mm256_set1_epi32(0xFC000000);

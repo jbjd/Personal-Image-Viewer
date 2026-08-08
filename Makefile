@@ -64,6 +64,9 @@ build-all-dist: build-all
 override TEST_FLAGS = -I$(C_SOURCE) -o test && test.$(EXECUTABLE_EXT)
 
 benchmark-c-base64:
+	gcc $(C_SOURCE)/tests/benchmark_base64.c $(C_SOURCE)/b64/base64.c $(TEST_FLAGS)
+
+benchmark-c-base64-avx2:
 	gcc $(C_SOURCE)/tests/benchmark_base64.c $(C_SOURCE)/b64/base64.c -mavx2 $(TEST_FLAGS)
 
 override CUNIT_TEST_FLAGS = -lcunit $(TEST_FLAGS)
