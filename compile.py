@@ -27,13 +27,12 @@ from compile_utils.cleaner import (
     strip_files,
     warn_unused_code_skips,
 )
-from compile_utils.code_to_skip import SKIP_ITERATION
+from compile_utils.code_to_skip import SKIP_ITERATION, modules_to_skip
 from compile_utils.constants import IMAGE_VIEWER_NAME, REPORT_FILE
 from compile_utils.log import get_logger
 from compile_utils.module_dependencies import (
     get_normalized_module_name,
     module_dependencies,
-    modules_to_skip,
 )
 from compile_utils.nuitka_ext import clean_compilation_report, start_nuitka_compilation
 from compile_utils.validation import (
