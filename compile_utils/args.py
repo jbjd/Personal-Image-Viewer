@@ -6,7 +6,6 @@ from enum import StrEnum
 
 from compile_utils.code_to_skip import data_files_to_exclude, dlls_to_include
 from compile_utils.constants import REPORT_FILE
-from compile_utils.exceptions import InvalidEnvironmentError
 from compile_utils.module_dependencies import modules_to_include
 
 
@@ -287,4 +286,4 @@ class CompileArgumentParser:
             if os.path.isfile(target):
                 return target
 
-        raise InvalidEnvironmentError(f"Can't find {file} on $PATH")
+        raise FileNotFoundError(f"Can't find dll file {file} on $PATH")

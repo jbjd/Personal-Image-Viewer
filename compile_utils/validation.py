@@ -13,7 +13,6 @@ from personal_compile_tools.requirement_operators import Operators
 from personal_compile_tools.requirements import Requirement, parse_requirements_file
 
 from compile_utils.constants import PROJECT_FILE
-from compile_utils.exceptions import InvalidEnvironmentError
 from compile_utils.log import get_logger
 from compile_utils.module_dependencies import module_dependencies
 
@@ -42,7 +41,7 @@ def validate_module_requirements() -> None:
     """Validates the modules this program depends on are installed and logs warning if
     installed packages do not match version specifications.
 
-    :raises InvalidEnvironment: If necessary modules are not installed."""
+    :raises ModuleNotFoundError: If necessary modules are not installed."""
 
     requirements: list[Requirement] = module_dependencies + parse_requirements_file(
         "requirements_compile.txt"
@@ -72,7 +71,7 @@ def validate_module_requirements() -> None:
             missing_modules.append(requirement.name)
 
     if missing_modules:
-        raise InvalidEnvironmentError(
+        raise ModuleNotFoundError(
             f"Missing module dependencies {missing_modules}\n"
             "Please install them to compile"
         )
@@ -82,14 +81,13 @@ def validate_python_version() -> None:
     """Validates the current python version is the expected version
     to compile this program and is valid for current nuitka install.
 
-    :raises InvalidEnvironment: If python version isn't what this program expects.
-    :raises NotImplementedError: If version isn't supported by this nuitka install."""
+    :raises NotImplementedError: If version isn't supported"""
 
     required_python: tuple[int, int] = get_required_python_version()
     used_python: tuple[int, int] = version_info[:2]
 
     if used_python != required_python:
-        raise InvalidEnvironmentError(
+        raise NotImplementedError(
             f"Expecting python version {required_python} but found {used_python}"
         )
 
@@ -103,7 +101,7 @@ def validate_PIL() -> None:  # noqa: N802
     Normal PIL installations will have these, but PIL can be built from source with
     these turned off.
 
-    :raises InvalidEnvironment: If PIL is missing required modules."""
+    :raises ModuleNotFoundError: If PIL is missing required modules."""
 
     missing_modules: list[str] = []
 
@@ -129,7 +127,7 @@ def validate_PIL() -> None:  # noqa: N802
         del _imagingft
 
     if missing_modules:
-        raise InvalidEnvironmentError(
+        raise ModuleNotFoundError(
             "Current PIL installation missing necessary modules: "
             + ",".join(missing_modules)
         )
