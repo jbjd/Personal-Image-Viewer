@@ -59,7 +59,7 @@ static inline void _base64_encode_avx2(const char *input, unsigned int input_siz
 
         // [a, b, c, d, e, f, ...] -> [a, b, b, c, d, e, e, f, ...]
         __m256i shuffle_mask = _mm256_setr_epi8(
-            0, 1, 1, 2, 3, 4, 4, 5, 6, 7, 7, 8, 9, 10, 10, 11, 12, 13, 13, 14, 15, 16, 16, 17, 18, 19, 19, 20, 21, 22, 22, 23
+            2, 1, 1, 0, 5, 4, 4, 3, 8, 7, 7, 6, 11, 10, 10, 9, 14, 13, 13, 12, 17, 16, 16, 15, 20, 19, 19, 18, 23, 22, 22, 21
         );
         __m256i shuffled = _mm256_shuffle_epi8(load, shuffle_mask);
 
