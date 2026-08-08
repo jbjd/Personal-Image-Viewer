@@ -12,7 +12,7 @@ static inline void _run_base64_encode_assert_expected(const char *input, const c
     base64_encode(input, strlen(input), buffer);
 
     if (strcmp(buffer, expected) != 0) {
-        printf("Failed\nExpected: %s\nActual: %s\n", expected, buffer);
+        printf("Failed\nExpected: %s\nActual:   %s\n", expected, buffer);
         CU_FAIL();
     } else {
         puts("Passed");
@@ -27,6 +27,7 @@ void test_encoding() {
     _run_base64_encode_assert_expected("aa", "YWE=", buffer);
     _run_base64_encode_assert_expected("aaa", "YWFh", buffer);
     _run_base64_encode_assert_expected(">>>???aaaAAAaaaaaaaaaaaaaaaaaaaaaa", "Pj4+Pz8/YWFhQUFBYWFhYWFhYWFhYWFhYWFhYWFhYWFhYQ==", buffer);
+    _run_base64_encode_assert_expected("GIF87a  ¡ ¬¤½¸µ¼ÒÐÅÝÜØ,     ", "R0lGODdhAiACIMKhBCDCrMKkwr3CuMK1wrzDksOQw4XDncOcw5gsICAgIAIg", buffer);
 
     free(buffer);
 }
