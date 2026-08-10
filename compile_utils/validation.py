@@ -1,19 +1,17 @@
 """Validation functions for compilation requirements"""
 
-import tomllib
 from importlib.metadata import PackageNotFoundError
 from importlib.metadata import version as get_module_version
 from sys import version_info
 from typing import Any
 
-from nuitka import PythonVersions
 from packaging.version import parse as _parse_version
-from personal_compile_tools.converters import version_str_to_tuple, version_tuple_to_str
+from personal_compile_tools.converters import version_str_to_tuple
+from personal_compile_tools.modules import get_missing_modules, read_pyproject_file
+from personal_compile_tools.nuitka_ext import nuitka_not_yet_supports_python_version
 from personal_compile_tools.requirement_operators import Operators
 from personal_compile_tools.requirements import Requirement, parse_requirements_file
 
-from compile_utils.constants import PROJECT_FILE
-from compile_utils.exceptions import InvalidEnvironmentError
 from compile_utils.log import get_logger
 from compile_utils.module_dependencies import module_dependencies
 
@@ -31,8 +29,7 @@ def get_required_python_version() -> tuple[int, int]:
     if _required_python_version is not None:
         return _required_python_version
 
-    with open(PROJECT_FILE, "rb") as fp:
-        project: dict[str, Any] = tomllib.load(fp)["project"]
+    project: dict[str, Any] = read_pyproject_file()["project"]
 
     _required_python_version = version_str_to_tuple(project["requires-python"][2:])
     return _required_python_version[:2]
@@ -42,7 +39,7 @@ def validate_module_requirements() -> None:
     """Validates the modules this program depends on are installed and logs warning if
     installed packages do not match version specifications.
 
-    :raises InvalidEnvironment: If necessary modules are not installed."""
+    :raises ModuleNotFoundError: If necessary modules are not installed."""
 
     requirements: list[Requirement] = module_dependencies + parse_requirements_file(
         "requirements_compile.txt"
@@ -72,7 +69,7 @@ def validate_module_requirements() -> None:
             missing_modules.append(requirement.name)
 
     if missing_modules:
-        raise InvalidEnvironmentError(
+        raise ModuleNotFoundError(
             f"Missing module dependencies {missing_modules}\n"
             "Please install them to compile"
         )
@@ -82,20 +79,20 @@ def validate_python_version() -> None:
     """Validates the current python version is the expected version
     to compile this program and is valid for current nuitka install.
 
-    :raises InvalidEnvironment: If python version isn't what this program expects.
-    :raises NotImplementedError: If version isn't supported by this nuitka install."""
+    :raises NotImplementedError: If version isn't supported"""
 
     required_python: tuple[int, int] = get_required_python_version()
     used_python: tuple[int, int] = version_info[:2]
 
     if used_python != required_python:
-        raise InvalidEnvironmentError(
-            f"Expecting python version {required_python} but found {used_python}"
+        raise NotImplementedError(
+            f"Expected Python version {required_python} but found {used_python}"
         )
 
-    version: str = version_tuple_to_str(used_python)
-    if version in PythonVersions.getNotYetSupportedPythonVersions():
-        raise NotImplementedError(f"{version} not supported by Nuitka yet")
+    if nuitka_not_yet_supports_python_version(used_python):
+        raise NotImplementedError(
+            f"Python version {used_python} not yet supported by Nuitka"
+        )
 
 
 def validate_PIL() -> None:  # noqa: N802
@@ -103,33 +100,14 @@ def validate_PIL() -> None:  # noqa: N802
     Normal PIL installations will have these, but PIL can be built from source with
     these turned off.
 
-    :raises InvalidEnvironment: If PIL is missing required modules."""
+    :raises ModuleNotFoundError: If PIL is missing required modules."""
 
-    missing_modules: list[str] = []
-
-    try:
-        from PIL import _avif
-    except ImportError:
-        missing_modules.append("AVIF")
-    else:
-        del _avif
-
-    try:
-        from PIL import _webp
-    except ImportError:
-        missing_modules.append("WEBP")
-    else:
-        del _webp
-
-    try:
-        from PIL import _imagingft
-    except ImportError:
-        missing_modules.append("FreeType")
-    else:
-        del _imagingft
+    missing_modules: list[str] = get_missing_modules(
+        ["PIL._avif", "PIL._webp", "PIL._imagingft"]
+    )
 
     if missing_modules:
-        raise InvalidEnvironmentError(
+        raise ModuleNotFoundError(
             "Current PIL installation missing necessary modules: "
             + ",".join(missing_modules)
         )

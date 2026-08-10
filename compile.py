@@ -8,11 +8,11 @@ from importlib.metadata import version as get_module_version
 from subprocess import Popen
 
 from personal_compile_tools.file_operations import (
-    copy_folder,
     delete_folder,
     get_folder_size,
+    overwrite_folder,
 )
-from personal_compile_tools.modules import get_module_file_path
+from personal_compile_tools.modules import get_module_file_path, module_is_one_file
 from personal_compile_tools.validation import raise_if_not_root
 
 from compile_utils.args import CompileArgumentParser, CompileNamespace
@@ -27,13 +27,12 @@ from compile_utils.cleaner import (
     strip_files,
     warn_unused_code_skips,
 )
-from compile_utils.code_to_skip import SKIP_ITERATION
+from compile_utils.code_to_skip import SKIP_ITERATION, modules_to_skip
 from compile_utils.constants import IMAGE_VIEWER_NAME, REPORT_FILE
 from compile_utils.log import get_logger
 from compile_utils.module_dependencies import (
     get_normalized_module_name,
     module_dependencies,
-    modules_to_skip,
 )
 from compile_utils.nuitka_ext import clean_compilation_report, start_nuitka_compilation
 from compile_utils.validation import (
@@ -105,7 +104,7 @@ try:
         module_file: str = os.path.basename(module_file_path)
         module_folder_path: str = os.path.dirname(module_file_path)
 
-        is_one_file: bool = module_folder_path.rstrip("\\/").endswith("site-packages")
+        is_one_file: bool = module_is_one_file(module_import_name)
 
         module_version: str = get_module_version(module.name)
         custom_module_path: str = (
@@ -132,8 +131,7 @@ try:
             site_packages_path = os.path.dirname(module_folder_path)
             old_lib_path: str = os.path.join(site_packages_path, "pillow.libs")
             new_lib_path: str = os.path.join(src_folder_path, "pillow.libs")
-            delete_folder(new_lib_path)
-            copy_folder(old_lib_path, new_lib_path)
+            overwrite_folder(old_lib_path, new_lib_path)
 
         if is_one_file:
             clean_file_and_copy(
