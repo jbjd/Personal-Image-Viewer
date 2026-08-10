@@ -6,7 +6,6 @@ import sys
 import pytest
 from psleak import MemoryLeakTestCase
 
-from compile_utils.exceptions import InvalidEnvironmentError
 from image_viewer._config import parse_config_file
 from image_viewer.image._read import (
     CRawImageView,
@@ -38,7 +37,7 @@ class TestLeaks(MemoryLeakTestCase):
         os.environ["PYTHONMALLOC"] = "malloc"
 
         if os.environ.get("PYTHONUNBUFFERED") != "1":
-            raise InvalidEnvironmentError("Need to set env variable PYTHONUNBUFFERED=1")
+            raise RuntimeError("Need to set env variable PYTHONUNBUFFERED=1")
 
     def tearDown(self) -> None:
         if self.malloc_env is not None:
