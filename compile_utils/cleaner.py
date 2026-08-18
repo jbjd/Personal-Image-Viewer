@@ -101,6 +101,8 @@ def clean_file_and_copy(
             source,
             optimize_config=OptimizeConfig(
                 code_to_skip=CodeToSkipConfig(
+                    skip_typing_cast=True,
+                    skip_unused_imports=True,
                     unused_imports_to_preserve=unused_imports_to_preserve.pop(
                         module_import_path, None
                     ),

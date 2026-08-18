@@ -18,6 +18,7 @@ from personal_compile_tools.validation import raise_if_not_root
 from compile_utils.args import CompileArgumentParser, CompileNamespace
 from compile_utils.build_setup import (
     custom_module_version_up_to_date,
+    get_code_to_skip_md5_hash,
     write_custom_module_version,
 )
 from compile_utils.cleaner import (
@@ -27,7 +28,7 @@ from compile_utils.cleaner import (
     strip_files,
     warn_unused_code_skips,
 )
-from compile_utils.code_to_skip import SKIP_ITERATION, modules_to_skip
+from compile_utils.code_to_skip import modules_to_skip
 from compile_utils.constants import IMAGE_VIEWER_NAME, REPORT_FILE
 from compile_utils.log import get_logger
 from compile_utils.module_dependencies import (
@@ -92,8 +93,10 @@ try:
 
     modules_no_warn_unused_skips: list[str] = []
 
+    code_to_skip_md5_hash: str = get_code_to_skip_md5_hash()
     minifier_version: str = get_module_version("personal_python_ast_optimizer")
     custom_version_flags: str = (
+        f"code_to_skip_md5_hash={code_to_skip_md5_hash}\n"
         f"assume_this_machine={assume_this_machine}\n"
         f"minifier_version={minifier_version}"
     )
@@ -114,11 +117,7 @@ try:
         )
 
         if custom_module_version_up_to_date(
-            custom_module_path,
-            module_import_name,
-            module_version,
-            SKIP_ITERATION,
-            custom_version_flags,
+            custom_module_path, module_import_name, module_version, custom_version_flags
         ):
             modules_no_warn_unused_skips.append(module_import_name)
             continue
@@ -152,11 +151,7 @@ try:
             )
 
         write_custom_module_version(
-            custom_module_path,
-            module_import_name,
-            module_version,
-            SKIP_ITERATION,
-            custom_version_flags,
+            custom_module_path, module_import_name, module_version, custom_version_flags
         )
 
     if args.extra_checks:

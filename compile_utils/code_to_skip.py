@@ -25,9 +25,6 @@ from image_viewer.image.image_io import (
 from image_viewer.image.resizer import JPEG_MAX_DIMENSION
 from image_viewer.ui.rename_entry import _ERROR_COLOR, _MAX_ENTRY_SIZE
 
-# Increment when edits to this file or module_dependencies are merged into main
-SKIP_ITERATION: int = 0
-
 modules_to_skip: list[str] = [
     "argparse",
     "bz2",
@@ -130,11 +127,13 @@ functions_to_always_skip: set[str] = {"logger.debug", "warnings.warn"}
 # Module dependent skips
 
 assignments_to_skip: dict[str, set[str]] = {
+    "PIL.AvifImagePlugin": {"format_description"},
     "PIL.DdsImagePlugin": {"format_description"},
     "PIL.GifImagePlugin": {"_Palette", "format_description"},
     "PIL.Image": {
         "DecoderInput",
         "MIME",
+        "_ENDIAN",
         "_ExifBase",
         "_fromarray_typemap",
         "logger",
@@ -169,6 +168,7 @@ functions_to_skip: dict[str, set[str]] = {
     "PIL._binary": {"i8", "si16be", "si16le", "si32be", "si32le"},
     "PIL._util": {"new"},
     "PIL.AvifImagePlugin": {"Image.register_mime", "get_codec_version"},
+    "PIL.GifImagePlugin": {"Image.register_mime", "_save_netpbm", "getheader"},
     "PIL.Image": {
         "__arrow_c_array__",
         "__getstate__",
@@ -185,6 +185,7 @@ functions_to_skip: dict[str, set[str]] = {
         "alpha_composite",
         "blend",
         "composite",
+        "draft",
         "deprecate",
         "effect_mandelbrot",
         "effect_noise",
@@ -250,10 +251,13 @@ functions_to_skip: dict[str, set[str]] = {
     "PIL.ImageFont": {
         "__getstate__",
         "__setstate__",
+        "_load_pilfont",
+        "_load_pilfont_data",
         "font_variant",
         "get_variation_axes",
         "get_variation_names",
         "getmetrics",
+        "getname",
         "load_default_imagefont",
         "load_default",
         "load_path",
@@ -291,8 +295,13 @@ functions_to_skip: dict[str, set[str]] = {
     },
     "PIL.ImageSequence": {"all_frames"},
     "PIL.ImageTk": {"_get_image_from_kw", "getimage"},
-    "PIL.GifImagePlugin": {"Image.register_mime", "_save_netpbm", "getheader"},
-    "PIL.JpegImagePlugin": {"Image.register_mime", "_getexif", "_getmp", "load_djpeg"},
+    "PIL.JpegImagePlugin": {
+        "Image.register_mime",
+        "_getexif",
+        "_getmp",
+        "draft",
+        "load_djpeg",
+    },
     "PIL.PngImagePlugin": {"Image.register_mime", "deprecate", "getchunks", "verify"},
     "PIL.WebPImagePlugin": {"Image.register_mime"},
 }

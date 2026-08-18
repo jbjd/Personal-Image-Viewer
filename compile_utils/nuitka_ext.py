@@ -6,6 +6,7 @@ import xml.etree.ElementTree as ET
 from collections.abc import Callable
 from subprocess import Popen
 
+from compile_utils import piv_plugin
 from compile_utils.log import get_logger
 
 _logger = get_logger()
@@ -34,8 +35,6 @@ def get_nuitka_command(input_file: str, nuitka_args: list[str]) -> list[str]:
     :param input_file: Input file to pass to nuitka
     :param nuita_args: Nuitka arguments to use"""
 
-    plugin_path: str = os.path.join(os.path.dirname(__file__), "piv_plugin.py")
-
     return [
         sys.executable,
         "-OO",
@@ -44,7 +43,7 @@ def get_nuitka_command(input_file: str, nuitka_args: list[str]) -> list[str]:
         input_file,
         "--python-flag=-OO,no_annotations,no_warnings,static_hashes",
         "--output-filename=viewer",
-        "--user-plugin=" + plugin_path,
+        "--user-plugin=" + piv_plugin.__file__,
         *nuitka_args,
     ]
 
