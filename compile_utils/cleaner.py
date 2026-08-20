@@ -47,6 +47,7 @@ from compile_utils.code_to_skip import (
     regex_to_apply_tk,
     unused_imports_to_preserve,
 )
+from compile_utils.constants import IMAGE_VIEWER_NAME
 from compile_utils.log import get_logger
 
 SEPARATORS = r"\\/" if os.name == "nt" else r"/"
@@ -291,12 +292,20 @@ def _get_tokens_to_skip_config(module_import_path: str) -> TokensToSkipConfig:
         else None
     )
 
+    # idea: ast parser that reads all names/attrs/args in image_viewer folder
+    # Orders by frequency
+    # Assigns them an unfound name/attr/args
+    name_mapper = (
+        {"self": "s"} if module_import_path.startswith(IMAGE_VIEWER_NAME) else None
+    )
+
     return TokensToSkipConfig(
         assignments_to_skip=assignments_input,
         classes_to_skip=classes_input,
         decorators_to_skip=decorators_input,
         from_imports_to_skip=from_module_imports_input,
         functions_to_skip=functions_input,
+        name_or_attr_map=name_mapper,
     )
 
 
