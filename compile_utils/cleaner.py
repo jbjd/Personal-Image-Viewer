@@ -21,6 +21,7 @@ from personal_python_ast_optimizer.config import (
     TokensToSkipConfig,
     TokenTypesToSkipConfig,
     TypeHintsToSkip,
+    UglifyConfig,
 )
 from personal_python_ast_optimizer.regex.replace import (
     RegexNoMatchError,
@@ -47,6 +48,7 @@ from compile_utils.code_to_skip import (
     regex_to_apply_tk,
     unused_imports_to_preserve,
 )
+from compile_utils.constants import IMAGE_VIEWER_NAME
 from compile_utils.log import get_logger
 
 SEPARATORS = r"\\/" if os.name == "nt" else r"/"
@@ -73,6 +75,7 @@ def clean_file_and_copy(
     module_name: str,
     module_import_path: str,
     assume_this_machine: bool,
+    uglify: bool,
 ) -> None:
     """Runs AST optimizer on source_file_path and writes result to dest_file_path.
 
@@ -80,7 +83,8 @@ def clean_file_and_copy(
     :param dest_file_path: Path to write
     :param module_name: Name of module
     :param module_import_path: How the module would be imported, e.x. 'PIL.Image'
-    :param assume_this_machine: Argument passed onto minifier"""
+    :param assume_this_machine: Removes code that is machine-dependent
+    :param uglify: Shorten some token names"""
 
     _logger.debug("Copying %s to %s", source_file_path, dest_file_path)
 
@@ -117,6 +121,7 @@ def clean_file_and_copy(
                 perf_optimizations=_get_perf_optimizations_config(
                     module_name, module_import_path, assume_this_machine
                 ),
+                uglify=_get_uglify_config(uglify, module_import_path),
             ),
             file_name=module_import_path,
         )
@@ -132,6 +137,7 @@ def clean_module_and_copy(
     dest_folder_path: str,
     module_name: str,
     assume_this_machine: bool,
+    uglify: bool,
     modules_to_skip: set[str] | None = None,
 ) -> None:
     """Copies all Python files of a module to dest_folder_path
@@ -140,7 +146,8 @@ def clean_module_and_copy(
     :param module_folder_path: Path to python module
     :param dest_folder_path: Path to write
     :param module_name: Name of module
-    :param assume_this_machine: Argument passed onto minifier
+    :param assume_this_machine: Removes code that is machine-dependent
+    :param uglify: Shorten some token names
     :param modules_to_skip: Submodules to not copy"""
 
     skipped_modules: set[str] = set()
@@ -168,6 +175,7 @@ def clean_module_and_copy(
                 module_name,
                 module_import_path,
                 assume_this_machine,
+                uglify,
             )
         else:
             copy_file(file_path, new_file_path)
@@ -332,6 +340,14 @@ def _get_perf_optimizations_config(
     config.name_or_attr_to_fold = TokensToFold(names_and_attrs, no_warn_folds)
 
     return config
+
+
+def _get_uglify_config(uglify: bool, module_import_path: str) -> UglifyConfig:
+
+    if uglify and module_import_path.startswith(IMAGE_VIEWER_NAME):
+        return UglifyConfig(shorten_private_functions=True)
+
+    return UglifyConfig()
 
 
 def _get_files_in_folder_with_filter(
