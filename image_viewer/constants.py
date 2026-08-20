@@ -28,8 +28,8 @@ class Movement(IntEnum):
 class TkTags(StrEnum):
     """Tags for items on the UI."""
 
-    TOPBAR = "topbar"
-    BACKGROUND = "back"
+    TOPBAR = "t"
+    BACKGROUND = "b"
 
 
 class ButtonName(StrEnum):

@@ -69,6 +69,7 @@ code_folder_path: str = os.path.join(working_folder, IMAGE_VIEWER_NAME)
 nuitka_dist_path: str = os.path.join(build_folder_path, TARGET_MODULE + ".dist")
 
 assume_this_machine: bool = not args.distribution
+uglify: bool = not args.debug
 
 _logger = get_logger()
 
@@ -85,10 +86,15 @@ try:
         IMAGE_VIEWER_NAME,
         f"{IMAGE_VIEWER_NAME}.{TARGET_MODULE}",
         assume_this_machine,
+        uglify,
     )
     delete_folder(os.path.join(src_folder_path, IMAGE_VIEWER_NAME))
     clean_module_and_copy(
-        code_folder_path, src_folder_path, IMAGE_VIEWER_NAME, assume_this_machine
+        code_folder_path,
+        src_folder_path,
+        IMAGE_VIEWER_NAME,
+        assume_this_machine,
+        uglify,
     )
 
     modules_no_warn_unused_skips: list[str] = []
@@ -139,6 +145,7 @@ try:
                 module_import_name,
                 module_import_name,
                 assume_this_machine,
+                uglify,
             )
         else:
             delete_folder(custom_module_path)
@@ -147,6 +154,7 @@ try:
                 src_folder_path,
                 module_import_name,
                 assume_this_machine,
+                uglify,
                 sub_modules_to_skip,
             )
 

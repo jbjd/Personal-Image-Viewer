@@ -363,102 +363,88 @@ machine_specific_folds: dict[str, FoldableConstant] = {
 machine_specific_call_folds_input = TokensToFold({"os.cpu_count": os.cpu_count()})
 
 
-remove_all_re = RegexReplacement(pattern="^.*$", flags=re.DOTALL)
+remove_all_re = RegexReplacement("^.*$", flags=re.DOTALL)
 regex_to_apply_py: dict[str, list[RegexReplacement]] = {
-    f"{IMAGE_VIEWER_NAME}.utils.PIL": [
-        RegexReplacement(pattern=r"_Image._plugins = \[\]")
-    ],
+    f"{IMAGE_VIEWER_NAME}.utils.PIL": [RegexReplacement(r"_Image._plugins = \[\]")],
     "PIL.__init__": [
-        RegexReplacement(
-            pattern=r"_plugins = \[.*?\]",
-            replacement="_plugins=[]",
-            flags=re.DOTALL,
-        ),
-        RegexReplacement(
-            pattern=r"from \. import _version.*del _version", flags=re.DOTALL
-        ),
+        RegexReplacement(r"_plugins = \[.*?\]", "_plugins=[]", flags=re.DOTALL),
+        RegexReplacement(r"from \. import _version.*del _version", flags=re.DOTALL),
     ],
     "PIL.AvifImagePlugin": [
         RegexReplacement(
-            pattern=r"try:\s+?from \. import _avif.*?SUPPORTED = False",
-            replacement="from . import _avif;SUPPORTED = True",
+            r"try:\s+?from \. import _avif.*?SUPPORTED = False",
+            "from . import _avif;SUPPORTED = True",
             flags=re.DOTALL,
         ),
         RegexReplacement(  # Remove Exif usage to remove Tiff dependency
-            pattern=r"if exif_orientation != 1 or exif:.*?self\.info\[\"exif\"\] = exif",  # noqa: E501
+            r"if exif_orientation != 1 or exif:.*?self\.info\[\"exif\"\] = exif",
             flags=re.DOTALL,
         ),
         RegexReplacement(  # Remove Exif usage to remove Tiff dependency
-            pattern=r" *if exif :=.*?\n\n", flags=re.DOTALL
+            r" *if exif :=.*?\n\n", flags=re.DOTALL
         ),
         RegexReplacement(  # Remove Exif usage to remove Tiff dependency
-            pattern=r'exif or b""', replacement='b""'
+            r'exif or b""', replacement='b""'
         ),
     ],
     "PIL.DdsImagePlugin": [
         RegexReplacement(
-            pattern=r"# Backward compatibility layer.*DXGI_FORMAT_BC7_UNORM_SRGB = DXGI_FORMAT.BC7_UNORM_SRGB",  # noqa: E501
+            r"# Backward compatibility layer.*DXGI_FORMAT_BC7_UNORM_SRGB = DXGI_FORMAT.BC7_UNORM_SRGB",  # noqa: E501
             flags=re.DOTALL,
         )
     ],
     "PIL.Image": [
         RegexReplacement(
-            pattern=r"try:\n    #.*?from \. import _imaging as core.*?except.*?raise",
-            replacement="from . import _imaging as core",
+            r"try:\n    #.*?from \. import _imaging as core.*?except.*?raise",
+            "from . import _imaging as core",
             flags=re.DOTALL,
         ),
         RegexReplacement(
-            pattern="if im is None and formats is ID:.*?if im:",
-            replacement="if im:",
-            flags=re.DOTALL,
+            "if im is None and formats is ID:.*?if im:", "if im:", flags=re.DOTALL
         ),
-        RegexReplacement(pattern=r"def preinit\(\).*_initialized = 1", flags=re.DOTALL),
+        RegexReplacement(r"def preinit\(\).*_initialized = 1", flags=re.DOTALL),
     ],
     "PIL.ImageDraw": [
         RegexReplacement(
-            pattern=r"def Draw.*?return ImageDraw.*?\)",
-            replacement="""def Draw(im,mode=None):return ImageDraw(im,mode)""",
+            r"def Draw.*?return ImageDraw.*?\)",
+            """def Draw(im,mode=None):return ImageDraw(im,mode)""",
             flags=re.DOTALL,
         ),
     ],
     "PIL.ImageFile": [
         RegexReplacement(
-            pattern=r"if isinstance\(self, StubImageFile\):.*?open\(self\)",
+            r"if isinstance\(self, StubImageFile\):.*?open\(self\)",
             flags=re.DOTALL,
         ),
     ],
     "PIL.ImageFont": [
         RegexReplacement(
-            pattern=r"try:.*DeferredError\.new\(ex\)",
-            replacement="from . import _imagingft as core",
+            r"try:.*DeferredError\.new\(ex\)",
+            "from . import _imagingft as core",
             flags=re.DOTALL,
         ),
         RegexReplacement(
-            pattern=r"if isinstance\(core, DeferredError\):.*?core\.ex", flags=re.DOTALL
+            r"if isinstance\(core, DeferredError\):.*?core\.ex", flags=re.DOTALL
         ),
         RegexReplacement(
-            pattern=r"if layout_engine not in.*?elif.*?layout_engine = Layout\.BASIC",
-            replacement="layout_engine = Layout.BASIC",
+            r"if layout_engine not in.*?elif.*?layout_engine = Layout\.BASIC",
+            "layout_engine = Layout.BASIC",
             flags=re.DOTALL,
         ),
     ],
     "PIL.ImageMode": [
         RegexReplacement(
-            pattern="from typing import NamedTuple",
-            replacement="from collections import namedtuple",
+            "from typing import NamedTuple", "from collections import namedtuple"
         ),
         RegexReplacement(
-            pattern=r"\(NamedTuple\):.*return self\.mode",
-            replacement=r"(namedtuple('ModeDescriptor', ['mode','bands','basemode','basetype','typestr'])):\n\tdef __str__(self):return self.mode",  # noqa: E501
+            r"\(NamedTuple\):.*return self\.mode",
+            r"(namedtuple('ModeDescriptor', ['mode','bands','basemode','basetype','typestr'])):\n\tdef __str__(self):return self.mode",  # noqa: E501
             flags=re.DOTALL,
         ),
     ],
     "PIL.ImageTk": [
-        RegexReplacement(pattern="image is None:", replacement="False:", count=0),
-        RegexReplacement(
-            pattern=r"isinstance\(image, str\):",
-            replacement="False:",
-        ),
+        RegexReplacement("image is None:", "False:", count=0),
+        RegexReplacement(r"isinstance\(image, str\):", "False:"),
     ],
     "PIL.JpegImagePlugin": [
         RegexReplacement(  # Remove .mpo support for now
@@ -471,23 +457,21 @@ regex_to_apply_py: dict[str, list[RegexReplacement]] = {
         ),
     ],
     "PIL.PngImagePlugin": [
-        RegexReplacement(
-            pattern=r"raise EOFError\(.*?\)", replacement="raise EOFError", count=0
-        ),
+        RegexReplacement(r"raise EOFError\(.*?\)", "raise EOFError", count=0),
         RegexReplacement(  # Remove Exif usage to remove Tiff dependency
             r"if isinstance\(exif, Image\.Exif\):\s+exif = exif.tobytes\(8\)"
         ),
     ],
     "PIL.ImageText": [
         RegexReplacement(
-            pattern=r"isinstance\(self\.font, ImageFont\.TransposedFont\)",
-            replacement="self.font.__class__.__name__ == 'TransposedFont'",
+            r"isinstance\(self\.font, ImageFont\.TransposedFont\)",
+            "self.font.__class__.__name__ == 'TransposedFont'",
         ),
     ],
     "PIL.WebPImagePlugin": [
         RegexReplacement(
-            pattern=r"try:\s+?from \. import _webp.*?SUPPORTED = False",
-            replacement="from . import _webp;SUPPORTED = True",
+            r"try:\s+?from \. import _webp.*?SUPPORTED = False",
+            "from . import _webp;SUPPORTED = True",
             flags=re.DOTALL,
         ),
         RegexReplacement(  # Remove Exif usage to remove Tiff dependency
@@ -508,7 +492,7 @@ else:
     regex_to_apply_py["send2trash.__init__"] = [remove_all_re]
     regex_to_apply_py["send2trash.compat"] = [
         RegexReplacement(
-            pattern="^.*$",
+            "^.*$",
             replacement=(
                 """
 text_type = str
@@ -523,7 +507,7 @@ environb = os.environb"""
     ]
     regex_to_apply_py["send2trash.exceptions"] = [
         RegexReplacement(
-            pattern="^.*$",
+            "^.*$",
             replacement="""
 import errno
 class TrashPermissionError(PermissionError):
@@ -534,7 +518,7 @@ class TrashPermissionError(PermissionError):
     ]
     # We don't use pathlib's Path, remove support for it
     regex_to_apply_py["send2trash.util"] = [
-        RegexReplacement(pattern=r".*\[path\.__fspath__\(\).*\]")
+        RegexReplacement(r".*\[path\.__fspath__\(\).*\]")
     ]
 
 
@@ -544,36 +528,32 @@ regex_to_apply_tk: dict[str, list[RegexReplacement]] = {
     "tk/ttk/ttk.tcl": [
         # Loads themes that are not used
         RegexReplacement(
-            pattern="proc ttk::LoadThemes.*?\n}",
-            replacement="proc ttk::LoadThemes {} {}",
-            flags=re.DOTALL,
+            "proc ttk::LoadThemes.*?\n}", "proc ttk::LoadThemes {} {}", flags=re.DOTALL
         )
     ],
     f"{tcl_folder}/platform-*.tm": [
         # Discontinued OS
-        RegexReplacement(pattern=r"osf1 \{.*?\}", flags=re.DOTALL),
-        RegexReplacement(
-            pattern=r"solaris(\*-\*)? \{(.*?\{.*?\}.*?)*?\}", flags=re.DOTALL
-        ),
+        RegexReplacement(r"osf1 \{.*?\}", flags=re.DOTALL),
+        RegexReplacement(r"solaris(\*-\*)? \{(.*?\{.*?\}.*?)*?\}", flags=re.DOTALL),
     ],
 }
 
 if sys.platform != "darwin":
     regex_to_apply_tk[f"{tcl_folder}/platform-*.tm"].append(
-        RegexReplacement(pattern=r"darwin \{.*?aix", replacement="aix", flags=re.DOTALL)
+        RegexReplacement(r"darwin \{.*?aix", "aix", flags=re.DOTALL)
     )
 
     regex_to_apply_tk["tcl/auto.tcl"] = [
         RegexReplacement(
-            pattern=r'if \{\$tcl_platform\(platform\) eq "unix".*?\}.*?\}',
+            r'if \{\$tcl_platform\(platform\) eq "unix".*?\}.*?\}',
             flags=re.DOTALL,
         )
     ]
 
     regex_to_apply_tk["tcl/init.tcl"] = [
         RegexReplacement(
-            pattern=r'if \{\$tcl_platform\(os\) eq "Darwin".*?else.*?\}\s*?\}',
-            replacement="package unknown {::tcl::tm::UnknownHandler ::tclPkgUnknown}",
+            r'if \{\$tcl_platform\(os\) eq "Darwin".*?else.*?\}\s*?\}',
+            "package unknown {::tcl::tm::UnknownHandler ::tclPkgUnknown}",
             flags=re.DOTALL,
         )
     ]

@@ -72,7 +72,7 @@ class CustomCanvas(Canvas):
         self._motion_id = self.after(2, self._move_to_inner, event)
 
     def _move_to_inner(self, event: Event) -> None:
-        """Moves imagae display the difference from coords in :func:`_move_from`
+        """Moves image display the difference from coords in :func:`_move_from`
         and this event.
 
         :param event: Tkinter event with mouse coords"""
