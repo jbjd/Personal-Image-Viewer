@@ -142,7 +142,7 @@ error:
 }
 
 /**
- * Downcales dimension by ratio of numerator over `downscale_factor`.
+ * Downscales dimension by ratio of numerator over `downscale_factor`.
  *
  * @param dimension int to scale
  * @param downscale_factor of ratio to scale by

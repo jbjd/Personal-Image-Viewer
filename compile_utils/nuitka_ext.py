@@ -33,7 +33,7 @@ def get_nuitka_command(input_file: str, nuitka_args: list[str]) -> list[str]:
 
     :param python: The name or path of python executable to use
     :param input_file: Input file to pass to nuitka
-    :param nuita_args: Nuitka arguments to use"""
+    :param nuitka_args: Nuitka arguments to use"""
 
     return [
         sys.executable,

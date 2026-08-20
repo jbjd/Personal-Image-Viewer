@@ -56,7 +56,7 @@ class ImageResizer:
         return resize(image, (new_width, new_height), resampling)
 
     def _too_big(self, width: int, height: int) -> bool:
-        """Returns if dimenons are too big and Resizer will not accept them."""
+        """Returns if dimensions are too big and Resizer will not accept them."""
         return width > JPEG_MAX_DIMENSION or height > JPEG_MAX_DIMENSION
 
     def get_image_fit_to_screen(self, image: Image, image_view: CRawImageView) -> Image:
