@@ -1,10 +1,8 @@
 """Tests for the ViewerApp class."""
 
-from tkinter import Tk
 from unittest.mock import MagicMock, patch
 
 import pytest
-from PIL.Image import Image
 
 from image_viewer.viewer import ViewerApp
 from tests.utils.mocks import MockEvent
@@ -75,6 +73,11 @@ def test_clear_image(viewer: ViewerApp) -> None:
 def test_exit(viewer: ViewerApp) -> None:
     """Should clean up and exit tkinter."""
 
+    mock_quit = MagicMock()
+    viewer.app.quit = mock_quit
+    mock_destroy = MagicMock()
+    viewer.app.destroy = mock_destroy
+
     del viewer.canvas
 
     # Cleans up properly when not fully initialized
@@ -84,13 +87,13 @@ def test_exit(viewer: ViewerApp) -> None:
 
     viewer.canvas = MagicMock()
     viewer.canvas.file_name_text_id = 0
-    mock_destroy = MagicMock()
-    viewer.app.destroy = mock_destroy
 
     with pytest.raises(SystemExit) as exception_cm:
         viewer.exit()
     assert exception_cm.value.code == 0
-    mock_destroy.assert_called_once()
+
+    assert mock_quit.call_count == 2
+    assert mock_destroy.call_count == 2
 
 
 def test_minimize(viewer: ViewerApp) -> None:
@@ -116,10 +119,7 @@ def test_minimize(viewer: ViewerApp) -> None:
     [(False, False), (False, True), (True, False), (True, True)],
 )
 def test_update_details_dropdown(
-    tk: Tk,  # noqa: ARG001
-    viewer: ViewerApp,
-    dropdown_show: bool,
-    dropdown_needs_refresh: bool,
+    viewer: ViewerApp, dropdown_show: bool, dropdown_needs_refresh: bool
 ) -> None:
     """Should correctly update dropdown given provided state."""
     viewer.canvas.itemconfigure = MagicMock()
@@ -151,11 +151,8 @@ def test_update_details_dropdown(
 
 
 @pytest.mark.parametrize("user_input", [" ", "something.png"])
-def test_rename_or_convert(tk: Tk, viewer: ViewerApp, user_input: str) -> None:  # noqa: ARG001
+def test_rename_or_convert(viewer: ViewerApp, user_input: str) -> None:
     event = MagicMock()
-    image_io = MagicMock()
-    image_io.PIL_image = Image()
-    viewer.image_io = image_io
     with (
         patch("image_viewer.viewer.RenameEntry.get", return_value=user_input),
         patch(
@@ -168,6 +165,13 @@ def test_rename_or_convert(tk: Tk, viewer: ViewerApp, user_input: str) -> None: 
         if stripped_input == "":
             mock_rename_or_convert_current_image.assert_not_called()
         else:
-            mock_rename_or_convert_current_image.assert_called_once_with(
-                image_io.PIL_image, stripped_input
-            )
+            mock_rename_or_convert_current_image.assert_called_once()
+
+
+def test_copy_to_clipboard_as_base64(viewer: ViewerApp) -> None:
+    viewer.copy_to_clipboard_as_base64(MagicMock())
+
+    assert (
+        viewer.app.clipboard_get()
+        == "R0lGODdhAgACAKEEAKykvbi1vNLQxd3c2CwAAAAAAgACAAACA0QmBQA7"
+    )
