@@ -12,6 +12,7 @@ from image_viewer._config import (
     DEFAULT_KB_UNDO_MOST_RECENT_ACTION,
     DEFAULT_UI_BACKGROUND_COLOR,
     DEFAULT_UI_FONT,
+    DEFAULT_UI_INIT_DOWNSCALE,
     Config,
     parse_config_file,
 )
@@ -35,6 +36,7 @@ def test_config_reader() -> None:
 
     assert config.ui_background_color == "#ABCDEF"
     assert config.ui_font == "test"
+    assert config.ui_init_downscale == 10
 
 
 def test_config_reader_defaults() -> None:
@@ -118,3 +120,4 @@ def _assert_defaults(config: Config) -> None:
 
     assert config.ui_background_color == DEFAULT_UI_BACKGROUND_COLOR
     assert config.ui_font == DEFAULT_UI_FONT
+    assert config.ui_init_downscale == DEFAULT_UI_INIT_DOWNSCALE

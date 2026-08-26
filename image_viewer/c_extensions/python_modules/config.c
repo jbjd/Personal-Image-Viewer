@@ -23,6 +23,7 @@ static PyMemberDef Config_members[] = {
     {"kb_undo_most_recent_action", Py_T_OBJECT_EX, offsetof(Config, kb_undo_most_recent_action), Py_READONLY, 0},
     {"ui_background_color", Py_T_OBJECT_EX, offsetof(Config, ui_background_color), Py_READONLY, 0},
     {"ui_font", Py_T_OBJECT_EX, offsetof(Config, ui_font), Py_READONLY, 0},
+    {"ui_init_downscale", Py_T_OBJECT_EX, offsetof(Config, ui_init_downscale), Py_READONLY, 0},
     {NULL}
 };
 
@@ -52,7 +53,6 @@ static PyTypeObject Config_Type = {
 
 static inline Config *Config_New() {
     Config *config = (Config *)PyObject_New(Config, &Config_Type);
-    config->ui_font = NULL;
     config->cache_size = NULL;
     config->kb_copy_to_clipboard_as_base64 = NULL;
     config->kb_move_to_new_file = NULL;
@@ -63,6 +63,8 @@ static inline Config *Config_New() {
     config->kb_show_details = NULL;
     config->kb_undo_most_recent_action = NULL;
     config->ui_background_color = NULL;
+    config->ui_font = NULL;
+    config->ui_init_downscale = NULL;
 
     return config;
 }
@@ -100,6 +102,9 @@ static void Config_SetDefaults(PyObject *self, Config *config) {
     }
     if (config->ui_font == NULL) {
         config->ui_font = PyObject_GetAttrString(self, VARIABLE_NAME(DEFAULT_UI_FONT));
+    }
+    if (config->ui_init_downscale == NULL) {
+        config->ui_init_downscale = PyObject_GetAttrString(self, VARIABLE_NAME(DEFAULT_UI_INIT_DOWNSCALE));
     }
 }
 // Config End
@@ -150,12 +155,12 @@ static PyObject *Py_from_string_or_null_with_validation(const char *value, bool 
     return PyUnicode_FromString(value);
 }
 
-static PyObject *Py_from_int_or_null(const char *value, int *error_out) {
+static PyObject *Py_from_int_or_null(const char *value, int maximum, int *error_out) {
     if (*value == '\0') {
         *error_out = false;
         return NULL;
     }
-    return PyLong_FromLong(str_to_int(value, 0, 100, DEFAULT_CACHE_SIZE, error_out));
+    return PyLong_FromLong(str_to_int(value, 0, maximum, DEFAULT_CACHE_SIZE, error_out));
 }
 
 static inline void _update_config(Config *config, enum Section section, char *restrict key, char *restrict value, bool validate) {
@@ -165,9 +170,9 @@ static inline void _update_config(Config *config, enum Section section, char *re
     switch (section) {
     case CACHE:
         if (strcmp(key, KEY_CACHE_SIZE) == 0) {
-            int error;
             target = &config->cache_size;
-            Py_value = Py_from_int_or_null(value, &error);
+            int error;
+            Py_value = Py_from_int_or_null(value, 100, &error);
             if (validate && error) {
                 _print_err_bad_value_int(key, value, section, "Not an integer in range 0-100", DEFAULT_CACHE_SIZE);
             }
@@ -222,6 +227,13 @@ static inline void _update_config(Config *config, enum Section section, char *re
         } else if (strcmp(key, KEY_UI_FONT) == 0) {
             target = &config->ui_font;
             Py_value = Py_from_string_or_null(value);
+        } else if (strcmp(key, KEY_UI_INIT_DOWNSCALE) == 0) {
+            target = &config->ui_init_downscale;
+            int error;
+            Py_value = Py_from_int_or_null(value, 50, &error);
+            if (validate && error) {
+                _print_err_bad_value_int(key, value, section, "Not an integer in range 0-50", DEFAULT_CACHE_SIZE);
+            }
         }
         break;
     case UNKNOWN:
@@ -338,6 +350,9 @@ static void _print_err_missing_keys(Config *config) {
     if (config->ui_font == NULL) {
         _print_err_missing_key(KEY_UI_FONT, UI);
     }
+    if (config->ui_init_downscale == NULL) {
+        _print_err_missing_key(KEY_UI_INIT_DOWNSCALE, UI);
+    }
 }
 
 PyObject *validate_config_file(PyObject *self, PyObject *arg) {
@@ -381,7 +396,8 @@ static int config_exec(PyObject *module) {
             PyModule_AddStringConstant(module, VARIABLE_NAME(DEFAULT_KB_SHOW_DETAILS), DEFAULT_KB_SHOW_DETAILS) ||
             PyModule_AddStringConstant(module, VARIABLE_NAME(DEFAULT_KB_UNDO_MOST_RECENT_ACTION), DEFAULT_KB_UNDO_MOST_RECENT_ACTION) ||
             PyModule_AddStringConstant(module, VARIABLE_NAME(DEFAULT_UI_BACKGROUND_COLOR), DEFAULT_UI_BACKGROUND_COLOR) ||
-            PyModule_AddStringConstant(module, VARIABLE_NAME(DEFAULT_UI_FONT), DEFAULT_UI_FONT)
+            PyModule_AddStringConstant(module, VARIABLE_NAME(DEFAULT_UI_FONT), DEFAULT_UI_FONT) ||
+            PyModule_AddIntConstant(module, VARIABLE_NAME(DEFAULT_UI_INIT_DOWNSCALE), DEFAULT_UI_INIT_DOWNSCALE)
         )) {
         Py_DECREF(module);
         return -1;

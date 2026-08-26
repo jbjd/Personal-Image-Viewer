@@ -25,7 +25,13 @@ def _validate_keybind_or_default(keybind: str, default: str) -> str:
 
 
 class Config:
-    __slots__ = ("background_color", "font_file", "keybinds", "max_items_in_cache")
+    __slots__ = (
+        "background_color",
+        "font_file",
+        "init_downscale",
+        "keybinds",
+        "max_items_in_cache",
+    )
 
     def __init__(self, config_file: str = "image_viewer/config.ini") -> None:
         config_parser: ConfigParserExt = ConfigParserExt()
@@ -52,6 +58,9 @@ class Config:
             "UI",
             "FONT",
             "arial.ttf" if os.name == "nt" else "LiberationSans-Regular.ttf",
+        )
+        self.init_downscale: int = config_parser.get_int_safe(
+            "UI", "INIT_DOWNSCALE", 20
         )
 
 
