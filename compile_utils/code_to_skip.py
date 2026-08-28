@@ -23,6 +23,7 @@ from image_viewer.image.image_io import (
     ZOOM_AMOUNT,
 )
 from image_viewer.image.resizer import JPEG_MAX_DIMENSION
+from image_viewer.ui.button_icon_factory import DEFAULT_ICON_SIZE
 from image_viewer.ui.rename_entry import _ERROR_COLOR, _MAX_ENTRY_SIZE
 
 modules_to_skip: list[str] = [
@@ -326,6 +327,9 @@ foldable_constants: dict[
     str,
     dict[str, FoldableConstant],
 ] = {
+    f"{IMAGE_VIEWER_NAME}.ui.button_icon_factory": {
+        "DEFAULT_ICON_SIZE": DEFAULT_ICON_SIZE
+    },
     "PIL.AvifImagePlugin": {"DECODE_CODEC_CHOICE": DECODE_CODEC_CHOICE},
     "PIL.DdsImagePlugin": {"DDS_MAGIC": DDS_MAGIC},
     "PIL.GifImagePlugin": {"_FORCE_OPTIMIZE": _FORCE_OPTIMIZE},
