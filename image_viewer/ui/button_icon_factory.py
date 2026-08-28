@@ -30,9 +30,9 @@ class ButtonIconFactory:
         """Resizes an ImageDraw to icon size and converts to a PhotoImage"""
         return PhotoImage(self._resize_icon(draw._image))
 
-    def _new_rgb_image(self, rgb: tuple[int, int, int]) -> Image:
+    def _new_icon_image(self, mode: str, rgb: tuple[int, ...] | None = None) -> Image:
         """Returns new default sized RGB Image"""
-        return new_image("RGB", DEFAULT_ICON_SIZE, rgb)
+        return new_image(mode, DEFAULT_ICON_SIZE, rgb)
 
     def _make_icon_base(
         self,
@@ -40,8 +40,8 @@ class ButtonIconFactory:
         default_hovered_rgb: tuple[int, int, int] = ICON_HOVERED_RGB,
     ) -> tuple[ImageDraw, ImageDraw]:
         """Returns tuple of icon and hovered icon base images"""
-        return ImageDraw(self._new_rgb_image(default_rgb)), ImageDraw(
-            self._new_rgb_image(default_hovered_rgb)
+        return ImageDraw(self._new_icon_image("RGB", default_rgb)), ImageDraw(
+            self._new_icon_image("RGB", default_hovered_rgb)
         )
 
     def make_topbar_image(self, screen_width: int) -> PhotoImage:
@@ -113,7 +113,7 @@ class ButtonIconFactory:
         return self.make_icon_from_draw(draw)
 
     def make_rename_icons(self) -> IconImages:
-        transparent_icon: Image = new_image("RGBA", DEFAULT_ICON_SIZE)
+        transparent_icon: Image = self._new_icon_image("RGBA")
         draw: ImageDraw = ImageDraw(transparent_icon.copy())
         draw_hovered: ImageDraw = ImageDraw(transparent_icon)
         draw_hovered.rectangle((4, 5, 28, 27), ICON_HOVERED_RGB, width=1)
