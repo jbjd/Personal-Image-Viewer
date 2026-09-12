@@ -104,7 +104,8 @@ try:
     custom_version_flags: str = (
         f"code_to_skip_md5_hash={code_to_skip_md5_hash}\n"
         f"assume_this_machine={assume_this_machine}\n"
-        f"minifier_version={minifier_version}"
+        f"minifier_version={minifier_version}\n"
+        f"uglify={uglify}"
     )
     for module in module_dependencies:
         module_import_name: str = get_normalized_module_name(module)

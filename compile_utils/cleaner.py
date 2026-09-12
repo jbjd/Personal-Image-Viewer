@@ -344,10 +344,15 @@ def _get_perf_optimizations_config(
 
 def _get_uglify_config(uglify: bool, module_import_path: str) -> UglifyConfig:
 
-    if uglify and module_import_path.startswith(IMAGE_VIEWER_NAME):
-        return UglifyConfig(shorten_private_functions=True)
+    config: dict = {}
 
-    return UglifyConfig()
+    if uglify:
+        config["names_to_uglify"] = ["self"]
+
+        if module_import_path.startswith(IMAGE_VIEWER_NAME):
+            config["shorten_private_functions"] = True
+
+    return UglifyConfig(**config)
 
 
 def _get_files_in_folder_with_filter(
