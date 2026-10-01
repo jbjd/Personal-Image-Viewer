@@ -20,11 +20,13 @@ _removable_std_modules = {
     "filecmp",
     "fileinput",
     "ftplib",
+    "getopt",
     "html",
     "imaplib",
     "imghdr",
     "ipaddress",
     "json",
+    "lzma",
     "mailcap",
     "mimetypes",
     "modulefinder",
@@ -43,6 +45,7 @@ _removable_std_modules = {
     "shlex",
     "sndhdr",
     "socketserver",
+    "sre_compile",
     "sysconfig",
     "timeit",
     "tomllib",
@@ -57,31 +60,39 @@ if sys.platform != "darwin":
     if sys.platform == "win32":
         _removable_std_modules.add("configparser")
 
-if sys.version_info >= (3, 13):
-    deprecated_std_modules: set[str] = {
-        "cgi",
-        "cgitb",
-        "chunk",
-        "imghdr",
-        "mailcap",
-        "pipes",
-        "sndhdr",
-        "uu",
-        "xdrlib",
-    }
-    if deprecated_std_modules & _removable_std_modules:
-        raise NotImplementedError(
-            f"Need to remove deprecated modules: {deprecated_std_modules}"
-        )
 
-if sys.version_info >= (3, 19):
-    deprecated_std_modules: set[str] = {
-        "nturl2path",
-    }
-    if deprecated_std_modules & _removable_std_modules:
-        raise NotImplementedError(
-            f"Need to remove deprecated modules: {deprecated_std_modules}"
-        )
+def _validate_deprecated_modules() -> None:
+    deprecated_modules_by_version: list[tuple[tuple[int, int], set[str]]] = [
+        (
+            (3, 13),
+            {
+                "cgi",
+                "cgitb",
+                "chunk",
+                "imghdr",
+                "mailcap",
+                "pipes",
+                "sndhdr",
+                "uu",
+                "xdrlib",
+            },
+        ),
+        ((3, 15), {"sre_compile"}),
+        ((3, 19), {"nturl2path"}),
+    ]
+
+    for version, deprected in deprecated_modules_by_version:
+        if sys.version_info < version:
+            break
+
+        need_to_remove: set[str] = deprected & _removable_std_modules
+        if need_to_remove:
+            raise NotImplementedError(
+                f"Need to remove deprecated modules: {need_to_remove}"
+            )
+
+
+_validate_deprecated_modules()
 
 
 _removable_std_extensions: set[str] = set()
