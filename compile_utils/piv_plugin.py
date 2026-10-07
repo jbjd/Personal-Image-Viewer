@@ -26,7 +26,6 @@ _removable_std_modules = {
     "imghdr",
     "ipaddress",
     "json",
-    "lzma",
     "mailcap",
     "mimetypes",
     "modulefinder",
@@ -81,11 +80,11 @@ def _validate_deprecated_modules() -> None:
         ((3, 19), {"nturl2path"}),
     ]
 
-    for version, deprected in deprecated_modules_by_version:
+    for version, deprecated in deprecated_modules_by_version:
         if sys.version_info < version:
             break
 
-        need_to_remove: set[str] = deprected & _removable_std_modules
+        need_to_remove: set[str] = deprecated & _removable_std_modules
         if need_to_remove:
             raise NotImplementedError(
                 f"Need to remove deprecated modules: {need_to_remove}"
