@@ -313,6 +313,7 @@ def _get_perf_optimizations_config(
     module_name: str, module_import_path: str, assume_this_machine: bool
 ) -> PerfOptimizationsConfig:
     config = PerfOptimizationsConfig(
+        fold_constants=True,
         fold_simple_function_locals=True,
         collection_concat_to_unpack=True,
         simplify_conditional_bool_return=True,
@@ -343,7 +344,7 @@ def _get_perf_optimizations_config(
         names_and_attrs |= machine_specific_folds
         names_no_warn |= machine_specific_folds
 
-    # TODO: Seems to work, but leaves ```b'a' + b'c'``` instead of ```b'ac'```
+    # TODO: Seems to work, need to add all _binary functions and live test
     config.calls_to_fold = TokensToFold(calls_to_fold)
     config.name_or_attr_to_fold = TokensToFold(names_and_attrs, names_no_warn)
 
