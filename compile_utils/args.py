@@ -34,8 +34,6 @@ class NuitkaArgs(StrEnum):
     QUIET = "--quiet"
     VERBOSE = "--verbose"
     REPORT = "--report"
-    WARN_IMPLICIT_EXCEPTIONS = "--warn-implicit-exceptions"
-    WARN_UNUSUAL_CODE = "--warn-unusual-code"
 
     def with_value(self, value: str) -> str:
         """Returns the flag in the format {flag}={value}"""
@@ -135,9 +133,7 @@ class CompileArgumentParser:
             (
                 "Doesn't move compiled code to install path, doesn't check for root, "
                 "assumes --report and --extra_checks, adds "
-                f"{NuitkaArgs.WARN_IMPLICIT_EXCEPTIONS}, {NuitkaArgs.WARN_UNUSUAL_CODE}"
-                f", and {NuitkaArgs.WINDOWS_CONSOLE_MODE}={ConsoleMode.FORCE} "
-                f"flags to nuitka."
+                f"{NuitkaArgs.WINDOWS_CONSOLE_MODE}={ConsoleMode.FORCE} flag to nuitka."
             ),
             is_development=True,
         )
@@ -210,11 +206,6 @@ class CompileArgumentParser:
 
         if args.report:
             nuitka_args.append(NuitkaArgs.REPORT.with_value(REPORT_FILE))
-            if args.debug:
-                nuitka_args += [
-                    NuitkaArgs.WARN_IMPLICIT_EXCEPTIONS,
-                    NuitkaArgs.WARN_UNUSUAL_CODE,
-                ]
 
         if args.quiet:
             nuitka_args.append(NuitkaArgs.QUIET)

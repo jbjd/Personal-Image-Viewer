@@ -11,7 +11,7 @@ from PIL.AvifImagePlugin import DECODE_CODEC_CHOICE
 from PIL.DdsImagePlugin import DDS_MAGIC
 from PIL.GifImagePlugin import _FORCE_OPTIMIZE
 from PIL.GimpGradientFile import EPSILON
-from PIL.Image import WARN_POSSIBLE_FORMATS
+from PIL.Image import MAX_IMAGE_PIXELS, WARN_POSSIBLE_FORMATS
 from PIL.ImageFile import MAXBLOCK
 from PIL.ImageFont import MAX_STRING_LENGTH
 
@@ -52,6 +52,7 @@ modules_to_skip: list[str] = [
     "PIL.FtexImagePlugin",
     "PIL.GdImageFile",
     "PIL.GbrImagePlugin",
+    "PIL.GimpPaletteFile",
     "PIL.GribStubImagePlugin",
     "PIL.Hdf5StubImagePlugin",
     "PIL.IcnsImagePlugin",
@@ -66,6 +67,7 @@ modules_to_skip: list[str] = [
     "PIL.MpegImagePlugin",
     "PIL.MpoImagePlugin",
     "PIL.MspImagePlugin",
+    "PIL.PaletteFile",
     "PIL.PalmImagePlugin",
     "PIL.PcdImagePlugin",
     "PIL.PcfFontFile",
@@ -172,6 +174,7 @@ functions_to_skip: dict[str, set[str]] = {
     "PIL.GifImagePlugin": {"Image.register_mime", "_save_netpbm", "getheader"},
     "PIL.Image": {
         "__arrow_c_array__",
+        "__arrow_c_schema__",
         "__getstate__",
         "__repr__",
         "__setstate__",
@@ -200,6 +203,7 @@ functions_to_skip: dict[str, set[str]] = {
         "getexif",
         "getextrema",
         "getmodebandnames",
+        "getprojection",
         "getxmp",
         "init",
         "linear_gradient",
@@ -334,7 +338,10 @@ foldable_constants: dict[
     "PIL.DdsImagePlugin": {"DDS_MAGIC": DDS_MAGIC},
     "PIL.GifImagePlugin": {"_FORCE_OPTIMIZE": _FORCE_OPTIMIZE},
     "PIL.GimpGradientFile": {"EPSILON": EPSILON},
-    "PIL.Image": {"WARN_POSSIBLE_FORMATS": WARN_POSSIBLE_FORMATS},
+    "PIL.Image": {
+        "MAX_IMAGE_PIXELS": MAX_IMAGE_PIXELS,
+        "WARN_POSSIBLE_FORMATS": WARN_POSSIBLE_FORMATS,
+    },
     "PIL.ImageFile": {"MAXBLOCK": MAXBLOCK},
     "PIL.ImageFont": {"MAX_STRING_LENGTH": MAX_STRING_LENGTH // 1000},
 }

@@ -606,12 +606,12 @@ class ViewerApp:
         to load  further images."""
         self._start_image_load(self.load_image, movement_on_failure)
 
-    def show_topbar(self, _: Event | None = None) -> None:
+    def show_topbar(self) -> None:
         """Shows all topbar elements and updates its display"""
         self.canvas.itemconfigure(TkTags.TOPBAR, state="normal")
         self.update_topbar()
 
-    def hide_topbar(self, _: Event | None = None) -> None:
+    def hide_topbar(self) -> None:
         """Hides and removes focus from all topbar elements"""
         self.canvas.itemconfigure(TkTags.TOPBAR, state="hidden")
         self.hide_rename_window()
