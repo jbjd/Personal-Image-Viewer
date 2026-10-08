@@ -312,7 +312,7 @@ def _get_tokens_to_skip_config(module_import_path: str) -> TokensToSkipConfig:
 def _get_perf_optimizations_config(
     module_name: str, module_import_path: str, assume_this_machine: bool
 ) -> PerfOptimizationsConfig:
-    config = PerfOptimizationsConfig(  # TODO: Fix names_to_fold
+    config = PerfOptimizationsConfig(
         fold_simple_function_locals=True,
         collection_concat_to_unpack=True,
         simplify_conditional_bool_return=True,
