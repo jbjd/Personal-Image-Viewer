@@ -30,7 +30,7 @@ from personal_python_ast_optimizer.regex.replace import (
     re_replace_file,
 )
 from personal_python_ast_optimizer.run import optimize_source_and_minify
-from personal_python_ast_optimizer.typing import FoldableConstant
+from personal_python_ast_optimizer.typing import ConstantCall, FoldableConstant
 from personal_simple_tcl_minifier.parse import tcl_minify_folder
 
 from compile_utils.code_to_skip import (
@@ -41,8 +41,9 @@ from compile_utils.code_to_skip import (
     from_imports_to_skip,
     functions_to_always_skip,
     functions_to_skip,
-    machine_specific_call_folds_input,
+    machine_specific_call_folds,
     machine_specific_folds,
+    module_foldable_calls,
     module_foldable_constants,
     regex_to_apply_py,
     regex_to_apply_tk,
@@ -321,23 +322,30 @@ def _get_perf_optimizations_config(
     names_and_attrs: dict[str, FoldableConstant] = foldable_constants.pop(
         module_import_path, {}
     )
-    no_warn_folds: Iterable[str]
+    names_no_warn: Iterable[str]
+
+    calls_to_fold: dict[str, ConstantCall] = {}
 
     if module_name in module_foldable_constants:
         module_folds: dict[str, FoldableConstant] = module_foldable_constants[
             module_name
         ]
         names_and_attrs |= module_folds
-        no_warn_folds = module_folds
+        names_no_warn = module_folds
     else:
-        no_warn_folds = {}
+        names_no_warn = {}
+
+    if module_name in module_foldable_calls:
+        calls_to_fold |= module_foldable_calls[module_name]
 
     if assume_this_machine:
-        config.calls_to_fold = machine_specific_call_folds_input
+        calls_to_fold |= machine_specific_call_folds
         names_and_attrs |= machine_specific_folds
-        no_warn_folds |= machine_specific_folds
+        names_no_warn |= machine_specific_folds
 
-    config.name_or_attr_to_fold = TokensToFold(names_and_attrs, no_warn_folds)
+    # TODO: Seems to work, but leaves ```b'a' + b'c'``` instead of ```b'ac'```
+    config.calls_to_fold = TokensToFold(calls_to_fold)
+    config.name_or_attr_to_fold = TokensToFold(names_and_attrs, names_no_warn)
 
     return config
 

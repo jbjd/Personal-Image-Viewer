@@ -4,9 +4,9 @@ import os
 import re
 import sys
 
-from personal_python_ast_optimizer.config import TokensToFold
 from personal_python_ast_optimizer.regex.replace import RegexReplacement
-from personal_python_ast_optimizer.typing import FoldableConstant
+from personal_python_ast_optimizer.typing import ConstantCall, FoldableConstant
+from PIL._binary import o8
 from PIL.AvifImagePlugin import DECODE_CODEC_CHOICE
 from PIL.DdsImagePlugin import DDS_MAGIC
 from PIL.GifImagePlugin import _FORCE_OPTIMIZE
@@ -365,13 +365,22 @@ module_foldable_constants: dict[
     "PIL": {"SUPPORTED": True, "TYPE_CHECKING": False},
 }
 
+module_foldable_calls: dict[
+    str,
+    dict[str, ConstantCall],
+] = {
+    "PIL": {"o8": o8},
+}
+
 machine_specific_folds: dict[str, FoldableConstant] = {
     "os.name": os.name,
     "sys.byteorder": sys.byteorder,
     "sys.platform": sys.platform,
 }
 
-machine_specific_call_folds_input = TokensToFold({"os.cpu_count": os.cpu_count()})
+machine_specific_call_folds: dict[str, FoldableConstant] = {
+    "os.cpu_count": os.cpu_count()
+}
 
 
 remove_all_re = RegexReplacement("^.*$", flags=re.DOTALL)
