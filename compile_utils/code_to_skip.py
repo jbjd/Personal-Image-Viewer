@@ -6,13 +6,13 @@ import sys
 
 from personal_python_ast_optimizer.regex.replace import RegexReplacement
 from personal_python_ast_optimizer.typing import ConstantCall, FoldableConstant
-from PIL._binary import o8
+from PIL._binary import o8, o32le
 from PIL.AvifImagePlugin import DECODE_CODEC_CHOICE
 from PIL.DdsImagePlugin import DDS_MAGIC
 from PIL.GifImagePlugin import _FORCE_OPTIMIZE
 from PIL.GimpGradientFile import EPSILON
 from PIL.Image import MAX_IMAGE_PIXELS, WARN_POSSIBLE_FORMATS
-from PIL.ImageFile import MAXBLOCK
+from PIL.ImageFile import MAXBLOCK, SAFEBLOCK
 from PIL.ImageFont import MAX_STRING_LENGTH
 
 from compile_utils.constants import IMAGE_VIEWER_NAME
@@ -342,7 +342,7 @@ foldable_constants: dict[
         "MAX_IMAGE_PIXELS": MAX_IMAGE_PIXELS,
         "WARN_POSSIBLE_FORMATS": WARN_POSSIBLE_FORMATS,
     },
-    "PIL.ImageFile": {"MAXBLOCK": MAXBLOCK},
+    "PIL.ImageFile": {"MAXBLOCK": MAXBLOCK, "SAFEBLOCK": SAFEBLOCK},
     "PIL.ImageFont": {"MAX_STRING_LENGTH": MAX_STRING_LENGTH // 1000},
 }
 
@@ -365,9 +365,16 @@ module_foldable_constants: dict[
     "PIL": {"SUPPORTED": True, "TYPE_CHECKING": False},
 }
 
+foldable_calls: dict[
+    str,
+    dict[str, FoldableConstant | ConstantCall],
+] = {
+    "PIL.DdsImagePlugin": {"o32": o32le},
+}
+
 module_foldable_calls: dict[
     str,
-    dict[str, ConstantCall],
+    dict[str, FoldableConstant | ConstantCall],
 ] = {
     "PIL": {"o8": o8},
 }

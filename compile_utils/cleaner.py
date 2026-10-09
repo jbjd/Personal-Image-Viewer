@@ -37,6 +37,7 @@ from compile_utils.code_to_skip import (
     assignments_to_skip,
     classes_to_skip,
     decorators_to_always_skip,
+    foldable_calls,
     foldable_constants,
     from_imports_to_skip,
     functions_to_always_skip,
@@ -325,7 +326,7 @@ def _get_perf_optimizations_config(
     )
     names_no_warn: Iterable[str]
 
-    calls_to_fold: dict[str, ConstantCall] = {}
+    calls_to_fold: dict[str, ConstantCall] = foldable_calls.pop(module_import_path, {})
 
     if module_name in module_foldable_constants:
         module_folds: dict[str, FoldableConstant] = module_foldable_constants[
@@ -344,7 +345,7 @@ def _get_perf_optimizations_config(
         names_and_attrs |= machine_specific_folds
         names_no_warn |= machine_specific_folds
 
-    # TODO: Seems to work, need to add all _binary functions and live test
+    # TODO: Seems to work, need to add all _binary functions
     config.calls_to_fold = TokensToFold(calls_to_fold)
     config.name_or_attr_to_fold = TokensToFold(names_and_attrs, names_no_warn)
 
