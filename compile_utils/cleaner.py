@@ -327,6 +327,7 @@ def _get_perf_optimizations_config(
     names_no_warn: Iterable[str]
 
     calls_to_fold: dict[str, ConstantCall] = foldable_calls.pop(module_import_path, {})
+    calls_no_warn: Iterable[str] = {}
 
     if module_name in module_foldable_constants:
         module_folds: dict[str, FoldableConstant] = module_foldable_constants[
@@ -339,14 +340,15 @@ def _get_perf_optimizations_config(
 
     if module_name in module_foldable_calls:
         calls_to_fold |= module_foldable_calls[module_name]
+        calls_no_warn |= module_foldable_calls[module_name]
 
     if assume_this_machine:
         calls_to_fold |= machine_specific_call_folds
+        calls_no_warn |= machine_specific_call_folds
         names_and_attrs |= machine_specific_folds
         names_no_warn |= machine_specific_folds
 
-    # TODO: Seems to work, need to add all _binary functions
-    config.calls_to_fold = TokensToFold(calls_to_fold)
+    config.calls_to_fold = TokensToFold(calls_to_fold, calls_no_warn)
     config.name_or_attr_to_fold = TokensToFold(names_and_attrs, names_no_warn)
 
     return config

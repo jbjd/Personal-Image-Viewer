@@ -168,7 +168,7 @@ classes_to_skip: dict[str, set[str]] = {
 
 
 functions_to_skip: dict[str, set[str]] = {
-    "PIL._binary": {"i8", "si16be", "si16le", "si32be", "si32le"},
+    "PIL._binary": {"i8", "o32le", "si16be", "si16le", "si32be", "si32le"},
     "PIL._util": {"new"},
     "PIL.AvifImagePlugin": {"Image.register_mime", "get_codec_version"},
     "PIL.GifImagePlugin": {"Image.register_mime", "_save_netpbm", "getheader"},
@@ -344,6 +344,7 @@ foldable_constants: dict[
     },
     "PIL.ImageFile": {"MAXBLOCK": MAXBLOCK, "SAFEBLOCK": SAFEBLOCK},
     "PIL.ImageFont": {"MAX_STRING_LENGTH": MAX_STRING_LENGTH // 1000},
+    "PIL.PngImagePlugin": {"MAX_TEXT_CHUNK": SAFEBLOCK},
 }
 
 
