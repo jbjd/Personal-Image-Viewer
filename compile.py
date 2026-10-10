@@ -13,7 +13,11 @@ from personal_compile_tools.file_operations import (
     overwrite_folder,
 )
 from personal_compile_tools.modules import get_module_file_path, module_is_one_file
-from personal_compile_tools.validation import raise_if_not_root
+from personal_compile_tools.nuitka_ext import nuitka_raise_if_unsupported_python_version
+from personal_compile_tools.validation import (
+    raise_if_not_root,
+    raise_if_unsupported_python_version_pyproject,
+)
 
 from compile_utils.args import CompileArgumentParser, CompileNamespace
 from compile_utils.build_setup import (
@@ -36,13 +40,10 @@ from compile_utils.module_dependencies import (
     module_dependencies,
 )
 from compile_utils.nuitka_ext import clean_compilation_report, start_nuitka_compilation
-from compile_utils.validation import (
-    validate_module_requirements,
-    validate_PIL,
-    validate_python_version,
-)
+from compile_utils.validation import validate_module_requirements, validate_PIL
 
-validate_python_version()
+raise_if_unsupported_python_version_pyproject()
+nuitka_raise_if_unsupported_python_version(sys.version_info[:2])
 validate_module_requirements()
 validate_PIL()
 

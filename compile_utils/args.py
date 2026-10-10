@@ -73,9 +73,7 @@ class CompileNamespace(Namespace):
     no_cache: bool
 
     def __str__(self) -> str:
-        return ", ".join(
-            f"{k}={v}" for k, v in self.__dict__.items() if isinstance(v, bool)
-        )
+        return ", ".join(f"{k}={v}" for k, v in self.__dict__.items())
 
 
 class CompileArgumentParser:
@@ -187,10 +185,16 @@ class CompileArgumentParser:
         if args.quiet and args.verbose:
             raise ValueError(f"Can't pass both {PivArgs.QUIET} and {PivArgs.VERBOSE}")
 
+        icon_relative_path: str = (
+            "icon/icon.ico" if os.name == "nt" else "icon/icon.png"
+        )
+        icon_path: str = os.path.join(working_folder, icon_relative_path)
+
         nuitka_args: list[str] = [
             f"{PivPluginArgs.PIV_ARGS}={args}",
             NuitkaArgs.STANDALONE,
             NuitkaArgs.ENABLE_PLUGIN.with_value("tk-inter"),
+            self._get_data_file_arg(icon_path, icon_relative_path),
         ]
 
         # PivPlugin args
@@ -212,12 +216,6 @@ class CompileArgumentParser:
         elif args.verbose:
             nuitka_args.append(NuitkaArgs.VERBOSE)
 
-        icon_relative_path: str = (
-            "icon/icon.ico" if os.name == "nt" else "icon/icon.png"
-        )
-        icon_path: str = os.path.join(working_folder, icon_relative_path)
-
-        nuitka_args.append(self._get_data_file_arg(icon_path, icon_relative_path))
         nuitka_args += [
             self._get_data_file_arg(os.path.join(working_folder, f), f)
             for f in files_to_include
