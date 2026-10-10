@@ -4,15 +4,15 @@ import os
 import re
 import sys
 
-from personal_python_ast_optimizer.config import TokensToFold
 from personal_python_ast_optimizer.regex.replace import RegexReplacement
-from personal_python_ast_optimizer.typing import FoldableConstant
+from personal_python_ast_optimizer.typing import ConstantCall, FoldableConstant
+from PIL._binary import o8, o32le
 from PIL.AvifImagePlugin import DECODE_CODEC_CHOICE
 from PIL.DdsImagePlugin import DDS_MAGIC
 from PIL.GifImagePlugin import _FORCE_OPTIMIZE
 from PIL.GimpGradientFile import EPSILON
 from PIL.Image import MAX_IMAGE_PIXELS, WARN_POSSIBLE_FORMATS
-from PIL.ImageFile import MAXBLOCK
+from PIL.ImageFile import MAXBLOCK, SAFEBLOCK
 from PIL.ImageFont import MAX_STRING_LENGTH
 
 from compile_utils.constants import IMAGE_VIEWER_NAME
@@ -168,7 +168,7 @@ classes_to_skip: dict[str, set[str]] = {
 
 
 functions_to_skip: dict[str, set[str]] = {
-    "PIL._binary": {"i8", "si16be", "si16le", "si32be", "si32le"},
+    "PIL._binary": {"i8", "o32le", "si16be", "si16le", "si32be", "si32le"},
     "PIL._util": {"new"},
     "PIL.AvifImagePlugin": {"Image.register_mime", "get_codec_version"},
     "PIL.GifImagePlugin": {"Image.register_mime", "_save_netpbm", "getheader"},
@@ -342,8 +342,9 @@ foldable_constants: dict[
         "MAX_IMAGE_PIXELS": MAX_IMAGE_PIXELS,
         "WARN_POSSIBLE_FORMATS": WARN_POSSIBLE_FORMATS,
     },
-    "PIL.ImageFile": {"MAXBLOCK": MAXBLOCK},
+    "PIL.ImageFile": {"MAXBLOCK": MAXBLOCK, "SAFEBLOCK": SAFEBLOCK},
     "PIL.ImageFont": {"MAX_STRING_LENGTH": MAX_STRING_LENGTH // 1000},
+    "PIL.PngImagePlugin": {"MAX_TEXT_CHUNK": SAFEBLOCK},
 }
 
 
@@ -365,13 +366,29 @@ module_foldable_constants: dict[
     "PIL": {"SUPPORTED": True, "TYPE_CHECKING": False},
 }
 
+foldable_calls: dict[
+    str,
+    dict[str, FoldableConstant | ConstantCall],
+] = {
+    "PIL.DdsImagePlugin": {"o32": o32le},
+}
+
+module_foldable_calls: dict[
+    str,
+    dict[str, FoldableConstant | ConstantCall],
+] = {
+    "PIL": {"o8": o8},
+}
+
 machine_specific_folds: dict[str, FoldableConstant] = {
     "os.name": os.name,
     "sys.byteorder": sys.byteorder,
     "sys.platform": sys.platform,
 }
 
-machine_specific_call_folds_input = TokensToFold({"os.cpu_count": os.cpu_count()})
+machine_specific_call_folds: dict[str, FoldableConstant] = {
+    "os.cpu_count": os.cpu_count()
+}
 
 
 remove_all_re = RegexReplacement("^.*$", flags=re.DOTALL)

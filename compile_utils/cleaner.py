@@ -2,7 +2,7 @@
 
 import os
 import subprocess
-from collections.abc import Iterable, Iterator
+from collections.abc import Iterator
 from glob import glob
 from re import sub
 
@@ -30,19 +30,21 @@ from personal_python_ast_optimizer.regex.replace import (
     re_replace_file,
 )
 from personal_python_ast_optimizer.run import optimize_source_and_minify
-from personal_python_ast_optimizer.typing import FoldableConstant
+from personal_python_ast_optimizer.typing import ConstantCall, FoldableConstant
 from personal_simple_tcl_minifier.parse import tcl_minify_folder
 
 from compile_utils.code_to_skip import (
     assignments_to_skip,
     classes_to_skip,
     decorators_to_always_skip,
+    foldable_calls,
     foldable_constants,
     from_imports_to_skip,
     functions_to_always_skip,
     functions_to_skip,
-    machine_specific_call_folds_input,
+    machine_specific_call_folds,
     machine_specific_folds,
+    module_foldable_calls,
     module_foldable_constants,
     regex_to_apply_py,
     regex_to_apply_tk,
@@ -311,7 +313,8 @@ def _get_tokens_to_skip_config(module_import_path: str) -> TokensToSkipConfig:
 def _get_perf_optimizations_config(
     module_name: str, module_import_path: str, assume_this_machine: bool
 ) -> PerfOptimizationsConfig:
-    config = PerfOptimizationsConfig(  # TODO: Fix names_to_fold
+    config = PerfOptimizationsConfig(
+        fold_constants=True,
         fold_simple_function_locals=True,
         collection_concat_to_unpack=True,
         simplify_conditional_bool_return=True,
@@ -321,23 +324,30 @@ def _get_perf_optimizations_config(
     names_and_attrs: dict[str, FoldableConstant] = foldable_constants.pop(
         module_import_path, {}
     )
-    no_warn_folds: Iterable[str]
+    names_no_warn: set[str] = set()
+
+    calls_to_fold: dict[str, ConstantCall] = foldable_calls.pop(module_import_path, {})
+    calls_no_warn: set[str] = set()
 
     if module_name in module_foldable_constants:
         module_folds: dict[str, FoldableConstant] = module_foldable_constants[
             module_name
         ]
         names_and_attrs |= module_folds
-        no_warn_folds = module_folds
-    else:
-        no_warn_folds = {}
+        names_no_warn |= module_folds.keys()
+
+    if module_name in module_foldable_calls:
+        calls_to_fold |= module_foldable_calls[module_name]
+        calls_no_warn |= module_foldable_calls[module_name].keys()
 
     if assume_this_machine:
-        config.calls_to_fold = machine_specific_call_folds_input
+        calls_to_fold |= machine_specific_call_folds
+        calls_no_warn |= machine_specific_call_folds.keys()
         names_and_attrs |= machine_specific_folds
-        no_warn_folds |= machine_specific_folds
+        names_no_warn |= machine_specific_folds.keys()
 
-    config.name_or_attr_to_fold = TokensToFold(names_and_attrs, no_warn_folds)
+    config.calls_to_fold = TokensToFold(calls_to_fold, calls_no_warn)
+    config.name_or_attr_to_fold = TokensToFold(names_and_attrs, names_no_warn)
 
     return config
 
