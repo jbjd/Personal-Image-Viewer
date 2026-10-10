@@ -2,7 +2,7 @@
 
 import os
 import subprocess
-from collections.abc import Iterable, Iterator
+from collections.abc import Iterator
 from glob import glob
 from re import sub
 
@@ -324,29 +324,27 @@ def _get_perf_optimizations_config(
     names_and_attrs: dict[str, FoldableConstant] = foldable_constants.pop(
         module_import_path, {}
     )
-    names_no_warn: Iterable[str]
+    names_no_warn: set[str] = set()
 
     calls_to_fold: dict[str, ConstantCall] = foldable_calls.pop(module_import_path, {})
-    calls_no_warn: Iterable[str] = {}
+    calls_no_warn: set[str] = set()
 
     if module_name in module_foldable_constants:
         module_folds: dict[str, FoldableConstant] = module_foldable_constants[
             module_name
         ]
         names_and_attrs |= module_folds
-        names_no_warn = module_folds
-    else:
-        names_no_warn = {}
+        names_no_warn |= module_folds.keys()
 
     if module_name in module_foldable_calls:
         calls_to_fold |= module_foldable_calls[module_name]
-        calls_no_warn |= module_foldable_calls[module_name]
+        calls_no_warn |= module_foldable_calls[module_name].keys()
 
     if assume_this_machine:
         calls_to_fold |= machine_specific_call_folds
-        calls_no_warn |= machine_specific_call_folds
+        calls_no_warn |= machine_specific_call_folds.keys()
         names_and_attrs |= machine_specific_folds
-        names_no_warn |= machine_specific_folds
+        names_no_warn |= machine_specific_folds.keys()
 
     config.calls_to_fold = TokensToFold(calls_to_fold, calls_no_warn)
     config.name_or_attr_to_fold = TokensToFold(names_and_attrs, names_no_warn)
