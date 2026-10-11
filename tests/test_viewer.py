@@ -175,3 +175,12 @@ def test_copy_to_clipboard_as_base64(viewer: ViewerApp) -> None:
         viewer.app.clipboard_get()
         == "R0lGODdhAgACAKEEAKykvbi1vNLQxd3c2CwAAAAAAgACAAACA0QmBQA7"
     )
+
+
+def test_setup_image_io(viewer: ViewerApp):
+    """"""
+
+    viewer._setup_image_io(1920, 1080, 999_999, 999_999, MagicMock())
+
+    assert viewer.image_io.image_resizer.screen_width > 1
+    assert viewer.image_io.image_resizer.screen_height > 1

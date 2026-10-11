@@ -65,7 +65,7 @@ class ViewerApp:
         self.image_load_id: str = ""
         self.animation_id: str = ""
 
-        self.app: Tk = self._setup_tk()
+        self._setup_tk()
 
         if os.name == "nt":
             init_c_utils(self.app.winfo_id())
@@ -84,11 +84,12 @@ class ViewerApp:
             self._scale_pixels_to_height(32),
         )
 
-        self.image_io: ImageIO = ImageIO(
-            screen_width - config.ui_padding_x,
-            screen_height - config.ui_padding_y,
+        self._setup_image_io(
+            screen_width,
+            screen_height,
+            config.ui_padding_x,
+            config.ui_padding_y,
             image_cache,
-            self.animation_loop,
         )
 
         init_PIL(config.ui_font, self._scale_pixels_to_height(23))
@@ -97,22 +98,37 @@ class ViewerApp:
 
         self._add_binds_to_tk(config)
 
-    @staticmethod
-    def _setup_tk() -> Tk:
+    def _setup_tk(self) -> None:
         """Creates and setups Tk class"""
-        app = Tk()
-        app.attributes("-fullscreen", True)
+        self.app = Tk()
+        self.app.attributes("-fullscreen", True)
 
         if os.name == "nt":
-            app.state("zoomed")
-            app.wm_iconbitmap(default="icon/icon.ico")
+            self.app.state("zoomed")
+            self.app.wm_iconbitmap(default="icon/icon.ico")
         else:
-            app.wm_iconphoto(
+            self.app.wm_iconphoto(
                 True,
                 tkPhotoImage(file="icon/icon.png"),
             )
 
-        return app
+    def _setup_image_io(
+        self,
+        screen_width: int,
+        screen_height: int,
+        padding_x: int,
+        padding_y: int,
+        image_cache: ImageCache,
+    ) -> None:
+        padding_x = min(padding_x, screen_width // 2)
+        padding_y = min(padding_y, screen_height // 2)
+
+        self.image_io = ImageIO(
+            screen_width - padding_x,
+            screen_height - padding_y,
+            image_cache,
+            self.animation_loop,
+        )
 
     def _init_image_display(self) -> None:
         """Loads first image and then finds all images files in the directory"""
