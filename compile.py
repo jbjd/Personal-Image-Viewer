@@ -8,6 +8,7 @@ from importlib.metadata import version as get_module_version
 from subprocess import Popen
 
 from personal_compile_tools.file_operations import (
+    copy_file,
     delete_folder,
     get_folder_size,
     overwrite_folder,
@@ -49,7 +50,8 @@ validate_PIL()
 
 working_folder: str = os.path.normpath(os.path.dirname(__file__))
 
-files_to_include: list[str] = ["image_viewer/config.ini"]
+CONFIG_REL_PATH: str = "image_viewer/config.ini"
+files_to_include: list[str] = [CONFIG_REL_PATH]
 
 parser = CompileArgumentParser()
 
@@ -194,7 +196,18 @@ try:
         strip_files(nuitka_dist_path)
 
     if not args.debug:
-        delete_folder(install_path)
+        if os.path.exists(install_path):
+            existing_config_file_path: str = os.path.join(install_path, CONFIG_REL_PATH)
+
+            if os.path.isfile(existing_config_file_path):
+                _logger.info("Preserving existing config file")
+
+                overwrite_config_file_path: str = os.path.join(
+                    nuitka_dist_path, CONFIG_REL_PATH
+                )
+                copy_file(existing_config_file_path, overwrite_config_file_path)
+
+            delete_folder(install_path)
 
         # Sometimes the file is randomly blocked by another process and one retry
         # will pass
