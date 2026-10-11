@@ -167,6 +167,7 @@ try:
         )
 
     if args.extra_checks:
+        _logger.debug("Checking for unused code skips")
         warn_unused_code_skips(modules_no_warn_unused_skips)
 
     if args.skip_nuitka:
@@ -186,6 +187,7 @@ try:
         sys.exit(1)
 
     if args.report:
+        _logger.debug("Cleaning report")
         clean_compilation_report(os.path.join(build_folder_path, REPORT_FILE))
 
     _logger.debug("Minifying TCL files")
@@ -197,6 +199,7 @@ try:
 
     if not args.debug:
         if os.path.exists(install_path):
+            _logger.debug("Found existing installation")
             existing_config_file_path: str = os.path.join(install_path, CONFIG_REL_PATH)
 
             if os.path.isfile(existing_config_file_path):
