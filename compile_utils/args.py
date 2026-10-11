@@ -34,8 +34,6 @@ class NuitkaArgs(StrEnum):
     QUIET = "--quiet"
     VERBOSE = "--verbose"
     REPORT = "--report"
-    WARN_IMPLICIT_EXCEPTIONS = "--warn-implicit-exceptions"
-    WARN_UNUSUAL_CODE = "--warn-unusual-code"
 
     def with_value(self, value: str) -> str:
         """Returns the flag in the format {flag}={value}"""
@@ -75,9 +73,7 @@ class CompileNamespace(Namespace):
     no_cache: bool
 
     def __str__(self) -> str:
-        return ", ".join(
-            f"{k}={v}" for k, v in self.__dict__.items() if isinstance(v, bool)
-        )
+        return ", ".join(f"{k}={v}" for k, v in self.__dict__.items())
 
 
 class CompileArgumentParser:
@@ -135,9 +131,7 @@ class CompileArgumentParser:
             (
                 "Doesn't move compiled code to install path, doesn't check for root, "
                 "assumes --report and --extra_checks, adds "
-                f"{NuitkaArgs.WARN_IMPLICIT_EXCEPTIONS}, {NuitkaArgs.WARN_UNUSUAL_CODE}"
-                f", and {NuitkaArgs.WINDOWS_CONSOLE_MODE}={ConsoleMode.FORCE} "
-                f"flags to nuitka."
+                f"{NuitkaArgs.WINDOWS_CONSOLE_MODE}={ConsoleMode.FORCE} flag to nuitka."
             ),
             is_development=True,
         )
@@ -191,10 +185,16 @@ class CompileArgumentParser:
         if args.quiet and args.verbose:
             raise ValueError(f"Can't pass both {PivArgs.QUIET} and {PivArgs.VERBOSE}")
 
+        icon_relative_path: str = (
+            "icon/icon.ico" if os.name == "nt" else "icon/icon.png"
+        )
+        icon_path: str = os.path.join(working_folder, icon_relative_path)
+
         nuitka_args: list[str] = [
             f"{PivPluginArgs.PIV_ARGS}={args}",
             NuitkaArgs.STANDALONE,
             NuitkaArgs.ENABLE_PLUGIN.with_value("tk-inter"),
+            self._get_data_file_arg(icon_path, icon_relative_path),
         ]
 
         # PivPlugin args
@@ -210,23 +210,12 @@ class CompileArgumentParser:
 
         if args.report:
             nuitka_args.append(NuitkaArgs.REPORT.with_value(REPORT_FILE))
-            if args.debug:
-                nuitka_args += [
-                    NuitkaArgs.WARN_IMPLICIT_EXCEPTIONS,
-                    NuitkaArgs.WARN_UNUSUAL_CODE,
-                ]
 
         if args.quiet:
             nuitka_args.append(NuitkaArgs.QUIET)
         elif args.verbose:
             nuitka_args.append(NuitkaArgs.VERBOSE)
 
-        icon_relative_path: str = (
-            "icon/icon.ico" if os.name == "nt" else "icon/icon.png"
-        )
-        icon_path: str = os.path.join(working_folder, icon_relative_path)
-
-        nuitka_args.append(self._get_data_file_arg(icon_path, icon_relative_path))
         nuitka_args += [
             self._get_data_file_arg(os.path.join(working_folder, f), f)
             for f in files_to_include

@@ -2,37 +2,15 @@
 
 from importlib.metadata import PackageNotFoundError
 from importlib.metadata import version as get_module_version
-from sys import version_info
-from typing import Any
 
 from packaging.version import parse as _parse_version
-from personal_compile_tools.converters import version_str_to_tuple
-from personal_compile_tools.modules import get_missing_modules, read_pyproject_file
-from personal_compile_tools.nuitka_ext import nuitka_not_yet_supports_python_version
-from personal_compile_tools.requirement_operators import Operators
+from personal_compile_tools.modules import get_missing_modules
 from personal_compile_tools.requirements import Requirement, parse_requirements_file
 
 from compile_utils.log import get_logger
 from compile_utils.module_dependencies import module_dependencies
 
 _logger = get_logger()
-
-_required_python_version: tuple[int, int] | None = None
-
-
-def get_required_python_version() -> tuple[int, int]:
-    """Returns required python version by parsing it out of the pyproject.toml file.
-
-    :returns: Tuple of the required version."""
-    global _required_python_version
-
-    if _required_python_version is not None:
-        return _required_python_version
-
-    project: dict[str, Any] = read_pyproject_file()["project"]
-
-    _required_python_version = version_str_to_tuple(project["requires-python"][2:])
-    return _required_python_version[:2]
 
 
 def validate_module_requirements() -> None:
@@ -51,12 +29,8 @@ def validate_module_requirements() -> None:
         try:
             # personal_compile_tools can't determine direct references,
             # so there is a custom check here
-            matches_installed: bool = (
-                requirement.matches_installed_version()
-                if requirement.rules[0].operator != Operators.DIRECT_REFERENCE
-                else _personal_module_matches_installed_version(
-                    requirement.name, requirement.rules[0].version
-                )
+            matches_installed: bool = requirement.matches_installed_version(
+                _personal_module_matches_installed_version
             )
             if not matches_installed:
                 installed_version: str = get_module_version(requirement.name)
@@ -72,26 +46,6 @@ def validate_module_requirements() -> None:
         raise ModuleNotFoundError(
             f"Missing module dependencies {missing_modules}\n"
             "Please install them to compile"
-        )
-
-
-def validate_python_version() -> None:
-    """Validates the current python version is the expected version
-    to compile this program and is valid for current nuitka install.
-
-    :raises NotImplementedError: If version isn't supported"""
-
-    required_python: tuple[int, int] = get_required_python_version()
-    used_python: tuple[int, int] = version_info[:2]
-
-    if used_python != required_python:
-        raise NotImplementedError(
-            f"Expected Python version {required_python} but found {used_python}"
-        )
-
-    if nuitka_not_yet_supports_python_version(used_python):
-        raise NotImplementedError(
-            f"Python version {used_python} not yet supported by Nuitka"
         )
 
 
@@ -113,15 +67,15 @@ def validate_PIL() -> None:  # noqa: N802
         )
 
 
-def _personal_module_matches_installed_version(name: str, url: str) -> bool:
+def _personal_module_matches_installed_version(
+    installed_version: str, url: str
+) -> bool:
     """Checks that the version of 'personal' module's are the correct by their url.
     They are tagged with their version, so the url's end can be used to check.
 
     :param name: The name of the 'personal' module.
     :param url: Url to the module on github.
     :returns: True if url's tag matches installed version."""
-
-    installed_version: str = get_module_version(name)
 
     url_version_index: int = url.rfind("@v")
     if url_version_index == -1:

@@ -4,15 +4,15 @@ import os
 import re
 import sys
 
-from personal_python_ast_optimizer.config import TokensToFold
 from personal_python_ast_optimizer.regex.replace import RegexReplacement
-from personal_python_ast_optimizer.typing import FoldableConstant
+from personal_python_ast_optimizer.typing import ConstantCall, FoldableConstant
+from PIL._binary import o8, o32le
 from PIL.AvifImagePlugin import DECODE_CODEC_CHOICE
 from PIL.DdsImagePlugin import DDS_MAGIC
 from PIL.GifImagePlugin import _FORCE_OPTIMIZE
 from PIL.GimpGradientFile import EPSILON
-from PIL.Image import WARN_POSSIBLE_FORMATS
-from PIL.ImageFile import MAXBLOCK
+from PIL.Image import MAX_IMAGE_PIXELS, WARN_POSSIBLE_FORMATS
+from PIL.ImageFile import MAXBLOCK, SAFEBLOCK
 from PIL.ImageFont import MAX_STRING_LENGTH
 
 from compile_utils.constants import IMAGE_VIEWER_NAME
@@ -23,6 +23,7 @@ from image_viewer.image.image_io import (
     ZOOM_AMOUNT,
 )
 from image_viewer.image.resizer import JPEG_MAX_DIMENSION
+from image_viewer.ui.button_icon_factory import DEFAULT_ICON_SIZE
 from image_viewer.ui.rename_entry import _ERROR_COLOR, _MAX_ENTRY_SIZE
 
 modules_to_skip: list[str] = [
@@ -51,6 +52,7 @@ modules_to_skip: list[str] = [
     "PIL.FtexImagePlugin",
     "PIL.GdImageFile",
     "PIL.GbrImagePlugin",
+    "PIL.GimpPaletteFile",
     "PIL.GribStubImagePlugin",
     "PIL.Hdf5StubImagePlugin",
     "PIL.IcnsImagePlugin",
@@ -65,6 +67,7 @@ modules_to_skip: list[str] = [
     "PIL.MpegImagePlugin",
     "PIL.MpoImagePlugin",
     "PIL.MspImagePlugin",
+    "PIL.PaletteFile",
     "PIL.PalmImagePlugin",
     "PIL.PcdImagePlugin",
     "PIL.PcfFontFile",
@@ -165,12 +168,13 @@ classes_to_skip: dict[str, set[str]] = {
 
 
 functions_to_skip: dict[str, set[str]] = {
-    "PIL._binary": {"i8", "si16be", "si16le", "si32be", "si32le"},
+    "PIL._binary": {"i8", "o32le", "si16be", "si16le", "si32be", "si32le"},
     "PIL._util": {"new"},
     "PIL.AvifImagePlugin": {"Image.register_mime", "get_codec_version"},
     "PIL.GifImagePlugin": {"Image.register_mime", "_save_netpbm", "getheader"},
     "PIL.Image": {
         "__arrow_c_array__",
+        "__arrow_c_schema__",
         "__getstate__",
         "__repr__",
         "__setstate__",
@@ -199,6 +203,7 @@ functions_to_skip: dict[str, set[str]] = {
         "getexif",
         "getextrema",
         "getmodebandnames",
+        "getprojection",
         "getxmp",
         "init",
         "linear_gradient",
@@ -326,13 +331,20 @@ foldable_constants: dict[
     str,
     dict[str, FoldableConstant],
 ] = {
+    f"{IMAGE_VIEWER_NAME}.ui.button_icon_factory": {
+        "DEFAULT_ICON_SIZE": DEFAULT_ICON_SIZE
+    },
     "PIL.AvifImagePlugin": {"DECODE_CODEC_CHOICE": DECODE_CODEC_CHOICE},
     "PIL.DdsImagePlugin": {"DDS_MAGIC": DDS_MAGIC},
     "PIL.GifImagePlugin": {"_FORCE_OPTIMIZE": _FORCE_OPTIMIZE},
     "PIL.GimpGradientFile": {"EPSILON": EPSILON},
-    "PIL.Image": {"WARN_POSSIBLE_FORMATS": WARN_POSSIBLE_FORMATS},
-    "PIL.ImageFile": {"MAXBLOCK": MAXBLOCK},
+    "PIL.Image": {
+        "MAX_IMAGE_PIXELS": MAX_IMAGE_PIXELS,
+        "WARN_POSSIBLE_FORMATS": WARN_POSSIBLE_FORMATS,
+    },
+    "PIL.ImageFile": {"MAXBLOCK": MAXBLOCK, "SAFEBLOCK": SAFEBLOCK},
     "PIL.ImageFont": {"MAX_STRING_LENGTH": MAX_STRING_LENGTH // 1000},
+    "PIL.PngImagePlugin": {"MAX_TEXT_CHUNK": SAFEBLOCK},
 }
 
 
@@ -354,13 +366,29 @@ module_foldable_constants: dict[
     "PIL": {"SUPPORTED": True, "TYPE_CHECKING": False},
 }
 
+foldable_calls: dict[
+    str,
+    dict[str, FoldableConstant | ConstantCall],
+] = {
+    "PIL.DdsImagePlugin": {"o32": o32le},
+}
+
+module_foldable_calls: dict[
+    str,
+    dict[str, FoldableConstant | ConstantCall],
+] = {
+    "PIL": {"o8": o8},
+}
+
 machine_specific_folds: dict[str, FoldableConstant] = {
     "os.name": os.name,
     "sys.byteorder": sys.byteorder,
     "sys.platform": sys.platform,
 }
 
-machine_specific_call_folds_input = TokensToFold({"os.cpu_count": os.cpu_count()})
+machine_specific_call_folds: dict[str, FoldableConstant] = {
+    "os.cpu_count": os.cpu_count()
+}
 
 
 remove_all_re = RegexReplacement("^.*$", flags=re.DOTALL)
