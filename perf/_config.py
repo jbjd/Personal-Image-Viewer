@@ -59,7 +59,8 @@ class Config:
             "FONT",
             "arial.ttf" if os.name == "nt" else "LiberationSans-Regular.ttf",
         )
-        self.padding_x: int = config_parser.get_int_safe("UI", "PADDING_X", 20)
+        self.padding_x: int = config_parser.get_int_safe("UI", "PADDING_X", 0)
+        self.padding_x: int = config_parser.get_int_safe("UI", "PADDING_Y", 0)
 
 
 class KeybindConfig:

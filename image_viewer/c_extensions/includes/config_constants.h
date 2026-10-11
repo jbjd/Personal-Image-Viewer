@@ -13,6 +13,7 @@ const char *KEY_KB_UNDO_MOST_RECENT_ACTION = "UNDO_MOST_RECENT_ACTION";
 const char *KEY_UI_BACKGROUND_COLOR = "BACKGROUND_COLOR";
 const char *KEY_UI_FONT = "FONT";
 const char *KEY_UI_PADDING_X = "PADDING_X";
+const char *KEY_UI_PADDING_Y = "PADDING_Y";
 
 const int DEFAULT_CACHE_SIZE = 20;
 const char *DEFAULT_KB_COPY_TO_CLIPBOARD_AS_BASE64 = "<Control-E>";
@@ -32,5 +33,6 @@ const char *DEFAULT_UI_FONT = "LiberationSans-Regular.ttf";
 #endif
 
 const int DEFAULT_UI_PADDING_X = 0;
+const int DEFAULT_UI_PADDING_Y = 0;
 
 #endif /* PIV_CONFIG_DEFAULTS */

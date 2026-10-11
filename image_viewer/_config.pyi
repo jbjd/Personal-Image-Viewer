@@ -14,6 +14,7 @@ DEFAULT_KB_UNDO_MOST_RECENT_ACTION: Final[str]
 DEFAULT_UI_BACKGROUND_COLOR: Final[str]
 DEFAULT_UI_FONT: Final[str]
 DEFAULT_UI_PADDING_X: Final[int]
+DEFAULT_UI_PADDING_Y: Final[int]
 
 class Config:
     """Can't be instantiated in Python.
@@ -33,6 +34,7 @@ class Config:
         "ui_background_color",
         "ui_font",
         "ui_padding_x",
+        "ui_padding_y",
     )
 
     cache_size: int
@@ -47,6 +49,7 @@ class Config:
     ui_background_color: str
     ui_font: str
     ui_padding_x: int
+    ui_padding_y: int
 
 def parse_config_file(file_path: str = "image_viewer/config.ini") -> Config:
     """Parses a simplified .ini file and returns provided values or default.

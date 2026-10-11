@@ -24,6 +24,7 @@ static PyMemberDef Config_members[] = {
     {"ui_background_color", Py_T_OBJECT_EX, offsetof(Config, ui_background_color), Py_READONLY, 0},
     {"ui_font", Py_T_OBJECT_EX, offsetof(Config, ui_font), Py_READONLY, 0},
     {"ui_padding_x", Py_T_OBJECT_EX, offsetof(Config, ui_padding_x), Py_READONLY, 0},
+    {"ui_padding_y", Py_T_OBJECT_EX, offsetof(Config, ui_padding_y), Py_READONLY, 0},
     {NULL}
 };
 
@@ -65,6 +66,7 @@ static inline Config *Config_New() {
     config->ui_background_color = NULL;
     config->ui_font = NULL;
     config->ui_padding_x = NULL;
+    config->ui_padding_y = NULL;
 
     return config;
 }
@@ -105,6 +107,9 @@ static void Config_SetDefaults(PyObject *self, Config *config) {
     }
     if (config->ui_padding_x == NULL) {
         config->ui_padding_x = PyObject_GetAttrString(self, VARIABLE_NAME(DEFAULT_UI_PADDING_X));
+    }
+    if (config->ui_padding_y == NULL) {
+        config->ui_padding_y = PyObject_GetAttrString(self, VARIABLE_NAME(DEFAULT_UI_PADDING_Y));
     }
 }
 // Config End
@@ -232,7 +237,14 @@ static inline void _update_config(Config *config, enum Section section, char *re
             int error;
             Py_value = Py_from_int_or_null(value, INT_MAX, &error);
             if (validate && error) {
-                _print_err_bad_value_int(key, value, section, "Not an integer in range (0 - INT_MAX)", DEFAULT_CACHE_SIZE);
+                _print_err_bad_value_int(key, value, section, "Not an integer in range (0 - INT_MAX)", DEFAULT_UI_PADDING_X);
+            }
+        } else if (strcmp(key, KEY_UI_PADDING_Y) == 0) {
+            target = &config->ui_padding_y;
+            int error;
+            Py_value = Py_from_int_or_null(value, INT_MAX, &error);
+            if (validate && error) {
+                _print_err_bad_value_int(key, value, section, "Not an integer in range (0 - INT_MAX)", DEFAULT_UI_PADDING_Y);
             }
         }
         break;
@@ -353,6 +365,9 @@ static void _print_err_missing_keys(Config *config) {
     if (config->ui_padding_x == NULL) {
         _print_err_missing_key(KEY_UI_PADDING_X, UI);
     }
+    if (config->ui_padding_y == NULL) {
+        _print_err_missing_key(KEY_UI_PADDING_Y, UI);
+    }
 }
 
 PyObject *validate_config_file(PyObject *self, PyObject *arg) {
@@ -397,7 +412,8 @@ static int config_exec(PyObject *module) {
             PyModule_AddStringConstant(module, VARIABLE_NAME(DEFAULT_KB_UNDO_MOST_RECENT_ACTION), DEFAULT_KB_UNDO_MOST_RECENT_ACTION) ||
             PyModule_AddStringConstant(module, VARIABLE_NAME(DEFAULT_UI_BACKGROUND_COLOR), DEFAULT_UI_BACKGROUND_COLOR) ||
             PyModule_AddStringConstant(module, VARIABLE_NAME(DEFAULT_UI_FONT), DEFAULT_UI_FONT) ||
-            PyModule_AddIntConstant(module, VARIABLE_NAME(DEFAULT_UI_PADDING_X), DEFAULT_UI_PADDING_X)
+            PyModule_AddIntConstant(module, VARIABLE_NAME(DEFAULT_UI_PADDING_X), DEFAULT_UI_PADDING_X) ||
+            PyModule_AddIntConstant(module, VARIABLE_NAME(DEFAULT_UI_PADDING_Y), DEFAULT_UI_PADDING_Y)
         )) {
         Py_DECREF(module);
         return -1;

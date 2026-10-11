@@ -86,7 +86,7 @@ class ViewerApp:
 
         self.image_io: ImageIO = ImageIO(
             screen_width - config.ui_padding_x,
-            screen_height,
+            screen_height - config.ui_padding_y,
             image_cache,
             self.animation_loop,
         )

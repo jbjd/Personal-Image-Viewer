@@ -13,6 +13,7 @@ from image_viewer._config import (
     DEFAULT_UI_BACKGROUND_COLOR,
     DEFAULT_UI_FONT,
     DEFAULT_UI_PADDING_X,
+    DEFAULT_UI_PADDING_Y,
     Config,
     parse_config_file,
 )
@@ -37,6 +38,7 @@ def test_config_reader() -> None:
     assert config.ui_background_color == "#ABCDEF"
     assert config.ui_font == "test"
     assert config.ui_padding_x == 10
+    assert config.ui_padding_y == 100
 
 
 def test_config_reader_defaults() -> None:
@@ -121,3 +123,4 @@ def _assert_defaults(config: Config) -> None:
     assert config.ui_background_color == DEFAULT_UI_BACKGROUND_COLOR
     assert config.ui_font == DEFAULT_UI_FONT
     assert config.ui_padding_x == DEFAULT_UI_PADDING_X
+    assert config.ui_padding_y == DEFAULT_UI_PADDING_Y
