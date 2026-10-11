@@ -44,7 +44,7 @@ from compile_utils.nuitka_ext import clean_compilation_report, start_nuitka_comp
 from compile_utils.validation import validate_module_requirements, validate_PIL
 
 raise_if_unsupported_python_version_pyproject()
-nuitka_raise_if_unsupported_python_version(sys.version_info[:2])
+nuitka_raise_if_unsupported_python_version()
 validate_module_requirements()
 validate_PIL()
 
