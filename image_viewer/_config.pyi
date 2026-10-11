@@ -13,7 +13,7 @@ DEFAULT_KB_SHOW_DETAILS: Final[str]
 DEFAULT_KB_UNDO_MOST_RECENT_ACTION: Final[str]
 DEFAULT_UI_BACKGROUND_COLOR: Final[str]
 DEFAULT_UI_FONT: Final[str]
-DEFAULT_UI_INIT_DOWNSCALE: Final[int]
+DEFAULT_UI_PADDING_X: Final[int]
 
 class Config:
     """Can't be instantiated in Python.
@@ -32,7 +32,7 @@ class Config:
         "kb_undo_most_recent_action",
         "ui_background_color",
         "ui_font",
-        "ui_init_downscale",
+        "ui_padding_x",
     )
 
     cache_size: int
@@ -46,7 +46,7 @@ class Config:
     kb_undo_most_recent_action: str
     ui_background_color: str
     ui_font: str
-    ui_init_downscale: int
+    ui_padding_x: int
 
 def parse_config_file(file_path: str = "image_viewer/config.ini") -> Config:
     """Parses a simplified .ini file and returns provided values or default.

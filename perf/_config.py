@@ -28,7 +28,7 @@ class Config:
     __slots__ = (
         "background_color",
         "font_file",
-        "init_downscale",
+        "padding_x",
         "keybinds",
         "max_items_in_cache",
     )
@@ -59,9 +59,7 @@ class Config:
             "FONT",
             "arial.ttf" if os.name == "nt" else "LiberationSans-Regular.ttf",
         )
-        self.init_downscale: int = config_parser.get_int_safe(
-            "UI", "INIT_DOWNSCALE", 20
-        )
+        self.padding_x: int = config_parser.get_int_safe("UI", "PADDING_X", 20)
 
 
 class KeybindConfig:

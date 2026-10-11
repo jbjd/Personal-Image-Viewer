@@ -85,7 +85,10 @@ class ViewerApp:
         )
 
         self.image_io: ImageIO = ImageIO(
-            screen_width, screen_height, image_cache, self.animation_loop
+            screen_width - config.ui_padding_x,
+            screen_height,
+            image_cache,
+            self.animation_loop,
         )
 
         init_PIL(config.ui_font, self._scale_pixels_to_height(23))

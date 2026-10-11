@@ -34,7 +34,7 @@ typedef struct
     // [UI]
     PyObject *ui_background_color; // str
     PyObject *ui_font;             // str
-    PyObject *ui_init_downscale;   // int
+    PyObject *ui_padding_x;        // int
 } Config;
 
 extern const int LINE_MAX_SIZE;
