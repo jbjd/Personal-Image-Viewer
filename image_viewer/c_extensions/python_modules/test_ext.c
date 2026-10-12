@@ -1,3 +1,4 @@
+#include "includes/base64.h"
 #include "includes/c_optimizations.h"
 #include "includes/config.h"
 
@@ -43,9 +44,28 @@ static PyObject *Py_is_valid_keybind(PyObject *self, PyObject *arg) {
     return PyBool_FromLong(is_valid_keybind(keybind));
 }
 
+static PyObject *Py_base64_encode(PyObject *self, PyObject *arg) {
+    Py_ssize_t size;
+    const char *to_encode = PyUnicode_AsUTF8AndSize(arg, &size);
+
+    if (unlikely(size == -1)) {
+        return NULL;
+    }
+
+    char *base64_encoded = malloc(get_safe_buffer_size_for_base64_encode(size));
+
+    base64_encode(to_encode, size, base64_encoded);
+
+    PyObject *Py_base64_encoded = PyUnicode_FromString(base64_encoded);
+    free(base64_encoded);
+
+    return Py_base64_encoded;
+}
+
 static PyMethodDef c_bindings_methods[] = {
     {"is_valid_hex_color", Py_is_valid_hex_color, METH_O, NULL},
     {"is_valid_keybind", Py_is_valid_keybind, METH_O, NULL},
+    {"base64_encode", Py_base64_encode, METH_O, NULL},
     {NULL, NULL, 0, NULL}
 };
 
