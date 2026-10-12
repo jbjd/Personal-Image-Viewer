@@ -362,10 +362,7 @@ static PyObject *read_buffer_as_base64_and_copy_to_clipboard(PyObject *self, PyO
 
     Py_BEGIN_ALLOW_THREADS;
 
-    // Encoded data is 4/3 the size of the original data so make encoded buffer 2x the size.
-    // +4 in case input is length 1
-    unsigned long long encoded_size = (2 * buffer_size) + 4;
-    HGLOBAL hGlobal = GlobalAlloc(GMEM_MOVEABLE, encoded_size);
+    HGLOBAL hGlobal = GlobalAlloc(GMEM_MOVEABLE, get_safe_buffer_size_for_base64_encode(buffer_size));
     if (unlikely(hGlobal == NULL)) {
         goto end;
     }

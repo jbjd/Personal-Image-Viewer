@@ -50,24 +50,16 @@ build-image-read:
 
 build-util-os-nt:
 ifeq ($(OS),Windows_NT)
-	gcc $(C_PYTHON_MODULES)/utils_os_nt.c $(C_SOURCE)/b64/base64.c -I$(C_SOURCE) -lshlwapi -loleaut32 -lole32 $(C_FLAGS) -o image_viewer/utils/_os_nt.$(COMPILED_EXT)
+	gcc $(C_PYTHON_MODULES)/utils_os_nt.c $(C_SOURCE)/base64.c -I$(C_SOURCE) -lshlwapi -loleaut32 -lole32 $(C_FLAGS) -o image_viewer/utils/_os_nt.$(COMPILED_EXT)
 endif
 
 build-test:
-	gcc $(C_PYTHON_MODULES)/test_ext.c $(C_SOURCE)/config.c $(C_FLAGS) -I$(C_SOURCE) -o tests/utils/_c_bindings.$(COMPILED_EXT)
+	gcc $(C_PYTHON_MODULES)/test_ext.c $(C_SOURCE)/config.c $(C_SOURCE)/base64.c $(C_FLAGS) -I$(C_SOURCE) -o tests/utils/_c_bindings.$(COMPILED_EXT)
 
 build-all: build-config build-image-read build-util-os-nt build-test
 
 build-all-dist: NATIVE_FLAGS=
 build-all-dist: build-all
-
-benchmark-c-base64:
-	gcc $(C_SOURCE)/tests/benchmark_base64.c $(C_SOURCE)/b64/base64.c -I$(C_SOURCE) -o test
-	./test.$(EXECUTABLE_EXT)
-
-test-c-base64:
-	gcc $(C_SOURCE)/tests/test_base64.c $(C_SOURCE)/b64/base64.c $(C_SOURCE)/tests/util.c -I$(C_SOURCE) -o test -lcunit
-	./test.$(EXECUTABLE_EXT)
 
 install:
 	$(PYTHON_EXECUTABLE) -OO compile.py --extra-checks --strip

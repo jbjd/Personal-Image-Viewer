@@ -1,5 +1,10 @@
 #include "includes/base64.h"
 
+inline unsigned long long get_safe_buffer_size_for_base64_encode(unsigned long input_size) {
+    // Encoded data is 4/3 the size of the original data so make encoded buffer 2x the size
+    return input_size < 5 ? 5 : input_size * 2;
+}
+
 static char _base64_encode_char(char to_encode) {
     static const char *base64_alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
     return base64_alphabet[(int)to_encode];
