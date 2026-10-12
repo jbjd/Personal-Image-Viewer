@@ -18,7 +18,6 @@ from image_viewer.ui.button_icon_factory import ButtonIconFactory
 from image_viewer.ui.canvas import CustomCanvas
 from image_viewer.ui.image import DropdownImageUIElement
 from image_viewer.ui.rename_entry import RenameEntry
-from image_viewer.utils.convert import read_memory_as_base64
 from image_viewer.utils.os import ask_yes_no, show_info
 from image_viewer.utils.PIL import create_dropdown_image, init_PIL
 
@@ -30,6 +29,7 @@ if os.name == "nt":
         read_buffer_as_base64_and_copy_to_clipboard,
     )
 else:
+    import binascii
     from tkinter import PhotoImage as tkPhotoImage
 
 
@@ -97,7 +97,7 @@ class ViewerApp:
     @staticmethod
     def _setup_tk() -> Tk:
         """Creates and setups Tk class"""
-        app: Tk = Tk()
+        app = Tk()
         app.attributes("-fullscreen", True)
 
         if os.name == "nt":
@@ -388,7 +388,9 @@ class ViewerApp:
         else:
             # TODO: See if I can use memoryview for clipboard_append
             # so conversion can be in C
-            image_base64: str = read_memory_as_base64(self.image_io.image_view.view)
+            image_base64: str = binascii.b2a_base64(
+                self.image_io.image_view.view, newline=False
+            ).decode("ascii", errors="ignore")
 
             self.app.clipboard_clear()
             self.app.clipboard_append(image_base64)
@@ -604,12 +606,12 @@ class ViewerApp:
         to load  further images."""
         self._start_image_load(self.load_image, movement_on_failure)
 
-    def show_topbar(self, _: Event | None = None) -> None:
+    def show_topbar(self) -> None:
         """Shows all topbar elements and updates its display"""
         self.canvas.itemconfigure(TkTags.TOPBAR, state="normal")
         self.update_topbar()
 
-    def hide_topbar(self, _: Event | None = None) -> None:
+    def hide_topbar(self) -> None:
         """Hides and removes focus from all topbar elements"""
         self.canvas.itemconfigure(TkTags.TOPBAR, state="hidden")
         self.hide_rename_window()

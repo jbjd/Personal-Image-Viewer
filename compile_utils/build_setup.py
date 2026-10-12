@@ -1,25 +1,30 @@
 """Setup logic for build folder."""
 
+import hashlib
 import os
 import sys
-from functools import lru_cache
 
 from personal_compile_tools.file_operations import read_file_utf8, write_file_utf8
+from personal_python_ast_optimizer.run import optimize_source_and_minify
 
+from compile_utils import code_to_skip
 from compile_utils.log import get_logger
 
 _logger = get_logger()
 
 
-@lru_cache
-def _get_version_file_path(folder_path: str, module_name: str) -> str:
-    """Gets absolute path to version file for custom modules.
+def get_code_to_skip_md5_hash() -> str:
+    """Reads contents of code to skip module and hashes it with md5.
 
-    :param folder_path: Path to custom module
-    :param module_name: Name of module
-    :returns: Full path to where custom version file should be stored"""
+    :returns: Hashed file"""
 
-    return os.path.join(folder_path, f"custom_version[{module_name}].txt")
+    file_name: str = code_to_skip.__file__
+
+    with open(file_name) as fp:
+        minified_source: str = optimize_source_and_minify(
+            fp.read(), file_name=file_name
+        )
+        return hashlib.md5(minified_source.encode(), usedforsecurity=False).hexdigest()
 
 
 def get_custom_module_version(folder_path: str, module_name: str) -> str | None:
@@ -35,25 +40,20 @@ def get_custom_module_version(folder_path: str, module_name: str) -> str | None:
         return None
 
 
-@lru_cache
-def create_custom_module_version(
-    module_version: str, custom_version: int | str, append: str = ""
-) -> str:
+def create_custom_module_version(module_version: str, append: str = "") -> str:
     """Creates version for custom module.
 
     :param module_version: Version of original module
-    :param custom_version: Version of custom implementation
     :param append: Any arbitrary string to append
     :returns: Created version"""
 
-    return f"{sys.version_info[:2]}\n{module_version}-{custom_version}\n{append}\n"
+    return f"{sys.version_info[:2]}\n{module_version}\n{append}\n"
 
 
 def write_custom_module_version(
     folder_path: str,
     module_name: str,
     module_version: str,
-    custom_version: int | str,
     append: str = "",
 ) -> None:
     """Writes version file for custom module. Should be called when caching a
@@ -62,10 +62,9 @@ def write_custom_module_version(
     :param folder_path: Path to custom module
     :param module_name: Name of module
     :param module_version: Version of original module
-    :param custom_version: Version of custom implementation
     :param append: Any arbitrary string to append"""
 
-    contents: str = create_custom_module_version(module_version, custom_version, append)
+    contents: str = create_custom_module_version(module_version, append)
     file_path: str = _get_version_file_path(folder_path, module_name)
 
     write_file_utf8(file_path, contents)
@@ -77,7 +76,6 @@ def custom_module_version_up_to_date(
     folder_path: str,
     module_name: str,
     module_version: str,
-    custom_version: int | str,
     append: str = "",
 ) -> bool:
     """Checks if custom module is up to date based on provided inputs.
@@ -85,13 +83,12 @@ def custom_module_version_up_to_date(
     :param folder_path: Path to custom module
     :param module_name: Name of module
     :param module_version: Version of original module
-    :param custom_version: Version of custom implementation
     :param append: Any arbitrary string to append
     :returns: True if up to date"""
 
     up_to_date: bool = get_custom_module_version(
         folder_path, module_name
-    ) == create_custom_module_version(module_version, custom_version, append)
+    ) == create_custom_module_version(module_version, append)
 
     _logger.info(
         "Found cached version of module: %s"
@@ -101,3 +98,13 @@ def custom_module_version_up_to_date(
     )
 
     return up_to_date
+
+
+def _get_version_file_path(folder_path: str, module_name: str) -> str:
+    """Gets absolute path to version file for custom modules.
+
+    :param folder_path: Path to custom module
+    :param module_name: Name of module
+    :returns: Full path to where custom version file should be stored"""
+
+    return os.path.join(folder_path, f"custom_version[{module_name}].txt")

@@ -98,24 +98,22 @@ def rename_entry_fixture(tk: Tk, canvas: CustomCanvas, font: Font) -> RenameEntr
     return RenameEntry(tk, canvas, rename_id, font, 250)
 
 
-@pytest.fixture(name="viewer")
-def viewer_fixture() -> ViewerApp:
+@pytest.fixture(name="viewer", scope="module")
+def viewer_fixture(tk: Tk) -> ViewerApp:
     """A Viewer object with visual UI elements mocked out"""
 
-    # This function needs to be unpacked so we must explicitly define it
-    mock_icon_factory = MagicMock()
-    mock_icon_factory.return_value.make_dropdown_icons.return_value = (
-        MagicMock(),
-        MagicMock(),
-    )
+    def _test_tk_setup(_: ViewerApp) -> Tk:
+        return tk
+
+    mock_canvas = MagicMock()
+    mock_canvas.return_value.screen_width = 1920
+    mock_canvas.return_value.screen_height = 1080
 
     with (
-        patch.object(ViewerApp, "_init_image_display"),
-        patch("image_viewer.viewer.Tk"),
-        patch("image_viewer.viewer.CustomCanvas"),
-        patch("image_viewer.viewer.ButtonIconFactory", mock_icon_factory),
+        patch.object(ViewerApp, "_setup_tk", _test_tk_setup),
+        patch("image_viewer.viewer.CustomCanvas", mock_canvas),
     ):
-        return ViewerApp(EXAMPLE_PNG_PATH)
+        return ViewerApp(EXAMPLE_GIF_PATH)
 
 
 @pytest.fixture(name="focused_event")

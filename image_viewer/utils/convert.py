@@ -1,7 +1,5 @@
 """Conversion between image file types and representations."""
 
-import binascii
-
 from PIL.Image import Image
 from PIL.ImageSequence import Iterator as ImageIterator
 from PIL.JpegImagePlugin import RAWMODE as VALID_JPEG_MODES
@@ -68,14 +66,3 @@ def try_convert_image_and_save_new(
     original_image.save(new_path, target_format, **save_kwargs)
 
     return True
-
-
-def read_memory_as_base64(image_buffer: memoryview) -> str:
-    """Decodes some memory into a base64 string.
-
-    :param image_buffer: The memory buffer of an image to decode.
-    :returns: The decoded base64."""
-
-    return binascii.b2a_base64(image_buffer, newline=False).decode(
-        "ascii", errors="ignore"
-    )
