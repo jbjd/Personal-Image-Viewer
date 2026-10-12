@@ -2,13 +2,11 @@ ifeq ($(OS),Windows_NT)
 	override DEFAULT_PYTHON := python
 	override PYTHON_DLL := python312
 	override COMPILED_EXT = pyd
-	override EXECUTABLE_EXT=exe
 	override OS_FLAGS =
 else
 	override DEFAULT_PYTHON := python3.12
 	override PYTHON_DLL := python3.12
 	override COMPILED_EXT = so
-	override EXECUTABLE_EXT=bin
 	override OS_FLAGS = -fPIC
 endif
 
