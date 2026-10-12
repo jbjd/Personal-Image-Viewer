@@ -177,10 +177,15 @@ def test_copy_to_clipboard_as_base64(viewer: ViewerApp) -> None:
     )
 
 
-def test_setup_image_io(viewer: ViewerApp):
-    """"""
+def test_setup_image_io(viewer: ViewerApp) -> None:
+    """Should respect padding up to have the screen size"""
+
+    viewer._setup_image_io(1920, 1080, 200, 100, MagicMock())
+
+    assert viewer.image_io.image_resizer.screen_width == 1720
+    assert viewer.image_io.image_resizer.screen_height == 980
 
     viewer._setup_image_io(1920, 1080, 999_999, 999_999, MagicMock())
 
-    assert viewer.image_io.image_resizer.screen_width > 1
-    assert viewer.image_io.image_resizer.screen_height > 1
+    assert viewer.image_io.image_resizer.screen_width == 960
+    assert viewer.image_io.image_resizer.screen_height == 540
