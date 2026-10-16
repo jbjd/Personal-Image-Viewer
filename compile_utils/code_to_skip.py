@@ -133,14 +133,7 @@ assignments_to_skip: dict[str, set[str]] = {
     "PIL.AvifImagePlugin": {"format_description"},
     "PIL.DdsImagePlugin": {"format_description"},
     "PIL.GifImagePlugin": {"_Palette", "format_description"},
-    "PIL.Image": {
-        "DecoderInput",
-        "MIME",
-        "_ENDIAN",
-        "_ExifBase",
-        "_fromarray_typemap",
-        "logger",
-    },
+    "PIL.Image": {"DecoderInput", "MIME", "_ENDIAN", "_ExifBase", "_fromarray_typemap"},
     "PIL.ImageDraw": {"Outline"},
     "PIL.ImageFile": {"logger"},
     "PIL.ImagePalette": {"tostring"},
@@ -171,7 +164,7 @@ functions_to_skip: dict[str, set[str]] = {
     "PIL._binary": {"i8", "o32le", "si16be", "si16le", "si32be", "si32le"},
     "PIL._util": {"new"},
     "PIL.AvifImagePlugin": {"Image.register_mime", "get_codec_version"},
-    "PIL.GifImagePlugin": {"Image.register_mime", "_save_netpbm", "getheader"},
+    "PIL.GifImagePlugin": {"Image.register_mime", "getheader"},
     "PIL.Image": {
         "__arrow_c_array__",
         "__arrow_c_schema__",
@@ -185,7 +178,6 @@ functions_to_skip: dict[str, set[str]] = {
         "_repr_jpeg_",
         "_repr_pretty_",
         "_repr_png_",
-        "_show",
         "alpha_composite",
         "blend",
         "composite",
@@ -199,7 +191,6 @@ functions_to_skip: dict[str, set[str]] = {
         "fromarrow",
         "fromqimage",
         "fromqpixmap",
-        "get_child_images",
         "getexif",
         "getextrema",
         "getmodebandnames",
@@ -307,14 +298,12 @@ functions_to_skip: dict[str, set[str]] = {
         "draft",
         "load_djpeg",
     },
-    "PIL.PngImagePlugin": {"Image.register_mime", "deprecate", "getchunks", "verify"},
+    "PIL.PngImagePlugin": {"Image.register_mime", "getchunks", "verify"},
     "PIL.WebPImagePlugin": {"Image.register_mime"},
 }
 
 
-from_imports_to_skip: dict[str, set[tuple[str, str]]] = {
-    "PIL.Image": {("defusedxml", "ElementTree")}
-}
+from_imports_to_skip: dict[str, set[tuple[str, str]]] = {}
 
 unused_imports_to_preserve: dict[str, set[str]] = {
     f"{IMAGE_VIEWER_NAME}.utils.os": {
@@ -440,10 +429,7 @@ regex_to_apply_py: dict[str, list[RegexReplacement]] = {
         ),
     ],
     "PIL.ImageFile": [
-        RegexReplacement(
-            r"if isinstance\(self, StubImageFile\):.*?open\(self\)",
-            flags=re.DOTALL,
-        ),
+        RegexReplacement(r"isinstance\(self, StubImageFile\)", "False", count=0),
     ],
     "PIL.ImageFont": [
         RegexReplacement(
