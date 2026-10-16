@@ -67,6 +67,12 @@ It may be helpful to put this on *PATH* for convenience.
 
 1. Run `make bundle-dist` or `make install-dist`. Bundle will install a distributable version of the program (includes licenses and no machine-specific Python or *gcc* optimizations) to the folder `dist`, while install will install it to the default location.
 
+### When Pulling New Changes
+
+1. Make sure Python dependencies in `requirements.txt` and `requirements_compile.txt` are up to date. You will get runtime warnings if versions are mismatched.
+
+1. Rebuild C extension modules `make build-all`
+
 ## Development
 
 I am currently the only dev and tend to work on Windows. I have a Linux laptop that I periodically check things on, but due to this being a UI app, I can't cover everything with a unit test. Its possible I break Linux compatibility from time to time, so be warned.
