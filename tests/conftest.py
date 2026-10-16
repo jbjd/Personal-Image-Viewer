@@ -100,10 +100,10 @@ def rename_entry_fixture(tk: Tk, canvas: CustomCanvas, font: Font) -> RenameEntr
 
 @pytest.fixture(name="viewer", scope="module")
 def viewer_fixture(tk: Tk) -> ViewerApp:
-    """A Viewer object with visual UI elements mocked out"""
+    """A Viewer object with canvas UI elements mocked out"""
 
-    def _test_tk_setup(_: ViewerApp) -> Tk:
-        return tk
+    def _test_tk_setup(self: ViewerApp) -> None:
+        self.app = tk
 
     mock_canvas = MagicMock()
     mock_canvas.return_value.screen_width = 1920

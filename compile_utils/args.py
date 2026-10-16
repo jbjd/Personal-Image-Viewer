@@ -4,6 +4,8 @@ import os
 from argparse import ArgumentParser, Namespace
 from enum import StrEnum
 
+from personal_compile_tools.file_operations import find_file_on_path
+
 from compile_utils.code_to_skip import data_files_to_exclude, dlls_to_include
 from compile_utils.constants import REPORT_FILE
 from compile_utils.module_dependencies import modules_to_include
@@ -248,7 +250,7 @@ class CompileArgumentParser:
 
             if args.distribution:
                 nuitka_args += [
-                    self._get_data_file_arg(self._get_full_path_to_file(file), file)
+                    self._get_data_file_arg(find_file_on_path(file), file)
                     for file in (dlls_to_include)
                 ]
 
@@ -257,22 +259,3 @@ class CompileArgumentParser:
     @staticmethod
     def _get_data_file_arg(abs_path: str, rel_path: str) -> str:
         return NuitkaArgs.INCLUDE_DATA_FILES.with_value(f"{abs_path}={rel_path}")
-
-    @staticmethod
-    def _get_full_path_to_file(file: str) -> str:
-        """Finds required file on $PATH.
-
-        :param file: File name to search for.
-        :returns: Full path to file."""
-
-        path_env: str = os.environ.get("PATH", "")
-
-        for folder in path_env.split(os.pathsep):
-            if not folder:
-                continue
-
-            target: str = os.path.join(folder, file)
-            if os.path.isfile(target):
-                return target
-
-        raise FileNotFoundError(f"Can't find dll file {file} on $PATH")

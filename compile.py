@@ -8,6 +8,7 @@ from importlib.metadata import version as get_module_version
 from subprocess import Popen
 
 from personal_compile_tools.file_operations import (
+    copy_file,
     delete_folder,
     get_folder_size,
     overwrite_folder,
@@ -43,13 +44,14 @@ from compile_utils.nuitka_ext import clean_compilation_report, start_nuitka_comp
 from compile_utils.validation import validate_module_requirements, validate_PIL
 
 raise_if_unsupported_python_version_pyproject()
-nuitka_raise_if_unsupported_python_version(sys.version_info[:2])
+nuitka_raise_if_unsupported_python_version()
 validate_module_requirements()
 validate_PIL()
 
 working_folder: str = os.path.normpath(os.path.dirname(__file__))
 
-files_to_include: list[str] = ["image_viewer/config.ini"]
+CONFIG_REL_PATH: str = "image_viewer/config.ini"
+files_to_include: list[str] = [CONFIG_REL_PATH]
 
 parser = CompileArgumentParser()
 
@@ -165,6 +167,7 @@ try:
         )
 
     if args.extra_checks:
+        _logger.debug("Checking for unused code skips")
         warn_unused_code_skips(modules_no_warn_unused_skips)
 
     if args.skip_nuitka:
@@ -184,6 +187,7 @@ try:
         sys.exit(1)
 
     if args.report:
+        _logger.debug("Cleaning report")
         clean_compilation_report(os.path.join(build_folder_path, REPORT_FILE))
 
     _logger.debug("Minifying TCL files")
@@ -194,7 +198,19 @@ try:
         strip_files(nuitka_dist_path)
 
     if not args.debug:
-        delete_folder(install_path)
+        if os.path.exists(install_path):
+            _logger.debug("Found existing installation")
+            existing_config_file_path: str = os.path.join(install_path, CONFIG_REL_PATH)
+
+            if os.path.isfile(existing_config_file_path):
+                _logger.info("Preserving existing config file")
+
+                overwrite_config_file_path: str = os.path.join(
+                    nuitka_dist_path, CONFIG_REL_PATH
+                )
+                copy_file(existing_config_file_path, overwrite_config_file_path)
+
+            delete_folder(install_path)
 
         # Sometimes the file is randomly blocked by another process and one retry
         # will pass
