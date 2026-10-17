@@ -1,6 +1,7 @@
 import os
 import sys
 import warnings
+from collections.abc import Iterable
 
 from nuitka.options.CommandLineOptionsTools import OurOptionGroup
 from nuitka.plugins.PluginBase import NuitkaPluginBase
@@ -203,12 +204,10 @@ class PivNuitkaPlugin(NuitkaPluginBase):  # type: ignore[misc]
                     stacklevel=1,
                 )
 
-    def getReportData(self) -> set[tuple[str, str]]:
-        """Provide dictionary of data for reporting purposes."""
-        # Virtual method, pylint: disable=no-self-use
-        return {
+    def getReportData(self, make_report_path: str) -> Iterable[tuple[str, str]]:  # noqa: ARG002
+        return [
             ("piv_arguments", self.piv_arguments),
             ("removed_std_modules", ",".join(self._removed_std_modules)),
             ("removed_std_extensions", ",".join(self._removed_std_extensions)),
             ("removed_dlls", ",".join(self._removed_dlls)),
-        }
+        ]
