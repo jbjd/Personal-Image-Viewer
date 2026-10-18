@@ -116,12 +116,10 @@ class CompileArgumentParser:
             PivArgs.QUIET, "Adds --quiet flag to nuitka.", is_development=True
         )
         self.add_argument(
-            PivArgs.VERBOSE, "Adds --quiet flag to nuitka.", is_development=True
+            PivArgs.VERBOSE, "Adds --verbose flag to nuitka.", is_development=True
         )
         self.add_argument(
-            PivArgs.EXTRA_CHECKS,
-            "Adds extra checks during build.",
-            is_development=True,
+            PivArgs.EXTRA_CHECKS, "Adds extra checks during build.", is_development=True
         )
         self.add_argument(
             PivArgs.NO_CACHE,
