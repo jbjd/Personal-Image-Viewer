@@ -68,6 +68,9 @@ install-dist:
 bundle-dist:
 	$(PYTHON_EXECUTABLE) -OO compile.py --extra-checks --strip --distribution --install-path ./dist
 
+install-setup:
+	$(PYTHON_EXECUTABLE) -OO compile.py --extra-checks --skip-nuitka
+
 install-debug:
 	$(PYTHON_EXECUTABLE) -OO compile.py --extra-checks --strip --debug
 

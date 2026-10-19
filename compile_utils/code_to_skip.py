@@ -273,6 +273,7 @@ functions_to_skip: dict[str, set[str]] = {
     "PIL.ImageMath": {"unsafe_eval"},
     "PIL.ImageOps": {
         "_color",
+        "_new_with_fill",
         "autocontrast",
         "colorize",
         "contain",
