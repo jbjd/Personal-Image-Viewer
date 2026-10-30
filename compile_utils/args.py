@@ -36,6 +36,7 @@ class NuitkaArgs(StrEnum):
     QUIET = "--quiet"
     VERBOSE = "--verbose"
     REPORT = "--report"
+    UPDATE_CHECK = "--update-check"
 
     def with_value(self, value: str) -> str:
         """Returns the flag in the format {flag}={value}"""
@@ -207,6 +208,7 @@ class CompileArgumentParser:
         else:
             nuitka_args.append(NuitkaArgs.DEPLOYMENT)
             nuitka_args.append(NuitkaArgs.REMOVE_OUTPUT)
+            nuitka_args.append(NuitkaArgs.UPDATE_CHECK.with_value("never"))
 
         if args.report:
             nuitka_args.append(NuitkaArgs.REPORT.with_value(REPORT_FILE))
