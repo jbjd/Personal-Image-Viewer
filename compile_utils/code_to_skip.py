@@ -94,6 +94,7 @@ modules_to_skip: list[str] = [
     "PIL.ImageDraw2",
     "PIL.ImageEnhance",
     "PIL.ImageFilter",
+    "PIL.ImageMath",
     "PIL.ImageMorph",
     "PIL.ImagePath",
     "PIL.ImageQt",
@@ -270,9 +271,9 @@ functions_to_skip: dict[str, set[str]] = {
         "set_variation_by_name",
         "truetype",
     },
-    "PIL.ImageMath": {"unsafe_eval"},
     "PIL.ImageOps": {
         "_color",
+        "_new_with_fill",
         "autocontrast",
         "colorize",
         "contain",
