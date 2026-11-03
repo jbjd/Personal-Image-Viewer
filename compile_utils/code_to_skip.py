@@ -555,15 +555,18 @@ regex_to_apply_tk: dict[str, list[RegexReplacement]] = {
         )
     ],
     f"{tcl_folder}/platform-*.tm": [
-        # Discontinued OS
-        RegexReplacement(r"osf1 \{.*?\}", flags=re.DOTALL),
-        RegexReplacement(r"solaris(\*-\*)? \{(.*?\{.*?\}.*?)*?\}", flags=re.DOTALL),
+        # Unsupported/discontinued OS
+        RegexReplacement(r"aix .*?hp-ux .*?osf1 \{.*?\}", flags=re.DOTALL),
+        RegexReplacement(r"sunos \{.*?(?=darwin)", flags=re.DOTALL),
+        RegexReplacement(r"solaris \{.*?(?=macosx)", flags=re.DOTALL),
+        RegexReplacement(r"solaris\*-\*.*?(?=linux)", flags=re.DOTALL),
+        RegexReplacement(r"if \{\[info exists argv0\].*", flags=re.DOTALL),
     ],
 }
 
 if sys.platform != "darwin":
     regex_to_apply_tk[f"{tcl_folder}/platform-*.tm"].append(
-        RegexReplacement(r"darwin \{.*?aix", "aix", flags=re.DOTALL)
+        RegexReplacement(r"darwin \{.*?set cpu x86_64.*?\}.*?\}.*?\}", flags=re.DOTALL)
     )
 
     regex_to_apply_tk["tcl/auto.tcl"] = [
@@ -587,14 +590,11 @@ data_files_to_exclude: list[str] = [
     "tcl*/**/http-*.tm",
     "tcl*/**/shell-*.tm",
     "tcl*/**/tcltest-*.tm",
+    "tcl/encoding/mac*.enc",
     "tcl/parray.tcl",
     "tk/ttk/*Theme.tcl",
     "tk/images",
     "tk/msgs",
 ]
-if sys.platform != "darwin":
-    # These are Mac specific encodings
-    data_files_to_exclude.append("tcl/encoding/mac*.enc")
-
 
 dlls_to_include: list[str] = ["libturbojpeg.dll"]
