@@ -480,6 +480,17 @@ regex_to_apply_py: dict[str, list[RegexReplacement]] = {
         ),
     ],
     "PIL.PngImagePlugin": [
+        # This is to fix an issue I reported to PIL #10399 but they
+        # will not deploy fix for until next release.
+        # TODO: Remove next PIL bump around Jan 2027
+        RegexReplacement(
+            (
+                r"self\._prev_im.paste\(updated, self.dispose_extent, mask\)\s+self\.im = self\._prev_im"  # noqa: E501
+            ),
+            """self.im=self._prev_im.copy()if self.dispose_op==Disposal.OP_PREVIOUS else self._prev_im
+                self.im.paste(updated, self.dispose_extent, mask)""",  # noqa: E501
+            flags=re.DOTALL,
+        ),
         RegexReplacement(r"raise EOFError\(.*?\)", "raise EOFError", count=0),
         RegexReplacement(  # Remove Exif usage to remove Tiff dependency
             r"if isinstance\(exif, Image\.Exif\):\s+exif = exif.tobytes\(8\)"

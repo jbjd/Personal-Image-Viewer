@@ -67,11 +67,20 @@ It may be helpful to put this on *PATH* for convenience.
 
 1. Run `make bundle-dist` or `make install-dist`. Bundle will install a distributable version of the program (includes licenses and no machine-specific Python or *gcc* optimizations) to the folder `dist`, while install will install it to the default location.
 
-### When Pulling New Changes
+## Pulling New Changes
+
+1. Run `git pull origin main` to get the latest updates
 
 1. Make sure Python dependencies in `requirements.txt` and `requirements_compile.txt` are up to date. You will get runtime warnings if versions are mismatched.
 
-1. Rebuild C extension modules `make build-all`
+1. Rebuild C extension modules, e.x. `make build-all`
+
+If you see a failure like `fatal: refusing to merge unrelated histories`, this means I have recently rebase'd some of the git history. You can fix it with the following commands:
+
+```bash
+git fetch origin
+git reset --hard origin/main
+```
 
 ## Development
 
