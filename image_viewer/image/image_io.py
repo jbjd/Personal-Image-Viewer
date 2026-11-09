@@ -1,4 +1,4 @@
-"""Classes for loading PIL images from disk"""
+"""Classes for loading PIL images from disk."""
 
 # Note: file name can't be "io" since it breaks debugger for some reason
 
@@ -26,7 +26,7 @@ MAX_ZOOM_RATIO_TO_SCREEN: float = 2.2
 
 
 class AnimationFrame:
-    """A frame within an animated image"""
+    """A frame within an animated image."""
 
     __slots__ = ("duration_ms", "image")
 
@@ -38,7 +38,7 @@ class AnimationFrame:
 
 
 class ReadImageResponse:
-    """Response when reading an image from disk"""
+    """Response when reading an image from disk."""
 
     __slots__ = ("image", "image_view")
 
@@ -93,7 +93,7 @@ class ImageIO:
         return self._state.zoom_allowed
 
     def get_next_frame(self) -> AnimationFrame | None:
-        """Gets next frame of animated image or empty frame while its being loaded"""
+        """Gets next frame of animated image or empty frame while its being loaded."""
         try:
             self.frame_index = (self.frame_index + 1) % len(self.animation_frames)
             current_frame = self.animation_frames[self.frame_index]
@@ -108,7 +108,7 @@ class ImageIO:
     def begin_animation(
         self, original_image: Image, resized_image: Image, frame_count: int
     ) -> None:
-        """Begins new thread to load frames of an animated image"""
+        """Begins new thread to load frames of an animated image."""
         self.animation_frames = [None] * frame_count
 
         first_frame: AnimationFrame = AnimationFrame(resized_image)
@@ -127,7 +127,7 @@ class ImageIO:
     @staticmethod
     def read_image(path_to_image: str) -> ReadImageResponse | None:
         """Tries to open file on disk as PIL Image
-        Returns Image or None on failure"""
+        Returns Image or None on failure."""
         try:
             image_view: CRawImageView | None = read_image_into_buffer(path_to_image)
             if image_view is None:
@@ -142,7 +142,7 @@ class ImageIO:
 
     def load_image(self, image_path: str) -> Image | None:
         """Loads an image, resizes it to screen, and caches it.
-        Returns Image or None on failure"""
+        Returns Image or None on failure."""
         read_image_response: ReadImageResponse | None = self.read_image(image_path)
         if read_image_response is None:
             return None
@@ -225,7 +225,7 @@ class ImageIO:
         return size_reduced
 
     def _resize_or_get_placeholder(self) -> Image:
-        """Resizes PIL image or returns placeholder if corrupted in some way"""
+        """Resizes PIL image or returns placeholder if corrupted in some way."""
         current_image: Image
         try:
             current_image = self.image_resizer.get_image_fit_to_screen(
@@ -286,7 +286,7 @@ class ImageIO:
     def load_remaining_frames(
         self, original_image: Image, last_frame: int, load_id: int
     ) -> None:
-        """Loads all frames starting from the second"""
+        """Loads all frames starting from the second."""
         for i in range(1, last_frame):
             if load_id != self.current_load_id:
                 break
@@ -304,7 +304,7 @@ class ImageIO:
 
     def reset_and_setup(self) -> None:
         """Resets zoom, animation frames, and closes previous image
-        to setup for next image load"""
+        to setup for next image load."""
         self._image_optimized = False
         self.animation_frames.clear()
         self.frame_index = 0

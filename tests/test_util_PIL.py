@@ -1,4 +1,6 @@
 # noqa: N999
+"""Tests for PIL extensions."""
+
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -17,8 +19,8 @@ from image_viewer.utils.PIL import (
 )
 
 
-def test_image_path() -> None:
-    """Check that ImageName correctly finds image suffixes"""
+def test_image_path():
+    """Check that ImageName correctly finds image suffixes."""
     example_image_path = ImageName("some_image.1.PNG")
     assert example_image_path.suffix == "png"
 
@@ -29,8 +31,8 @@ def test_image_path() -> None:
     assert example_image_path.suffix == ""
 
 
-def test_init_PIL() -> None:  # noqa: N802
-    """Should remove all values from _plugins and set default font"""
+def test_init_PIL():  # noqa: N802
+    """Should remove all values from _plugins and set default font."""
     from PIL import Image as _Image
     from PIL.ImageDraw import ImageDraw
 
@@ -41,7 +43,7 @@ def test_init_PIL() -> None:  # noqa: N802
     del _Image, ImageDraw
 
 
-def test_create_images() -> None:
+def test_create_images():
     init_PIL(DEFAULT_UI_FONT, 20)
 
     dropdown = create_dropdown_image("test\ntest")
@@ -53,8 +55,8 @@ def test_create_images() -> None:
     assert isinstance(placeholder, Image)
 
 
-def test_resize() -> None:
-    """Test a variety of PIL Image resize scenarios"""
+def test_resize():
+    """Test a variety of PIL Image resize scenarios."""
 
     example_image = new("P", (10, 10))
 
@@ -85,7 +87,7 @@ def test_resize() -> None:
 def test_optimize_image_mode(
     mode: str, pixel_data: list[tuple], expected_mode: str
 ) -> None:
-    """Should reduce pixel depth if visually equivalent"""
+    """Should reduce pixel depth if visually equivalent."""
 
     image = new(mode, (10, 10))
     image.putdata(pixel_data)
@@ -120,8 +122,8 @@ def test_get_mode_info(
     assert bpp == expected_bpp
 
 
-def test_preinit() -> None:
-    """Should import supported formats and set PIL as initialized"""
+def test_preinit():
+    """Should import supported formats and set PIL as initialized."""
 
     mock_import = MagicMock()
     mock_register_open = MagicMock()
@@ -159,8 +161,8 @@ def test_preinit() -> None:
     assert supported_formats == imported_formats
 
 
-def test_preinit_already_initialized() -> None:
-    """Should do nothing since already initialized"""
+def test_preinit_already_initialized():
+    """Should do nothing since already initialized."""
 
     mock_register_open = MagicMock()
     mock_image_module = MagicMock()

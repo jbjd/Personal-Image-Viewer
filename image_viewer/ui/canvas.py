@@ -1,4 +1,4 @@
-"""Classes representing a canvas UI element"""
+"""Classes representing a canvas UI element."""
 
 from tkinter import Canvas, Event, Tk
 from tkinter.font import Font  # noqa: TC003
@@ -12,7 +12,7 @@ from image_viewer.utils.os import maybe_truncate_long_name
 
 
 class CustomCanvas(Canvas):
-    """Extended version of tkinter's canvas to support internal methods"""
+    """Extended version of tkinter's canvas to support internal methods."""
 
     __slots__ = (
         "_motion_id",
@@ -119,20 +119,20 @@ class CustomCanvas(Canvas):
         return image_id
 
     def create_topbar(self, topbar_img: PhotoImage) -> None:
-        """Creates the topbar and stores it"""
+        """Creates the topbar and stores it."""
         self._topbar = topbar_img  # save from garbage collector
         self.create_image(
             0, 0, image=topbar_img, anchor="nw", tag=TkTags.TOPBAR, state="hidden"
         )
 
     def create_name_text(self, x: int, y: int) -> None:
-        """Creates text object used to display file name"""
+        """Creates text object used to display file name."""
         self.file_name_text_id = self.create_text(
             x, y, fill=TEXT_RGB, anchor="w", font=self.font, tags=TkTags.TOPBAR
         )
 
     def update_image_display(self, new_image: PhotoImage) -> None:
-        """Puts a new image on screen"""
+        """Puts a new image on screen."""
         self.delete(self.image_display.id)
 
         self.image_display.id = self.create_image(
@@ -147,13 +147,13 @@ class CustomCanvas(Canvas):
         self.update_idletasks()
 
     def update_existing_image_display(self, new_image: PhotoImage) -> None:
-        """Updates existing image on screen with a new PhotoImage"""
+        """Updates existing image on screen with a new PhotoImage."""
         self.itemconfig(self.image_display.id, image=new_image)
         self.image_display.image = new_image
         self.update_idletasks()
 
     def update_file_name(self, new_name: str) -> int:
-        """Updates file name. Returns width of new name"""
+        """Updates file name. Returns width of new name."""
         expected_width: int = self.font.measure(new_name)
         max_width: int = self.screen_width // 3
         self.itemconfigure(
@@ -163,7 +163,7 @@ class CustomCanvas(Canvas):
         return self.bbox(self.file_name_text_id)[2]
 
     def is_widget_visible(self, tag_or_id: str | int) -> bool:
-        """Returns bool of if provided tag/id is visible"""
+        """Returns bool of if provided tag/id is visible."""
         return self.itemcget(tag_or_id, "state") != "hidden"
 
     def get_button_id(self, name: str) -> int:
@@ -171,7 +171,7 @@ class CustomCanvas(Canvas):
 
     def mock_button_click(self, name: str) -> None:
         """Triggers on click event of button programmatically
-        passing None as event"""
+        passing None as event."""
         button: ButtonUIElementBase = self.button_name_to_object[name]
         button.on_click(None)
         button.on_leave(None)  # Don't make button look hovered by mouse

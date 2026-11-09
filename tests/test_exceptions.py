@@ -5,7 +5,7 @@ from unittest.mock import MagicMock, mock_open, patch
 from image_viewer.exceptions import exception_hook
 
 
-def test_exception_hook() -> None:
+def test_exception_hook():
     """Should write exception to a file while swallowing errors."""
 
     exception = Exception("problem!")

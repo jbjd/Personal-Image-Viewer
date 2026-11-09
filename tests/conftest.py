@@ -1,5 +1,5 @@
 """Common file for pytest framework to define test fixtures, also used to
-define other constants used within tests"""
+define other constants used within tests."""
 
 import os
 from tkinter import Tk
@@ -100,7 +100,7 @@ def rename_entry_fixture(tk: Tk, canvas: CustomCanvas, font: Font) -> RenameEntr
 
 @pytest.fixture(name="viewer", scope="module")
 def viewer_fixture(tk: Tk) -> ViewerApp:
-    """A Viewer object with canvas UI elements mocked out"""
+    """A Viewer object with canvas UI elements mocked out."""
 
     def _test_tk_setup(self: ViewerApp) -> None:
         self.app = tk

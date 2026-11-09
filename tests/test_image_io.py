@@ -29,7 +29,7 @@ from tests.conftest import (
 _MODULE_PATH: str = "image_viewer.image.image_io"
 
 
-def test_animation_frame() -> None:
+def test_animation_frame():
     example_image = Image()
 
     assert AnimationFrame(example_image).duration_ms == DEFAULT_DURATION_MS
@@ -49,10 +49,8 @@ def test_animation_frame() -> None:
         (EXAMPLE_WEBP_PATH, "WEBP"),
     ],
 )
-def test_load_image(
-    image_io: ImageIO, input_image_path: str, expected_format: str
-) -> None:
-    """When an image of the same name is in cache, don't load from disk"""
+def test_load_image(image_io: ImageIO, input_image_path: str, expected_format: str):
+    """When an image of the same name is in cache, don't load from disk."""
 
     image_io.load_image(input_image_path)
 
@@ -60,8 +58,8 @@ def test_load_image(
     assert image_io.PIL_image.format == expected_format
 
 
-def test_load_image_error_on_open(image_io: ImageIO) -> None:
-    """An image might error on open when its not a valid image or not found"""
+def test_load_image_error_on_open(image_io: ImageIO):
+    """An image might error on open when its not a valid image or not found."""
 
     with patch("builtins.open", side_effect=FileNotFoundError):
         assert image_io.load_image("") is None
@@ -73,8 +71,8 @@ def test_load_image_error_on_open(image_io: ImageIO) -> None:
         assert image_io.load_image("") is None
 
 
-def test_load_image_in_cache(image_io: ImageIO) -> None:
-    """When an image of the same name is in cache, don't load from disk"""
+def test_load_image_in_cache(image_io: ImageIO):
+    """When an image of the same name is in cache, don't load from disk."""
 
     # setup cache for test
     image_format: str = "RGB"
@@ -98,8 +96,8 @@ def test_load_image_in_cache(image_io: ImageIO) -> None:
         assert image_io.load_image("some/path") is cached_image
 
 
-def test_load_image_resize_error(image_io: ImageIO) -> None:
-    """Should get placeholder image when resize errors"""
+def test_load_image_resize_error(image_io: ImageIO):
+    """Should get placeholder image when resize errors."""
     with (
         patch(
             f"{_MODULE_PATH}.ImageResizer.get_image_fit_to_screen", side_effect=OSError
@@ -114,8 +112,8 @@ def test_load_image_resize_error(image_io: ImageIO) -> None:
         assert not image_io._state.zoom_allowed
 
 
-def test_get_next_frame(image_io: ImageIO) -> None:
-    """Test expected behavior from getting next frame and resetting"""
+def test_get_next_frame(image_io: ImageIO):
+    """Test expected behavior from getting next frame and resetting."""
 
     frame1, frame2, frame3 = (
         AnimationFrame(Image()),
@@ -162,7 +160,7 @@ def test_optimize_png_image(
     mode: str,
     expected_mode: str,
     pixel_generator: Callable[[int], tuple],
-) -> None:
+):
     """Should saved optimized PNG."""
 
     original_image = tempfile.NamedTemporaryFile(delete=False)  # noqa: SIM115
@@ -195,7 +193,7 @@ def test_optimize_png_image(
         os.remove(original_image.name)
 
 
-def test_optimize_png_image_non_pngs(image_io: ImageIO) -> None:
+def test_optimize_png_image_non_pngs(image_io: ImageIO):
     """Should not run on non-PNGs."""
 
     assert image_io.load_image(EXAMPLE_JPEG_PATH)
@@ -203,7 +201,7 @@ def test_optimize_png_image_non_pngs(image_io: ImageIO) -> None:
     assert not image_io.optimize_png_image("")
 
 
-def test_get_zoomed_image(image_io: ImageIO) -> None:
+def test_get_zoomed_image(image_io: ImageIO):
     """Should return increasingly sized zoomed images."""
 
     assert image_io.load_image(EXAMPLE_JPEG_PATH)

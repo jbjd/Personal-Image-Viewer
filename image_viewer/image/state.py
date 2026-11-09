@@ -1,4 +1,4 @@
-"""Classes that represent the zoom state"""
+"""Classes that represent the zoom state."""
 
 from image_viewer.constants import ZoomDirection
 
@@ -18,7 +18,7 @@ class ImageState:
         ImageState.__init__(self)
 
     def try_update(self, direction: ZoomDirection) -> bool:
-        """Tries to zoom in or out. Returns True if zoom level changed"""
+        """Tries to zoom in or out. Returns True if zoom level changed."""
         updated: bool = False
 
         if direction == ZoomDirection.IN and self.zoom_level < self.zoom_level_max:

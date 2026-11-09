@@ -39,11 +39,13 @@ class NuitkaArgs(StrEnum):
     UPDATE_CHECK = "--update-check"
 
     def with_value(self, value: str) -> str:
-        """Returns the flag in the format {flag}={value}"""
+        """Returns the flag in the format {flag}={value}."""
         return f"{self}={value}"
 
 
 class PivArgs(StrEnum):
+    """Arguments to this compilation script."""
+
     INSTALL_PATH = "--install-path"
     REPORT = "--report"
     STRIP = "--strip"
@@ -57,6 +59,8 @@ class PivArgs(StrEnum):
 
 
 class PivPluginArgs(StrEnum):
+    """Internal arguments for the Nuitka extension plugin."""
+
     EXTRA_CHECKS = "--extra-checks"
     PIV_ARGS = "--piv-arguments"
 
@@ -178,7 +182,7 @@ class CompileArgumentParser:
         files_to_include: list[str],
         modules_to_skip: list[str],
     ) -> tuple[CompileNamespace, list[str]]:
-        """Returns CompileNamespace of user args and list of args to pass to nuitka"""
+        """Returns CompileNamespace of user args and list of args to pass to nuitka."""
         args: CompileNamespace = self.arg_parser.parse_args(
             namespace=CompileNamespace()
         )

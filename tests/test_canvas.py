@@ -17,7 +17,7 @@ from tests.utils.mocks import MockEvent
 )
 def test_create_assets(
     canvas: CustomCanvas, input_text: str, size_on_screen: int, displayed_text: str
-) -> None:
+):
     """Should successfully create buttons, text, and topbar."""
 
     # Should store id after creation
@@ -36,16 +36,16 @@ def test_create_assets(
         )
 
 
-def test_create_topbar(canvas: CustomCanvas, example_image: Image) -> None:
+def test_create_topbar(canvas: CustomCanvas, example_image: Image):
     # Should store image after creation or garbage collector kills topbar
     display_image = PhotoImage(example_image)
     canvas.create_topbar(display_image)
     assert canvas._topbar is display_image
 
 
-def test_update_image_display(canvas: CustomCanvas, example_image: Image) -> None:
+def test_update_image_display(canvas: CustomCanvas, example_image: Image):
     """Should center images on update_image_display and
-    preserve coords on update_existing_image_display"""
+    preserve coords on update_existing_image_display."""
     display_image = PhotoImage(example_image)
     canvas.update_image_display(display_image)
     image_id: int = canvas.image_display.id
@@ -66,8 +66,8 @@ def test_update_image_display(canvas: CustomCanvas, example_image: Image) -> Non
     assert original_coords != canvas.coords(image_id)
 
 
-def test_widget_visible(canvas: CustomCanvas) -> None:
-    """Is widget visible function should be accurate"""
+def test_widget_visible(canvas: CustomCanvas):
+    """Is widget visible function should be accurate."""
     widget_id: int = canvas.create_rectangle(0, 0, 10, 10)
     assert canvas.is_widget_visible(widget_id)
 
@@ -89,8 +89,8 @@ def test_drag(
     start_coords: tuple[int, int],
     end_coords: tuple[int, int],
     expected_move_amount: tuple[int, int],
-) -> None:
-    """Should move image amount dragged"""
+):
+    """Should move image amount dragged."""
     canvas.update_image_display(PhotoImage(example_image))
 
     start_x, start_y = start_coords
@@ -108,7 +108,7 @@ def test_drag(
         )
 
 
-def test_drag_frame_limit(canvas: CustomCanvas) -> None:
+def test_drag_frame_limit(canvas: CustomCanvas):
     """Should not drag when another drag has occurred recently."""
 
     canvas._motion_id = "abc"
@@ -123,8 +123,8 @@ def test_drag_frame_limit(canvas: CustomCanvas) -> None:
         mock_after.assert_called_once()
 
 
-def test_get_button_id(canvas: CustomCanvas, example_image: Image) -> None:
-    """Should keep track of buttons and correctly return their id"""
+def test_get_button_id(canvas: CustomCanvas, example_image: Image):
+    """Should keep track of buttons and correctly return their id."""
 
     mock_button = MagicMock()
     mock_button.id = 1234
@@ -135,8 +135,8 @@ def test_get_button_id(canvas: CustomCanvas, example_image: Image) -> None:
     assert canvas.get_button_id(button_name) == mock_button.id
 
 
-def test_mock_button_click(canvas: CustomCanvas, example_image: Image) -> None:
-    """Should call on_click and on_leave functions of button"""
+def test_mock_button_click(canvas: CustomCanvas, example_image: Image):
+    """Should call on_click and on_leave functions of button."""
 
     mock_button = MagicMock()
     button_name: str = "my_button"

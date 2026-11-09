@@ -1,3 +1,5 @@
+"""Rename entry box in UI."""
+
 from tkinter import Canvas, Entry, Event, StringVar, Tk
 from tkinter.font import Font
 from typing import Literal
@@ -16,7 +18,7 @@ def _validate_input(user_input: StringVar) -> None:
 
 
 class RenameEntry(Entry, UIElementBase):
-    """Entry for use in a rename window"""
+    """Entry for use in a rename window."""
 
     __slots__ = ("_entry_text", "being_resized", "min_width", "text")
 
@@ -52,23 +54,23 @@ class RenameEntry(Entry, UIElementBase):
         self.bind("<Motion>", lambda e: self._resize(canvas, e.x))
 
     def mouse_can_resize(self, x_position: int) -> bool:
-        """Returns True if x position on right edge of entry where user can resize"""
+        """Returns True if x position on right edge of entry where user can resize."""
         width: int = self.cget("width")
         grabbable_x_width: int = self.min_width // 35
 
         return x_position >= width - grabbable_x_width
 
     def _start_resize(self, event: Event) -> None:
-        """Starts resize if cursor is in the correct spot"""
+        """Starts resize if cursor is in the correct spot."""
         self.being_resized = self.mouse_can_resize(event.x)
 
     def _stop_resize(self, _: Event) -> None:
-        """Re-allows input when resize event ends"""
+        """Re-allows input when resize event ends."""
         self.configure(state="normal")
         self.being_resized = False
 
     def _resize(self, canvas: Canvas, new_width: int) -> None:
-        """Handles dragging to resize rename window"""
+        """Handles dragging to resize rename window."""
         if self.being_resized:
             self.configure(state="disabled")
             max_width: int = self.min_width << 1
@@ -82,6 +84,6 @@ class RenameEntry(Entry, UIElementBase):
             self.configure(cursor=cursor)
 
     def error_flash(self) -> None:
-        """Makes Entry flash red"""
+        """Makes Entry flash red."""
         self.configure(bg=_ERROR_COLOR)
         self.after(400, lambda: self.configure(bg=TEXT_RGB))

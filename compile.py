@@ -1,4 +1,4 @@
-"""A script to compile the image viewer into an executable file via nuitka"""
+"""A script to compile the image viewer into an executable file via nuitka."""
 
 import logging
 import os

@@ -1,3 +1,5 @@
+"""Tests for the RenameEntry class."""
+
 from unittest.mock import patch
 
 from image_viewer.constants import TEXT_RGB
@@ -6,7 +8,7 @@ from image_viewer.ui.rename_entry import _ERROR_COLOR, RenameEntry
 from tests.utils.mocks import MockEvent
 
 
-def test_error_flash(rename_entry: RenameEntry) -> None:
+def test_error_flash(rename_entry: RenameEntry):
     """Should change color when error_flash called."""
 
     current_background: str
@@ -24,8 +26,8 @@ def test_error_flash(rename_entry: RenameEntry) -> None:
         assert current_background == _ERROR_COLOR
 
 
-def test_resize(rename_entry: RenameEntry, canvas: CustomCanvas) -> None:
-    """Ensure correct behavior when user resizes the entry"""
+def test_resize(rename_entry: RenameEntry, canvas: CustomCanvas):
+    """Ensure correct behavior when user resizes the entry."""
 
     mock_event = MockEvent(x=250)
 
@@ -48,8 +50,8 @@ def test_resize(rename_entry: RenameEntry, canvas: CustomCanvas) -> None:
         assert config["state"][4] == "normal"
 
 
-def test_resize_hover(rename_entry: RenameEntry, canvas: CustomCanvas) -> None:
-    """Cursor should update when user can resize entry"""
+def test_resize_hover(rename_entry: RenameEntry, canvas: CustomCanvas):
+    """Cursor should update when user can resize entry."""
 
     with patch.object(CustomCanvas, "itemconfig") as mock_itemconfig:
         with patch.object(RenameEntry, "cget", lambda *_: 250):

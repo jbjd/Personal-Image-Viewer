@@ -24,10 +24,10 @@ class ButtonUIElementBase(UIElementBase):
 
     @abstractmethod
     def on_click(self, event: Event | None = None) -> None:
-        """Function to run when button clicked"""
+        """Function to run when button clicked."""
 
     def on_enter(self, _: Event | None = None) -> None:
-        """Function to run when mouse first hovers the button"""
+        """Function to run when mouse first hovers the button."""
 
     def on_leave(self, _: Event | None = None) -> None:
-        """Function to run when mouse first leaves hovering the button"""
+        """Function to run when mouse first leaves hovering the button."""

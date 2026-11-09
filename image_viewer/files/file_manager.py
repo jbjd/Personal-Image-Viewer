@@ -1,3 +1,5 @@
+"""Image file tracking."""
+
 import os
 from collections import deque
 from enum import Enum
@@ -28,7 +30,7 @@ class _ShouldPreserveIndex(Enum):
 
 
 class ImageFileManager:
-    """Manages interaction with and tracking of image files"""
+    """Manages interaction with and tracking of image files."""
 
     __slots__ = (
         "_dialog_file_types",
@@ -41,7 +43,7 @@ class ImageFileManager:
     )
 
     def __init__(self, first_image_path: str, image_cache: ImageCache) -> None:
-        """Load single file for display before we load the rest"""
+        """Load single file for display before we load the rest."""
         self.image_folder: str = get_normalized_folder_name(first_image_path)
         self.image_cache: ImageCache = image_cache
 
@@ -71,7 +73,7 @@ class ImageFileManager:
 
     def move_to_new_file(self) -> bool:
         """Opens native open file dialog and points to new image if selected.
-        Returns True if user selected a file, False if dialog was exited"""
+        Returns True if user selected a file, False if dialog was exited."""
         new_file_path: str = askopenfilename(
             title="Open Image",
             initialdir=self.image_folder,
@@ -99,7 +101,7 @@ class ImageFileManager:
 
     def _update_after_move_or_edit(self) -> None:
         """Sets variables about current image.
-        Should be called after adding/deleting an image"""
+        Should be called after adding/deleting an image."""
         self.current_image = self._files.get_current_image()
         self.path_to_image = self.get_path_to_image(self.current_image.name)
 
@@ -195,7 +197,7 @@ class ImageFileManager:
         return details
 
     def move_index(self, amount: int) -> None:
-        """Moves index with safe wrap around"""
+        """Moves index with safe wrap around."""
         self._files.move_index(amount)
         self._update_after_move_or_edit()
 
@@ -228,7 +230,7 @@ class ImageFileManager:
     def rename_or_convert_current_image(
         self, original_image: Image, new_name_or_path: str
     ) -> None:
-        """Try to either rename or convert based on input"""
+        """Try to either rename or convert based on input."""
         new_dir: str
         new_name: str
         new_dir, new_name = self._split_dir_and_name(new_name_or_path)
@@ -280,7 +282,7 @@ class ImageFileManager:
             self._update_after_move_or_edit()
 
     def _split_dir_and_name(self, new_name_or_path: str) -> tuple[str, str]:
-        """Returns tuple with path and file name split up"""
+        """Returns tuple with path and file name split up."""
         new_name: str = os.path.basename(new_name_or_path) or self.current_image.name
         new_dir: str = get_normalized_folder_name(new_name_or_path)
 
@@ -292,7 +294,7 @@ class ImageFileManager:
         return new_dir, new_name
 
     def _construct_path_for_rename(self, new_dir: str, new_name: str) -> str:
-        """Makes new path with validations when moving between directories"""
+        """Makes new path with validations when moving between directories."""
         will_move_dirs: bool = new_dir != ""
 
         new_full_path: str
@@ -318,7 +320,7 @@ class ImageFileManager:
     def _ask_to_delete_old_image_after_convert(
         self, original_path: str, new_full_path: str, new_format: str
     ) -> Convert:
-        """Asks user to delete old file and returns Convert result"""
+        """Asks user to delete old file and returns Convert result."""
         delete: bool = ask_yes_no(
             "Confirm deletion", f"Converted file to {new_format}, delete old file?"
         )
@@ -332,7 +334,7 @@ class ImageFileManager:
         return Convert(original_path, new_full_path, delete)
 
     def _rename(self, original_path: str, new_path: str) -> Rename:
-        """Renames a file and returns the rename result"""
+        """Renames a file and returns the rename result."""
         os.rename(original_path, new_path)
         self._files.remove_current_image()
         self.image_cache.update_key(self.path_to_image, new_path)
@@ -355,7 +357,7 @@ class ImageFileManager:
     ) -> None:
         """Adds a new image to the image list
         preserve_index: try to keep index at the same image it was before adding
-        index: where the image is inserted if provided"""
+        index: where the image is inserted if provided."""
         image_name: ImageName = ImageName(new_name)
         if index < 0:
             index = self._files.search(image_name.name).index

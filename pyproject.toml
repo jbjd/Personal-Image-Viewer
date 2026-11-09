@@ -16,10 +16,10 @@ omit = ["__init__.py", "main.py"]
 [tool.mypy]
 python_version = "3.12"
 exclude = "build/|test.py"
-ignore_missing_imports = true  # Handled by ruff
+ignore_missing_imports = true     # Handled by ruff
+disallow_untyped_defs = false     # Handled by ruff
+disallow_incomplete_defs = false  # Handled by ruff
 disallow_subclassing_any = true
-disallow_untyped_defs = true
-disallow_incomplete_defs = true
 check_untyped_defs = true
 disallow_untyped_decorators = true
 warn_redundant_casts = true

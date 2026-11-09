@@ -1,6 +1,6 @@
 """Information on dependencies modules including:
 * Dependencies based on current OS
-* Modules that need to be explicitly included in standalone builds"""
+* Modules that need to be explicitly included in standalone builds."""
 
 import os
 

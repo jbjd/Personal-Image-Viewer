@@ -1,3 +1,5 @@
+"""Internal Nuitka plugin."""
+
 import os
 import sys
 import warnings
@@ -108,6 +110,9 @@ if sys.platform == "win32":
 
 
 class PivNuitkaPlugin(NuitkaPluginBase):  # type: ignore[misc]
+    """Helps remove dead code from std modules and unneeded
+    dlls in standalone."""
+
     plugin_name: str = "PivPlugin"
 
     __slots__ = (

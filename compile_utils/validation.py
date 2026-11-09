@@ -1,4 +1,4 @@
-"""Validation functions for compilation requirements"""
+"""Validation functions for compilation requirements."""
 
 from importlib.metadata import PackageNotFoundError
 from importlib.metadata import version as get_module_version

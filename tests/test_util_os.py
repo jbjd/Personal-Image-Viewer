@@ -1,3 +1,5 @@
+"""Tests for OS specific utilities."""
+
 import os
 from unittest.mock import patch
 
@@ -13,8 +15,8 @@ from tests.conftest import IMG_DIR
 
 
 @pytest.mark.parametrize("os_name", ["nt", "linux"])
-def test_get_byte_display(os_name: str) -> None:
-    """Should take bytes and return correct string representing kb/mb on given OS"""
+def test_get_byte_display(os_name: str):
+    """Should take bytes and return correct string representing kb/mb on given OS."""
     kb_size: int = 1024 if os_name == "nt" else 1000
     expected_display_999kb: str = "999kb"
     expected_display_1000kb: str = "0.98mb" if os_name == "nt" else "1.00mb"
@@ -24,8 +26,8 @@ def test_get_byte_display(os_name: str) -> None:
         assert get_byte_display(1000 * kb_size) == expected_display_1000kb
 
 
-def test_truncate_long_name() -> None:
-    """Should truncate names relative to size passed"""
+def test_truncate_long_name():
+    """Should truncate names relative to size passed."""
     assert maybe_truncate_long_name("abcdefgh.png", 5, 5) == "abcdefgh.png"
 
     assert maybe_truncate_long_name("abcdefgh.png", 10, 5) == "abcd(…).png"
@@ -44,8 +46,8 @@ def test_split_name_and_suffix(
     assert suffix == expected_suffix
 
 
-def test_get_files_in_folder() -> None:
-    """Test that get_files_in_folder correctly finds files in dir"""
+def test_get_files_in_folder():
+    """Test that get_files_in_folder correctly finds files in dir."""
 
     files = list(get_files_in_folder(IMG_DIR))
     assert len(files) == 8

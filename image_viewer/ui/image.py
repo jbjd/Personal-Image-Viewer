@@ -1,4 +1,4 @@
-"""Classes that represent images on a tkinter canvas"""
+"""Classes that represent images on a tkinter canvas."""
 
 from PIL.ImageTk import PhotoImage
 
@@ -6,7 +6,7 @@ from image_viewer.ui.base import UIElementBase
 
 
 class ImageUIElement(UIElementBase):
-    """Represents an image displayed on a tkinter canvas"""
+    """Represents an image displayed on a tkinter canvas."""
 
     __slots__ = ("image",)
 
@@ -16,7 +16,7 @@ class ImageUIElement(UIElementBase):
 
 
 class DropdownImageUIElement(ImageUIElement):
-    """Represents a lazy loaded drop down image displayed on a tkinter canvas"""
+    """Represents a lazy loaded drop down image displayed on a tkinter canvas."""
 
     __slots__ = ("need_refresh", "show")
 
@@ -26,5 +26,5 @@ class DropdownImageUIElement(ImageUIElement):
         self.show: bool = False
 
     def toggle_display(self) -> None:
-        """Flips if showing is true or false"""
+        """Flips if showing is true or false."""
         self.show = not self.show

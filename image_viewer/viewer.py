@@ -1,3 +1,5 @@
+"""Main application class that strings everything together."""
+
 import os
 from collections.abc import Callable
 from time import perf_counter
@@ -34,7 +36,7 @@ else:
 
 
 class ViewerApp:
-    """Main UI class handling IO and on screen widgets"""
+    """Main UI class handling IO and on screen widgets."""
 
     __slots__ = (
         "animation_id",
@@ -99,7 +101,7 @@ class ViewerApp:
         self._add_binds_to_tk(config)
 
     def _setup_tk(self) -> None:
-        """Creates and setups Tk class"""
+        """Creates and setups Tk class."""
         self.app = Tk()
         self.app.attributes("-fullscreen", True)
 
@@ -131,7 +133,7 @@ class ViewerApp:
         )
 
     def _init_image_display(self) -> None:
-        """Loads first image and then finds all images files in the directory"""
+        """Loads first image and then finds all images files in the directory."""
         # Don't call this class's load_image here since we only consider there
         # to be one image now, and that function would throw if that one failed to load
         image: Image | None = self._load_image_at_current_path()
@@ -146,7 +148,7 @@ class ViewerApp:
             self.load_image()
 
     def _add_binds_to_tk(self, config: Config) -> None:
-        """Assigns binds to Tk instance"""
+        """Assigns binds to Tk instance."""
         app: Tk = self.app
         app.bind("<FocusIn>", self.redraw)
         app.bind("<Map>", self.handle_map)
@@ -206,7 +208,7 @@ class ViewerApp:
         screen_width: int,
         topbar_height: int,
     ) -> None:
-        """Load all assets on topbar and create canvas items"""
+        """Load all assets on topbar and create canvas items."""
 
         icon_size: int = topbar_height + (topbar_height % 2)  # ensure even number
 
@@ -272,15 +274,15 @@ class ViewerApp:
         self.rename_entry.bind("<Return>", self.rename_or_convert)
 
     def _scale_pixels_to_height(self, original_pixels: int) -> int:
-        """Normalize all pixels relative to a 1080 pixel tall screen"""
+        """Normalize all pixels relative to a 1080 pixel tall screen."""
         return int(original_pixels * self.height_ratio)
 
     def _scale_pixels_to_width(self, original_pixels: int) -> int:
-        """Normalize all pixels relative to a 1920 pixel wide screen"""
+        """Normalize all pixels relative to a 1920 pixel wide screen."""
         return int(original_pixels * self.width_ratio)
 
     def start(self) -> None:
-        """Starts tkinter main loop"""
+        """Starts tkinter main loop."""
         self.app.mainloop()
 
     def unresponsive_long_running_process[*Ts, R](
@@ -318,7 +320,7 @@ class ViewerApp:
 
     def handle_mouse_wheel(self, event: Event) -> None:
         """On mouse wheel: either moves between images
-        or zooms when right mouse held"""
+        or zooms when right mouse held."""
         right_mouse_held: bool = getattr(event, "state", 0) & 1024 == 1024
         forward_scroll: bool = event.delta > 0 if os.name == "nt" else event.num == 4
 
@@ -330,7 +332,7 @@ class ViewerApp:
             self.move(Movement.BACKWARD if forward_scroll else Movement.FORWARD)
 
     def handle_canvas_click(self, _: Event) -> None:
-        """Toggles the display of topbar when non-topbar area clicked"""
+        """Toggles the display of topbar when non-topbar area clicked."""
         if self.canvas.is_widget_visible(TkTags.TOPBAR):
             self.hide_topbar()
         else:
@@ -340,12 +342,12 @@ class ViewerApp:
         self, event: Event, function_to_call: Callable[[*Ts], None], *args: *Ts
     ) -> None:
         """Given a callable that accepts a tkinter Event,
-        only call it if self.app is the target"""
+        only call it if self.app is the target."""
         if event.widget is self.app:
             function_to_call(*args)
 
     def handle_key_release(self, event: Event) -> None:
-        """Handle key release, current just used for L/R arrow release"""
+        """Handle key release, current just used for L/R arrow release."""
         if (
             event.widget is self.app
             and event.keysym_num in (Key.LEFT, Key.RIGHT)
@@ -356,7 +358,7 @@ class ViewerApp:
 
     def handle_lr_arrow(self, event: Event) -> None:
         """Handle L/R arrow key input
-        Doesn't move when main window unfocused"""
+        Doesn't move when main window unfocused."""
         if event.widget is self.app and self.move_id == "":
             # move +4 when ctrl held, +1 when shift held
             move_amount: int = 1 + (getattr(event, "state", 0) & 5)
@@ -366,27 +368,27 @@ class ViewerApp:
             self._repeat_move(move_amount, 500)
 
     def _repeat_move(self, move_amount: int, ms: int) -> None:
-        """Repeat move to next image while L/R key held"""
+        """Repeat move to next image while L/R key held."""
         if self.move_id != "":
             self.move(move_amount)
             self.move_id = self.app.after(ms, self._repeat_move, move_amount, 200)
 
     def handle_esc(self, _: Event) -> None:
-        """Closes rename window, then program on hitting escape"""
+        """Closes rename window, then program on hitting escape."""
         if self.canvas.is_widget_visible(self.rename_entry.id):
             self.hide_rename_window()
             return
         self.exit()
 
     def handle_up_arrow(self, _: Event) -> None:
-        """Hides either dropdown or topbar in that order if either visible"""
+        """Hides either dropdown or topbar in that order if either visible."""
         if self.canvas.is_widget_visible(self.dropdown.id):
             self.canvas.mock_button_click(ButtonName.DROPDOWN)
         else:
             self.hide_topbar()
 
     def handle_down_arrow(self, _: Event) -> None:
-        """Shows either topbar or dropdown in that order if either not visible"""
+        """Shows either topbar or dropdown in that order if either not visible."""
         if self.canvas.is_widget_visible(TkTags.TOPBAR):
             if not self.canvas.is_widget_visible(self.dropdown.id):
                 self.canvas.mock_button_click(ButtonName.DROPDOWN)
@@ -394,13 +396,13 @@ class ViewerApp:
             self.show_topbar()
 
     def toggle_show_dropdown(self) -> None:
-        """Handle when user clicks on the dropdown arrow"""
+        """Handle when user clicks on the dropdown arrow."""
         self.dropdown.toggle_display()
         self.update_details_dropdown()
 
     def copy_to_clipboard_as_base64(self, _: Event) -> None:
         """Converts the file's bytes into base64 and copies
-        it to the clipboard"""
+        it to the clipboard."""
 
         if os.name == "nt":
             read_buffer_as_base64_and_copy_to_clipboard(self.image_io.image_view)
@@ -415,7 +417,7 @@ class ViewerApp:
             self.app.clipboard_append(image_base64)
 
     def show_details(self, _: Event | None = None) -> None:
-        """Gets details on image and shows it in a UI popup"""
+        """Gets details on image and shows it in a UI popup."""
         details: str | None = self.file_manager.get_current_image_details(
             self.image_io.PIL_image
         )
@@ -424,7 +426,7 @@ class ViewerApp:
             show_info("Image Details", details)
 
     def load_zoomed_image(self, direction: ZoomDirection) -> None:
-        """Loads zoomed image and updates display"""
+        """Loads zoomed image and updates display."""
 
         zoomed_image: Image | None = self.image_io.get_zoomed_image(direction)
         if zoomed_image is not None:
@@ -433,7 +435,7 @@ class ViewerApp:
         self._end_image_load()
 
     def load_zoomed_image_unblocking(self, direction: ZoomDirection) -> None:
-        """Starts new thread for loading zoomed image"""
+        """Starts new thread for loading zoomed image."""
         if not self.image_io.zoom_allowed:
             return
 
@@ -442,7 +444,7 @@ class ViewerApp:
     # End functions handling specific user input
 
     def move_to_new_file(self, _: Event) -> None:
-        """Moves to a new image from file dialog"""
+        """Moves to a new image from file dialog."""
         if self.file_manager.move_to_new_file():
             self.load_image()
 
@@ -466,14 +468,14 @@ class ViewerApp:
         raise SystemExit(exit_code)
 
     def minimize(self) -> None:
-        """Minimizes the app and sets flag to redraw current image when opened again"""
+        """Minimizes the app and sets flag to redraw current image when opened again."""
         self.app.iconify()
         if self.move_id != "":
             self.app.after_cancel(self.move_id)
 
     def refresh(self, _: Event) -> None:
         """Updates list of all images in directory.
-        Display may change if image was removed outside of program"""
+        Display may change if image was removed outside of program."""
         self.clear_current_image_data()
         try:
             self.file_manager.refresh_files_with_known_starting_image()
@@ -482,7 +484,7 @@ class ViewerApp:
         self.load_image_unblocking()
 
     def undo_most_recent_action(self, _: Event) -> None:
-        """Tries to undo most recent action and loads new image if needed"""
+        """Tries to undo most recent action and loads new image if needed."""
         if self.file_manager.undo_most_recent_action():
             self.load_image_unblocking()
 
@@ -537,12 +539,12 @@ class ViewerApp:
         self.load_image_unblocking()
 
     def hide_rename_window(self) -> None:
-        """Hides rename window and returns focus to main window"""
+        """Hides rename window and returns focus to main window."""
         self.canvas.itemconfigure(self.rename_entry.id, state="hidden")
         self.app.focus()
 
     def show_rename_window(self) -> None:
-        """Shows rename window and moves focus to it"""
+        """Shows rename window and moves focus to it."""
         if not self.canvas.is_widget_visible(TkTags.TOPBAR):
             self.show_topbar()
 
@@ -550,7 +552,7 @@ class ViewerApp:
         self.rename_entry.focus()
 
     def toggle_show_rename_window(self, _: Event | None = None) -> None:
-        """Either shows or hides rename window and shifts focus accordingly"""
+        """Either shows or hides rename window and shifts focus accordingly."""
         if self.canvas.is_widget_visible(self.rename_entry.id):
             self.hide_rename_window()
         else:
@@ -558,7 +560,7 @@ class ViewerApp:
 
     def rename_or_convert(self, _: Event) -> None:
         """Tries to rename or convert current image based on input.
-        Makes window flash red if operation failed"""
+        Makes window flash red if operation failed."""
         user_input: str = self.rename_entry.get().strip()
         if user_input == "":
             return
@@ -578,22 +580,22 @@ class ViewerApp:
 
     def _update_existing_image_display(self, image: Image) -> None:
         """Updates display with PhotoImage version of provided Image.
-        Use when the displayed image hasn't changed, but moved or went to a new frame"""
+        Use when the displayed image hasn't changed, but e.x. moved to a new frame."""
         self.canvas.update_existing_image_display(PhotoImage(image))
 
     def _update_image_display(self, image: Image) -> None:
         """Updates display with PhotoImage version of provided Image.
         Use when a new image is replacing the previous and should be
-        re-centered"""
+        re-centered."""
         self.canvas.update_image_display(PhotoImage(image))
 
     def update_after_image_load(self, image: Image) -> None:
-        """Updates app title and displayed image"""
+        """Updates app title and displayed image."""
         self._update_image_display(image)
         self.app.title(self.file_manager.current_image.name)
 
     def _load_image_at_current_path(self) -> Image | None:
-        """Wraps ImageLoader's load call with path from FileManager"""
+        """Wraps ImageLoader's load call with path from FileManager."""
         return self.image_io.load_image(self.file_manager.path_to_image)
 
     def load_image(self, movement_on_failure: Movement = Movement.NONE) -> None:
@@ -626,12 +628,12 @@ class ViewerApp:
         self._start_image_load(self.load_image, movement_on_failure)
 
     def show_topbar(self) -> None:
-        """Shows all topbar elements and updates its display"""
+        """Shows all topbar elements and updates its display."""
         self.canvas.itemconfigure(TkTags.TOPBAR, state="normal")
         self.update_topbar()
 
     def hide_topbar(self) -> None:
-        """Hides and removes focus from all topbar elements"""
+        """Hides and removes focus from all topbar elements."""
         self.canvas.itemconfigure(TkTags.TOPBAR, state="hidden")
         self.hide_rename_window()
 
@@ -647,7 +649,7 @@ class ViewerApp:
             self.exit()
 
     def update_topbar(self) -> None:
-        """Updates all elements on the topbar with current info"""
+        """Updates all elements on the topbar with current info."""
         rename_window_x_offset = self.canvas.update_file_name(
             self.file_manager.current_image.name
         )
@@ -663,11 +665,11 @@ class ViewerApp:
         self.update_details_dropdown()
 
     def currently_animating(self) -> bool:
-        """Returns True when currently in an animation loop"""
+        """Returns True when currently in an animation loop."""
         return self.animation_id != ""
 
     def animation_loop(self, duration_ms: int, ms_backoff: int) -> None:
-        """Handles looping between animation frames"""
+        """Handles looping between animation frames."""
         self.animation_id = self.app.after(
             duration_ms, self._show_next_frame, ms_backoff
         )

@@ -1,4 +1,4 @@
-"""Classes representing button UI elements"""
+"""Classes representing button UI elements."""
 
 from collections.abc import Callable
 from tkinter import Event
@@ -22,7 +22,7 @@ class IconImages:
 
 
 class HoverableButtonUIElement(ButtonUIElementBase):
-    """Button with different icons when its hovered"""
+    """Button with different icons when its hovered."""
 
     __slots__ = ("canvas", "icon", "icon_hovered", "on_click_function")
 
@@ -61,13 +61,13 @@ class HoverableButtonUIElement(ButtonUIElementBase):
 
     @override
     def on_enter(self, _: Event | None = None) -> None:
-        """Updates display icon with return value from :func:`_get_hovered_icon`"""
+        """Updates display icon with return value from :func:`_get_hovered_icon`."""
 
         self.canvas.itemconfigure(self.id, image=self._get_hovered_icon())
 
     @override
     def on_leave(self, _: Event | None = None) -> None:
-        """Updates display icon with return value from :func:`_get_default_icon`"""
+        """Updates display icon with return value from :func:`_get_default_icon`."""
 
         self.canvas.itemconfigure(self.id, image=self._get_default_icon())
 

@@ -1,6 +1,4 @@
-"""
-Classes representing undoable actions that a user can do
-"""
+"""Classes representing user actions that can be undone."""
 
 import os
 from abc import abstractmethod
@@ -10,7 +8,7 @@ from image_viewer.utils.os import restore_file, trash_file
 
 
 class FileAction:
-    """Class used to track actions done to a file"""
+    """Class used to track actions done to a file."""
 
     __slots__ = ("original_path",)
 
@@ -31,7 +29,7 @@ class FileAction:
 
 
 class Rename(FileAction):
-    """Represents a file path changing"""
+    """Represents a file path changing."""
 
     __slots__ = ("new_path",)
 
@@ -52,7 +50,7 @@ class Rename(FileAction):
 class Convert(Rename):
     """Represents a conversion done to a file such that a new path exists,
     but it is related to the old path. Such as converting an image where both
-    the old and converted image now exist"""
+    the old and converted image now exist."""
 
     __slots__ = ("original_file_deleted",)
 
@@ -82,7 +80,7 @@ class Convert(Rename):
 
 
 class Delete(FileAction):
-    """Represents a file being deleted and sent to the recycle bin"""
+    """Represents a file being deleted and sent to the recycle bin."""
 
     __slots__ = ()
 

@@ -1,5 +1,5 @@
 # noqa: N999
-"""Functions for manipulating PIL and PIL's image objects"""
+"""Functions for manipulating PIL and PIL's image objects."""
 
 import os
 from textwrap import wrap
@@ -60,7 +60,7 @@ def image_is_animated(image: Image) -> bool:
 def resize(
     image: Image, size: tuple[int, int], resample: Resampling = Resampling.LANCZOS
 ) -> Image:
-    """Modified version of resize from PIL"""
+    """Modified version of resize from PIL."""
     image.load()
     if image.size == size:
         return image.copy()
@@ -130,7 +130,7 @@ def _should_be_grayscale(image: Image) -> bool:
 
 
 def _get_longest_line_dimensions(text: str) -> tuple[int, int]:
-    """Returns width and height of longest string in a string with multiple lines"""
+    """Returns width and height of longest string in a string with multiple lines."""
     longest_line: str = max(text.split("\n"), key=len)
 
     width_offset, height_offset, width, height = ImageDraw.font.getbbox(longest_line)  # type: ignore[union-attr]
@@ -139,7 +139,7 @@ def _get_longest_line_dimensions(text: str) -> tuple[int, int]:
 
 
 def create_dropdown_image(text: str) -> Image:
-    """Creates a new Image with current images metadata"""
+    """Creates a new Image with current images metadata."""
     line_width, line_height = _get_longest_line_dimensions(text)
 
     line_count: int = text.count("\n") + 1
@@ -163,7 +163,7 @@ def create_dropdown_image(text: str) -> Image:
 def get_placeholder_for_errored_image(
     error: Exception, screen_width: int, screen_height: int
 ) -> Image:
-    """Returns an Image with error message"""
+    """Returns an Image with error message."""
     error_type: str = type(error).__name__
     error_title: str = f"{error_type} occurred while trying to load file"
 
@@ -196,7 +196,7 @@ def get_placeholder_for_errored_image(
 
 
 def _preinit() -> None:
-    """Edited version of PIL's preinit to be used as a replacement"""
+    """Edited version of PIL's preinit to be used as a replacement."""
     if _Image._initialized > 0:
         return
 
@@ -220,7 +220,7 @@ def _preinit() -> None:
 
 
 def _stop_unwanted_PIL_imports() -> None:  # noqa: N802
-    """Edits parts of PIL module to prevent excessive imports"""
+    """Edits parts of PIL module to prevent excessive imports."""
     from PIL.JpegImagePlugin import MARKER, Skip
 
     # Remove calls to "APP" since its only for exif and uses removed Tiff plugin
@@ -240,7 +240,7 @@ def _stop_unwanted_PIL_imports() -> None:  # noqa: N802
 
 
 def init_PIL(font_file: str, font_size: int) -> None:  # noqa: N802
-    """Sets up font and edit PIL's internal list of plugins to load"""
+    """Sets up font and edit PIL's internal list of plugins to load."""
 
     _stop_unwanted_PIL_imports()
 

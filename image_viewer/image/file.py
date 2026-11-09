@@ -1,6 +1,4 @@
-"""
-Deals with storing known image file paths and determining their true file extension.
-"""
+"""Deals with storing and parsing known image file paths."""
 
 from collections.abc import Iterable
 

@@ -4,7 +4,7 @@ from image_viewer.constants import ZoomDirection
 from image_viewer.image.state import ImageState
 
 
-def test_try_update_state() -> None:
+def test_try_update_state():
     """Should move zoom and orientation based on input."""
     state = ImageState()
     state.zoom_level_max = 1
@@ -22,7 +22,7 @@ def test_try_update_state() -> None:
     assert state.zoom_level == 0
 
 
-def test_reset() -> None:
+def test_reset():
     state = ImageState()
     state.zoom_level += 1
     state.zoom_level_max += 2

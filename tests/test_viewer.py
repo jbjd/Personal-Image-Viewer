@@ -12,7 +12,7 @@ _MODULE_PATH: str = "image_viewer.viewer"
 # mypy: disable-error-code="method-assign"
 
 
-def test_pixel_scaling(viewer: ViewerApp) -> None:
+def test_pixel_scaling(viewer: ViewerApp):
     """Should correctly scale sizes to the screen."""
 
     viewer.height_ratio = 1
@@ -28,7 +28,7 @@ def test_pixel_scaling(viewer: ViewerApp) -> None:
 
 def test_redraw(
     viewer: ViewerApp, focused_event: MockEvent, unfocused_event: MockEvent
-) -> None:
+):
     """Should only redraw the current image when necessary."""
 
     with patch(f"{_MODULE_PATH}.ViewerApp.load_image_unblocking") as mock_refresh:
@@ -54,7 +54,7 @@ def test_redraw(
             mock_refresh.assert_called_once()
 
 
-def test_clear_image(viewer: ViewerApp) -> None:
+def test_clear_image(viewer: ViewerApp):
     """Should stop animations and reset image loader."""
     mock_after_cancel = MagicMock()
     viewer.app.after_cancel = mock_after_cancel
@@ -70,7 +70,7 @@ def test_clear_image(viewer: ViewerApp) -> None:
         mock_reset.assert_called_once()
 
 
-def test_exit(viewer: ViewerApp) -> None:
+def test_exit(viewer: ViewerApp):
     """Should clean up and exit tkinter."""
 
     mock_quit = MagicMock()
@@ -96,7 +96,7 @@ def test_exit(viewer: ViewerApp) -> None:
     assert mock_destroy.call_count == 2
 
 
-def test_minimize(viewer: ViewerApp) -> None:
+def test_minimize(viewer: ViewerApp):
     """Should iconify the app and cancel scheduled movements."""
 
     mock_after_cancel = MagicMock()
@@ -120,7 +120,7 @@ def test_minimize(viewer: ViewerApp) -> None:
 )
 def test_update_details_dropdown(
     viewer: ViewerApp, dropdown_show: bool, dropdown_needs_refresh: bool
-) -> None:
+):
     """Should correctly update dropdown given provided state."""
     viewer.canvas.itemconfigure = MagicMock()
 
@@ -151,7 +151,7 @@ def test_update_details_dropdown(
 
 
 @pytest.mark.parametrize("user_input", [" ", "something.png"])
-def test_rename_or_convert(viewer: ViewerApp, user_input: str) -> None:
+def test_rename_or_convert(viewer: ViewerApp, user_input: str):
     event = MagicMock()
     with (
         patch("image_viewer.viewer.RenameEntry.get", return_value=user_input),
@@ -168,7 +168,7 @@ def test_rename_or_convert(viewer: ViewerApp, user_input: str) -> None:
             mock_rename_or_convert_current_image.assert_called_once()
 
 
-def test_copy_to_clipboard_as_base64(viewer: ViewerApp) -> None:
+def test_copy_to_clipboard_as_base64(viewer: ViewerApp):
     viewer.copy_to_clipboard_as_base64(MagicMock())
 
     assert (
@@ -177,8 +177,8 @@ def test_copy_to_clipboard_as_base64(viewer: ViewerApp) -> None:
     )
 
 
-def test_setup_image_io(viewer: ViewerApp) -> None:
-    """Should respect padding up to have the screen size"""
+def test_setup_image_io(viewer: ViewerApp):
+    """Should respect padding up to have the screen size."""
 
     viewer._setup_image_io(1920, 1080, 200, 100, MagicMock())
 

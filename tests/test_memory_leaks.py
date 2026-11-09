@@ -25,36 +25,36 @@ else:
     read_buffer_as_base64_and_copy_to_clipboard = lambda _: ""
 
 
-class TestLeaks(MemoryLeakTestCase):
+class TestLeaks(MemoryLeakTestCase):  # noqa: D101
     warmup_times = 2
 
     times = 20
 
     retries = 4
 
-    def setUp(self) -> None:
+    def setUp(self):
         self.malloc_env: str | None = os.getenv("PYTHONMALLOC")
         os.environ["PYTHONMALLOC"] = "malloc"
 
         if os.environ.get("PYTHONUNBUFFERED") != "1":
             raise RuntimeError("Need to set env variable PYTHONUNBUFFERED=1")
 
-    def tearDown(self) -> None:
+    def tearDown(self):
         if self.malloc_env is not None:
             os.environ["PYTHONMALLOC"] = self.malloc_env
         else:
             del os.environ["PYTHONMALLOC"]
 
-    def test_parse_config_file_defaults(self) -> None:
+    def test_parse_config_file_defaults(self):
         self.execute(parse_config_file, "some bad path")
 
-    def test_validate_config_file(self) -> None:
+    def test_validate_config_file(self):
         self.execute(parse_config_file, "image_viewer/config.ini")
 
-    def test_read_image_into_buffer(self) -> None:
+    def test_read_image_into_buffer(self):
         self.execute(read_image_into_buffer, EXAMPLE_JPEG_PATH)
 
-    def test_decode_jpeg_downscaled(self) -> None:
+    def test_decode_jpeg_downscaled(self):
         image_buffer = read_image_into_buffer(EXAMPLE_JPEG_PATH)
         if image_buffer is None:
             raise RuntimeError("Failed to setup test_decode_jpeg_downscaled")
@@ -66,11 +66,11 @@ class TestLeaks(MemoryLeakTestCase):
         self.execute(decode_jpeg_downscaled, image_buffer, 2)
 
     @pytest.mark.skipif(sys.platform != "win32", reason=ONLY_ON_WINDOWS)
-    def test_get_files_in_folder(self) -> None:
+    def test_get_files_in_folder(self):
         self.execute(get_files_in_folder, IMG_DIR)
 
     @pytest.mark.skipif(sys.platform != "win32", reason=ONLY_ON_WINDOWS)
-    def test_read_buffer_as_base64_and_copy_to_clipboard(self) -> None:
+    def test_read_buffer_as_base64_and_copy_to_clipboard(self):
         image_view: CRawImageView | None = read_image_into_buffer(EXAMPLE_JPEG_PATH)
 
         assert image_view is not None

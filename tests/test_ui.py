@@ -1,3 +1,5 @@
+"""Tests for UI Element classes."""
+
 from unittest.mock import MagicMock
 
 from image_viewer.constants import ButtonName
@@ -10,17 +12,17 @@ from image_viewer.ui.canvas import CustomCanvas
 from image_viewer.ui.image import DropdownImageUIElement
 
 
-def test_show_dropdown_image() -> None:
-    """Should toggle between being shown and not"""
+def test_show_dropdown_image():
+    """Should toggle between being shown and not."""
     dropdown = DropdownImageUIElement(123)
     assert not dropdown.show
     dropdown.toggle_display()
     assert dropdown.show
 
 
-def test_button(canvas: CustomCanvas, button_icons: IconImages) -> None:
+def test_button(canvas: CustomCanvas, button_icons: IconImages):
     """Ensure buttons can add themselves to canvas and
-    on click/enter/leave events work as expected"""
+    on click/enter/leave events work as expected."""
     on_click_function = MagicMock()
     button = HoverableButtonUIElement(canvas, button_icons, on_click_function)
 
@@ -42,8 +44,8 @@ def test_button(canvas: CustomCanvas, button_icons: IconImages) -> None:
 
 
 # TODO: add checks for using different images in active/inactive states
-def test_toggleable_button(canvas: CustomCanvas, button_icons: IconImages) -> None:
-    """Ensure toggleable button goes between active/inactive states"""
+def test_toggleable_button(canvas: CustomCanvas, button_icons: IconImages):
+    """Ensure toggleable button goes between active/inactive states."""
     on_click_function = MagicMock()
     button = ToggleableButtonUIElement(
         canvas, button_icons, button_icons, on_click_function

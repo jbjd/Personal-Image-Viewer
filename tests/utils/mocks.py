@@ -1,7 +1,4 @@
-"""
-Mocks that are commonly used within the tests.
-These are an alternative to MagicMock when certain ones are used often
-"""
+"""Mocks that are commonly used within the tests."""
 
 from __future__ import annotations
 
@@ -13,7 +10,7 @@ from PIL.Image import Image
 
 
 class MockStatResult:
-    """Mocks OS's stat_result"""
+    """Mocks OS's stat_result."""
 
     st_birthtime: int = 1649709119
     st_ctime: int = 1649709119
@@ -24,7 +21,7 @@ class MockStatResult:
 
 
 class MockEvent(Event):
-    """Mocks Tk Event"""
+    """Mocks Tk Event."""
 
     def __init__(
         self, widget: Misc | None = None, keysym_num: int = 0, x: int = 0, y: int = 0
@@ -38,7 +35,7 @@ class MockEvent(Event):
 
 
 class MockImage(Image):
-    """Mocks PIL Image for testing"""
+    """Mocks PIL Image for testing."""
 
     info: dict = {}  # noqa: RUF012
     _size: tuple[int, int] = (0, 0)

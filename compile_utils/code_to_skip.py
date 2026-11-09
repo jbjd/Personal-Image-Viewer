@@ -1,4 +1,4 @@
-"""Collections of various bits of code that should not be included during compilation"""
+"""Collections of various code that should be excluded from compilation."""
 
 import os
 import re

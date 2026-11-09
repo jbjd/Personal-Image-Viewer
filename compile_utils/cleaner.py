@@ -1,4 +1,4 @@
-"""Classes and functions that remove unused code and annotations"""
+"""Classes and functions that remove unused code and annotations."""
 
 import os
 import subprocess
@@ -210,7 +210,7 @@ def _should_skip_module(
 
 def warn_unused_code_skips(modules_no_warn_unused_skips: list[str]) -> None:
     """If any values remain from code_to_skip imports, warn
-    that they were unused"""
+    that they were unused."""
 
     for skips, friendly_name in (
         (assignments_to_skip, "skip assignments"),
@@ -231,7 +231,7 @@ def warn_unused_code_skips(modules_no_warn_unused_skips: list[str]) -> None:
 
 def clean_tk_files(compile_dir: str) -> None:
     """Removes unwanted files that nuitka auto includes in standalone
-    and cleans up comments/whitespace from necessary tcl files"""
+    and cleans up comments/whitespace from necessary tcl files."""
     for path_or_glob, regexes in regex_to_apply_tk.items():
         glob_result: list[str] = glob(os.path.join(compile_dir, path_or_glob))
         if not glob_result:
@@ -249,7 +249,7 @@ def clean_tk_files(compile_dir: str) -> None:
 
 
 def strip_files(compile_dir: str) -> None:
-    """Runs strip on all exe/dll files in provided dir"""
+    """Runs strip on all exe/dll files in provided dir."""
 
     # TODO: Had issues adding .so here on linux. Should be revisited here at some point
     result = subprocess.run(

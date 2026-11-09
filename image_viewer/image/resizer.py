@@ -14,7 +14,7 @@ JPEG_MAX_DIMENSION: int = 65_535
 
 
 class ImageResizer:
-    """Handles resizing images to fit to the screen"""
+    """Handles resizing images to fit to the screen."""
 
     __slots__ = ("jpeg_helper", "screen_height", "screen_width")
 
@@ -60,14 +60,14 @@ class ImageResizer:
         return width > JPEG_MAX_DIMENSION or height > JPEG_MAX_DIMENSION
 
     def get_image_fit_to_screen(self, image: Image, image_view: CRawImageView) -> Image:
-        """Resizes image to screen with PIL"""
+        """Resizes image to screen with PIL."""
         if image_view.format == JPEG:
             return self._get_jpeg_fit_to_screen(image, image_view)
 
         return self._get_generic_fit_to_screen(image)
 
     def _get_jpeg_fit_to_screen(self, image: Image, image_view: CRawImageView) -> Image:
-        """Resizes a JPEG utilizing libjpeg-turbo to shrink very large images"""
+        """Resizes a JPEG utilizing libjpeg-turbo to shrink very large images."""
         image_width, image_height = image.size
         scale_factor: int = self._get_jpeg_fit_to_screen_downscale_factor(
             image_width, image_height
@@ -127,7 +127,7 @@ class ImageResizer:
     ) -> tuple[int, int]:
         """Fits dimensions to height if width within screen,
         else fit to width and let height go off screen.
-        Returns new width/height to use"""
+        Returns new width/height to use."""
         fit_to_height: tuple[int, int] = self._fit_dimensions_to_screen_height(
             image_width, image_height
         )
@@ -140,13 +140,13 @@ class ImageResizer:
     def _fit_dimensions_to_screen_height(
         self, image_width: int, image_height: int
     ) -> tuple[int, int]:
-        """Fits dimensions to screen's height"""
+        """Fits dimensions to screen's height."""
         width: int = round(image_width * (self.screen_height / image_height))
         return (width, self.screen_height)
 
     def _fit_dimensions_to_screen_width(
         self, image_width: int, image_height: int
     ) -> tuple[int, int]:
-        """Fits dimensions to screen's width"""
+        """Fits dimensions to screen's width."""
         height: int = round(image_height * (self.screen_width / image_width))
         return (self.screen_width, height)

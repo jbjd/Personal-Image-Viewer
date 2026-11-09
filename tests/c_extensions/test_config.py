@@ -1,3 +1,5 @@
+"""Tests for config parsing logic in C extensions."""
+
 import pytest
 
 from image_viewer._config import (
@@ -20,8 +22,8 @@ from image_viewer._config import (
 from tests.utils._c_bindings import is_valid_hex_color, is_valid_keybind
 
 
-def test_config_reader() -> None:
-    """Should return all specified values"""
+def test_config_reader():
+    """Should return all specified values."""
     config: Config = parse_config_file(_get_test_file_path("config.ini"))
 
     assert config.cache_size == 100
@@ -41,8 +43,8 @@ def test_config_reader() -> None:
     assert config.ui_padding_y == 100
 
 
-def test_config_reader_defaults() -> None:
-    """Should return all default values"""
+def test_config_reader_defaults():
+    """Should return all default values."""
     config: Config = parse_config_file(_get_test_file_path("config_empty.ini"))
 
     _assert_defaults(config)
@@ -59,8 +61,8 @@ def test_config_reader_defaults() -> None:
     assert is_valid_hex_color(config.ui_background_color)
 
 
-def test_config_reader_int_fallback() -> None:
-    """Should return default when"""
+def test_config_reader_int_fallback():
+    """Should return default when."""
     config: Config = parse_config_file(_get_test_file_path("config_bad_values.ini"))
 
     _assert_defaults(config)
@@ -86,7 +88,7 @@ def _get_test_file_path(file_name: str) -> str:
         ("<K>", True),
     ],
 )
-def test_validate_keybind(keybind: str, expected: bool) -> None:
+def test_validate_keybind(keybind: str, expected: bool):
     """Should correctly identify valid keybinds."""
     assert is_valid_keybind(keybind) is expected
 
@@ -101,7 +103,7 @@ def test_validate_keybind(keybind: str, expected: bool) -> None:
         ("#01", False),
     ],
 )
-def test_validate_hex(hex_color: str, expected: bool) -> None:
+def test_validate_hex(hex_color: str, expected: bool):
     """Should correctly identify valid hexs."""
     assert is_valid_hex_color(hex_color) is expected
 
