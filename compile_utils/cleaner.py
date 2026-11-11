@@ -251,18 +251,33 @@ def clean_tk_files(compile_dir: str) -> None:
 def strip_files(compile_dir: str) -> None:
     """Runs strip on all exe/dll files in provided dir."""
 
-    # TODO: Had issues adding .so here on linux. Should be revisited here at some point
-    result = subprocess.run(
+    entry: str
+    dll_extensions: tuple[str, ...]
+    if os.name == "nt":
+        entry = "viewer.exe"
+        dll_extensions = (".dll", ".pyd")
+    else:
+        entry = "viewer.so"
+        dll_extensions = (".so",)
+
+    entry_result = subprocess.run(
+        ["strip", "--strip-all", os.path.join(compile_dir, entry)],  # noqa: S607
+        check=False,
+    )
+    library_result = subprocess.run(
         [  # noqa: S607
             "strip",
-            "--strip-all",
-            *_get_files_in_folder_with_filter(compile_dir, (".exe", ".dll", ".pyd")),
+            "--strip-unneeded",
+            *_get_files_in_folder_with_filter(compile_dir, dll_extensions),
         ],
         check=False,
     )
 
-    if result.returncode != 0:
-        _logger.warning("Strip returned non-zero status")
+    if entry_result.returncode != 0:
+        _logger.warning("Failed to strip entry point")
+
+    if library_result.returncode != 0:
+        _logger.warning("Failed to strip libraries")
 
 
 def _get_tokens_to_skip_config(module_import_path: str) -> TokensToSkipConfig:
