@@ -29,7 +29,6 @@ class NuitkaArgs(StrEnum):
     INCLUDE_DATA_FILES = "--include-data-files"
     NO_INCLUDE_DATA_FILES = "--noinclude-data-files"
     INCLUDE_MODULE = "--include-module"
-    NO_INCLUDE_DLLS = "--noinclude-dlls"
     WINDOWS_ICON_FROM_ICO = "--windows-icon-from-ico"
     WINDOWS_CONSOLE_MODE = "--windows-console-mode"
     REMOVE_OUTPUT = "--remove-output"
