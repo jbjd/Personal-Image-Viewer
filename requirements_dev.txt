@@ -1,6 +1,7 @@
+personal-testing-tools @ git+https://github.com/jbjd/Python-Compile-Tools@v1.0.0
 clang-format~=23.1.0
 codespell==2.4.3
 coverage~=7.17.0
 mypy==2.4.1
 pytest~=9.2.0
-ruff==0.17.5
+ruff==0.17.6

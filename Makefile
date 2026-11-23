@@ -90,15 +90,12 @@ validate:
 	mypy .
 	codespell
 
-override PYTEST_DISABLE_PLUGIN_AUTOLOAD=1
-export PYTEST_DISABLE_PLUGIN_AUTOLOAD
-
+test: export PYTEST_DISABLE_PLUGIN_AUTOLOAD=1
 test:
 	$(PYTHON_EXECUTABLE) -m coverage run --source=image_viewer -m pytest --ignore=tests/test_memory_leaks.py
 	@coverage report -m
 
-override PYTHONUNBUFFERED=1
-export PYTHONUNBUFFERED
-
+test-memory-leak: export PYTHONUNBUFFERED=1
+test-memory-leak: export PYTHONMALLOC=malloc
 test-memory-leak:
 	$(PYTHON_EXECUTABLE) -m pytest tests/test_memory_leaks.py

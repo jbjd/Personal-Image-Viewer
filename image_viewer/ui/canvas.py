@@ -1,7 +1,7 @@
 """Classes representing a canvas UI element."""
 
 from tkinter import Canvas, Event, Tk
-from tkinter.font import Font  # noqa: TC003
+from tkinter.font import Font
 
 from PIL.ImageTk import PhotoImage
 

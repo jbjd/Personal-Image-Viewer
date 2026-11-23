@@ -41,6 +41,7 @@ select = ["ALL"]
 # T201: Print
 # TC001: Move import into a type-checking block (Irrelavent due to compilation)
 # TC002: Type checking block
+# TC003: Type checking block
 # TD002: Missing author in TODO
 # TD003: Missing issue link in TODO
 # TRY002: Use custom exceptions
@@ -48,7 +49,7 @@ select = ["ALL"]
 ignore = [
     "C901", "COM812", "CPY", "D102", "D103", "D105", "D107", "D202", "D203", "D205", "D209", "D213", "D401", "D415", "EM", "ERA001",
     "FBT", "FIX", "FURB136", "PLC0415", "PLR0912", "PLR0913", "PLR0917", "PLR1730", "PLR2004", "PTH", "PYI021", "S603",
-    "SIM105", "SLF001", "T201", "TC001", "TC002", "TD002", "TD003", "TRY002", "TRY003"
+    "SIM105", "SLF001", "T201", "TC001", "TC002", "TC003", "TD002", "TD003", "TRY002", "TRY003"
 ]
 
 [lint.extend-per-file-ignores]

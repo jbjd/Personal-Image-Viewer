@@ -1,10 +1,9 @@
 """Tests for memory leaks in C extension modules."""
 
-import os
 import sys
 
-import pytest
-from psleak import MemoryLeakTestCase
+from personal_testing_tools.mark import mark_windows_only
+from personal_testing_tools.psleak import MemoryLeakTestCaseExt
 
 from image_viewer._config import parse_config_file
 from image_viewer.image._read import (
@@ -12,7 +11,7 @@ from image_viewer.image._read import (
     decode_jpeg_downscaled,
     read_image_into_buffer,
 )
-from tests.conftest import EXAMPLE_JPEG_PATH, IMG_DIR, ONLY_ON_WINDOWS
+from tests.conftest import EXAMPLE_JPEG_PATH, IMG_DIR
 
 if sys.platform == "win32":
     from image_viewer.utils._os_nt import (
@@ -22,28 +21,15 @@ if sys.platform == "win32":
 else:
     # mypy
     get_files_in_folder = lambda _: ""
-    read_buffer_as_base64_and_copy_to_clipboard = lambda _: ""
+    read_buffer_as_base64_and_copy_to_clipboard = lambda _: None
 
 
-class TestLeaks(MemoryLeakTestCase):  # noqa: D101
+class TestLeaks(MemoryLeakTestCaseExt):  # noqa: D101
     warmup_times = 2
 
     times = 20
 
     retries = 4
-
-    def setUp(self):
-        self.malloc_env: str | None = os.getenv("PYTHONMALLOC")
-        os.environ["PYTHONMALLOC"] = "malloc"
-
-        if os.environ.get("PYTHONUNBUFFERED") != "1":
-            raise RuntimeError("Need to set env variable PYTHONUNBUFFERED=1")
-
-    def tearDown(self):
-        if self.malloc_env is not None:
-            os.environ["PYTHONMALLOC"] = self.malloc_env
-        else:
-            del os.environ["PYTHONMALLOC"]
 
     def test_parse_config_file_defaults(self):
         self.execute(parse_config_file, "some bad path")
@@ -65,11 +51,11 @@ class TestLeaks(MemoryLeakTestCase):  # noqa: D101
 
         self.execute(decode_jpeg_downscaled, image_buffer, 2)
 
-    @pytest.mark.skipif(sys.platform != "win32", reason=ONLY_ON_WINDOWS)
+    @mark_windows_only()
     def test_get_files_in_folder(self):
         self.execute(get_files_in_folder, IMG_DIR)
 
-    @pytest.mark.skipif(sys.platform != "win32", reason=ONLY_ON_WINDOWS)
+    @mark_windows_only()
     def test_read_buffer_as_base64_and_copy_to_clipboard(self):
         image_view: CRawImageView | None = read_image_into_buffer(EXAMPLE_JPEG_PATH)
 

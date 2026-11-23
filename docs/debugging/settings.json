@@ -1,6 +1,7 @@
 {
     "C_Cpp.errorSquiggles": "disabled",
     "python.testing.pytestArgs": [
+        "--ignore=tests/test_memory_leaks.py",
         "-s",
         "tests"
     ],
