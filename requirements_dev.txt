@@ -1,4 +1,4 @@
-personal-testing-tools @ git+https://github.com/jbjd/Python-Compile-Tools@v1.0.0
+personal-testing-tools @ git+https://github.com/jbjd/Python-Testing-Tools@v1.1.0
 clang-format~=23.1.0
 codespell==2.4.3
 coverage~=7.17.0
