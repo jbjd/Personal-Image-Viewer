@@ -26,6 +26,7 @@ HWND g_hwnd = 0;
  * @return PyLong casted HWND.
  */
 static inline HWND PyLong_AsHWND(PyObject *pyLong) {
+#pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wint-to-pointer-cast"
     return (HWND)PyLong_AsLong(pyLong);
 #pragma GCC diagnostic pop

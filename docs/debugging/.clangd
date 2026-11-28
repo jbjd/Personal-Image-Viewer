@@ -1,6 +1,8 @@
 CompileFlags:
   Add:
+    - -xc
+    - -std=c23
     - --target=x86_64-w64-windows-gnu
-    - -IC:\Users\jimde\AppData\Local\Programs\Python\Python312/include/
+    - -IC:\Users\<you>\AppData\Local\Programs\Python\Python312/include/
     - -IC:\Python\Personal-Image-Viewer\image_viewer\c_extensions
-    - -IC:\tools\msys64\mingw64\include
+    - -IC:\msys64\mingw64\include
