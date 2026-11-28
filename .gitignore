@@ -9,8 +9,9 @@ __pycache__/
 build/
 *.egg-info
 .venv
-
 .coverage
+
+/.clangd
 
 # Image Viewer
 ERROR.log
@@ -32,8 +33,6 @@ nuitka-crash-report.xml
 # Compiled Python Extensions
 *.pyd
 *.so
-
-libturbojpeg.*
 
 *.ipynb
 test.py
